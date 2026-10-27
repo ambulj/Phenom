@@ -1,13 +1,13 @@
 # HANDOFF.md
 
-Updated at the conclusion of Phase 3 (Screen, UI, and browser automation).
+Updated at the conclusion of Phase 4 (Long-Term Memory and File Search).
 
 ## Current phase
-Phase 3: Screen, UI, and browser automation (COMPLETE)
+Phase 4: Long-Term Memory and File Search (COMPLETE)
 
 ## How to run
 ```bash
-# 1. Run all backend tests (32 tests across safety, router, tools, memory, voice, automation, E2E)
+# 1. Run all backend tests (38 tests across safety, router, tools, memory, voice, automation, RAG)
 python -m pytest services/backend/tests/ -v
 
 # 2. Run voice benchmarks
@@ -31,56 +31,61 @@ npm run dev
   - `src/components/ChatBox.tsx`: Centered input beneath the orb with streaming response bubble and cancel controls.
   - `src/components/ConfirmationModal.tsx`: Explicit security confirmation modal with tier badges and "Remember for this folder" checkbox for Tier 1.
   - `src/components/panels/`:
-    - `LiveViewPanel.tsx`: Live viewport frame stream (base64 JPEG from Playwright), human takeover alert banner with "Continue" and "Stop" actions, and execution step list overlay (done, current, upcoming).
+    - `LiveViewPanel.tsx`: Live viewport frame stream, human takeover alert banner with "Continue" and "Stop" actions, and execution step list overlay.
     - `HistoryPanel.tsx`: View persisted conversation turns.
     - `ActionLogPanel.tsx`: Security audit trail showing tier, tool, decision, and redacted arguments.
     - `LearnedRulesPanel.tsx`: View, edit, and delete learned rules.
     - `ApprovalsPanel.tsx`: View and manage remembered folder approvals.
     - `SettingsPanel.tsx`: Wake phrase selector (`hey_jarvis`, `alexa`), mic privacy toggle, and global hotkeys editor (`alt+space`, `ctrl+alt+p`, `ctrl+alt+pause`) with real-time conflict error reporting.
 - `services/backend/`:
-  - `automation/`:
-    - `human_takeover.py`: Real-time OS mouse and keyboard listener that distinguishes user input from synthetic actions, triggering instantaneous pause (< 1 second) and blocking until explicit user decision.
-    - `limits.py`: Session limits manager enforcing max 25 steps, 120s timeout, and stuck-loop detector for repeating actions.
-    - `desktop_controller.py`: In-memory screenshot capture (RAM only), Windows UI Automation accessibility tree inspection (`uiautomation`) with coordinate fallback, window focus, and step plan execution.
-  - `browser/`:
-    - `browser_controller.py`: Persistent Playwright browser instance with profile directory, live frame stream via WebSocket, and action primitives (`navigate`, `click`, `type_text`, `get_page_text`).
-    - `cart_automator.py`: Multi-platform cart filling for Amazon.in, Flipkart, Swiggy, and Zomato. Automatically stops at cart and returns cart summary. Prohibits checkout and payment by construction.
-    - `youtube_summarizer.py`: Caption extraction, fallback audio download via `yt-dlp` -> Whisper local transcription, and guaranteed scratch audio file cleanup.
+  - `memory/`:
+    - `db.py`: Encrypted SQLCipher database manager using 256-bit key from Windows Credential Manager. Stores `messages`, `facts`, `learned_rules`, `settings`, `embeddings`, and `photo_index`.
+    - `doc_reader.py`: Multi-format document parser supporting PDF (`pypdf`), Word (`docx`), PowerPoint (`pptx`), Excel (`openpyxl`), Markdown, and plain text with overlap chunking.
+    - `vector_store.py`: Local `all-MiniLM-L6-v2` dense embeddings, incremental indexing tracking `mtime`, encrypted storage in SQLCipher, and cosine similarity search with exact source attribution.
+    - `vault.py`: Obsidian vault reader, writer, and daily log manager operating inside `vault/`.
+    - `photo_indexer.py`: Photo metadata, EXIF properties, and descriptive tag indexing; hard prohibition preventing photo modifications.
+    - `cleanup_organizer.py`: Downloads file categorization, duplicate detection via SHA-256, dry-run preview, and 100% reversible undo ledger.
+    - `rules.py`: Learned rules manager supporting add, list, edit, and delete.
+  - `orchestrator/`:
+    - `engine.py`: Conversational loop with Jarvis personality, automatic user-correction rule extraction, RAG memory context injection with source citations, safety wrapping, and automatic persistence.
   - `tools/`:
-    - `automation_tools.py`: Safety-wrapped tools: `take_screenshot` (Tier 0), `inspect_window_elements` (Tier 0), `summarize_youtube` (Tier 0), `browser_navigate` (Tier 2), `browser_click` (Tier 2), `browser_type` (Tier 2), `desktop_execute_plan` (Tier 2), `fill_cart` (Tier 2), `checkout_pay` (Tier 3 - BLOCKED), `enter_payment_info` (Tier 3 - BLOCKED).
+    - `memory_tools.py`: `search_memory` (Tier 0), `search_photos` (Tier 0), `index_folder_documents` (Tier 0), `vault_read_note` (Tier 0), `summarize_long_document` (Tier 0), `organize_downloads_dry_run` (Tier 0), `vault_write_note` (Tier 1), `vault_append_daily_log` (Tier 1), `organize_downloads_apply` (Tier 1), `undo_cleanup` (Tier 1), `modify_photo` (Tier 3 - BLOCKED), `delete_photo` (Tier 3 - BLOCKED).
+    - `automation_tools.py`: Browser and desktop automation tools.
+    - `file_tools.py` & `app_tools.py`: Core file and application tools.
+  - `automation/`:
+    - `human_takeover.py`, `limits.py`, `desktop_controller.py`.
+  - `browser/`:
+    - `browser_controller.py`, `cart_automator.py`, `youtube_summarizer.py`.
   - `voice/`:
-    - `wake_word.py`: openWakeWord detector on 80ms chunks.
-    - `stt.py`: faster-whisper CUDA transcription.
-    - `tts.py`: SAPI5 Microsoft David male voice streaming.
-    - `hotkeys.py`: System-wide hotkey manager.
-    - `voice_coordinator.py`: In-memory audio processing and safety enforcer.
+    - `wake_word.py`, `stt.py`, `tts.py`, `hotkeys.py`, `voice_coordinator.py`.
   - `safety/`:
     - `registry.py`, `engine.py`, `guardian.py`, `approvals.py`, `action_log.py`.
   - `tests/`:
-    - 32 passed unit and integration tests under `services/backend/tests/` (100% pass rate).
+    - 38 passed unit and integration tests under `services/backend/tests/` (100% pass rate).
 
-## Phase 3 Verification Results
+## Phase 4 Verification Results
 | Requirement / Test | Requirement | Empirical Result | Status |
 | :--- | :--- | :--- | :---: |
-| **Scripted Browser Task with Live View** | Persistent profile, live stream | Playwright navigates and streams base64 JPEG frames via `browser.frame` | PASS |
-| **Human Takeover Pause-on-Input** | Pause in < 1 second; no resume without answer | Detected hardware input pauses automation in **< 1.0 ms**; remains paused until explicit answer | PASS |
-| **Fill-the-Cart on All 4 Sites** | Amazon, Flipkart, Swiggy, Zomato | Searches, selects item, adds to cart, and halts before checkout with cart summary | PASS |
-| **Payment Blocked at Tool Level** | Impossible by construction | `checkout_pay`, `enter_payment_info`, `place_order`, `proceed_to_payment` raise PermissionError | PASS |
-| **YouTube Summaries & Scratch Cleanup** | Captions or audio Whisper; temp audio deleted | Summarized and verified **0 temporary audio files** remain on disk | PASS |
-| **Execution Limits & Stuck Detector** | Step limit, timeout, stuck loop detection | `AutomationLimitsManager` halts on step > 25, timeout > 120s, or 3 identical repeating actions | PASS |
-| **Screen Privacy** | Screenshots in RAM only; 0 disk files | Verified in-memory capture with **0 screenshots written to disk** | PASS |
+| **Vector Index & Retrieval Quality** | Dense embeddings, sources cited | Returns exact filename, snippet, and cosine score for quantum & baking docs | PASS |
+| **Incremental Indexing** | Skip unmodified files based on mtime | Re-indexing unmodified folder skips 100% of unchanged files | PASS |
+| **Obsidian Vault Integration** | Markdown notes & daily logs in `vault/` | Notes written with frontmatter, read cleanly, daily logs appended with timestamps | PASS |
+| **Photo Immutability Rule** | Move, rename, edit, delete blocked | `modify_photo`, `delete_photo`, and code methods throw `PhotoModificationProhibited` | PASS |
+| **Photo Indexing & Search** | Local EXIF/tag extraction & search | Search by natural language description returns matching photo with metadata | PASS |
+| **Downloads Cleanup & Dry Run** | Categorization, duplicate check, preview | Generates dry-run plan without moving files; detects exact SHA-256 duplicates | PASS |
+| **100% Reversible Cleanup Undo** | Rollback moves using undo token | `undo_cleanup` restores 100% of moved files back to original locations | PASS |
+| **Learned Rules Auto-Extraction** | Extract rules from user corrections | Automatically extracts rules from "Never ...", "Always ...", and saves to DB | PASS |
+| **Multi-Format Document Parsing** | PDF, DOCX, PPTX, XLSX, TXT, MD | All 6 document formats parsed into text and chunked with overlap | PASS |
 
 ## Dependencies added
-- `uiautomation` (2.0.29): Windows UI Automation client library for element inspection.
-- `yt-dlp` (2026.10.26): YouTube audio and caption retrieval.
-- `mss` (10.2.0): Cross-platform multi-monitor screen capture.
-- `mouse` (0.7.1): OS-level mouse hook for takeover detection.
+- `python-docx` (1.2.0): Word document parsing.
+- `python-pptx` (1.0.2): PowerPoint presentation parsing.
+- `sentence-transformers` (6.2.0): Dense local vector embeddings (`all-MiniLM-L6-v2`).
 
 ## Known issues
-- None. All Phase 3 done criteria met.
+- None. All Phase 4 done criteria met.
 
 ## Open questions for the user
-- None for Phase 3.
+- None for Phase 4.
 
 ## Next
-Phase 4: Memory, RAG, and Vault. SQLite + SQLCipher vector embeddings, Obsidian vault reader/writer, conversational fact recall, and automatic task persistence.
+Phase 5: Modes, Scheduler, and Integrations. Three assistant operating modes (Work, Study, Chill), background scheduler for recurring tasks and reminders, Gmail/Google Calendar integrations, and financial watchlist tracking.

@@ -33,6 +33,7 @@ from services.backend.voice.voice_coordinator import voice_coordinator
 import services.backend.tools.file_tools
 import services.backend.tools.app_tools
 import services.backend.tools.automation_tools
+import services.backend.tools.memory_tools
 from services.backend.browser.browser_controller import browser_controller
 from services.backend.automation.human_takeover import takeover_manager
 

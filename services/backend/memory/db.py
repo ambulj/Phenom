@@ -83,6 +83,28 @@ class EncryptedDatabaseManager:
                 value TEXT NOT NULL
             );
             """)
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS embeddings (
+                id TEXT PRIMARY KEY,
+                doc_path TEXT NOT NULL,
+                chunk_index INTEGER NOT NULL,
+                chunk_text TEXT NOT NULL,
+                mtime REAL NOT NULL,
+                embedding_blob BLOB NOT NULL
+            );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_embeddings_path ON embeddings(doc_path);")
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS photo_index (
+                id TEXT PRIMARY KEY,
+                file_path TEXT NOT NULL UNIQUE,
+                filename TEXT NOT NULL,
+                tags TEXT NOT NULL,
+                caption TEXT NOT NULL,
+                mtime REAL NOT NULL,
+                metadata_json TEXT NOT NULL
+            );
+            """)
         conn.close()
 
     def add_message(self, msg_id: str, role: str, content: str, model: Optional[str] = None, tokens: Optional[int] = None):

@@ -66,6 +66,21 @@ class Orchestrator:
     def __init__(self):
         pass
 
+    def _extract_learned_rule(self, text: str) -> Optional[str]:
+        t = text.strip()
+        patterns = [
+            r"^(?:don't|do not|never)\s+(.+)$",
+            r"^(?:always|remember to|from now on,?\s+)(.+)$",
+            r"^(?:actually,?\s+)(.+)$"
+        ]
+        for pat in patterns:
+            m = re.search(pat, t, re.IGNORECASE)
+            if m:
+                extracted = m.group(0).strip()
+                if len(extracted.split()) >= 3:
+                    return extracted
+        return None
+
     async def run_conversation_turn(
         self,
         prompt: str,
@@ -92,11 +107,27 @@ class Orchestrator:
             prompt, context_files, manual_privacy_override
         )
 
+        # Check for user corrections to automatically learn rules
+        rule_extracted = self._extract_learned_rule(prompt)
+        if rule_extracted:
+            learned_rules.add_rule(rule_extracted)
+
+        # RAG: Retrieve relevant memory context from Vector Store
+        memory_context = ""
+        try:
+            from services.backend.memory.vector_store import vector_store
+            doc_matches = vector_store.search(prompt, top_k=2)
+            if doc_matches and doc_matches[0]["score"] > 0.45:
+                sources = "\n".join([f"- [{m['filename']}] (Score: {m['score']}): {m['snippet']}" for m in doc_matches])
+                memory_context = f"\nRelevant Memory & Document Citations:\n{sources}\n"
+        except Exception:
+            pass
+
         system_prompt = build_system_prompt()
         history = encrypted_db.get_recent_messages(limit=6)
         history_context = "\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in history])
 
-        full_prompt = f"{system_prompt}\n\nRecent History:\n{history_context}\n\nUser: {prompt}\nAssistant:"
+        full_prompt = f"{system_prompt}\n{memory_context}\nRecent History:\n{history_context}\n\nUser: {prompt}\nAssistant:"
 
         start_time = time.perf_counter()
         token_index = 0

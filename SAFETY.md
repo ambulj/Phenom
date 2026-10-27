@@ -5,10 +5,10 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 ## 1. Risk tiers
 | Tier | Name | Behaviour | Examples |
 | --- | --- | --- | --- |
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory, check weather, read calendar, system status, take screenshot (RAM), inspect UI elements, summarize YouTube |
-| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads, save an email draft, write a vault note |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run |
+| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log |
 | 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
-| 3 | Blocked or system-level | Blocked by default; allowed only if listed in section 6; needs a typed confirmation on the desktop; cannot be approved remotely | payments, checkout completion, OTP entry, permanent delete, changing system settings, sending email, touching credentials, installing software, editing other people's calendar events |
+| 3 | Blocked or system-level | Blocked by default; allowed only if listed in section 6; needs a typed confirmation on the desktop; cannot be approved remotely | modify/delete photos, payments, checkout completion, OTP entry, permanent delete, changing system settings, sending email, touching credentials, installing software |
 
 Unknown tools or unclassified calls are Tier 3.
 
@@ -37,11 +37,11 @@ SQLite table `action_log`, one row per attempted action:
 
 ## 6. Tier 3 allowlist
 Empty by default. Anything added needs the user's written approval and a line here: tool, reason, date.
-Permanently blocked without allowlist entries: `checkout_pay`, `enter_payment_info`.
+Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `checkout_pay`, `enter_payment_info`.
 
 ## 7. Privacy labels and cloud escalation
 - Labels: `private` (default) or `shareable`.
-- Automatic rules: anything in Documents, Desktop, Photos, Mail, Obsidian vault, financial, medical, ID or credential-looking content is `private`. Files in a folder the user marks shareable, and public web content, are `shareable`. The user can override any label in the UI.
+- Automatic rules: anything in Documents, Desktop, Photos, Mail, Obsidian vault (`vault/`), financial, medical, ID or credential-looking content is `private`. Files in a folder the user marks shareable, and public web content, are `shareable`. The user can override any label in the UI.
 - Local first: all requests start on the local model.
 - Cloud escalation only when ALL are true: the input is `shareable`, it is too long or too hard for the local model, and the user approved after seeing a preview.
 - Preview shows: which model, the exact text or the file excerpts that will be sent, the size, and the reason for escalation.
@@ -50,8 +50,8 @@ Permanently blocked without allowlist entries: `checkout_pay`, `enter_payment_in
 
 ## 8. Hard prohibitions (enforced in code)
 - No trades, no buy or sell suggestions, no financial advice phrasing.
-- No photo move, rename, edit or delete.
-- No permanent delete.
+- No photo move, rename, edit or delete. Photos are indexed and searched only.
+- No permanent delete. Delete means Recycle Bin (`send2trash`).
 - No payment, checkout completion, entering card data, or OTP submission. Fill-the-cart stops unconditionally before checkout.
 - No typing or storing passwords.
 - No sending email.
@@ -59,7 +59,7 @@ Permanently blocked without allowlist entries: `checkout_pay`, `enter_payment_in
 - Screenshots are processed in RAM only, analyzed locally, and never sent to the cloud or saved without explicit user instruction.
 - Spoken "yes" never approves Tier 1 or Tier 2 actions.
 
-## 9. Audit checklist (run at the end of Phases 1, 2, 3, 5, 6, 7)
+## 9. Audit checklist (run at the end of Phases 1, 2, 3, 4, 5, 6, 7)
 - [x] Every registered tool has a tier, preview and tests
 - [x] No code path calls a tool without the Safety layer
 - [x] Kill switch works from UI, hotkey, voice, and Telegram (when present)
@@ -67,6 +67,9 @@ Permanently blocked without allowlist entries: `checkout_pay`, `enter_payment_in
 - [x] Zero audio files written to disk (in-memory RAM processing verified)
 - [x] Payment and checkout completion are impossible by construction (Tier 3 blocked)
 - [x] Screenshots processed in RAM only (zero saved without instruction)
+- [x] Photos are untouched by construction; modify and delete are Tier 3 blocked
+- [x] Downloads cleanup is 100% reversible via undo token
+- [x] Vector embeddings and memory stored encrypted at rest in SQLCipher
 - [x] Human takeover pauses automation within 1 second and never resumes without explicit answer
 - [x] Nothing private reaches the cloud without a previewed approval
 - [x] Log contains no secrets, credentials, or private content
