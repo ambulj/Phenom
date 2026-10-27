@@ -1,0 +1,23 @@
+{
+  "tts": {
+    "voice_name": "Microsoft David Desktop - English (United States)",
+    "time_to_first_audio_ms": 89.67,
+    "total_speech_s": 6.64,
+    "status": "works"
+  },
+  "stt": {
+    "model": "faster-whisper tiny.en (CUDA float16)",
+    "audio_duration_s": 7.97,
+    "median_stt_latency_ms": 354.86,
+    "real_time_factor": 0.045,
+    "sample_transcript": "Good afternoon.  Phenom desktop assistant speech recognition feasibility test running locally on Windows 11.",
+    "status": "works"
+  },
+  "wake_word": {
+    "engine": "openWakeWord (ONNX)",
+    "avg_cpu_percent": 68.1,
+    "avg_gpu_percent": 39.0,
+    "status": "works"
+  },
+  "status": "works"
+}

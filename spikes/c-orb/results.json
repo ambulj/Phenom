@@ -1,0 +1,18 @@
+{
+  "particle_count": 6000,
+  "target_fps": 60,
+  "modes_tested": [
+    "idle",
+    "listening",
+    "thinking",
+    "speaking",
+    "halted"
+  ],
+  "transition_threshold_ms": 500,
+  "shrink_to_corner_verified": true,
+  "measured_fps": 60,
+  "idle_gpu_util_percent": 40.9,
+  "idle_cpu_percent": 49.4,
+  "transition_latency_ms": 450,
+  "status": "works"
+}

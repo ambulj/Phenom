@@ -1,0 +1,15 @@
+{
+  "name": "phenom-spike-c-orb",
+  "version": "0.1.0",
+  "description": "Phenom Spike C: Three.js Particle Orb in Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}

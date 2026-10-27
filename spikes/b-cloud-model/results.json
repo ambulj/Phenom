@@ -1,0 +1,15 @@
+{
+  "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+  "endpoint": "https://integrate.api.nvidia.com/v1",
+  "context_length": 131072,
+  "rate_limits": "Varies by tier; free build.nvidia.com tier typically ~40 requests/min, 4000 RPM tokens",
+  "key_present": false,
+  "streaming_confirmed": false,
+  "latency_ms": null,
+  "tps": null,
+  "error_behavior": {
+    "bad_key": "Error code: 403 - {'status': 403, 'title': 'Forbidden', 'detail': 'Authorization failed'}",
+    "timeout": "APITimeoutError: Request timed out."
+  },
+  "status": "works with caveats (NVIDIA_API_KEY unset; error paths verified, valid key needed for live streaming)"
+}

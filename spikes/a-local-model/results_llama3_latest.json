@@ -1,0 +1,17 @@
+{
+  "performance": {
+    "median_first_token_ms": 2175.5126000025484,
+    "median_tps": 14.84650482491757,
+    "median_vram_mb": 5652.0
+  },
+  "tools": {
+    "valid_json": 20,
+    "correct_tool": 20,
+    "total": 20
+  },
+  "summary": {
+    "elapsed_s": 24.86595899999884,
+    "tps": 13.234584738536075,
+    "tokens": 261
+  }
+}

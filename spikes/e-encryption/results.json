@@ -1,0 +1,6 @@
+{
+  "key_roundtrip": "PASS",
+  "unreadable_without_key": "PASS",
+  "decrypt_with_key": "PASS",
+  "status": "works"
+}
