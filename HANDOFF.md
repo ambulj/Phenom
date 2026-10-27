@@ -1,13 +1,13 @@
 # HANDOFF.md
 
-Updated at the conclusion of Phase 4 (Long-Term Memory and File Search).
+Updated at the conclusion of Phase 5 (Modes, Scheduler, and Integrations).
 
 ## Current phase
-Phase 4: Long-Term Memory and File Search (COMPLETE)
+Phase 5: Modes, Scheduler, and Integrations (COMPLETE)
 
 ## How to run
 ```bash
-# 1. Run all backend tests (38 tests across safety, router, tools, memory, voice, automation, RAG)
+# 1. Run all backend tests (46 tests across safety, router, tools, memory, voice, automation, RAG, modes, scheduler, integrations)
 python -m pytest services/backend/tests/ -v
 
 # 2. Run voice benchmarks
@@ -25,67 +25,65 @@ npm run dev
 ## What exists
 - `apps/desktop/`:
   - `electron/main.cjs`: Electron window host with global shortcut registration (`Ctrl+Alt+Pause` Guardian kill switch).
-  - `src/App.tsx`: Central coordinator with WebSocket connection management, voice amplitude listener, live view frame streaming, takeover prompt modal handling, confirmation modal.
-  - `src/components/Orb.tsx`: 3D Three.js particle orb (6,000 particles) with 5 states (calm blue, teal listening, violet thinking, amber speaking, red halted) with real-time amplitude-driven burst modulation during speech.
-  - `src/components/HeaderBar.tsx`: Fluent UI header with connection indicator, microphone mute toggle (`Mic Active` / `Muted`), listening badge indicator, Guardian Kill Switch / Resume button, and "Live View" panel launcher.
-  - `src/components/ChatBox.tsx`: Centered input beneath the orb with streaming response bubble and cancel controls.
-  - `src/components/ConfirmationModal.tsx`: Explicit security confirmation modal with tier badges and "Remember for this folder" checkbox for Tier 1.
+  - `src/App.tsx`: Central coordinator managing WebSocket link, voice amplitude, live view frames, takeover prompts, active modes, scheduled reminders, and watchlist alerts.
+  - `src/components/Orb.tsx`: 3D Three.js particle orb with calm, listening, thinking, speaking, and halted states.
+  - `src/components/HeaderBar.tsx`: Fluent UI header with connection indicator, microphone mute toggle, listening badge indicator, Guardian Kill Switch / Resume button, live view launcher, one-click Mode cycle badge (`Work` / `Study` / `Chill`), Dashboard button, and Mini Overlay toggle.
+  - `src/components/MiniOverlay.tsx`: Compact floating widget displaying current task state, next scheduled item, active mode badge with one-click cycle, and immediate Guardian Kill Switch.
   - `src/components/panels/`:
+    - `DashboardPanel.tsx`: 4-tab command center: Scheduler & Reminders (quick add, active items, run logs), Financial Watchlist (informational alerts, prices, conditions), Live Safety Action Logs, and Tech News Briefing (HN, TechCrunch, The Verge).
     - `LiveViewPanel.tsx`: Live viewport frame stream, human takeover alert banner with "Continue" and "Stop" actions, and execution step list overlay.
     - `HistoryPanel.tsx`: View persisted conversation turns.
     - `ActionLogPanel.tsx`: Security audit trail showing tier, tool, decision, and redacted arguments.
     - `LearnedRulesPanel.tsx`: View, edit, and delete learned rules.
     - `ApprovalsPanel.tsx`: View and manage remembered folder approvals.
-    - `SettingsPanel.tsx`: Wake phrase selector (`hey_jarvis`, `alexa`), mic privacy toggle, and global hotkeys editor (`alt+space`, `ctrl+alt+p`, `ctrl+alt+pause`) with real-time conflict error reporting.
+    - `SettingsPanel.tsx`: Wake phrase selector, mic privacy toggle, and global hotkeys editor with real-time conflict error reporting.
 - `services/backend/`:
-  - `memory/`:
-    - `db.py`: Encrypted SQLCipher database manager using 256-bit key from Windows Credential Manager. Stores `messages`, `facts`, `learned_rules`, `settings`, `embeddings`, and `photo_index`.
-    - `doc_reader.py`: Multi-format document parser supporting PDF (`pypdf`), Word (`docx`), PowerPoint (`pptx`), Excel (`openpyxl`), Markdown, and plain text with overlap chunking.
-    - `vector_store.py`: Local `all-MiniLM-L6-v2` dense embeddings, incremental indexing tracking `mtime`, encrypted storage in SQLCipher, and cosine similarity search with exact source attribution.
-    - `vault.py`: Obsidian vault reader, writer, and daily log manager operating inside `vault/`.
-    - `photo_indexer.py`: Photo metadata, EXIF properties, and descriptive tag indexing; hard prohibition preventing photo modifications.
-    - `cleanup_organizer.py`: Downloads file categorization, duplicate detection via SHA-256, dry-run preview, and 100% reversible undo ledger.
-    - `rules.py`: Learned rules manager supporting add, list, edit, and delete.
-  - `orchestrator/`:
-    - `engine.py`: Conversational loop with Jarvis personality, automatic user-correction rule extraction, RAG memory context injection with source citations, safety wrapping, and automatic persistence.
+  - `modes/`:
+    - `mode_manager.py`: Three assistant modes (`Work`, `Study`, `Chill` / Gaming). Controls enabled tools, system prompt tone modifier, and notification policy (standard, quiet, minimal). Switchable by voice, hotkey, or UI; persisted in encrypted SQLCipher DB.
+  - `scheduler/`:
+    - `cron.py`: BackgroundScheduler for recurring tasks and reminders. Persisted in SQLCipher (`scheduled_jobs`, `job_run_logs`), survives application restarts, fires on time, logs every run with status, duration, and summary.
+  - `integrations/`:
+    - `finance.py`: Market quotes for stocks and crypto. Watchlist price alerts that trigger once without duplicate spamming. Hard code prohibitions blocking trading (`place_trade`) and buy/sell recommendations (`suggest_trade`).
+    - `google_workspace.py`: Gmail and Google Calendar integration. Search/read emails, save Gmail drafts (never send). List calendar events, create calendar events (never delete or edit). Hard code prohibitions throwing `EmailSendingProhibitedError` and `CalendarModificationProhibitedError`.
+    - `live_data.py`: Multi-source live data pipeline (Weather, Mutual Funds, Sports). Fixed order: Official API first, fallback to web scraping, explicitly labelled `source="scraped"`.
+    - `news_briefing.py`: Tech news briefing aggregating Hacker News, TechCrunch, and The Verge RSS feeds.
+    - `research.py`: Academic research sources: arXiv official API, Semantic Scholar API, Crossref DOI/citation lookup, and Google Scholar scraped fallback (labelled `less_reliable`).
+    - `doc_generator.py`: Generates documents across 4 formats: Word (.docx via python-docx), Excel (.xlsx via openpyxl), PowerPoint (.pptx via python-pptx), and PDF (.pdf via reportlab). All verified to open and parse cleanly.
   - `tools/`:
-    - `memory_tools.py`: `search_memory` (Tier 0), `search_photos` (Tier 0), `index_folder_documents` (Tier 0), `vault_read_note` (Tier 0), `summarize_long_document` (Tier 0), `organize_downloads_dry_run` (Tier 0), `vault_write_note` (Tier 1), `vault_append_daily_log` (Tier 1), `organize_downloads_apply` (Tier 1), `undo_cleanup` (Tier 1), `modify_photo` (Tier 3 - BLOCKED), `delete_photo` (Tier 3 - BLOCKED).
-    - `automation_tools.py`: Browser and desktop automation tools.
-    - `file_tools.py` & `app_tools.py`: Core file and application tools.
-  - `automation/`:
-    - `human_takeover.py`, `limits.py`, `desktop_controller.py`.
-  - `browser/`:
-    - `browser_controller.py`, `cart_automator.py`, `youtube_summarizer.py`.
-  - `voice/`:
-    - `wake_word.py`, `stt.py`, `tts.py`, `hotkeys.py`, `voice_coordinator.py`.
-  - `safety/`:
-    - `registry.py`, `engine.py`, `guardian.py`, `approvals.py`, `action_log.py`.
+    - `integration_tools.py`: 13 Tier 0 tools, 7 Tier 1 tools, 1 Tier 2 tool, and 5 Tier 3 blocked tools registered behind the Safety Layer.
+    - `memory_tools.py`, `automation_tools.py`, `file_tools.py`, `app_tools.py`.
+  - `memory/`:
+    - `db.py`: Encrypted SQLCipher database manager storing messages, facts, rules, settings, embeddings, photo index, scheduled jobs, job logs, and financial watchlist.
+    - `doc_reader.py`, `vector_store.py`, `vault.py`, `photo_indexer.py`, `cleanup_organizer.py`, `rules.py`.
+  - `orchestrator/`:
+    - `engine.py`: Conversational loop with Jarvis personality, dynamic mode tone modifier injection, RAG memory context injection, safety wrapping, and automatic persistence.
   - `tests/`:
-    - 38 passed unit and integration tests under `services/backend/tests/` (100% pass rate).
+    - 46 passed unit and integration tests under `services/backend/tests/` (100% pass rate).
 
-## Phase 4 Verification Results
-| Requirement / Test | Requirement | Empirical Result | Status |
+## Phase 5 Verification Results
+| Requirement / Done Criterion | Specification | Empirical Evidence | Status |
 | :--- | :--- | :--- | :---: |
-| **Vector Index & Retrieval Quality** | Dense embeddings, sources cited | Returns exact filename, snippet, and cosine score for quantum & baking docs | PASS |
-| **Incremental Indexing** | Skip unmodified files based on mtime | Re-indexing unmodified folder skips 100% of unchanged files | PASS |
-| **Obsidian Vault Integration** | Markdown notes & daily logs in `vault/` | Notes written with frontmatter, read cleanly, daily logs appended with timestamps | PASS |
-| **Photo Immutability Rule** | Move, rename, edit, delete blocked | `modify_photo`, `delete_photo`, and code methods throw `PhotoModificationProhibited` | PASS |
-| **Photo Indexing & Search** | Local EXIF/tag extraction & search | Search by natural language description returns matching photo with metadata | PASS |
-| **Downloads Cleanup & Dry Run** | Categorization, duplicate check, preview | Generates dry-run plan without moving files; detects exact SHA-256 duplicates | PASS |
-| **100% Reversible Cleanup Undo** | Rollback moves using undo token | `undo_cleanup` restores 100% of moved files back to original locations | PASS |
-| **Learned Rules Auto-Extraction** | Extract rules from user corrections | Automatically extracts rules from "Never ...", "Always ...", and saves to DB | PASS |
-| **Multi-Format Document Parsing** | PDF, DOCX, PPTX, XLSX, TXT, MD | All 6 document formats parsed into text and chunked with overlap | PASS |
+| **Three Assistant Modes** | Work, Study, Chill modify tone, tools & notifications | Work (standard), Study (quiet/DND), Chill (minimal/low resource) switch cleanly and persist in DB | PASS |
+| **Scheduler Persistence & Execution** | Fires on time, survives restart, logs runs | Job created in DB, surviving reload in fresh scheduler instance, executed and logged in `job_run_logs` | PASS |
+| **Live Data API Fallback & Labelling** | Official API first, fallback to scraping with label | When API is unavailable, fallback triggers and returns `source="scraped"` for weather, mutual funds, sports | PASS |
+| **Watchlist Single-Trigger Alert** | Informational alert triggers once when condition met | AAPL alert above $180 triggers once at $185, marks `triggered=1`, ignores subsequent checks at $190 | PASS |
+| **Finance Hard Prohibitions** | No trades, no buy/sell suggestions | `place_trade` and `suggest_trade` throw `TradingProhibitedError` and are registered as Tier 3 | PASS |
+| **Email Hard Prohibitions** | Drafts allowed, sending email permanently blocked | `create_draft` creates Gmail draft; `send_email` throws `EmailSendingProhibitedError` (Tier 3) | PASS |
+| **Calendar Hard Prohibitions** | Creation allowed, delete and edit blocked | `create_event` creates event; `delete_calendar_event` and `edit_calendar_event` throw `CalendarModificationProhibitedError` | PASS |
+| **Document Generation & Parsing** | Word, Excel, PowerPoint, PDF created & open correctly | All 4 formats generated and verified to open cleanly with `python-docx`, `openpyxl`, `python-pptx`, `pypdf` | PASS |
+| **Tech News Briefing** | Hacker News, TechCrunch, The Verge RSS feeds | `tech_news.get_briefing` parses feeds and formats Markdown briefing with article titles and links | PASS |
+| **Academic Research Sources** | arXiv, Semantic Scholar, Crossref, Google Scholar | Unified search across arXiv, Semantic Scholar, Crossref citations, and Google Scholar scraped fallback | PASS |
+| **Dashboard & Mini Overlay** | Live tasks, scheduled jobs, watchlist, and kill switch | `DashboardPanel.tsx` (4 tabs) and floating `MiniOverlay.tsx` with one-click mode cycle and HALT switch | PASS |
 
 ## Dependencies added
-- `python-docx` (1.2.0): Word document parsing.
-- `python-pptx` (1.0.2): PowerPoint presentation parsing.
-- `sentence-transformers` (6.2.0): Dense local vector embeddings (`all-MiniLM-L6-v2`).
+- `beautifulsoup4` (4.15.0): HTML parsing and live data web scraping fallback.
+- `feedparser` (6.0.14): RSS feed parser for tech news briefing (Hacker News, TechCrunch, The Verge).
 
 ## Known issues
-- None. All Phase 4 done criteria met.
+- None. All Phase 5 done criteria met.
 
 ## Open questions for the user
-- None for Phase 4.
+- None for Phase 5.
 
 ## Next
-Phase 5: Modes, Scheduler, and Integrations. Three assistant operating modes (Work, Study, Chill), background scheduler for recurring tasks and reminders, Gmail/Google Calendar integrations, and financial watchlist tracking.
+Phase 6: Remote Control via Telegram. Bot whitelisted to owner user ID only, push notifications for approvals, remote chat, status queries, remote kill switch, and safe remote file transfer.

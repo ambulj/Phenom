@@ -5,10 +5,10 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 ## 1. Risk tiers
 | Tier | Name | Behaviour | Examples |
 | --- | --- | --- | --- |
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run |
-| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events |
+| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf) |
 | 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
-| 3 | Blocked or system-level | Blocked by default; allowed only if listed in section 6; needs a typed confirmation on the desktop; cannot be approved remotely | modify/delete photos, payments, checkout completion, OTP entry, permanent delete, changing system settings, sending email, touching credentials, installing software |
+| 3 | Blocked or system-level | Blocked by default; allowed only if listed in section 6; needs a typed confirmation on the desktop; cannot be approved remotely | modify/delete photos, payments, checkout completion, OTP entry, permanent delete, changing system settings, sending email, editing or deleting calendar events, financial trading/orders, financial advice/recommendations, touching credentials, installing software |
 
 Unknown tools or unclassified calls are Tier 3.
 
@@ -37,7 +37,7 @@ SQLite table `action_log`, one row per attempted action:
 
 ## 6. Tier 3 allowlist
 Empty by default. Anything added needs the user's written approval and a line here: tool, reason, date.
-Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `checkout_pay`, `enter_payment_info`.
+Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `checkout_pay`, `enter_payment_info`, `send_email`, `calendar_delete_event`, `calendar_edit_event`, `place_trade`, `suggest_trade`.
 
 ## 7. Privacy labels and cloud escalation
 - Labels: `private` (default) or `shareable`.
@@ -49,12 +49,13 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 - Every escalation is logged with what was sent (redacted) and the reason.
 
 ## 8. Hard prohibitions (enforced in code)
-- No trades, no buy or sell suggestions, no financial advice phrasing.
+- No trades, no buy or sell suggestions, no financial advice phrasing. Informational market quotes and single-trigger price alerts only.
+- No sending email. Phenom may only save email drafts for user review.
+- No calendar deletion or editing of existing events. Creating new events is permitted under Tier 2.
 - No photo move, rename, edit or delete. Photos are indexed and searched only.
 - No permanent delete. Delete means Recycle Bin (`send2trash`).
 - No payment, checkout completion, entering card data, or OTP submission. Fill-the-cart stops unconditionally before checkout.
 - No typing or storing passwords.
-- No sending email.
 - No audio stored on disk; no audio sent to the cloud. Audio is processed strictly in-memory (RAM) and discarded immediately. Temporary YouTube audio scratch files are guaranteed deleted after transcription.
 - Screenshots are processed in RAM only, analyzed locally, and never sent to the cloud or saved without explicit user instruction.
 - Spoken "yes" never approves Tier 1 or Tier 2 actions.
@@ -71,6 +72,12 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 - [x] Downloads cleanup is 100% reversible via undo token
 - [x] Vector embeddings and memory stored encrypted at rest in SQLCipher
 - [x] Human takeover pauses automation within 1 second and never resumes without explicit answer
+- [x] Sending email is blocked in code and classified Tier 3
+- [x] Calendar event deletion and editing are blocked in code and classified Tier 3
+- [x] Placing trades and offering buy/sell suggestions are blocked in code and classified Tier 3
+- [x] Financial watchlist alerts trigger once without spamming
+- [x] Live data pipeline falls back to scraping when API fails and is explicitly labelled
+- [x] Generated documents (.docx, .xlsx, .pptx, .pdf) open and parse correctly
 - [x] Nothing private reaches the cloud without a previewed approval
 - [x] Log contains no secrets, credentials, or private content
 - [x] Every prohibition in section 8 has a test

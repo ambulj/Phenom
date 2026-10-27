@@ -105,6 +105,41 @@ class EncryptedDatabaseManager:
                 metadata_json TEXT NOT NULL
             );
             """)
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS scheduled_jobs (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                schedule_type TEXT NOT NULL,
+                schedule_expr TEXT NOT NULL,
+                action_type TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                enabled INTEGER DEFAULT 1,
+                next_run_at TEXT,
+                created_at TEXT NOT NULL
+            );
+            """)
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS job_run_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                job_id TEXT NOT NULL,
+                run_at TEXT NOT NULL,
+                status TEXT NOT NULL,
+                duration_ms REAL,
+                result_summary TEXT,
+                error TEXT
+            );
+            """)
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS financial_watchlist (
+                symbol TEXT PRIMARY KEY,
+                asset_type TEXT NOT NULL,
+                target_price REAL,
+                condition TEXT,
+                triggered INTEGER DEFAULT 0,
+                last_price REAL,
+                updated_at TEXT NOT NULL
+            );
+            """)
         conn.close()
 
     def add_message(self, msg_id: str, role: str, content: str, model: Optional[str] = None, tokens: Optional[int] = None):

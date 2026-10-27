@@ -40,33 +40,45 @@ def test_health_endpoint():
 
 def test_websocket_e2e_flow():
     client = TestClient(app)
-    with client.websocket_connect("/ws") as ws:
-        # 1. Expect initial rules and state messages
-        init_rules = ws.receive_json()
-        assert init_rules["type"] == "rules.updated"
-        
-        init_state = ws.receive_json()
-        assert init_state["type"] == "state.change"
-        assert init_state["payload"]["state"] in ("idle", "halted")
+    try:
+        with client.websocket_connect("/ws") as ws:
+            # 1. Expect initial rules and state messages (and mode, scheduler, watchlist)
+            init_rules = ws.receive_json()
+            assert init_rules["type"] == "rules.updated"
+            
+            init_state = ws.receive_json()
+            assert init_state["type"] == "state.change"
+            assert init_state["payload"]["state"] in ("idle", "halted")
 
-        # 2. Test Killswitch Trigger via WebSocket
-        ws.send_json({
-            "id": "ks-1",
-            "type": "killswitch.trigger",
-            "payload": {}
-        })
-        ks_state = ws.receive_json()
-        assert ks_state["type"] == "state.change"
-        assert ks_state["payload"]["state"] == "halted"
-        assert guardian.is_halted is True
+            init_mode = ws.receive_json()
+            assert init_mode["type"] == "mode.changed"
 
-        # 3. Test Killswitch Resume via WebSocket
-        ws.send_json({
-            "id": "ks-2",
-            "type": "killswitch.resume",
-            "payload": {}
-        })
-        resume_state = ws.receive_json()
-        assert resume_state["type"] == "state.change"
-        assert resume_state["payload"]["state"] == "idle"
-        assert guardian.is_halted is False
+            init_sched = ws.receive_json()
+            assert init_sched["type"] == "scheduler.list_result"
+
+            init_watch = ws.receive_json()
+            assert init_watch["type"] == "watchlist.list_result"
+
+            # 2. Test Killswitch Trigger via WebSocket
+            ws.send_json({
+                "id": "ks-1",
+                "type": "killswitch.trigger",
+                "payload": {}
+            })
+            ks_state = ws.receive_json()
+            assert ks_state["type"] == "state.change"
+            assert ks_state["payload"]["state"] == "halted"
+            assert guardian.is_halted is True
+
+            # 3. Test Killswitch Resume via WebSocket
+            ws.send_json({
+                "id": "ks-2",
+                "type": "killswitch.resume",
+                "payload": {}
+            })
+            resume_state = ws.receive_json()
+            assert resume_state["type"] == "state.change"
+            assert resume_state["payload"]["state"] == "idle"
+            assert guardian.is_halted is False
+    finally:
+        guardian.resume()

@@ -22,11 +22,13 @@ from services.backend.safety.guardian import guardian
 from services.backend.safety.registry import registry
 from services.backend.memory.db import encrypted_db
 from services.backend.memory.rules import learned_rules
+from services.backend.modes.mode_manager import mode_manager
 
 OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
 SYSTEM_PROMPT_TEMPLATE = """You are Phenom, a personal Windows 11 desktop assistant.
+{mode_prompt}
 Personality: Witty, playful, Jarvis-style sidekick. Confident and warm, never smug.
 Humor is light and short; at most one brief quip per reply, and none during errors, warnings, or destructive actions.
 Clarity first: deliver the answer or action, then the flourish.
@@ -34,9 +36,10 @@ Clarity first: deliver the answer or action, then the flourish.
 Permanent Rules:
 1. You act only through tools. Every tool execution is subject to safety validation.
 2. Delete means send to Recycle Bin. Never permanent delete.
-3. Finance is informational only: no trading, no buy/sell advice.
-4. If a request looks risky or irreversible, politely warn the user once, explain the risk, offer a safer option, and proceed with their choice.
-5. Never pretend to have executed a command without receiving a tool result.
+3. Finance is informational only: no trading, no buy/sell advice. Price alerts only for a watchlist.
+4. Email: drafts only, never send. Calendar: create events only, never edit or delete.
+5. If a request looks risky or irreversible, politely warn the user once, explain the risk, offer a safer option, and proceed with their choice.
+6. Never pretend to have executed a command without receiving a tool result.
 
 Active Learned Rules:
 {learned_rules}
@@ -60,7 +63,12 @@ def build_system_prompt() -> str:
     tools_str = "\n".join(tool_lines)
 
     rules_str = learned_rules.format_rules_for_prompt() or "(None yet)"
-    return SYSTEM_PROMPT_TEMPLATE.format(learned_rules=rules_str, tool_descriptions=tools_str)
+    mode_prompt = mode_manager.get_tone_prompt()
+    return SYSTEM_PROMPT_TEMPLATE.format(
+        mode_prompt=mode_prompt,
+        learned_rules=rules_str,
+        tool_descriptions=tools_str
+    )
 
 class Orchestrator:
     def __init__(self):

@@ -10,7 +10,12 @@ import {
   SettingsRegular,
   MicRegular,
   MicOffRegular,
-  EyeRegular
+  EyeRegular,
+  ClockRegular,
+  BriefcaseRegular,
+  HatGraduationRegular,
+  WeatherMoonRegular,
+  WindowAppsRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
 
@@ -23,6 +28,10 @@ interface HeaderBarProps {
   isConnected: boolean;
   isMuted?: boolean;
   onToggleMute?: () => void;
+  currentMode?: string;
+  onCycleMode?: () => void;
+  showMiniOverlay?: boolean;
+  onToggleMiniOverlay?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -33,9 +42,39 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onResume,
   isConnected,
   isMuted = false,
-  onToggleMute
+  onToggleMute,
+  currentMode = 'work',
+  onCycleMode,
+  showMiniOverlay = false,
+  onToggleMiniOverlay
 }) => {
   const isHalted = orbState === 'halted';
+
+  const getModeColor = (): "brand" | "danger" | "important" | "informative" | "severe" | "subtle" | "success" | "warning" => {
+    switch (currentMode.toLowerCase()) {
+      case 'work':
+        return 'informative';
+      case 'study':
+        return 'important';
+      case 'chill':
+        return 'warning';
+      default:
+        return 'brand';
+    }
+  };
+
+  const getModeIcon = () => {
+    switch (currentMode.toLowerCase()) {
+      case 'work':
+        return <BriefcaseRegular />;
+      case 'study':
+        return <HatGraduationRegular />;
+      case 'chill':
+        return <WeatherMoonRegular />;
+      default:
+        return <BriefcaseRegular />;
+    }
+  };
 
   return (
     <header
@@ -71,9 +110,29 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             LISTENING
           </Badge>
         )}
+        {/* Mode Switcher Button */}
+        <Badge
+          appearance="filled"
+          color={getModeColor()}
+          icon={getModeIcon()}
+          size="medium"
+          style={{ cursor: 'pointer', textTransform: 'uppercase', fontWeight: 600, fontSize: 11 }}
+          onClick={onCycleMode}
+          title="Click to switch assistant mode (Work / Study / Chill)"
+        >
+          {currentMode} MODE
+        </Badge>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Button
+          appearance={activePanel === 'dashboard' ? 'primary' : 'subtle'}
+          icon={<ClockRegular />}
+          onClick={() => onSelectPanel(activePanel === 'dashboard' ? null : 'dashboard')}
+          title="Open Dashboard & Scheduler"
+        >
+          Dashboard
+        </Button>
         <Button
           appearance={activePanel === 'history' ? 'primary' : 'subtle'}
           icon={<HistoryRegular />}
@@ -115,6 +174,14 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           onClick={() => onSelectPanel(activePanel === 'live_view' ? null : 'live_view')}
         >
           Live View
+        </Button>
+        <Button
+          appearance={showMiniOverlay ? 'primary' : 'subtle'}
+          icon={<WindowAppsRegular />}
+          onClick={onToggleMiniOverlay}
+          title="Toggle Mini Overlay widget"
+        >
+          Overlay
         </Button>
         <Button
           appearance="subtle"

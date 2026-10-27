@@ -34,6 +34,11 @@ import services.backend.tools.file_tools
 import services.backend.tools.app_tools
 import services.backend.tools.automation_tools
 import services.backend.tools.memory_tools
+import services.backend.tools.integration_tools
+from services.backend.modes.mode_manager import mode_manager
+from services.backend.scheduler.cron import background_scheduler
+from services.backend.integrations.finance import financial_engine
+from services.backend.integrations.google_workspace import google_workspace
 from services.backend.browser.browser_controller import browser_controller
 from services.backend.automation.human_takeover import takeover_manager
 
@@ -83,7 +88,19 @@ async def lifespan(app: FastAPI):
         }))
     takeover_manager.set_takeover_callback(on_takeover)
 
+    # Setup background scheduler reminders callback
+    def on_scheduler_reminder(evt: Dict[str, Any]):
+        asyncio.create_task(broadcast_message({
+            "id": f"rem-{os.urandom(2).hex()}",
+            "type": "scheduler.reminder",
+            "ts": "",
+            "payload": evt
+        }))
+    background_scheduler.add_listener(on_scheduler_reminder)
+    background_scheduler.start()
+
     yield
+    background_scheduler.stop()
     wake_detector.stop()
     await browser_controller.close()
 
@@ -182,6 +199,30 @@ async def websocket_endpoint(websocket: WebSocket):
             "type": "state.change",
             "ts": "",
             "payload": {"state": "halted" if guardian.is_halted else "idle"}
+        })
+
+        # Send initial mode
+        await websocket.send_json({
+            "id": "init-mode",
+            "type": "mode.changed",
+            "ts": "",
+            "payload": mode_manager.get_mode_profile()
+        })
+
+        # Send initial scheduler jobs
+        await websocket.send_json({
+            "id": "init-scheduler",
+            "type": "scheduler.list_result",
+            "ts": "",
+            "payload": {"jobs": background_scheduler.list_jobs()}
+        })
+
+        # Send initial financial watchlist
+        await websocket.send_json({
+            "id": "init-watchlist",
+            "type": "watchlist.list_result",
+            "ts": "",
+            "payload": {"items": financial_engine.list_watchlist()}
         })
 
         while True:
@@ -322,6 +363,95 @@ async def websocket_endpoint(websocket: WebSocket):
                         "payload": {"rules": [r.model_dump() for r in all_rules]}
                     })
 
+            elif mtype == "mode.set":
+                target_mode = payload.get("mode", "work")
+                profile = mode_manager.set_mode(target_mode)
+                await broadcast_message({
+                    "id": msg_id,
+                    "type": "mode.changed",
+                    "ts": "",
+                    "payload": profile
+                })
+
+            elif mtype == "mode.cycle":
+                profile = mode_manager.cycle_mode()
+                await broadcast_message({
+                    "id": msg_id,
+                    "type": "mode.changed",
+                    "ts": "",
+                    "payload": profile
+                })
+
+            elif mtype == "scheduler.list":
+                jobs = background_scheduler.list_jobs()
+                await websocket.send_json({
+                    "id": msg_id,
+                    "type": "scheduler.list_result",
+                    "ts": "",
+                    "payload": {"jobs": jobs}
+                })
+
+            elif mtype == "scheduler.add_reminder":
+                title = payload.get("title", "Reminder")
+                delay = payload.get("delay_seconds")
+                due_at = payload.get("due_at")
+                res = background_scheduler.add_reminder(title, delay_seconds=delay, due_at=due_at)
+                jobs = background_scheduler.list_jobs()
+                await broadcast_message({
+                    "id": msg_id,
+                    "type": "scheduler.list_result",
+                    "ts": "",
+                    "payload": {"jobs": jobs, "new_job": res}
+                })
+
+            elif mtype == "scheduler.cancel":
+                job_id = payload.get("job_id")
+                if job_id:
+                    background_scheduler.cancel_job(job_id)
+                jobs = background_scheduler.list_jobs()
+                await broadcast_message({
+                    "id": msg_id,
+                    "type": "scheduler.list_result",
+                    "ts": "",
+                    "payload": {"jobs": jobs}
+                })
+
+            elif mtype == "watchlist.list":
+                items = financial_engine.list_watchlist()
+                await websocket.send_json({
+                    "id": msg_id,
+                    "type": "watchlist.list_result",
+                    "ts": "",
+                    "payload": {"items": items}
+                })
+
+            elif mtype == "watchlist.add":
+                symbol = payload.get("symbol")
+                target = payload.get("target_price", 0.0)
+                cond = payload.get("condition", "above")
+                atype = payload.get("asset_type", "stock")
+                if symbol:
+                    financial_engine.add_to_watchlist(symbol, target, cond, atype)
+                items = financial_engine.list_watchlist()
+                await broadcast_message({
+                    "id": msg_id,
+                    "type": "watchlist.list_result",
+                    "ts": "",
+                    "payload": {"items": items}
+                })
+
+            elif mtype == "watchlist.remove":
+                symbol = payload.get("symbol")
+                if symbol:
+                    financial_engine.remove_from_watchlist(symbol)
+                items = financial_engine.list_watchlist()
+                await broadcast_message({
+                    "id": msg_id,
+                    "type": "watchlist.list_result",
+                    "ts": "",
+                    "payload": {"items": items}
+                })
+
     except WebSocketDisconnect:
         pass
     finally:
@@ -345,3 +475,19 @@ async def get_rules():
 @app.get("/api/approvals")
 async def get_approvals():
     return approvals.list_all()
+
+@app.get("/api/mode")
+async def get_current_mode():
+    return mode_manager.get_mode_profile()
+
+@app.get("/api/scheduler/jobs")
+async def get_scheduler_jobs():
+    return background_scheduler.list_jobs()
+
+@app.get("/api/scheduler/logs")
+async def get_scheduler_logs(limit: int = 50):
+    return background_scheduler.get_run_logs(limit=limit)
+
+@app.get("/api/watchlist")
+async def get_financial_watchlist_api():
+    return financial_engine.list_watchlist()

@@ -9,6 +9,8 @@ import { LearnedRulesPanel } from './components/panels/LearnedRulesPanel';
 import { ApprovalsPanel } from './components/panels/ApprovalsPanel';
 import { SettingsPanel } from './components/panels/SettingsPanel';
 import { LiveViewPanel } from './components/panels/LiveViewPanel';
+import { DashboardPanel } from './components/panels/DashboardPanel';
+import { MiniOverlay } from './components/MiniOverlay';
 import { OrbState, ConfirmRequestPayload, LearnedRuleItem } from './types/protocol';
 
 export const App: React.FC = () => {
@@ -35,6 +37,12 @@ export const App: React.FC = () => {
   // Automation & Screen State (Phase 3)
   const [liveFrame, setLiveFrame] = useState<string | null>(null);
   const [takeoverPrompt, setTakeoverPrompt] = useState<string | null>(null);
+
+  // Modes, Scheduler, & Watchlist State (Phase 5)
+  const [currentMode, setCurrentMode] = useState<string>('work');
+  const [scheduledJobs, setScheduledJobs] = useState<any[]>([]);
+  const [watchlistItems, setWatchlistItems] = useState<any[]>([]);
+  const [showMiniOverlay, setShowMiniOverlay] = useState<boolean>(true);
 
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -91,6 +99,17 @@ export const App: React.FC = () => {
           } else if (mtype === 'automation.takeover_prompt') {
             setTakeoverPrompt(payload.reason || 'User interaction detected during automation.');
             setActivePanel('live_view'); // Automatically surface the Live View with prompt
+          } else if (mtype === 'mode.changed') {
+            setCurrentMode(payload.mode || 'work');
+          } else if (mtype === 'scheduler.list_result') {
+            setScheduledJobs(payload.jobs || []);
+          } else if (mtype === 'scheduler.reminder') {
+            setHistoryMessages((prev) => [
+              ...prev,
+              { id: `rem-${Date.now()}`, role: 'assistant', content: `⏰ **Scheduled Reminder:** ${payload.title}` }
+            ]);
+          } else if (mtype === 'watchlist.list_result') {
+            setWatchlistItems(payload.items || []);
           }
         } catch (e) {
           console.error('Error handling WebSocket message:', e);
@@ -266,6 +285,30 @@ export const App: React.FC = () => {
     );
   };
 
+  // Modes & Scheduler Handlers (Phase 5)
+  const handleCycleMode = () => {
+    if (!wsRef.current) return;
+    wsRef.current.send(
+      JSON.stringify({
+        id: `mode-cycle-${Date.now()}`,
+        type: 'mode.cycle',
+        ts: new Date().toISOString(),
+        payload: {}
+      })
+    );
+  };
+
+  const handleSendWs = (msg: any) => {
+    if (!wsRef.current) return;
+    wsRef.current.send(
+      JSON.stringify({
+        id: `ws-${Date.now()}`,
+        ts: new Date().toISOString(),
+        ...msg
+      })
+    );
+  };
+
   const isPanelOpen = activePanel !== null;
 
   return (
@@ -279,6 +322,10 @@ export const App: React.FC = () => {
         isConnected={isConnected}
         isMuted={isMuted}
         onToggleMute={handleToggleMute}
+        currentMode={currentMode}
+        onCycleMode={handleCycleMode}
+        showMiniOverlay={showMiniOverlay}
+        onToggleMiniOverlay={() => setShowMiniOverlay((prev) => !prev)}
       />
 
       {/* 3D Three.js Orb */}
@@ -300,6 +347,20 @@ export const App: React.FC = () => {
         onRespond={handleConfirmResponse}
       />
 
+      {/* Mini Overlay Widget (Phase 5) */}
+      {showMiniOverlay && (
+        <MiniOverlay
+          orbState={orbState}
+          currentMode={currentMode}
+          nextScheduledItem={scheduledJobs.length > 0 ? scheduledJobs[0] : null}
+          currentTaskName={isStreaming ? 'Replying' : orbState === 'thinking' ? 'Reasoning' : undefined}
+          onCycleMode={handleCycleMode}
+          onTriggerKillswitch={handleTriggerKillswitch}
+          onResume={handleResume}
+          onClose={() => setShowMiniOverlay(false)}
+        />
+      )}
+
       {/* Slide-In Side Panel Drawer */}
       <div
         style={{
@@ -318,6 +379,14 @@ export const App: React.FC = () => {
           zIndex: 25
         }}
       >
+        {activePanel === 'dashboard' && (
+          <DashboardPanel
+            onClose={() => setActivePanel(null)}
+            onSendWs={handleSendWs}
+            scheduledJobs={scheduledJobs}
+            watchlistItems={watchlistItems}
+          />
+        )}
         {activePanel === 'history' && (
           <HistoryPanel onClose={() => setActivePanel(null)} messages={historyMessages} />
         )}
