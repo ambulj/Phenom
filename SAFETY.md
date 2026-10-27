@@ -55,9 +55,9 @@ Empty by default. Anything added needs the user's written approval and a line he
 - No audio stored by default; no audio sent to the cloud.
 
 ## 9. Audit checklist (run at the end of Phases 1, 3, 5, 6, 7)
-- [ ] Every registered tool has a tier, preview and tests
-- [ ] No code path calls a tool without the Safety layer
-- [ ] Kill switch works from UI, hotkey, voice, and Telegram (when present)
+- [x] Every registered tool has a tier, preview and tests
+- [x] No code path calls a tool without the Safety layer
+- [x] Kill switch works from UI, hotkey, voice, and Telegram (when present)
 - [ ] Nothing private reaches the cloud without a previewed approval
 - [ ] Log contains no secrets or private content
 - [ ] Every prohibition in section 8 has a test

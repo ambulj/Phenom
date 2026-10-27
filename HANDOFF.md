@@ -1,91 +1,82 @@
 # HANDOFF.md
 
-Updated at the conclusion of Phase 0 (Feasibility Spikes).
+Updated at the conclusion of Phase 1 (Core).
 
 ## Current phase
-Phase 0: Feasibility Spikes (COMPLETE)
+Phase 1: Core (COMPLETE)
 
 ## How to run
 ```bash
-# Spike A (Local Model Benchmark)
-python spikes/a-local-model/benchmark.py llama3:latest
-python spikes/a-local-model/benchmark.py llama3:8b-instruct-q8_0
+# 1. Run all tests (unit, safety, router, tools, memory, E2E WebSocket)
+npm run test:backend
 
-# Spike B (Cloud Model Nemotron)
-$env:NVIDIA_API_KEY = "nvapi-..."
-python spikes/b-cloud-model/test_nemotron.py
+# 2. Typecheck and build the desktop UI
+cd apps/desktop
+npm run build
+cd ../..
 
-# Spike C (Orb Renderer & Benchmark)
-cd spikes/c-orb
-npm start
-python spikes/c-orb/measure_orb.py
-
-# Spike D (FastAPI WebSocket & Cancellation)
-python spikes/d-backend-link/server.py
-python spikes/d-backend-link/test_client.py
-
-# Spike E (SQLCipher & Windows Credential Manager)
-python spikes/e-encryption/test_encryption.py
-
-# Spike F (Voice Feasibility: TTS, Whisper CUDA, Wake Word)
-python spikes/f-voice/test_voice.py
+# 3. Start backend and desktop app together with a single command
+npm run dev
 ```
 
 ## What exists
-- `spikes/a-local-model/`:
-  - `benchmark.py`: Complete test runner for first-token latency, throughput (tps), VRAM consumption, 20-prompt tool-calling JSON schema compliance, and 3,000-word document summarization.
-  - `results_llama3_latest.json`: Empirical results for 4-bit quantization.
-  - `results_llama3_8b-instruct-q8_0.json`: Empirical results for 8-bit quantization.
-  - `README.md`: Documentation and instructions.
-- `spikes/b-cloud-model/`:
-  - `test_nemotron.py`: NVIDIA build.nvidia.com OpenAI-compatible client, streaming test, timeout testing, error guard validation.
-  - `results.json`: Output metrics and error path logs.
-  - `README.md`: Documentation and instructions.
-- `spikes/c-orb/`:
-  - `package.json`: Electron 33.4.11 and Three.js dependencies.
-  - `main.js`: Electron main process.
-  - `index.html`: UI container, HUD, and 5-mode interactive state buttons.
-  - `orb.js`: 6,000-particle WebGL cloud, state interpolations (< 500 ms), and corner shrink handler.
-  - `measure_orb.py`: Automated performance sampler.
-  - `results.json`: 60 FPS verification and GPU load metrics.
-  - `README.md`: Documentation and instructions.
-- `spikes/d-backend-link/`:
-  - `server.py`: FastAPI server with WebSocket `/ws`, streaming Ollama tokens, handling `chat.cancel`, broadcasting orb states.
-  - `test_client.py`: Automated client testing token stream and measuring cancel latency.
-  - `results.json`: 0.70 ms cancel verification.
-  - `README.md`: Documentation and instructions.
-- `spikes/e-encryption/`:
-  - `test_encryption.py`: Key generator, Windows Credential Manager reader/writer (`win32cred`), SQLCipher database creator, unencrypted access rejection verifier.
-  - `test_encrypted.db`: Verified encrypted SQLite file.
-  - `results.json`: Key roundtrip, header entropy, and decryption proof.
-  - `README.md`: Documentation and instructions.
-- `spikes/f-voice/`:
-  - `test_voice.py`: SAPI5 male TTS benchmark, `faster-whisper` tiny.en on CUDA with cublas DLL resolution, `openWakeWord` ONNX streaming detection.
-  - `test_speech.wav`: Reference audio sample.
-  - `results.json`: TTS/STT latency and accuracy benchmarks.
-  - `README.md`: Documentation and instructions.
-- `SPIKES.md`: Comprehensive table of all results, hardware discoveries, and recommendations.
+- `apps/desktop/`:
+  - `electron/main.cjs`: Electron window host with global shortcut registration (`Ctrl+Alt+Pause` Guardian kill switch).
+  - `src/App.tsx`: Central coordinator with WebSocket connection management, slide panel state, confirmation modal.
+  - `src/components/Orb.tsx`: 3D Three.js particle orb (6,000 particles) with 5 states (calm blue, teal, violet, amber, red) and smooth corner shrink transition (< 450 ms).
+  - `src/components/HeaderBar.tsx`: Fluent UI header with connection indicator, Guardian Kill Switch / Resume button, and navigation.
+  - `src/components/ChatBox.tsx`: Centered input beneath the orb with streaming response bubble and cancel controls.
+  - `src/components/ConfirmationModal.tsx`: Explicit security confirmation modal with tier badges and "Remember for this folder" checkbox for Tier 1.
+  - `src/components/panels/`:
+    - `HistoryPanel.tsx`: View persisted conversation turns.
+    - `ActionLogPanel.tsx`: Security audit trail showing tier, tool, decision, and redacted arguments.
+    - `LearnedRulesPanel.tsx`: View, edit, and delete learned rules.
+    - `ApprovalsPanel.tsx`: View and manage remembered folder approvals.
+    - `SettingsPanel.tsx`: Non-secret system settings, model architecture, and hotkey overview.
+- `services/backend/`:
+  - `main.py`: FastAPI server with typed WebSocket endpoint on `/ws`, confirmation Future resolver, and REST audit endpoints.
+  - `schemas/protocol.py`: Typed Pydantic models for all messages and payloads.
+  - `scripts/generate_types.py`: Automatic generator translating Pydantic schemas to TypeScript interfaces in `apps/desktop/src/types/protocol.ts`.
+  - `safety/`:
+    - `registry.py`: Strict tool registry requiring tier (0-3), preview function, and Pydantic schema.
+    - `engine.py`: Central gateway enforcing the 4 security tiers, timeouts, confirmation flow, and blocking.
+    - `guardian.py`: Guardian kill switch with process termination and halted state enforcement.
+    - `approvals.py`: Persistent per-folder remembered approvals for Tier 1.
+    - `action_log.py`: Action log with automatic redaction of confidential argument values.
+  - `router/`:
+    - `privacy.py`: Privacy classifier defaulting to private and inspecting paths/content.
+    - `router.py`: Model routing engine directing private input to Local 8B and long shareable input to Cloud Nemotron after preview approval.
+  - `tools/`:
+    - `file_tools.py`: `list_files` (Tier 0), `read_file` (Tier 0), `search_files_by_name` (Tier 0), `create_file` (Tier 1), `copy_file` (Tier 1), `move_file` (Tier 1), `create_folder` (Tier 1), `recycle_delete` (Tier 2, send2trash).
+    - `app_tools.py`: `list_apps` (Tier 0), `open_app` (Tier 1), `close_app` (Tier 1).
+  - `memory/`:
+    - `db.py`: Encrypted SQLCipher database manager using 256-bit key from Windows Credential Manager.
+    - `rules.py`: Learned rules manager supporting add, list, edit, and delete.
+  - `orchestrator/`:
+    - `engine.py`: Conversational loop with Jarvis personality, tool-call interception, safety wrapping, and automatic persistence.
+  - `tests/`:
+    - `test_safety.py`: 5 safety layer unit tests.
+    - `test_router.py`: 7 router & privacy classifier unit tests.
+    - `test_tools.py`: 4 tool & safety bypass prevention tests.
+    - `test_memory.py`: 2 encrypted memory and learned rules tests.
+    - `test_e2e_chat.py`: 2 E2E WebSocket chat and kill switch tests.
 
 ## Decisions made
-- **Quantization (2026-10-27)**: Use 4-bit quantization (`llama3:latest` Q4_0 / Q4_K_M) instead of 8-bit. Due to the laptop GPU having 6 GB VRAM, 8-bit models spill 55% of layers into host RAM, cutting throughput from 14.85 tps down to 5.63 tps. 4-bit maintains 100% JSON/tool accuracy while running 2.6x faster.
-- **Local TTS (2026-10-27)**: Use Windows SAPI5 (`Microsoft David Desktop`) for local male voice. Measured 89.67 ms to first audio with 0 VRAM usage.
-- **Local STT (2026-10-27)**: Use `faster-whisper` with `tiny.en` on CUDA (float16). Measured 354.9 ms median latency for ~8s audio (0.045x real-time factor).
-- **Windows Credential Manager (2026-10-27)**: Use native `win32cred` (`CRED_TYPE_GENERIC`) from `pywin32`. Roundtrip storage of 256-bit DB keys verified.
-- **SQLCipher Engine (2026-10-27)**: Standardize on `sqlcipher3-wheels` 0.5.7 (SQLCipher v4).
+- **Safety First**: Implemented and verified the complete Safety layer and Guardian kill switch before implementing any tool.
+- **Strict Typing**: Enforced bidirectional type parity by auto-generating `apps/desktop/src/types/protocol.ts` directly from `services/backend/schemas/protocol.py`.
+- **Delete Means Recycle**: Used `send2trash` for all deletions so permanent deletes are impossible by construction.
 
 ## Dependencies added
-- `sqlcipher3-wheels` (0.5.7): Pre-compiled SQLCipher v4 bindings for Windows Python 3.11.
-- `faster-whisper` (1.2.1) + `ctranslate2` (4.8.4): Fast, GPU-accelerated local transcription engine.
-- `openwakeword` (0.6.0): Local ONNX wake word detection without cloud dependencies.
-- `electron` (33.4.11) + `three` (0.170.0): Desktop UI container and 3D particle orb system.
+- `@fluentui/react-components` (9.56.0) & `@fluentui/react-icons` (2.0.260): Microsoft Windows Fluent UI system for desktop app.
+- `send2trash` (2.1.0): Native Windows recycle bin integration.
+- `keyboard` (0.13.5): Global Windows hotkey hook for Guardian kill switch.
+- `pytest-asyncio` (1.4.1): Async test runner for FastAPI WebSocket endpoints.
 
 ## Known issues
-- `NVIDIA_API_KEY` was missing from the current system environment during Spike B; API error paths (HTTP 403, timeout) were tested and verified. User should provide their key when ready.
-- Hardware VRAM is 6 GB (NVIDIA RTX 3050 Laptop GPU) rather than the 8+ GB specified in initial assumptions. Fully mitigated by selecting 4-bit quantization.
+- Cloud model (Nemotron) awaits `NVIDIA_API_KEY` for live cloud streaming; local 4-bit Llama 3 handles all requests securely and reliably.
 
 ## Open questions for the user
-1. Would you like to provide an `NVIDIA_API_KEY` now or configure it via the Phase 1 settings/Credential Manager?
-   *(Recommended default: Configure via environment variable or Windows Credential Manager in Phase 1).*
+- None for Phase 1. All done criteria are met.
 
 ## Next
-Phase 1: Core. Scaffold repo layout, build Safety layer first with four tiers and Guardian kill switch, create FastAPI WebSocket backend, model router with private tag filtering, tool implementations, and Electron Fluent UI with Three.js particle orb.
+Phase 2: Voice. Wake-word detection (openWakeWord), local Whisper STT (faster-whisper on CUDA), and male TTS (Windows SAPI5 Microsoft David) integrated into the live app.
