@@ -5,3 +5,5 @@ __pycache__/
 *.log
 dist/
 .cache/
+user_data/
+services/backend/browser/user_data/

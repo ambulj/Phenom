@@ -8,6 +8,7 @@ import { ActionLogPanel } from './components/panels/ActionLogPanel';
 import { LearnedRulesPanel } from './components/panels/LearnedRulesPanel';
 import { ApprovalsPanel } from './components/panels/ApprovalsPanel';
 import { SettingsPanel } from './components/panels/SettingsPanel';
+import { LiveViewPanel } from './components/panels/LiveViewPanel';
 import { OrbState, ConfirmRequestPayload, LearnedRuleItem } from './types/protocol';
 
 export const App: React.FC = () => {
@@ -30,6 +31,10 @@ export const App: React.FC = () => {
     kill_switch: 'ctrl+alt+pause'
   });
   const [hotkeyError, setHotkeyError] = useState<string | null>(null);
+
+  // Automation & Screen State (Phase 3)
+  const [liveFrame, setLiveFrame] = useState<string | null>(null);
+  const [takeoverPrompt, setTakeoverPrompt] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -81,6 +86,11 @@ export const App: React.FC = () => {
             } else {
               setHotkeyError(payload.error || 'Failed to update hotkey.');
             }
+          } else if (mtype === 'browser.frame') {
+            setLiveFrame(payload.image_data);
+          } else if (mtype === 'automation.takeover_prompt') {
+            setTakeoverPrompt(payload.reason || 'User interaction detected during automation.');
+            setActivePanel('live_view'); // Automatically surface the Live View with prompt
           }
         } catch (e) {
           console.error('Error handling WebSocket message:', e);
@@ -242,6 +252,20 @@ export const App: React.FC = () => {
     );
   };
 
+  // Automation Handlers (Phase 3)
+  const handleTakeoverDecision = (decision: 'continue' | 'stop') => {
+    if (!wsRef.current) return;
+    setTakeoverPrompt(null);
+    wsRef.current.send(
+      JSON.stringify({
+        id: `takeover-reply-${Date.now()}`,
+        type: 'automation.takeover_reply',
+        ts: new Date().toISOString(),
+        payload: { decision }
+      })
+    );
+  };
+
   const isPanelOpen = activePanel !== null;
 
   return (
@@ -321,6 +345,14 @@ export const App: React.FC = () => {
             onSetWakePhrase={handleSetWakePhrase}
             isMuted={isMuted}
             onToggleMute={handleToggleMute}
+          />
+        )}
+        {activePanel === 'live_view' && (
+          <LiveViewPanel
+            onClose={() => setActivePanel(null)}
+            liveFrame={liveFrame}
+            takeoverPrompt={takeoverPrompt}
+            onTakeoverDecision={handleTakeoverDecision}
           />
         )}
       </div>

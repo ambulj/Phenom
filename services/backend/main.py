@@ -32,6 +32,9 @@ from services.backend.voice.hotkeys import hotkey_manager
 from services.backend.voice.voice_coordinator import voice_coordinator
 import services.backend.tools.file_tools
 import services.backend.tools.app_tools
+import services.backend.tools.automation_tools
+from services.backend.browser.browser_controller import browser_controller
+from services.backend.automation.human_takeover import takeover_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -59,8 +62,29 @@ async def lifespan(app: FastAPI):
     wake_detector.set_wake_callback(on_wake_word_detected)
     wake_detector.start()
 
+    # Setup browser live view streaming callback
+    def on_browser_frame(b64: str):
+        asyncio.create_task(broadcast_message({
+            "id": f"frame-{os.urandom(2).hex()}",
+            "type": "browser.frame",
+            "ts": "",
+            "payload": {"image_data": b64}
+        }))
+    browser_controller.set_frame_callback(on_browser_frame)
+
+    # Setup human takeover callback
+    def on_takeover():
+        asyncio.create_task(broadcast_message({
+            "id": f"takeover-{os.urandom(2).hex()}",
+            "type": "automation.takeover_prompt",
+            "ts": "",
+            "payload": {"reason": "User input detected. Automation paused for safety."}
+        }))
+    takeover_manager.set_takeover_callback(on_takeover)
+
     yield
     wake_detector.stop()
+    await browser_controller.close()
 
 app = FastAPI(title="Phenom Backend", lifespan=lifespan)
 
@@ -258,6 +282,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 settings_dict = payload.get("settings", {})
                 if "wake_phrase" in settings_dict:
                     wake_detector.set_wake_phrase(settings_dict["wake_phrase"])
+
+            elif mtype == "automation.takeover_reply":
+                decision = payload.get("decision", "stop")
+                try:
+                    takeover_manager.resolve_takeover(decision)
+                except Exception as e:
+                    pass
 
             elif mtype == "rules.delete":
                 rule_id = payload.get("rule_id")

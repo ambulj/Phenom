@@ -9,7 +9,8 @@ import {
   LightbulbRegular,
   SettingsRegular,
   MicRegular,
-  MicOffRegular
+  MicOffRegular,
+  EyeRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
 
@@ -107,6 +108,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           onClick={() => onSelectPanel(activePanel === 'settings' ? null : 'settings')}
         >
           Settings
+        </Button>
+        <Button
+          appearance={activePanel === 'live_view' ? 'primary' : 'subtle'}
+          icon={<EyeRegular />}
+          onClick={() => onSelectPanel(activePanel === 'live_view' ? null : 'live_view')}
+        >
+          Live View
         </Button>
         <Button
           appearance="subtle"

@@ -214,3 +214,29 @@ class HotkeysUpdateMsg(BaseMessage):
     type: Literal["hotkeys.update"] = "hotkeys.update"
     payload: HotkeysUpdatePayload
 
+# ==========================================
+# Automation Protocol Payloads (Phase 3)
+# ==========================================
+
+class BrowserFramePayload(BaseModel):
+    image_data: str
+
+class BrowserFrameMsg(BaseMessage):
+    type: Literal["browser.frame"] = "browser.frame"
+    payload: BrowserFramePayload
+
+class AutomationTakeoverPromptPayload(BaseModel):
+    reason: str
+
+class AutomationTakeoverPromptMsg(BaseMessage):
+    type: Literal["automation.takeover_prompt"] = "automation.takeover_prompt"
+    payload: AutomationTakeoverPromptPayload
+
+class AutomationTakeoverReplyPayload(BaseModel):
+    decision: Literal["continue", "stop"]
+
+class AutomationTakeoverReplyMsg(BaseMessage):
+    type: Literal["automation.takeover_reply"] = "automation.takeover_reply"
+    payload: AutomationTakeoverReplyPayload
+
+

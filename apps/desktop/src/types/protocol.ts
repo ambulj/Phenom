@@ -239,6 +239,33 @@ export interface HotkeysUpdateMsg extends BaseMessage {
   payload: HotkeysUpdatePayload;
 }
 
+export interface BrowserFramePayload {
+  image_data: string;
+}
+
+export interface BrowserFrameMsg extends BaseMessage {
+  type: 'browser.frame';
+  payload: BrowserFramePayload;
+}
+
+export interface AutomationTakeoverPromptPayload {
+  reason: string;
+}
+
+export interface AutomationTakeoverPromptMsg extends BaseMessage {
+  type: 'automation.takeover_prompt';
+  payload: AutomationTakeoverPromptPayload;
+}
+
+export interface AutomationTakeoverReplyPayload {
+  decision: 'continue' | 'stop';
+}
+
+export interface AutomationTakeoverReplyMsg extends BaseMessage {
+  type: 'automation.takeover_reply';
+  payload: AutomationTakeoverReplyPayload;
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -250,8 +277,9 @@ export type InboundServerMessage =
   | VoiceAmplitudeMsg
   | VoiceStatusMsg
   | HotkeysResultMsg
+  | BrowserFrameMsg
+  | AutomationTakeoverPromptMsg
   | ErrorMsg;
-
 export type OutboundClientMessage =
   | ChatSendMsg
   | ChatCancelMsg
@@ -262,4 +290,5 @@ export type OutboundClientMessage =
   | ModeSetMsg
   | VoiceToggleMsg
   | VoiceMuteMsg
-  | HotkeysUpdateMsg;
+  | HotkeysUpdateMsg
+  | AutomationTakeoverReplyMsg;

@@ -5,10 +5,10 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 ## 1. Risk tiers
 | Tier | Name | Behaviour | Examples |
 | --- | --- | --- | --- |
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory, check weather, read calendar, system status |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory, check weather, read calendar, system status, take screenshot (RAM), inspect UI elements, summarize YouTube |
 | 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads, save an email draft, write a vault note |
-| 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, remote approvals |
-| 3 | Blocked or system-level | Blocked by default; allowed only if listed in section 6; needs a typed confirmation on the desktop; cannot be approved remotely | payments, permanent delete, changing system settings, sending email, touching credentials, installing software, editing other people's calendar events |
+| 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
+| 3 | Blocked or system-level | Blocked by default; allowed only if listed in section 6; needs a typed confirmation on the desktop; cannot be approved remotely | payments, checkout completion, OTP entry, permanent delete, changing system settings, sending email, touching credentials, installing software, editing other people's calendar events |
 
 Unknown tools or unclassified calls are Tier 3.
 
@@ -16,16 +16,17 @@ Unknown tools or unclassified calls are Tier 3.
 Every tool declares: `name`, `tier`, `description`, a Pydantic argument schema, `preview(args)` (a human-readable description of the effect), and `undo(args, result)` when reversible. A tool without a tier cannot be registered.
 
 ## 3. Confirmation dialog
-- Shows: what Phenom wants to do, the tool, the exact arguments, the tier, and a preview (for example the list of files to be moved with old and new paths).
+- Shows: what Phenom wants to do, the tool, the exact arguments, the tier, and a preview (for example the list of files to be moved with old and new paths, or the ordered steps in an automation plan).
 - Buttons: Approve, Deny, and (Tier 1 only) "Approve and remember for this folder".
 - Timeouts: no answer within 2 minutes counts as Deny.
 - Remembered choices are listed in Settings with a revoke button. They never apply to Tier 2 or 3, and never outside the chosen folder.
 - **Voice Safety Guarantee**: Voice requests are marked `source="voice"`. Destructive (Tier 2) and reversible (Tier 1) actions strictly require an on-screen visual confirmation dialog; spoken "yes" or voice affirmations are categorically refused by safety code.
+- **Automation Takeover**: Physical user mouse or keyboard input during automated desktop/browser tasks triggers an instant pause (< 1 second). Automation will never resume without an explicit user answer (`continue` or `stop`).
 
 ## 4. Action log
 SQLite table `action_log`, one row per attempted action:
 `id, timestamp, source (desktop|voice|telegram|scheduler), tool, tier, arguments_redacted, decision (auto|approved|denied|blocked|timeout), result_status, error, undo_token`
-- Arguments are redacted: no file contents, email bodies, passwords, keys.
+- Arguments are redacted: no file contents, email bodies, passwords, keys, or payment details.
 - The UI log panel supports filter, search, export, and "Undo" where an undo token exists.
 
 ## 5. Guardian kill switch
@@ -36,6 +37,7 @@ SQLite table `action_log`, one row per attempted action:
 
 ## 6. Tier 3 allowlist
 Empty by default. Anything added needs the user's written approval and a line here: tool, reason, date.
+Permanently blocked without allowlist entries: `checkout_pay`, `enter_payment_info`.
 
 ## 7. Privacy labels and cloud escalation
 - Labels: `private` (default) or `shareable`.
@@ -50,10 +52,11 @@ Empty by default. Anything added needs the user's written approval and a line he
 - No trades, no buy or sell suggestions, no financial advice phrasing.
 - No photo move, rename, edit or delete.
 - No permanent delete.
-- No payment, checkout completion, or entering card data.
-- No sending email.
+- No payment, checkout completion, entering card data, or OTP submission. Fill-the-cart stops unconditionally before checkout.
 - No typing or storing passwords.
-- No audio stored on disk; no audio sent to the cloud. Audio is processed strictly in-memory (RAM) and discarded immediately.
+- No sending email.
+- No audio stored on disk; no audio sent to the cloud. Audio is processed strictly in-memory (RAM) and discarded immediately. Temporary YouTube audio scratch files are guaranteed deleted after transcription.
+- Screenshots are processed in RAM only, analyzed locally, and never sent to the cloud or saved without explicit user instruction.
 - Spoken "yes" never approves Tier 1 or Tier 2 actions.
 
 ## 9. Audit checklist (run at the end of Phases 1, 2, 3, 5, 6, 7)
@@ -62,6 +65,9 @@ Empty by default. Anything added needs the user's written approval and a line he
 - [x] Kill switch works from UI, hotkey, voice, and Telegram (when present)
 - [x] Spoken confirmation cannot approve destructive or reversible actions (on-screen confirmation enforced)
 - [x] Zero audio files written to disk (in-memory RAM processing verified)
+- [x] Payment and checkout completion are impossible by construction (Tier 3 blocked)
+- [x] Screenshots processed in RAM only (zero saved without instruction)
+- [x] Human takeover pauses automation within 1 second and never resumes without explicit answer
 - [x] Nothing private reaches the cloud without a previewed approval
-- [x] Log contains no secrets or private content
+- [x] Log contains no secrets, credentials, or private content
 - [x] Every prohibition in section 8 has a test
