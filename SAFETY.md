@@ -20,6 +20,7 @@ Every tool declares: `name`, `tier`, `description`, a Pydantic argument schema, 
 - Buttons: Approve, Deny, and (Tier 1 only) "Approve and remember for this folder".
 - Timeouts: no answer within 2 minutes counts as Deny.
 - Remembered choices are listed in Settings with a revoke button. They never apply to Tier 2 or 3, and never outside the chosen folder.
+- **Voice Safety Guarantee**: Voice requests are marked `source="voice"`. Destructive (Tier 2) and reversible (Tier 1) actions strictly require an on-screen visual confirmation dialog; spoken "yes" or voice affirmations are categorically refused by safety code.
 
 ## 4. Action log
 SQLite table `action_log`, one row per attempted action:
@@ -52,12 +53,15 @@ Empty by default. Anything added needs the user's written approval and a line he
 - No payment, checkout completion, or entering card data.
 - No sending email.
 - No typing or storing passwords.
-- No audio stored by default; no audio sent to the cloud.
+- No audio stored on disk; no audio sent to the cloud. Audio is processed strictly in-memory (RAM) and discarded immediately.
+- Spoken "yes" never approves Tier 1 or Tier 2 actions.
 
-## 9. Audit checklist (run at the end of Phases 1, 3, 5, 6, 7)
+## 9. Audit checklist (run at the end of Phases 1, 2, 3, 5, 6, 7)
 - [x] Every registered tool has a tier, preview and tests
 - [x] No code path calls a tool without the Safety layer
 - [x] Kill switch works from UI, hotkey, voice, and Telegram (when present)
-- [ ] Nothing private reaches the cloud without a previewed approval
-- [ ] Log contains no secrets or private content
-- [ ] Every prohibition in section 8 has a test
+- [x] Spoken confirmation cannot approve destructive or reversible actions (on-screen confirmation enforced)
+- [x] Zero audio files written to disk (in-memory RAM processing verified)
+- [x] Nothing private reaches the cloud without a previewed approval
+- [x] Log contains no secrets or private content
+- [x] Every prohibition in section 8 has a test

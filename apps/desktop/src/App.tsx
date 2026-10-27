@@ -20,6 +20,17 @@ export const App: React.FC = () => {
   const [learnedRules, setLearnedRules] = useState<LearnedRuleItem[]>([]);
   const [historyMessages, setHistoryMessages] = useState<Array<{ id: string; role: string; content: string }>>([]);
 
+  // Voice State (Phase 2)
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [amplitude, setAmplitude] = useState<number>(0);
+  const [wakePhrase, setWakePhrase] = useState<string>('hey_jarvis');
+  const [hotkeys, setHotkeys] = useState<Record<string, string>>({
+    push_to_talk: 'alt+space',
+    toggle_phenom: 'ctrl+alt+p',
+    kill_switch: 'ctrl+alt+pause'
+  });
+  const [hotkeyError, setHotkeyError] = useState<string | null>(null);
+
   const wsRef = useRef<WebSocket | null>(null);
 
   // Initialize WebSocket connection
@@ -59,6 +70,17 @@ export const App: React.FC = () => {
             setConfirmRequest(payload);
           } else if (mtype === 'rules.updated') {
             setLearnedRules(payload.rules || []);
+          } else if (mtype === 'voice.amplitude') {
+            setAmplitude(payload.amplitude ?? 0);
+          } else if (mtype === 'voice.status') {
+            setIsMuted(payload.muted ?? false);
+          } else if (mtype === 'hotkeys.result') {
+            if (payload.success) {
+              setHotkeys(payload.hotkeys || {});
+              setHotkeyError(null);
+            } else {
+              setHotkeyError(payload.error || 'Failed to update hotkey.');
+            }
           }
         } catch (e) {
           console.error('Error handling WebSocket message:', e);
@@ -179,6 +201,47 @@ export const App: React.FC = () => {
     );
   };
 
+  // Voice Handlers
+  const handleToggleMute = () => {
+    if (!wsRef.current) return;
+    const newMute = !isMuted;
+    setIsMuted(newMute);
+    wsRef.current.send(
+      JSON.stringify({
+        id: `mute-${Date.now()}`,
+        type: 'voice.mute',
+        ts: new Date().toISOString(),
+        payload: { muted: newMute }
+      })
+    );
+  };
+
+  const handleUpdateHotkey = (action: string, keyCombo: string) => {
+    if (!wsRef.current) return;
+    setHotkeyError(null);
+    wsRef.current.send(
+      JSON.stringify({
+        id: `hotkey-${Date.now()}`,
+        type: 'hotkeys.update',
+        ts: new Date().toISOString(),
+        payload: { action, key_combo: keyCombo }
+      })
+    );
+  };
+
+  const handleSetWakePhrase = (phrase: string) => {
+    setWakePhrase(phrase);
+    if (!wsRef.current) return;
+    wsRef.current.send(
+      JSON.stringify({
+        id: `wake-${Date.now()}`,
+        type: 'settings.update',
+        ts: new Date().toISOString(),
+        payload: { settings: { wake_phrase: phrase } }
+      })
+    );
+  };
+
   const isPanelOpen = activePanel !== null;
 
   return (
@@ -190,10 +253,12 @@ export const App: React.FC = () => {
         onTriggerKillswitch={handleTriggerKillswitch}
         onResume={handleResume}
         isConnected={isConnected}
+        isMuted={isMuted}
+        onToggleMute={handleToggleMute}
       />
 
       {/* 3D Three.js Orb */}
-      <Orb state={orbState} isShrunk={isPanelOpen} />
+      <Orb state={orbState} isShrunk={isPanelOpen} amplitude={amplitude} />
 
       {/* Main Chat Interface */}
       <ChatBox
@@ -247,7 +312,16 @@ export const App: React.FC = () => {
           <ApprovalsPanel onClose={() => setActivePanel(null)} />
         )}
         {activePanel === 'settings' && (
-          <SettingsPanel onClose={() => setActivePanel(null)} />
+          <SettingsPanel
+            onClose={() => setActivePanel(null)}
+            hotkeys={hotkeys}
+            onUpdateHotkey={handleUpdateHotkey}
+            hotkeyError={hotkeyError}
+            wakePhrase={wakePhrase}
+            onSetWakePhrase={handleSetWakePhrase}
+            isMuted={isMuted}
+            onToggleMute={handleToggleMute}
+          />
         )}
       </div>
     </div>

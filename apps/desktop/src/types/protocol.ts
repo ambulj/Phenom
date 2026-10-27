@@ -180,6 +180,65 @@ export interface ErrorMsg extends BaseMessage {
   payload: ErrorPayload;
 }
 
+
+export interface VoiceAmplitudePayload {
+  amplitude: number;
+}
+
+export interface VoiceAmplitudeMsg extends BaseMessage {
+  type: 'voice.amplitude';
+  payload: VoiceAmplitudePayload;
+}
+
+export interface VoiceStatusPayload {
+  enabled: boolean;
+  muted: boolean;
+}
+
+export interface VoiceStatusMsg extends BaseMessage {
+  type: 'voice.status';
+  payload: VoiceStatusPayload;
+}
+
+export interface HotkeysResultPayload {
+  success: boolean;
+  error?: string | null;
+  hotkeys: Record<string, string>;
+}
+
+export interface HotkeysResultMsg extends BaseMessage {
+  type: 'hotkeys.result';
+  payload: HotkeysResultPayload;
+}
+
+export interface VoiceTogglePayload {
+  enabled: boolean;
+}
+
+export interface VoiceToggleMsg extends BaseMessage {
+  type: 'voice.toggle';
+  payload: VoiceTogglePayload;
+}
+
+export interface VoiceMutePayload {
+  muted: boolean;
+}
+
+export interface VoiceMuteMsg extends BaseMessage {
+  type: 'voice.mute';
+  payload: VoiceMutePayload;
+}
+
+export interface HotkeysUpdatePayload {
+  action: string;
+  key_combo: string;
+}
+
+export interface HotkeysUpdateMsg extends BaseMessage {
+  type: 'hotkeys.update';
+  payload: HotkeysUpdatePayload;
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -188,6 +247,9 @@ export type InboundServerMessage =
   | ConfirmRequestMsg
   | LogEntryMsg
   | RulesUpdatedMsg
+  | VoiceAmplitudeMsg
+  | VoiceStatusMsg
+  | HotkeysResultMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -197,4 +259,7 @@ export type OutboundClientMessage =
   | SettingsUpdateMsg
   | KillSwitchTriggerMsg
   | KillSwitchResumeMsg
-  | ModeSetMsg;
+  | ModeSetMsg
+  | VoiceToggleMsg
+  | VoiceMuteMsg
+  | HotkeysUpdateMsg;

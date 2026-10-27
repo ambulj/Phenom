@@ -172,3 +172,45 @@ class ErrorPayload(BaseModel):
 class ErrorMsg(BaseMessage):
     type: Literal["error"] = "error"
     payload: ErrorPayload
+
+# ==========================================
+# Voice Protocol Payloads (Phase 2)
+# ==========================================
+
+class VoiceAmplitudePayload(BaseModel):
+    amplitude: float
+
+class VoiceAmplitudeMsg(BaseMessage):
+    type: Literal["voice.amplitude"] = "voice.amplitude"
+    payload: VoiceAmplitudePayload
+
+class VoiceStatusPayload(BaseModel):
+    enabled: bool
+    muted: bool
+
+class VoiceStatusMsg(BaseMessage):
+    type: Literal["voice.status"] = "voice.status"
+    payload: VoiceStatusPayload
+
+class VoiceTogglePayload(BaseModel):
+    enabled: bool
+
+class VoiceToggleMsg(BaseMessage):
+    type: Literal["voice.toggle"] = "voice.toggle"
+    payload: VoiceTogglePayload
+
+class VoiceMutePayload(BaseModel):
+    muted: bool
+
+class VoiceMuteMsg(BaseMessage):
+    type: Literal["voice.mute"] = "voice.mute"
+    payload: VoiceMutePayload
+
+class HotkeysUpdatePayload(BaseModel):
+    action: str
+    key_combo: str
+
+class HotkeysUpdateMsg(BaseMessage):
+    type: Literal["hotkeys.update"] = "hotkeys.update"
+    payload: HotkeysUpdatePayload
+

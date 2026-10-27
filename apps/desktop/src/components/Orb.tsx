@@ -5,6 +5,7 @@ import { OrbState } from '../types/protocol';
 interface OrbProps {
   state: OrbState;
   isShrunk: boolean;
+  amplitude?: number;
 }
 
 const PARTICLE_COUNT = 6000;
@@ -42,13 +43,18 @@ const STATE_CONFIGS = {
   }
 };
 
-export const Orb: React.FC<OrbProps> = ({ state, isShrunk }) => {
+export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const targetStateRef = useRef<OrbState>(state);
+  const amplitudeRef = useRef<number>(amplitude);
 
   useEffect(() => {
     targetStateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    amplitudeRef.current = amplitude;
+  }, [amplitude]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -152,6 +158,7 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk }) => {
 
       const pos = geometry.attributes.position.array as Float32Array;
       const tstate = targetStateRef.current;
+      const ampMod = Math.min(1.0, Math.max(0.0, amplitudeRef.current || 0.0));
 
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const idx = i * 3;
@@ -170,7 +177,8 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk }) => {
           pos[idx + 1] = Math.sin(angles[i]) * r;
           pos[idx + 2] = bz * (0.8 + 0.2 * Math.sin(elapsedTime * 3.0 + i));
         } else if (tstate === 'speaking') {
-          const burst = 1.0 + 0.35 * Math.sin(elapsedTime * 8.0 + (i % 20)) * Math.cos(elapsedTime * 4.0);
+          const burstAmp = 1.0 + ampMod * 0.75;
+          const burst = (1.0 + 0.35 * Math.sin(elapsedTime * 8.0 + (i % 20)) * Math.cos(elapsedTime * 4.0)) * burstAmp;
           pos[idx] = bx * burst * currentDispersion;
           pos[idx + 1] = by * burst * currentDispersion;
           pos[idx + 2] = bz * burst * currentDispersion;

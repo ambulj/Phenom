@@ -26,6 +26,10 @@ from services.backend.safety.approvals import approvals
 from services.backend.memory.rules import learned_rules
 from services.backend.memory.db import encrypted_db
 from services.backend.orchestrator.engine import orchestrator
+from services.backend.voice.tts import tts_engine
+from services.backend.voice.wake_word import wake_detector
+from services.backend.voice.hotkeys import hotkey_manager
+from services.backend.voice.voice_coordinator import voice_coordinator
 import services.backend.tools.file_tools
 import services.backend.tools.app_tools
 
@@ -33,7 +37,30 @@ import services.backend.tools.app_tools
 async def lifespan(app: FastAPI):
     # Setup global hotkey in background
     guardian.setup_global_hotkey("ctrl+alt+pause")
+    
+    # Setup amplitude callback for TTS speech animation
+    def on_tts_amplitude(amp: float):
+        asyncio.create_task(broadcast_message({
+            "id": f"tts-amp-{os.urandom(2).hex()}",
+            "type": "voice.amplitude",
+            "ts": "",
+            "payload": {"amplitude": amp}
+        }))
+    tts_engine.set_amplitude_callback(on_tts_amplitude)
+
+    # Setup wake word callback
+    def on_wake_word_detected():
+        asyncio.create_task(broadcast_message({
+            "id": f"wake-{os.urandom(2).hex()}",
+            "type": "state.change",
+            "ts": "",
+            "payload": {"state": "listening", "detail": "Wake word triggered"}
+        }))
+    wake_detector.set_wake_callback(on_wake_word_detected)
+    wake_detector.start()
+
     yield
+    wake_detector.stop()
 
 app = FastAPI(title="Phenom Backend", lifespan=lifespan)
 
@@ -194,6 +221,43 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif mtype == "killswitch.resume":
                 guardian.resume()
+
+            elif mtype == "voice.toggle":
+                enabled = payload.get("enabled", True)
+                wake_detector.set_enabled(enabled)
+                await broadcast_message({
+                    "id": "voice-status",
+                    "type": "voice.status",
+                    "ts": "",
+                    "payload": {"enabled": wake_detector.is_enabled, "muted": wake_detector.is_muted}
+                })
+
+            elif mtype == "voice.mute":
+                muted = payload.get("muted", True)
+                wake_detector.set_muted(muted)
+                await broadcast_message({
+                    "id": "voice-status",
+                    "type": "voice.status",
+                    "ts": "",
+                    "payload": {"enabled": wake_detector.is_enabled, "muted": wake_detector.is_muted}
+                })
+
+            elif mtype == "hotkeys.update":
+                action = payload.get("action")
+                key_combo = payload.get("key_combo")
+                if action and key_combo:
+                    success, err = hotkey_manager.update_hotkey(action, key_combo)
+                    await websocket.send_json({
+                        "id": msg_id,
+                        "type": "hotkeys.result",
+                        "ts": "",
+                        "payload": {"success": success, "error": err, "hotkeys": hotkey_manager.get_hotkeys()}
+                    })
+
+            elif mtype == "settings.update":
+                settings_dict = payload.get("settings", {})
+                if "wake_phrase" in settings_dict:
+                    wake_detector.set_wake_phrase(settings_dict["wake_phrase"])
 
             elif mtype == "rules.delete":
                 rule_id = payload.get("rule_id")

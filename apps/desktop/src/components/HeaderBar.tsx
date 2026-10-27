@@ -7,7 +7,9 @@ import {
   DocumentBulletListRegular,
   ShieldCheckmarkRegular,
   LightbulbRegular,
-  SettingsRegular
+  SettingsRegular,
+  MicRegular,
+  MicOffRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
 
@@ -18,6 +20,8 @@ interface HeaderBarProps {
   onTriggerKillswitch: () => void;
   onResume: () => void;
   isConnected: boolean;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -26,7 +30,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onSelectPanel,
   onTriggerKillswitch,
   onResume,
-  isConnected
+  isConnected,
+  isMuted = false,
+  onToggleMute
 }) => {
   const isHalted = orbState === 'halted';
 
@@ -57,6 +63,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         {isHalted && (
           <Badge appearance="filled" color="danger" size="medium">
             GUARDIAN HALTED
+          </Badge>
+        )}
+        {!isMuted && orbState === 'listening' && (
+          <Badge appearance="filled" color="informative" size="small">
+            LISTENING
           </Badge>
         )}
       </div>
@@ -96,6 +107,15 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           onClick={() => onSelectPanel(activePanel === 'settings' ? null : 'settings')}
         >
           Settings
+        </Button>
+        <Button
+          appearance="subtle"
+          icon={isMuted ? <MicOffRegular /> : <MicRegular />}
+          onClick={onToggleMute}
+          style={{ color: isMuted ? '#f87171' : '#34d399', fontWeight: 500 }}
+          title={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+        >
+          {isMuted ? 'Muted' : 'Mic Active'}
         </Button>
       </div>
 
