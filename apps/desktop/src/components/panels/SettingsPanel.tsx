@@ -176,6 +176,78 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </div>
         </div>
 
+        {/* Telegram Remote Control (Phase 6) */}
+        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#38bdf8', margin: 0 }}>Telegram Remote Control (Phase 6)</h3>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8' }}>
+              Credential Manager
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 10px 0' }}>
+            Remotely chat, approve Tier 1/2 actions, check status, and trigger kill switch. Messages from non-whitelisted user IDs are silently ignored.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Owner Telegram User ID
+              </label>
+              <Input
+                placeholder="e.g. 123456789"
+                defaultValue=""
+                id="tg-owner-input"
+                style={{ width: '100%' }}
+                size="small"
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Bot Token (Stored in Credential Manager)
+              </label>
+              <Input
+                type="password"
+                placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+                defaultValue=""
+                id="tg-token-input"
+                style={{ width: '100%' }}
+                size="small"
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <Button
+                appearance="primary"
+                size="small"
+                onClick={async () => {
+                  const tokenEl = document.getElementById('tg-token-input') as HTMLInputElement;
+                  const ownerEl = document.getElementById('tg-owner-input') as HTMLInputElement;
+                  if (tokenEl && ownerEl) {
+                    await fetch('http://localhost:8000/api/telegram/config', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ token: tokenEl.value, owner_id: ownerEl.value })
+                    });
+                    alert('Telegram configuration saved to Windows Credential Manager.');
+                  }
+                }}
+              >
+                Save Credentials
+              </Button>
+              <Button
+                appearance="secondary"
+                size="small"
+                onClick={async () => {
+                  await fetch('http://localhost:8000/api/telegram/unlock', { method: 'POST' });
+                  alert('Remote control unlocked at physical desktop.');
+                }}
+              >
+                Unlock Remote
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Model Architecture */}
         <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: '#60a5fa', marginBottom: 6 }}>Model Architecture</h3>

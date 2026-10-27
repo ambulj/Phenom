@@ -23,10 +23,14 @@ ConfirmationHandler = Callable[
 class SafetyExecutionEngine:
     def __init__(self):
         self._confirmation_handler: Optional[ConfirmationHandler] = None
+        self._remote_confirmation_handler: Optional[ConfirmationHandler] = None
         self._tier3_allowlist: set[str] = set() # Empty by default per SAFETY.md section 6
 
     def set_confirmation_handler(self, handler: ConfirmationHandler):
         self._confirmation_handler = handler
+
+    def set_remote_confirmation_handler(self, handler: ConfirmationHandler):
+        self._remote_confirmation_handler = handler
 
     async def execute_tool(
         self,
@@ -86,6 +90,18 @@ class SafetyExecutionEngine:
 
         # Guard 3: Tier 3 Blocked Check
         if tier == 3:
+            if source == "telegram":
+                action_log.log_action(
+                    tool=tool_name,
+                    tier=3,
+                    args=validated_args,
+                    decision="blocked",
+                    result_status="BLOCKED",
+                    source=source,
+                    error="Tier 3 actions cannot be approved remotely. Physical desktop typed confirmation is required."
+                )
+                raise PermissionError(f"Tier 3 tool '{tool_name}' cannot be approved remotely.")
+
             if tool_name not in self._tier3_allowlist:
                 action_log.log_action(
                     tool=tool_name,
@@ -116,8 +132,14 @@ class SafetyExecutionEngine:
         req_id = f"conf-{tool_name}-{os.urandom(4).hex()}"
         can_remember = (tier == 1) and bool(folder_for_approval)
 
-        if not self._confirmation_handler:
-            # Without UI confirmation handler, cannot proceed for Tier 1 or Tier 2
+        handler_to_use = (
+            self._remote_confirmation_handler
+            if (source == "telegram" and self._remote_confirmation_handler)
+            else self._confirmation_handler
+        )
+
+        if not handler_to_use:
+            # Without confirmation handler, cannot proceed for Tier 1 or Tier 2
             action_log.log_action(
                 tool=tool_name,
                 tier=tier,
@@ -127,10 +149,10 @@ class SafetyExecutionEngine:
                 source=source,
                 error="Confirmation required but no confirmation handler registered."
             )
-            raise PermissionError(f"Action requires confirmation (Tier {tier}), but confirmation UI is unavailable.")
+            raise PermissionError(f"Action requires confirmation (Tier {tier}), but confirmation handler is unavailable.")
 
         try:
-            decision, remember_choice = await self._confirmation_handler(
+            decision, remember_choice = await handler_to_use(
                 req_id,
                 tool_name,
                 tier,

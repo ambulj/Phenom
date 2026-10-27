@@ -41,6 +41,10 @@ from services.backend.integrations.finance import financial_engine
 from services.backend.integrations.google_workspace import google_workspace
 from services.backend.browser.browser_controller import browser_controller
 from services.backend.automation.human_takeover import takeover_manager
+from services.backend.remote.telegram_bot import telegram_controller
+from services.backend.remote.credentials import (
+    is_remote_locked, set_remote_locked, set_telegram_token, set_telegram_owner_id, get_telegram_owner_id
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -98,8 +102,10 @@ async def lifespan(app: FastAPI):
         }))
     background_scheduler.add_listener(on_scheduler_reminder)
     background_scheduler.start()
+    telegram_controller.start()
 
     yield
+    telegram_controller.stop()
     background_scheduler.stop()
     wake_detector.stop()
     await browser_controller.close()
@@ -173,6 +179,27 @@ async def websocket_confirmation_handler(
         pending_confirmations.pop(request_id, None)
 
 safety_engine.set_confirmation_handler(websocket_confirmation_handler)
+
+async def remote_confirmation_handler(
+    request_id: str,
+    tool: str,
+    tier: RiskTier,
+    preview: str,
+    args: Dict[str, Any],
+    can_remember: bool,
+    folder_path: Optional[str],
+    timeout_seconds: int
+) -> tuple[str, bool]:
+    return await telegram_controller.handle_remote_approval_request(
+        request_id=request_id,
+        tool=tool,
+        tier=tier,
+        preview=preview,
+        args=args,
+        timeout_seconds=timeout_seconds
+    )
+
+safety_engine.set_remote_confirmation_handler(remote_confirmation_handler)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -491,3 +518,37 @@ async def get_scheduler_logs(limit: int = 50):
 @app.get("/api/watchlist")
 async def get_financial_watchlist_api():
     return financial_engine.list_watchlist()
+
+@app.get("/api/telegram/status")
+async def get_telegram_status():
+    return {
+        "configured": telegram_controller.is_configured,
+        "owner_id": get_telegram_owner_id(),
+        "locked": is_remote_locked()
+    }
+
+@app.post("/api/telegram/unlock")
+async def unlock_telegram_remote():
+    set_remote_locked(False)
+    return {"locked": False, "status": "unlocked"}
+
+@app.post("/api/telegram/lock")
+async def lock_telegram_remote():
+    set_remote_locked(True)
+    return {"locked": True, "status": "locked"}
+
+@app.post("/api/telegram/config")
+async def update_telegram_config(payload: Dict[str, Any]):
+    token = payload.get("token")
+    owner_id = payload.get("owner_id")
+    if token:
+        set_telegram_token(token)
+    if owner_id:
+        set_telegram_owner_id(int(owner_id))
+    if token and owner_id:
+        telegram_controller.set_credentials(token, int(owner_id))
+    return {
+        "configured": telegram_controller.is_configured,
+        "owner_id": get_telegram_owner_id(),
+        "locked": is_remote_locked()
+    }

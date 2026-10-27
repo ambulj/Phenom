@@ -22,6 +22,8 @@ Every tool declares: `name`, `tier`, `description`, a Pydantic argument schema, 
 - Remembered choices are listed in Settings with a revoke button. They never apply to Tier 2 or 3, and never outside the chosen folder.
 - **Voice Safety Guarantee**: Voice requests are marked `source="voice"`. Destructive (Tier 2) and reversible (Tier 1) actions strictly require an on-screen visual confirmation dialog; spoken "yes" or voice affirmations are categorically refused by safety code.
 - **Automation Takeover**: Physical user mouse or keyboard input during automated desktop/browser tasks triggers an instant pause (< 1 second). Automation will never resume without an explicit user answer (`continue` or `stop`).
+- **Telegram Remote Approvals**: Tier 1 and Tier 2 actions may be approved over Telegram by the whitelisted owner ID, presenting the exact same preview as on the desktop. Tier 3 actions are permanently prohibited from remote approval and require physical typed desktop confirmation.
+- **Telegram Whitelist & Lock Guarantee**: Messages or callbacks from non-whitelisted user IDs are silently ignored and logged. The `/lock` command disables remote control until physically re-enabled at the desktop application.
 
 ## 4. Action log
 SQLite table `action_log`, one row per attempted action:
@@ -59,6 +61,9 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 - No audio stored on disk; no audio sent to the cloud. Audio is processed strictly in-memory (RAM) and discarded immediately. Temporary YouTube audio scratch files are guaranteed deleted after transcription.
 - Screenshots are processed in RAM only, analyzed locally, and never sent to the cloud or saved without explicit user instruction.
 - Spoken "yes" never approves Tier 1 or Tier 2 actions.
+- No remote approval for Tier 3 actions; Tier 3 must be confirmed with typed confirmation on the desktop.
+- Telegram bot messages from non-whitelisted user IDs are silently ignored and logged; zero replies sent to unauthorized users.
+- Remote control can be locked at any time via /lock and cannot be unlocked from Telegram.
 
 ## 9. Audit checklist (run at the end of Phases 1, 2, 3, 4, 5, 6, 7)
 - [x] Every registered tool has a tier, preview and tests
@@ -78,6 +83,11 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 - [x] Financial watchlist alerts trigger once without spamming
 - [x] Live data pipeline falls back to scraping when API fails and is explicitly labelled
 - [x] Generated documents (.docx, .xlsx, .pptx, .pdf) open and parse correctly
-- [x] Nothing private reaches the cloud without a previewed approval
+- [x] Telegram bot strictly accepts owner user ID only; non-whitelisted senders silently ignored and logged
+- [x] Telegram remote approvals work for Tier 1 and Tier 2 with preview
+- [x] Tier 3 actions are categorically refused remotely
+- [x] Telegram /halt command halts running tasks immediately
+- [x] Telegram /lock command disables remote control until re-enabled at the desktop
+- [x] Nothing private reaches the cloud or Telegram without a previewed approval
 - [x] Log contains no secrets, credentials, or private content
 - [x] Every prohibition in section 8 has a test
