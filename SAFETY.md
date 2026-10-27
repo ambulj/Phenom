@@ -91,3 +91,9 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 - [x] Nothing private reaches the cloud or Telegram without a previewed approval
 - [x] Log contains no secrets, credentials, or private content
 - [x] Every prohibition in section 8 has a test
+- [x] Installer bundles UI and backend with prerequisites check
+- [x] First-run wizard configures English voice, API keys, safe hotkeys, and indexing boundaries
+- [x] Auto-start with Windows, system tray icon, and quiet background start verified
+- [x] Auto-update with automatic rollback on boot failure verified
+- [x] Crash reporter operates strictly local-only with private path and secret redaction
+- [x] System resource benchmark complete: idle CPU 0.0%, RAM 211.9 MB, wake word 3.2% CPU

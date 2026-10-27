@@ -7,3 +7,6 @@ dist/
 .cache/
 user_data/
 services/backend/browser/user_data/
+services/backend/data/crash_logs/
+services/backend/data/version_backups/
+services/backend/data/version.json

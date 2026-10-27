@@ -11,9 +11,11 @@ import { SettingsPanel } from './components/panels/SettingsPanel';
 import { LiveViewPanel } from './components/panels/LiveViewPanel';
 import { DashboardPanel } from './components/panels/DashboardPanel';
 import { MiniOverlay } from './components/MiniOverlay';
+import { FirstRunWizard } from './components/FirstRunWizard';
 import { OrbState, ConfirmRequestPayload, LearnedRuleItem } from './types/protocol';
 
 export const App: React.FC = () => {
+  const [showFirstRun, setShowFirstRun] = useState<boolean>(() => !localStorage.getItem('phenom_first_run_done'));
   const [orbState, setOrbState] = useState<OrbState>('idle');
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [activePanel, setActivePanel] = useState<string | null>(null);
@@ -340,6 +342,11 @@ export const App: React.FC = () => {
         isStreaming={isStreaming}
         isShrunk={isPanelOpen}
       />
+
+      {/* First Run Setup Wizard (Phase 7) */}
+      {showFirstRun && (
+        <FirstRunWizard onComplete={() => setShowFirstRun(false)} />
+      )}
 
       {/* Confirmation Modal */}
       <ConfirmationModal
