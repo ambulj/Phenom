@@ -1,0 +1,16 @@
+{
+  "name": "phenom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Phenom - Personal Windows 11 Desktop Assistant",
+  "scripts": {
+    "dev:backend": "python -m uvicorn services.backend.main:app --host 127.0.0.1 --port 8000 --reload",
+    "dev:app": "npm --prefix apps/desktop run dev",
+    "dev": "concurrently -n backend,app -c blue,magenta \"npm run dev:backend\" \"npm run dev:app\"",
+    "test:backend": "pytest services/backend/tests -v",
+    "generate-types": "python services/backend/scripts/generate_types.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
