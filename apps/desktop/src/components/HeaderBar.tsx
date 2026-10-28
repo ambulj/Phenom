@@ -90,16 +90,40 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.5px', color: '#60a5fa' }}>
-          PHENOM
+        <h1
+          style={{
+            fontSize: 19,
+            fontWeight: 800,
+            letterSpacing: '1.2px',
+            background: 'linear-gradient(135deg, #38bdf8, #818cf8)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            margin: 0
+          }}
+        >
+          ⚡ PHENOM
         </h1>
         <Badge
           appearance="tint"
           color={isConnected ? 'success' : 'danger'}
           size="small"
         >
-          {isConnected ? 'LIVE' : 'DISCONNECTED'}
+          {isConnected ? 'ONLINE' : 'OFFLINE'}
         </Badge>
+        <span
+          style={{
+            fontSize: 11,
+            color: '#64748b',
+            background: 'rgba(255, 255, 255, 0.04)',
+            padding: '3px 8px',
+            borderRadius: 6,
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            fontFamily: 'monospace'
+          }}
+          title="Local Llama 3 8B model pinned in NVIDIA GPU VRAM"
+        >
+          CUDA • 8B VRAM
+        </span>
         {isHalted && (
           <Badge appearance="filled" color="danger" size="medium">
             GUARDIAN HALTED

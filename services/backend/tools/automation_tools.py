@@ -38,6 +38,51 @@ async def take_screenshot() -> Dict[str, Any]:
         "privacy": "local_ram_only"
     }
 
+_EASYOCR_READER = None
+
+def _get_ocr_reader():
+    global _EASYOCR_READER
+    if _EASYOCR_READER is None:
+        import easyocr
+        import torch
+        has_cuda = torch.cuda.is_available()
+        _EASYOCR_READER = easyocr.Reader(['en'], gpu=has_cuda)
+    return _EASYOCR_READER
+
+class InspectScreenOcrArgs(BaseModel):
+    focus_query: Optional[str] = Field(default=None, description="Optional keyword or error term to look for on screen")
+
+@registry.register(
+    name="inspect_screen_ocr",
+    tier=0,
+    description="Performs in-memory optical character recognition (OCR) of the current desktop screen to read text, code, or error dialogs (strictly RAM only, zero images saved to disk)",
+    args_schema=InspectScreenOcrArgs,
+    preview_fn=lambda a: "Inspect visible screen text via in-memory OCR"
+)
+async def inspect_screen_ocr(focus_query: Optional[str] = None) -> Dict[str, Any]:
+    import numpy as np
+    img = desktop_controller.capture_screen_ram()
+    reader = _get_ocr_reader()
+    arr = np.array(img)
+    results = reader.readtext(arr)
+
+    detected_texts = [text for (bbox, text, prob) in results if prob > 0.2]
+    error_keywords = ["error", "exception", "failed", "traceback", "warning", "fatal", "not found", "cannot", "denied", "bug", "crash"]
+    error_candidates = [t for t in detected_texts if any(k in t.lower() for k in error_keywords)]
+
+    matched_texts = detected_texts
+    if focus_query:
+        q = focus_query.lower()
+        matched_texts = [t for t in detected_texts if q in t.lower()]
+
+    return {
+        "status": "success",
+        "total_elements_found": len(detected_texts),
+        "visible_snippets": matched_texts[:15],
+        "error_candidates": error_candidates[:5],
+        "privacy": "in_memory_only_never_saved_to_disk"
+    }
+
 class InspectWindowElementsArgs(BaseModel):
     name_query: str = Field(description="Sub-string to search for in UI elements")
 

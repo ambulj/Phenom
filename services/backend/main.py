@@ -25,7 +25,7 @@ from services.backend.safety.action_log import action_log
 from services.backend.safety.approvals import approvals
 from services.backend.memory.rules import learned_rules
 from services.backend.memory.db import encrypted_db
-from services.backend.orchestrator.engine import orchestrator
+from services.backend.orchestrator.engine import orchestrator, warm_up_ollama
 from services.backend.voice.tts import tts_engine
 from services.backend.voice.wake_word import wake_detector
 from services.backend.voice.hotkeys import hotkey_manager
@@ -103,6 +103,7 @@ async def lifespan(app: FastAPI):
     background_scheduler.add_listener(on_scheduler_reminder)
     background_scheduler.start()
     telegram_controller.start()
+    asyncio.create_task(warm_up_ollama())
 
     yield
     telegram_controller.stop()

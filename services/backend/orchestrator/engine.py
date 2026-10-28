@@ -54,14 +54,23 @@ To call a tool, respond ONLY with a JSON block in this exact format:
 Otherwise, respond naturally in English. Keep voice/orb replies concise and crisp.
 """
 
-def build_system_prompt() -> str:
-    # Build tool descriptions
-    tool_lines = []
-    for name, tool_def in registry.list_all().items():
-        fields = list(tool_def.args_schema.model_fields.keys())
-        tool_lines.append(f"- {name}({', '.join(fields)}): {tool_def.description} [Tier {tool_def.tier}]")
-    tools_str = "\n".join(tool_lines)
+_CACHED_TOOLS_STR: Optional[str] = None
+_CACHED_TOOLS_LEN: int = 0
 
+def get_cached_tool_descriptions() -> str:
+    global _CACHED_TOOLS_STR, _CACHED_TOOLS_LEN
+    all_tools = registry.list_all()
+    if _CACHED_TOOLS_STR is None or len(all_tools) != _CACHED_TOOLS_LEN:
+        tool_lines = []
+        for name, tool_def in all_tools.items():
+            fields = list(tool_def.args_schema.model_fields.keys())
+            tool_lines.append(f"- {name}({', '.join(fields)}): {tool_def.description} [Tier {tool_def.tier}]")
+        _CACHED_TOOLS_STR = "\n".join(tool_lines)
+        _CACHED_TOOLS_LEN = len(all_tools)
+    return _CACHED_TOOLS_STR
+
+def build_system_prompt() -> str:
+    tools_str = get_cached_tool_descriptions()
     rules_str = learned_rules.format_rules_for_prompt() or "(None yet)"
     mode_prompt = mode_manager.get_tone_prompt()
     return SYSTEM_PROMPT_TEMPLATE.format(
@@ -69,6 +78,17 @@ def build_system_prompt() -> str:
         learned_rules=rules_str,
         tool_descriptions=tools_str
     )
+
+async def warm_up_ollama(model_name: str = "llama3:latest"):
+    """Preloads the model into GPU VRAM at application startup to eliminate cold-start latency."""
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            await client.post(
+                OLLAMA_GENERATE_URL,
+                json={"model": model_name, "prompt": "hi", "stream": False, "keep_alive": -1}
+            )
+    except Exception:
+        pass
 
 class Orchestrator:
     def __init__(self):
@@ -120,16 +140,26 @@ class Orchestrator:
         if rule_extracted:
             learned_rules.add_rule(rule_extracted)
 
-        # RAG: Retrieve relevant memory context from Vector Store
+        # Smart RAG: Only query vector store if query is substantive or memory-related
         memory_context = ""
-        try:
-            from services.backend.memory.vector_store import vector_store
-            doc_matches = vector_store.search(prompt, top_k=2)
-            if doc_matches and doc_matches[0]["score"] > 0.45:
-                sources = "\n".join([f"- [{m['filename']}] (Score: {m['score']}): {m['snippet']}" for m in doc_matches])
-                memory_context = f"\nRelevant Memory & Document Citations:\n{sources}\n"
-        except Exception:
-            pass
+        prompt_lower = prompt.lower().strip()
+        is_trivial = len(prompt_lower.split()) <= 3 and any(
+            prompt_lower.startswith(g) for g in ["hi", "hello", "hey", "howdy", "sup", "what's up", "who are you", "what time", "test", "ping", "clear", "thanks", "ok"]
+        )
+        should_rag = not is_trivial and (
+            any(k in prompt_lower for k in ["search", "remember", "note", "vault", "document", "file", "photo", "pdf", "find", "recall", "memory", "fact", "rule"])
+            or len(prompt_lower.split()) > 5
+        )
+
+        if should_rag:
+            try:
+                from services.backend.memory.vector_store import vector_store
+                doc_matches = vector_store.search(prompt, top_k=2)
+                if doc_matches and doc_matches[0]["score"] > 0.45:
+                    sources = "\n".join([f"- [{m['filename']}] (Score: {m['score']}): {m['snippet']}" for m in doc_matches])
+                    memory_context = f"\nRelevant Memory & Document Citations:\n{sources}\n"
+            except Exception:
+                pass
 
         system_prompt = build_system_prompt()
         history = encrypted_db.get_recent_messages(limit=6)
@@ -144,12 +174,21 @@ class Orchestrator:
 
         try:
             if backend_type == "local":
-                # Stream from Ollama
+                # Stream from Ollama with permanent VRAM keep_alive and optimized predict cap
                 async with httpx.AsyncClient(timeout=60.0) as client:
                     async with client.stream(
                         "POST",
                         OLLAMA_GENERATE_URL,
-                        json={"model": model_name, "prompt": full_prompt, "stream": True, "options": {"temperature": 0.2}}
+                        json={
+                            "model": model_name,
+                            "prompt": full_prompt,
+                            "stream": True,
+                            "keep_alive": -1,
+                            "options": {
+                                "temperature": 0.2,
+                                "num_predict": 512,
+                            }
+                        }
                     ) as resp:
                         async for line in resp.aiter_lines():
                             if cancel_event and cancel_event.is_set():

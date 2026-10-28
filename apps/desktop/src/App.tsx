@@ -338,9 +338,11 @@ export const App: React.FC = () => {
         orbState={orbState}
         onSendMessage={handleSendMessage}
         onCancelMessage={handleCancelMessage}
+        onClearHistory={() => setHistoryMessages([])}
         streamingText={streamingText}
         isStreaming={isStreaming}
         isShrunk={isPanelOpen}
+        messages={historyMessages}
       />
 
       {/* First Run Setup Wizard (Phase 7) */}
