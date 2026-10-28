@@ -7,7 +7,8 @@ import {
   NewsRegular,
   MoneyRegular,
   FolderOpenRegular,
-  DeleteRegular
+  DeleteRegular,
+  MicRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
 
@@ -22,6 +23,7 @@ interface ChatBoxProps {
   onSendMessage: (text: string) => void;
   onCancelMessage: () => void;
   onClearHistory?: () => void;
+  onTriggerVoice?: () => void;
   streamingText: string;
   isStreaming: boolean;
   isShrunk: boolean;
@@ -33,6 +35,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   onSendMessage,
   onCancelMessage,
   onClearHistory,
+  onTriggerVoice,
   streamingText,
   isStreaming,
   isShrunk,
@@ -404,7 +407,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           placeholder={
             orbState === 'halted'
               ? 'Phenom is halted. Click Resume in the top bar to continue.'
-              : 'Ask Phenom anything (e.g. "What\'s on my screen?", "Summarize news", "Organize downloads")...'
+              : orbState === 'listening'
+              ? '🎙️ Listening to your voice... Speak your command now!'
+              : 'Ask Phenom anything (or say "Hey Jarvis")...'
           }
           disabled={isStreaming || orbState === 'halted'}
           style={{
@@ -417,6 +422,24 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             padding: '8px 4px'
           }}
         />
+
+        {onTriggerVoice && (
+          <Button
+            appearance="subtle"
+            icon={<MicRegular style={{ color: orbState === 'listening' ? '#38bdf8' : '#94a3b8' }} />}
+            onClick={onTriggerVoice}
+            title="Click to speak (or say 'Hey Jarvis')"
+            style={{
+              background: orbState === 'listening' ? 'rgba(56, 189, 248, 0.25)' : 'transparent',
+              borderRadius: '50%',
+              minWidth: 36,
+              width: 36,
+              height: 36,
+              padding: 0,
+              boxShadow: orbState === 'listening' ? '0 0 12px #38bdf8' : 'none'
+            }}
+          />
+        )}
 
         {isStreaming ? (
           <Button

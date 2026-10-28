@@ -21,6 +21,12 @@ from services.backend.orchestrator.engine import orchestrator
 class VoiceCoordinator:
     def __init__(self):
         self._is_processing = False
+        self._token_callback = None
+        self._done_callback = None
+
+    def set_stream_callbacks(self, on_token=None, on_done=None):
+        self._token_callback = on_token
+        self._done_callback = on_done
 
     async def handle_spoken_audio(self, audio_data: np.ndarray) -> Dict[str, Any]:
         """
@@ -58,6 +64,11 @@ class VoiceCoordinator:
             if etype == "chat.token":
                 token = event["payload"]["token"]
                 tokens.append(token)
+                if self._token_callback:
+                    try:
+                        await self._token_callback(token)
+                    except Exception:
+                        pass
                 # Stream speech sentence-by-sentence up to max_spoken_sentences
                 if not summarized_for_voice:
                     sentence = tts_engine.feed_token(token, sentence_buffer)
@@ -69,6 +80,11 @@ class VoiceCoordinator:
             elif etype == "chat.done":
                 if not summarized_for_voice:
                     tts_engine.flush_buffer(sentence_buffer)
+                if self._done_callback:
+                    try:
+                        await self._done_callback("".join(tokens))
+                    except Exception:
+                        pass
 
         full_reply = "".join(tokens)
         return {

@@ -6,6 +6,7 @@ Features:
 - In-memory circular buffer
 - Enables / disables / mutes cleanly
 - Triggers barge-in when TTS is active
+- Records post-wake command audio in RAM and delivers to STT pipeline
 """
 
 import threading
@@ -17,12 +18,13 @@ import openwakeword
 from openwakeword.model import Model
 from services.backend.voice.tts import tts_engine
 
-CHUNK_SIZE = 1280 # 80ms at 16kHz
+CHUNK_SIZE = 1280  # 80ms at 16kHz
 SAMPLE_RATE = 16000
 
 class WakeWordDetector:
-    def __init__(self, wake_phrase: str = "hey_jarvis"):
+    def __init__(self, wake_phrase: str = "hey_jarvis", threshold: float = 0.20):
         self.wake_phrase = wake_phrase
+        self.threshold = threshold
         self._enabled: bool = True
         self._muted: bool = False
         self._is_listening: bool = False
@@ -31,10 +33,21 @@ class WakeWordDetector:
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._on_wake_callback: Optional[Callable[[], None]] = None
+        self._on_command_callback: Optional[Callable[[np.ndarray], None]] = None
+        self._on_amplitude_callback: Optional[Callable[[float], None]] = None
+        self._recording_command: bool = False
+        self._command_chunks: list[np.ndarray] = []
+        self._max_command_chunks: int = int(4.5 * SAMPLE_RATE / CHUNK_SIZE)  # ~4.5 seconds of command audio
         self._lock = threading.Lock()
 
     def set_wake_callback(self, cb: Callable[[], None]):
         self._on_wake_callback = cb
+
+    def set_command_callback(self, cb: Callable[[np.ndarray], None]):
+        self._on_command_callback = cb
+
+    def set_amplitude_callback(self, cb: Callable[[float], None]):
+        self._on_amplitude_callback = cb
 
     @property
     def is_enabled(self) -> bool:
@@ -59,6 +72,18 @@ class WakeWordDetector:
                 self._model = Model(wakeword_models=[self.wake_phrase], inference_framework="onnx")
             except Exception:
                 self._model = Model(inference_framework="onnx")
+
+    def trigger_manual_listen(self, duration_seconds: float = 4.0):
+        """Allows UI button or Push-to-Talk hotkey to trigger listening without wake word."""
+        with self._lock:
+            self._recording_command = True
+            self._command_chunks = []
+            self._max_command_chunks = int(duration_seconds * SAMPLE_RATE / CHUNK_SIZE)
+            if self._on_wake_callback:
+                try:
+                    self._on_wake_callback()
+                except Exception:
+                    pass
 
     def start(self):
         """Starts background continuous listening stream."""
@@ -86,7 +111,6 @@ class WakeWordDetector:
                 inference_framework="onnx"
             )
         except Exception:
-            # Fallback to any available openwakeword model
             self._model = Model(inference_framework="onnx")
 
         def audio_callback(indata, frames, time_info, status):
@@ -97,12 +121,30 @@ class WakeWordDetector:
             if len(audio_chunk) != CHUNK_SIZE:
                 return
 
-            # Feed to openWakeWord
+            # Compute audio RMS amplitude for live UI Orb visualizer
+            if self._on_amplitude_callback:
+                try:
+                    rms = float(np.sqrt(np.mean(audio_chunk.astype(np.float32) ** 2))) / 32768.0
+                    self._on_amplitude_callback(min(1.0, rms * 8.0))
+                except Exception:
+                    pass
+
+            # If actively recording user command audio after wake trigger
+            if self._recording_command:
+                self._command_chunks.append(audio_chunk.copy())
+                if len(self._command_chunks) >= self._max_command_chunks:
+                    self._recording_command = False
+                    full_audio = np.concatenate(self._command_chunks)
+                    self._command_chunks = []
+                    if self._on_command_callback:
+                        cb = self._on_command_callback
+                        threading.Thread(target=cb, args=(full_audio,), daemon=True).start()
+                return
+
+            # Predict wake word activation
             predictions = self._model.predict(audio_chunk)
-            
-            # Check for activation
             for phrase, score in predictions.items():
-                if score > 0.5:
+                if score >= self.threshold:
                     self._handle_detection(phrase, score)
                     break
 
@@ -118,13 +160,18 @@ class WakeWordDetector:
                 while not self._stop_event.is_set():
                     time.sleep(0.1)
         except Exception as e:
-            # Mic input error (e.g. no audio input device available in testing)
-            pass
+            # Mic input error (e.g. non-interactive background worker without audio hardware access)
+            print(f"[Phenom Wake Detector] Microphone stream notice: {e}")
 
     def _handle_detection(self, phrase: str, score: float):
         # If assistant is speaking, trigger barge-in immediately!
         if tts_engine.is_speaking:
             tts_engine.stop_speech()
+
+        print(f"[Phenom Wake Detector] Wake phrase '{phrase}' detected (score={score:.3f}). Recording command...")
+        self._recording_command = True
+        self._command_chunks = []
+        self._max_command_chunks = int(4.5 * SAMPLE_RATE / CHUNK_SIZE)
 
         if self._on_wake_callback:
             try:

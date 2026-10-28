@@ -247,6 +247,18 @@ export const App: React.FC = () => {
     );
   };
 
+  const handleTriggerVoice = () => {
+    if (!wsRef.current) return;
+    wsRef.current.send(
+      JSON.stringify({
+        id: `voice-trig-${Date.now()}`,
+        type: 'voice.trigger',
+        ts: new Date().toISOString(),
+        payload: {}
+      })
+    );
+  };
+
   const handleUpdateHotkey = (action: string, keyCombo: string) => {
     if (!wsRef.current) return;
     setHotkeyError(null);
@@ -339,6 +351,7 @@ export const App: React.FC = () => {
         onSendMessage={handleSendMessage}
         onCancelMessage={handleCancelMessage}
         onClearHistory={() => setHistoryMessages([])}
+        onTriggerVoice={handleTriggerVoice}
         streamingText={streamingText}
         isStreaming={isStreaming}
         isShrunk={isPanelOpen}

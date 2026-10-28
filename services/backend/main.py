@@ -61,15 +61,68 @@ async def lifespan(app: FastAPI):
         }))
     tts_engine.set_amplitude_callback(on_tts_amplitude)
 
-    # Setup wake word callback
+    main_loop = asyncio.get_running_loop()
+
+    # Setup wake word and voice command pipeline
     def on_wake_word_detected():
-        asyncio.create_task(broadcast_message({
+        asyncio.run_coroutine_threadsafe(broadcast_message({
             "id": f"wake-{os.urandom(2).hex()}",
             "type": "state.change",
             "ts": "",
-            "payload": {"state": "listening", "detail": "Wake word triggered"}
-        }))
+            "payload": {"state": "listening", "detail": "Listening for your command, sir..."}
+        }), main_loop)
     wake_detector.set_wake_callback(on_wake_word_detected)
+
+    def on_amplitude(amp: float):
+        if amp > 0.04:
+            asyncio.run_coroutine_threadsafe(broadcast_message({
+                "id": "amp",
+                "type": "voice.amplitude",
+                "ts": "",
+                "payload": {"amplitude": amp}
+            }), main_loop)
+    wake_detector.set_amplitude_callback(on_amplitude)
+
+    async def on_voice_token(token: str):
+        await broadcast_message({
+            "id": "voice-reply",
+            "type": "chat.token",
+            "ts": "",
+            "payload": {"token": token, "index": 0}
+        })
+
+    async def on_voice_done(full_text: str):
+        await broadcast_message({
+            "id": "voice-reply",
+            "type": "chat.done",
+            "ts": "",
+            "payload": {"full_text": full_text}
+        })
+
+    voice_coordinator.set_stream_callbacks(on_voice_token, on_voice_done)
+
+    def on_command_recorded(audio_data: np.ndarray):
+        async def process_spoken_turn():
+            await broadcast_message({
+                "id": f"stt-{os.urandom(2).hex()}",
+                "type": "state.change",
+                "ts": "",
+                "payload": {"state": "thinking", "detail": "Transcribing speech..."}
+            })
+
+            # Process through Voice Coordinator pipeline (STT -> Orchestrator -> Piper TTS)
+            await voice_coordinator.handle_spoken_audio(audio_data)
+
+            await broadcast_message({
+                "id": f"done-{os.urandom(2).hex()}",
+                "type": "state.change",
+                "ts": "",
+                "payload": {"state": "idle"}
+            })
+
+        asyncio.run_coroutine_threadsafe(process_spoken_turn(), main_loop)
+
+    wake_detector.set_command_callback(on_command_recorded)
     wake_detector.start()
 
     # Setup browser live view streaming callback
@@ -315,6 +368,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif mtype == "killswitch.resume":
                 guardian.resume()
+
+            elif mtype == "voice.trigger":
+                wake_detector.trigger_manual_listen(4.5)
 
             elif mtype == "voice.toggle":
                 enabled = payload.get("enabled", True)
