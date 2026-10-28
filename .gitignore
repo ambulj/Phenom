@@ -13,3 +13,7 @@ services/backend/data/version.json
 .env
 *.env
 .pytest_cache/
+.venv/
+.venv-clean/
+venv/
+*.egg-info/
