@@ -114,16 +114,21 @@ app.whenReady().then(() => {
   createWindow();
   checkPrerequisites();
 
-  // Register global Guardian Kill Switch hotkey (Ctrl+Alt+Pause)
-  try {
-    globalShortcut.register('Ctrl+Alt+Pause', () => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('guardian:hotkey');
-      }
-    });
-  } catch (err) {
-    console.error('Failed to register global hotkey:', err);
-  }
+  // Register global Guardian Kill Switch hotkey (Ctrl+Alt+P and Ctrl+Alt+Escape)
+  const registerKillHotkey = (shortcut) => {
+    try {
+      globalShortcut.register(shortcut, () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('guardian:hotkey');
+        }
+      });
+    } catch (err) {
+      console.warn(`Could not register ${shortcut}:`, err);
+    }
+  };
+
+  registerKillHotkey('CommandOrControl+Alt+P');
+  registerKillHotkey('CommandOrControl+Alt+Escape');
 
   app.on('activate', () => {
     if (mainWindow) {
