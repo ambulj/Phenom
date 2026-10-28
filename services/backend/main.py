@@ -5,12 +5,17 @@ Connects the desktop Electron app to the orchestrator, safety layer, router, and
 """
 
 import asyncio
+import hmac
 import json
 import os
+import time
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from typing import Dict, Any, Optional
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import numpy as np
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from services.backend.schemas.protocol import (
     OrbState, RiskTier, DecisionType,
     ConfirmRequestMsg, ConfirmRequestPayload,
@@ -183,19 +188,79 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Phenom Backend", lifespan=lifespan)
 
+PACKAGED_ORIGINS = {"file://", "null", "vscode-file://", "electron://"}
+DEV_ORIGINS = {"http://localhost:5173", "http://127.0.0.1:5173"}
+
+def get_allowed_origins() -> list[str]:
+    origins = list(PACKAGED_ORIGINS)
+    if os.environ.get("PHENOM_DEV") == "1":
+        origins.extend(DEV_ORIGINS)
+    return origins
+
+def is_origin_allowed(origin: Optional[str]) -> bool:
+    allowed = set(PACKAGED_ORIGINS)
+    if os.environ.get("PHENOM_DEV") == "1":
+        allowed.update(DEV_ORIGINS)
+        if origin is None:
+            return True
+    if origin is None:
+        return False
+    return origin in allowed
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=get_allowed_origins(),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+bearer_scheme = HTTPBearer(auto_error=False)
+
+def verify_session_token(credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme)):
+    expected = os.environ.get("PHENOM_SESSION_TOKEN")
+    if not expected:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session token not configured (PHENOM_SESSION_TOKEN unset)"
+        )
+    if not credentials or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header"
+        )
+    if not hmac.compare_digest(credentials.credentials, expected):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid session token"
+        )
+    return credentials.credentials
+
+# Rate limiting for WebSocket failed handshakes: 5 failed handshakes per 60s per peer IP
+failed_handshakes: Dict[str, list[float]] = defaultdict(list)
+FAILED_HANDSHAKE_WINDOW = 60.0
+MAX_FAILED_HANDSHAKES = 5
+
+def is_peer_rate_limited(peer_ip: str) -> bool:
+    now = time.time()
+    valid_window = [t for t in failed_handshakes[peer_ip] if now - t < FAILED_HANDSHAKE_WINDOW]
+    failed_handshakes[peer_ip] = valid_window
+    return len(valid_window) >= MAX_FAILED_HANDSHAKES
+
+def record_handshake_failure(peer_ip: str) -> None:
+    now = time.time()
+    valid_window = [t for t in failed_handshakes[peer_ip] if now - t < FAILED_HANDSHAKE_WINDOW]
+    valid_window.append(now)
+    failed_handshakes[peer_ip] = valid_window
 
 active_websockets: set[WebSocket] = set()
 pending_confirmations: Dict[str, asyncio.Future] = {}
 
 async def broadcast_message(msg_dict: Dict[str, Any]):
+    # Broadcast safety: only authenticated sockets may receive broadcasts (especially confirm.request and log.entry)
     for ws in list(active_websockets):
+        if getattr(ws, "authenticated", False) is not True:
+            continue
         try:
             await ws.send_text(json.dumps(msg_dict))
         except Exception:
@@ -274,7 +339,49 @@ safety_engine.set_remote_confirmation_handler(remote_confirmation_handler)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
+    peer_ip = websocket.client.host if websocket.client else "127.0.0.1"
+
+    # Rate limiting: close socket after 5 failed handshakes from same peer within 60s
+    if is_peer_rate_limited(peer_ip):
+        await websocket.close(code=4401)
+        return
+
+    expected_token = os.environ.get("PHENOM_SESSION_TOKEN")
+    if not expected_token:
+        # Refuse to start WebSocket (fail closed) if PHENOM_SESSION_TOKEN is not set
+        record_handshake_failure(peer_ip)
+        await websocket.close(code=4401)
+        return
+
+    # Validate Origin header against allowlist
+    origin = websocket.headers.get("origin")
+    if not is_origin_allowed(origin):
+        record_handshake_failure(peer_ip)
+        await websocket.close(code=4401)
+        return
+
+    # Validate token in Sec-WebSocket-Protocol (phenom.<token>)
+    subprotocols = websocket.scope.get("subprotocols", []) or []
+    if not subprotocols:
+        header = websocket.headers.get("sec-websocket-protocol", "")
+        if header:
+            subprotocols = [s.strip() for s in header.split(",")]
+
+    provided_token = None
+    accepted_subprotocol = None
+    for sp in subprotocols:
+        if sp.startswith("phenom."):
+            provided_token = sp[len("phenom."):]
+            accepted_subprotocol = sp
+            break
+
+    if not provided_token or not hmac.compare_digest(provided_token, expected_token):
+        record_handshake_failure(peer_ip)
+        await websocket.close(code=4401)
+        return
+
+    await websocket.accept(subprotocol=accepted_subprotocol)
+    websocket.authenticated = True
     active_websockets.add(websocket)
     session_cancel_event = asyncio.Event()
     active_task: Optional[asyncio.Task] = None
@@ -556,44 +663,47 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         pass
     finally:
+        websocket.authenticated = False
         active_websockets.discard(websocket)
         if active_task and not active_task.done():
             active_task.cancel()
 
-# REST Endpoints for Diagnostics and Logs
+# Minimal unauthenticated health endpoints
+@app.get("/health")
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "service": "phenom-backend", "halted": guardian.is_halted}
+    return {"status": "ok"}
 
-@app.get("/api/logs")
+# REST Endpoints protected by session token
+@app.get("/api/logs", dependencies=[Depends(verify_session_token)])
 async def get_logs(limit: int = 50):
     return action_log.list_entries(limit=limit)
 
-@app.get("/api/rules")
+@app.get("/api/rules", dependencies=[Depends(verify_session_token)])
 async def get_rules():
     return learned_rules.list_rules()
 
-@app.get("/api/approvals")
+@app.get("/api/approvals", dependencies=[Depends(verify_session_token)])
 async def get_approvals():
     return approvals.list_all()
 
-@app.get("/api/mode")
+@app.get("/api/mode", dependencies=[Depends(verify_session_token)])
 async def get_current_mode():
     return mode_manager.get_mode_profile()
 
-@app.get("/api/scheduler/jobs")
+@app.get("/api/scheduler/jobs", dependencies=[Depends(verify_session_token)])
 async def get_scheduler_jobs():
     return background_scheduler.list_jobs()
 
-@app.get("/api/scheduler/logs")
+@app.get("/api/scheduler/logs", dependencies=[Depends(verify_session_token)])
 async def get_scheduler_logs(limit: int = 50):
     return background_scheduler.get_run_logs(limit=limit)
 
-@app.get("/api/watchlist")
+@app.get("/api/watchlist", dependencies=[Depends(verify_session_token)])
 async def get_financial_watchlist_api():
     return financial_engine.list_watchlist()
 
-@app.get("/api/telegram/status")
+@app.get("/api/telegram/status", dependencies=[Depends(verify_session_token)])
 async def get_telegram_status():
     return {
         "configured": telegram_controller.is_configured,
@@ -601,17 +711,17 @@ async def get_telegram_status():
         "locked": is_remote_locked()
     }
 
-@app.post("/api/telegram/unlock")
+@app.post("/api/telegram/unlock", dependencies=[Depends(verify_session_token)])
 async def unlock_telegram_remote():
     set_remote_locked(False)
     return {"locked": False, "status": "unlocked"}
 
-@app.post("/api/telegram/lock")
+@app.post("/api/telegram/lock", dependencies=[Depends(verify_session_token)])
 async def lock_telegram_remote():
     set_remote_locked(True)
     return {"locked": True, "status": "locked"}
 
-@app.post("/api/telegram/config")
+@app.post("/api/telegram/config", dependencies=[Depends(verify_session_token)])
 async def update_telegram_config(payload: Dict[str, Any]):
     token = payload.get("token")
     owner_id = payload.get("owner_id")

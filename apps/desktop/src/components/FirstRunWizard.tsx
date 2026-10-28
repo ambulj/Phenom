@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input, Badge, Checkbox } from '@fluentui/react-components';
+import { apiFetch } from '../utils/api';
 import {
   CheckmarkCircleFilled,
   KeyRegular,
@@ -30,7 +31,7 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
     // Save credentials to backend
     try {
       if (telegramToken && telegramOwnerId) {
-        await fetch('http://localhost:8000/api/telegram/config', {
+        await apiFetch('/api/telegram/config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: telegramToken, owner_id: telegramOwnerId })

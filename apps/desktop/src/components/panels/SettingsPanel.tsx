@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Select } from '@fluentui/react-components';
 import { DismissRegular, CheckmarkRegular, MicRegular, MicOffRegular } from '@fluentui/react-icons';
+import { apiFetch } from '../../utils/api';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -223,7 +224,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   const tokenEl = document.getElementById('tg-token-input') as HTMLInputElement;
                   const ownerEl = document.getElementById('tg-owner-input') as HTMLInputElement;
                   if (tokenEl && ownerEl) {
-                    await fetch('http://localhost:8000/api/telegram/config', {
+                    await apiFetch('/api/telegram/config', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ token: tokenEl.value, owner_id: ownerEl.value })
@@ -238,7 +239,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 appearance="secondary"
                 size="small"
                 onClick={async () => {
-                  await fetch('http://localhost:8000/api/telegram/unlock', { method: 'POST' });
+                  await apiFetch('/api/telegram/unlock', { method: 'POST' });
                   alert('Remote control unlocked at physical desktop.');
                 }}
               >

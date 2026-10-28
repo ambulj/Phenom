@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Badge } from '@fluentui/react-components';
 import { DismissRegular, ArrowSyncRegular } from '@fluentui/react-icons';
 import { LogEntryPayload } from '../../types/protocol';
+import { apiFetch } from '../../utils/api';
 
 interface ActionLogPanelProps {
   onClose: () => void;
@@ -14,7 +15,7 @@ export const ActionLogPanel: React.FC<ActionLogPanelProps> = ({ onClose }) => {
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/logs');
+      const res = await apiFetch('/api/logs');
       if (res.ok) {
         const data = await res.json();
         setLogs(data);

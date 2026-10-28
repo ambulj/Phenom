@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@fluentui/react-components';
 import { DismissRegular, ArrowSyncRegular } from '@fluentui/react-icons';
+import { apiFetch } from '../../utils/api';
 
 interface ApprovalsPanelProps {
   onClose: () => void;
@@ -13,7 +14,7 @@ export const ApprovalsPanel: React.FC<ApprovalsPanelProps> = ({ onClose }) => {
   const fetchApprovals = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/approvals');
+      const res = await apiFetch('/api/approvals');
       if (res.ok) {
         const data = await res.json();
         setApprovals(data);

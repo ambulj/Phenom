@@ -14,6 +14,7 @@ import {
   ArrowClockwiseRegular,
   NewsRegular
 } from '@fluentui/react-icons';
+import { apiFetch } from '../../utils/api';
 
 interface DashboardPanelProps {
   onClose: () => void;
@@ -51,8 +52,8 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
   const fetchLogs = async () => {
     try {
       const [resSched, resAction] = await Promise.all([
-        fetch('http://localhost:8000/api/scheduler/logs?limit=25'),
-        fetch('http://localhost:8000/api/logs?limit=25')
+        apiFetch('/api/scheduler/logs?limit=25'),
+        apiFetch('/api/logs?limit=25')
       ]);
       if (resSched.ok) {
         setSchedulerLogs(await resSched.json());

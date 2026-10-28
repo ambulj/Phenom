@@ -53,7 +53,9 @@ export const App: React.FC = () => {
     let reconnectTimeout: any;
 
     const connect = () => {
-      const ws = new WebSocket('ws://localhost:8000/ws');
+      const token = window.phenom?.getSessionToken();
+      const protocols = token ? [`phenom.${token}`] : [];
+      const ws = new WebSocket('ws://127.0.0.1:8000/ws', protocols);
       wsRef.current = ws;
 
       ws.onopen = () => {

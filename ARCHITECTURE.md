@@ -32,10 +32,28 @@ FastAPI backend
 | Cloud unreachable or approval denied | Local 8B with chunking, and say so |
 Every decision is logged with its reason.
 
-## 4. WebSocket protocol (all messages have `id`, `type`, `ts`)
+## 4. WebSocket protocol & API Security
+All WebSocket messages have `id`, `type`, `ts`.
 - UI to backend: `chat.send`, `chat.cancel`, `confirm.reply`, `settings.update`, `killswitch.trigger`, `mode.set`
 - Backend to UI: `chat.token`, `chat.done`, `state.change` (idle|listening|thinking|speaking|halted), `tool.request`, `confirm.request`, `log.entry`, `rules.updated`, `error`
 Define each as a Pydantic model in the backend and a TypeScript type in the app, generated from one schema so they never drift.
+
+### Connection & Authentication Specification
+1. **Session Token**: At launch, Electron generates a cryptographic 32-byte hex token in `apps/desktop/electron/main.cjs` passed to the Python backend via environment variable `PHENOM_SESSION_TOKEN`. It is exposed to the renderer only via `window.phenom.getSessionToken()` through a contextBridge preload script. It is never logged or stored in localStorage.
+2. **WebSocket Handshake Auth**: The client must supply the token in the `Sec-WebSocket-Protocol` header formatted as `phenom.<token>` (e.g. `new WebSocket('ws://127.0.0.1:8000/ws', ['phenom.' + token])`).
+   - The backend validates the token using `hmac.compare_digest` before calling `websocket.accept()`.
+   - On mismatch, missing token, or unset `PHENOM_SESSION_TOKEN`, the socket is closed immediately with code `4401` and no state/data is sent.
+   - Sockets failing authentication 5 times within 60 seconds from the same peer IP are immediately closed.
+3. **Origin Validation & CORS**:
+   - Packaged app origins allowed: `file://`, `null` (Chromium file:// origin), `vscode-file://`, `electron://`.
+   - Dev origins (`http://localhost:5173`, `http://127.0.0.1:5173`) are permitted only when `PHENOM_DEV=1`.
+   - All other origins (e.g. web pages running in standard browsers) are rejected with code 4401.
+   - CORS `allow_credentials` is `False`.
+4. **Broadcast Isolation**:
+   - `active_websockets` checks an `authenticated` flag on the socket connection. Sensitive broadcasts (`confirm.request`, `log.entry`) are strictly isolated to authenticated sockets.
+5. **REST Security**:
+   - All REST routes under `/api/*` require `Authorization: Bearer <token>`.
+   - The `/health` and `/api/health` endpoints are unauthenticated and return only `{"status": "ok"}` with no environment, path, or configuration metadata.
 
 ## 5. Orb states
 | State | Colour | Particle behaviour |

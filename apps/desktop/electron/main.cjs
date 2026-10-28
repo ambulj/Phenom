@@ -1,10 +1,45 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeImage, ipcMain, dialog } = require('electron');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
+const { spawn } = require('child_process');
+
+// Generate fresh 32-byte session token at every launch
+const sessionToken = process.env.PHENOM_SESSION_TOKEN || crypto.randomBytes(32).toString('hex');
+process.env.PHENOM_SESSION_TOKEN = sessionToken;
+
+// IPC handler to expose session token securely via contextBridge preload
+ipcMain.on('phenom:get-session-token', (event) => {
+  event.returnValue = sessionToken;
+});
 
 let mainWindow;
 let tray = null;
 let isQuitting = false;
+let backendProcess = null;
+
+function startBackend() {
+  // If backend is already running (e.g. during dev), do not spawn duplicate
+  const probe = http.get('http://127.0.0.1:8000/health', (res) => {
+    console.log('[Phenom] Backend already active (Status: ' + res.statusCode + ')');
+  });
+  probe.on('error', () => {
+    console.log('[Phenom] Starting backend service with session token...');
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    backendProcess = spawn(
+      pythonCmd,
+      ['-m', 'uvicorn', 'services.backend.main:app', '--host', '127.0.0.1', '--port', '8000'],
+      {
+        cwd: path.join(__dirname, '../../..'),
+        env: { ...process.env, PHENOM_SESSION_TOKEN: sessionToken },
+        stdio: 'inherit'
+      }
+    );
+    backendProcess.on('error', (err) => {
+      console.error('[Phenom] Failed to spawn backend process:', err);
+    });
+  });
+}
 
 // Check if quiet background start requested
 const isHiddenStart = process.argv.includes('--hidden') || process.argv.includes('--quiet');
@@ -63,11 +98,11 @@ function createTray() {
 }
 
 function checkPrerequisites() {
-  const req = http.get('http://localhost:8000/api/health', (res) => {
+  const req = http.get('http://127.0.0.1:8000/health', (res) => {
     console.log('[Phenom Prerequisite Check] Backend connected (Status: ' + res.statusCode + ')');
   });
   req.on('error', () => {
-    console.log('[Phenom Prerequisite Check] Backend not yet reachable; will retry on launch.');
+    console.log('[Phenom Prerequisite Check] Backend not yet reachable; starting/retrying...');
   });
 }
 
@@ -84,7 +119,8 @@ function createWindow() {
     titleBarStyle: 'default',
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs')
     }
   });
 
@@ -111,6 +147,7 @@ app.whenReady().then(() => {
   });
 
   createTray();
+  startBackend();
   createWindow();
   checkPrerequisites();
 
@@ -141,6 +178,14 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   isQuitting = true;
+  if (backendProcess) {
+    try {
+      backendProcess.kill();
+    } catch (e) {
+      // ignore
+    }
+    backendProcess = null;
+  }
 });
 
 app.on('will-quit', () => {
