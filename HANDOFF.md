@@ -1,97 +1,95 @@
 # HANDOFF.md
 
-Updated at the conclusion of Phase 7: Polish and Packaging (FINAL PHASE COMPLETE).
+**Hardening Pass 1 Status Report**  
+- **Branch**: `hardening/pass-1`  
+- **Base Commit**: `200b65ece7bef60a1536e279d661789a7773a741`  
+- **Date**: October 29, 2026  
+- **Audit Findings Addressed**: F1 (WebSocket & REST Authentication), F2 (Complete Requirements Manifest), F3 (pytest.ini, conftest.py, and CI), F4 (Honest Documentation), F5 (Python Version Guard & Prerequisites).
 
-## Project status
-Phenom personal Windows 11 desktop assistant is **100% complete** across all 8 planned phases (Phase 0 through Phase 7). All done criteria are passed with empirical evidence, and all 57 backend tests are passing with zero failures.
+---
 
-## How to run
-```bash
-# 1. Run complete test suite (57 tests across safety, router, tools, memory, voice, automation, RAG, modes, scheduler, integrations, Telegram, and packaging)
-python -m pytest services/backend/tests/ -v
+## 1. Verified Test Results
 
-# 2. Run system performance benchmark (measures idle CPU/RAM, wake word CPU, DB query latency, doc generation)
-python services/backend/benchmarks/benchmark_phase7.py
+### Local Windows Test Run
+- **Test Command**: `python -m pytest -q`
+- **Result**: **73 passed, 22 warnings in 42.12s** (0 failed, 0 errors).
+- **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
 
-# 3. Typecheck and build the desktop UI
-cd apps/desktop
-npm run build
-cd ../..
+### Cross-Platform Core Test Run
+- **Test Command**: `python -m pytest -q -m "not (windows_only or needs_audio or slow or needs_gpu)"`
+- **Result**: **67 passed, 6 deselected, 21 warnings in 34.72s**.
 
-# 4. Start backend and desktop app together with a single command
+### Import Coverage Audit
+- **Audit Command**: `python services/backend/scripts/audit_imports.py`
+- **Result**: **33 third-party imports audited; 0 missing dependencies**. All imports declared in `requirements.txt`, `requirements-windows.txt`, and `requirements-dev.txt`.
+
+### Desktop UI Build
+- **Build Command**: `npm --prefix apps/desktop run build`
+- **Result**: **Clean TypeScript compilation (`tsc`) and Vite production bundle generated in 15.77s with 0 errors**.
+
+---
+
+## 2. Phase-by-Phase Verification Matrix
+
+| Phase | Scope | What Was Actually Verified | What Was NOT Verified & Reason | Verification Command |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phase 0: Spikes** | Core Link & Encryption | WebSocket typed framing, state transitions (`idle` → `thinking` → `speaking`), token stream cancellation, and SQLCipher encryption. | Live Nemotron API cloud streaming (Nemotron API key not configured in environment). | `pytest services/backend/tests/test_memory.py -q` |
+| **Phase 1: Core & Safety** | Safety Engine & Guardian | 4-tier risk classification, tool registration, preview generation, UI confirmation handlers, action logging, and Guardian kill switch trigger/resume. | Physical keyboard interrupt while Python GIL is locked by C extensions (tested via asyncio cancellation and keyboard hook handlers). | `pytest services/backend/tests/test_safety.py services/backend/tests/test_final_safety_audit.py -q` |
+| **Phase 2: Voice & Persona** | Voice Pipeline | Sentence-by-sentence TTS streaming, barge-in stop latency (< 50ms), hotkey conflict validation, and hard safety refusal of spoken approvals. | Physical microphone wake-word detection in an ambient noisy room (verified using synthetic in-memory audio buffers). | `pytest services/backend/tests/test_voice.py -q` |
+| **Phase 3: Tools & Automation** | OS & Browser Automation | File sandboxing (create, read, copy, list, recycle), app listing, Playwright scripted navigation, dry-run cart filling, blocked checkout/pay actions, and in-RAM screen capture. | Live monetary purchases on real e-commerce sites (permanently blocked by construction under Rule 8). | `pytest services/backend/tests/test_tools.py services/backend/tests/test_automation.py -q` |
+| **Phase 4: Memory & RAG** | Encrypted Memory & Vault | SQLCipher schema roundtrips, vector store dense similarity search, Obsidian vault notes sync, photo EXIF read-only indexing, and reversible downloads cleanup. | Full filesystem scan across massive production drives (> 100k files; tested against isolated directory trees). | `pytest services/backend/tests/test_memory_phase4.py -q` |
+| **Phase 5: Modes & Integrations** | Assistant Personas & Feeds | Work/Study/Chill mode profiles, scheduler cron persistence in SQLCipher, watchlist stock/crypto quotes, tech news RSS parsing, and multi-format document generation (.docx, .xlsx, .pptx, .pdf). | Live financial trades (permanently prohibited under Rule 5) and live Google Workspace OAuth token exchange. | `pytest services/backend/tests/test_phase5.py -q` |
+| **Phase 6: Remote Bridge** | Telegram Remote Access | Telegram client message formatting, strict owner whitelist enforcement, non-owner rejection and security logging, remote inline button approvals, and remote locking. | Live network connection to official Telegram Bot API servers (tested via MockTelegramClient because no real bot token is stored in Credential Manager). | `pytest services/backend/tests/test_phase6.py -q` |
+| **Hardening Pass 1** | Security & Reproducibility | WebSocket token authentication via `Sec-WebSocket-Protocol`, Origin validation, rate limiting (5 failures / 60s), REST token protection, clean venv installation from `requirements.lock.txt`, and Python >= 3.11 startup guard. | Electron installer runtime bundle on non-Windows developer machines. | `pytest services/backend/tests/test_ws_auth.py services/backend/tests/test_requirements_cover_imports.py -q` |
+
+---
+
+## 3. Honest List of Known Issues and Limitations
+
+1. **WebSocket Session Token Lifetime**:
+   The WebSocket endpoint requires a cryptographic 32-byte session token generated at Electron startup (`PHENOM_SESSION_TOKEN`). If the desktop app crashes or restarts, a new token is generated. Any detached background task running across restarts cannot broadcast back to the frontend until a new authenticated WebSocket handshake is established.
+2. **Heavy Dependencies & CUDA Download Size**:
+   PyTorch with CUDA 12.4 acceleration (`torch==2.6.0+cu124`) is ~2.5 GB. Fresh installation on low-bandwidth networks requires significant time. For CI and non-GPU environments, lightweight CPU PyTorch wheels are documented and utilized.
+3. **OS-Specific Features on Linux/macOS**:
+   Windows-specific tests (`windows_only`) rely on `pywin32`, Windows Credential Manager (`win32cred`), `win32com`, `keyboard`, `mouse`, and `uiautomation`. These tests automatically skip when run on Linux or macOS. Cross-platform CI tests only the cross-platform core.
+4. **Standalone Python Interpreter Bundling**:
+   `electron-builder` packages the desktop UI and backend Python scripts into `extraResources/backend`, but does not bundle a standalone Python executable. The target Windows host must have Python >= 3.11 installed. The startup check in `main.cjs` detects Python and alerts the user if missing.
+5. **Local LLM Model Availability**:
+   Private on-device text generation relies on Ollama running on `http://127.0.0.1:11434` with `llama3.1:8b` installed. If Ollama is not running, Phenom alerts the user via the First-Run Wizard and chat interface.
+6. **Physical Audio Hardware in Headless CI**:
+   Tests tagged `needs_audio` require an initialized PortAudio device. Headless CI runners without virtual audio loopbacks automatically skip these tests.
+
+---
+
+## 4. Exact Steps to Reproduce from a Fresh Clone
+
+```powershell
+# 1. Clone repository and check out hardening branch
+git clone https://github.com/ambulj/Phenom.git
+cd Phenom
+git checkout hardening/pass-1
+
+# 2. Create clean Python 3.11 virtual environment
+py -3.11 -m venv .venv
+.venv\Scripts\activate
+
+# 3. Install locked dependencies
+pip install -r services/backend/requirements.lock.txt
+
+# 4. Verify dependency coverage (must output 0 missing)
+python services/backend/scripts/audit_imports.py
+
+# 5. Run backend test suite (must pass 73 tests)
+python -m pytest -q
+
+# 6. Verify Python version guard logic
+node apps/desktop/test_python_version.js
+
+# 7. Install and build desktop application
+npm install
+npm --prefix apps/desktop install
+npm --prefix apps/desktop run build
+
+# 8. Start development stack
 npm run dev
-
-# 5. Build Windows installer bundle with electron-builder
-cd apps/desktop
-npm run dist
 ```
-
-## System Architecture Summary
-- **Desktop UI (`apps/desktop/`)**:
-  - `electron/main.cjs`: Windows auto-start (`setLoginItemSettings`), System Tray Icon with context menu, quiet background start (`--hidden`), prerequisite health checks, global `Ctrl+Alt+Pause` Guardian hotkey, and minimize-to-tray on close.
-  - `src/components/Orb.tsx`: 3D Three.js particle cloud (6,000 particles) with 5 distinct visual states (calm blue, teal listening, violet thinking, amber speaking, red halted) modulated by real-time voice amplitude bursts.
-  - `src/components/FirstRunWizard.tsx`: 4-step onboarding wizard for English UI & voice selection, API credentials setup (NVIDIA, Google, Telegram) saved to Windows Credential Manager, safe default hotkeys, and indexing folder boundaries.
-  - `src/components/HeaderBar.tsx`: Fluent UI header with connection status, mute toggle, listening badge, Guardian Kill Switch / Resume, Mode cycle button (`Work` / `Study` / `Chill`), Dashboard launcher, and Mini Overlay toggle.
-  - `src/components/MiniOverlay.tsx`: Compact floating widget showing active task state, next scheduled reminder, active mode badge with one-click cycle, and immediate Guardian HALT button.
-  - `src/components/panels/`:
-    - `DashboardPanel.tsx`: 4 tabs for Scheduler & Reminders, Financial Watchlist, Live Safety Action Logs, and Tech News Briefing (HN, TechCrunch, The Verge).
-    - `LiveViewPanel.tsx`: Live viewport frame stream, human takeover banner with Continue/Stop actions, and step progress.
-    - `HistoryPanel.tsx`, `ActionLogPanel.tsx`, `LearnedRulesPanel.tsx`, `ApprovalsPanel.tsx`, `SettingsPanel.tsx`.
-- **Backend Services (`services/backend/`)**:
-  - `packaging/`:
-    - `updater.py`: Version tracking, update staging, and automatic rollback on boot health check failure.
-    - `crash_reporter.py`: Local-only crash log recording with zero telemetry and one-click export that strips personal usernames (`C:\Users\[USER]\...`), IP addresses, and secret keys.
-  - `remote/`:
-    - `credentials.py`: Windows Credential Manager integration for tokens and owner user IDs.
-    - `telegram_client.py`: Async Telegram Bot API client via `httpx`.
-    - `telegram_bot.py`: Strict sender whitelisting (owner ID only; others silently ignored and logged), remote approvals for Tier 1/2 with previews, remote kill switch (`/halt`), `/status`, `/tasks`, `/logs`, and `/lock` command.
-  - `modes/`:
-    - `mode_manager.py`: Work, Study, and Chill modes controlling tools, prompt tone, and notification filtering.
-  - `scheduler/`:
-    - `cron.py`: BackgroundScheduler with persistence across restarts in encrypted SQLCipher DB and run history logs.
-  - `integrations/`:
-    - `finance.py`: Market quotes, single-trigger price alerts; code-level blocks on trading and financial advice.
-    - `google_workspace.py`: Gmail reading and draft creation (never send); Calendar event creation (never delete/edit).
-    - `live_data.py`: API first, fallback to web scraping labelled `source="scraped"` for Weather, Mutual Funds, Sports.
-    - `news_briefing.py`: Tech news RSS parser.
-    - `research.py`: arXiv, Semantic Scholar, Crossref, and Google Scholar academic search.
-    - `doc_generator.py`: Generates Word (.docx), Excel (.xlsx), PowerPoint (.pptx), and PDF (.pdf) documents.
-  - `safety/`:
-    - `engine.py`, `registry.py`, `guardian.py`, `action_log.py`, `approvals.py`.
-  - `memory/`:
-    - `db.py`: Encrypted SQLCipher database manager using 256-bit key in Windows Credential Manager.
-    - `vector_store.py`: Local `all-MiniLM-L6-v2` dense vector embeddings.
-    - `vault.py`: Obsidian markdown vault in `vault/`.
-    - `photo_indexer.py`: Photo EXIF indexing; hard code-level prohibition against photo modifications.
-    - `cleanup_organizer.py`: Downloads categorization, SHA-256 duplicate detection to Recycle Bin, and 100% reversible undo.
-
-## Phase 7 Verification Results
-| Requirement / Done Criterion | Specification | Empirical Evidence | Status |
-| :--- | :--- | :--- | :---: |
-| **Windows Installer & Packaging** | electron-builder bundles UI and Python backend with NSIS | `package.json` configured with NSIS target, shortcuts, icon, and extraResources bundling backend | PASS |
-| **First-Run Wizard** | English UI & voice, API keys, safe hotkeys, folder boundaries | `FirstRunWizard.tsx` guides 4 steps, saves credentials to Windows Credential Manager, sets `phenom_first_run_done` | PASS |
-| **Auto-Start & Tray Icon** | Windows boot launch, tray menu, quiet background start | `main.cjs` registers `setLoginItemSettings`, tray context menu (Show, Hide, HALT, Quit), and `--hidden` quiet launch | PASS |
-| **Auto-Update & Safe Rollback** | Staged update automatically rolls back on boot failure | `AutoUpdateManager.stage_update("1.1.0")` followed by `verify_boot(is_healthy=False)` restored `1.0.0` snapshot | PASS |
-| **Local-Only Crash Logs** | Local JSON storage with zero telemetry and sanitized export | `CrashReporter.export_sanitized_report()` stripped username (`C:\Users\[USER]\...`), keys, and IPs | PASS |
-| **Performance Pass Numbers** | Idle CPU/RAM, orb frame rate, and wake-word load | Idle CPU: 0.0%, RAM: 211.9 MB, Wake Word CPU: 3.2%, DB Latency: 5.61 ms, Orb: 60.0 FPS | PASS |
-| **Final Safety Audit Walk** | Every tool checked across 4 tiers; kill switch tested from UI, voice, hotkey, Telegram | 25+ tools verified across all 4 tiers; Guardian halts from UI, hotkey, voice, and Telegram; cloud privacy verified | PASS |
-
-## Measured Performance Numbers
-- **Backend Idle RAM**: 211.9 MB
-- **Backend Idle CPU**: 0.0%
-- **Wake Word Detection CPU**: 3.2%
-- **Encrypted SQLCipher Query Latency**: 5.61 ms
-- **Word Document Creation**: 45.1 ms
-- **Excel Spreadsheet Creation**: 29.3 ms
-- **PDF Report Generation**: 3.8 ms
-- **Three.js Particle Orb**: 60.0 FPS (16.67 ms frame budget)
-
-## Test Results
-- **Full Backend Test Suite**: **57 passed out of 57 tests** (100% pass rate).
-- **Desktop UI TypeScript Build**: Clean production build with Vite (`dist/index.html`, `dist/assets/`).
-
-## Known issues
-- None. All done criteria across all phases are met.
-
-## Open questions for the user
-- None. Ready for production deployment and daily use.
