@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input, Badge, Checkbox } from '@fluentui/react-components';
-import { apiFetch } from '../utils/api';
 import {
   CheckmarkCircleFilled,
+  DismissCircleFilled,
   KeyRegular,
   KeyboardRegular,
   FolderRegular,
   Speaker2Regular,
   ArrowRightRegular,
-  ArrowLeftRegular
+  ArrowLeftRegular,
+  DesktopRegular
 } from '@fluentui/react-icons';
+import { apiFetch } from '../utils/api';
 
 interface FirstRunWizardProps {
   onComplete: () => void;
@@ -17,6 +19,10 @@ interface FirstRunWizardProps {
 
 export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) => {
   const [step, setStep] = useState<number>(1);
+
+  // Prerequisites states
+  const [pythonStatus, setPythonStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+  const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'ok' | 'error'>('checking');
 
   // Form states
   const [nvidiaKey, setNvidiaKey] = useState<string>('');
@@ -26,6 +32,32 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
   const [indexDocuments, setIndexDocuments] = useState<boolean>(true);
   const [indexDownloads, setIndexDownloads] = useState<boolean>(true);
   const [indexPhotos, setIndexPhotos] = useState<boolean>(true);
+
+  useEffect(() => {
+    // 1. Check Python backend status
+    apiFetch('/health')
+      .then((res) => {
+        if (res.ok) setPythonStatus('ok');
+        else setPythonStatus('error');
+      })
+      .catch(() => {
+        if (window.phenom?.getSessionToken()) {
+          setPythonStatus('ok');
+        } else {
+          setPythonStatus('error');
+        }
+      });
+
+    // 2. Check Ollama daemon
+    fetch('http://127.0.0.1:11434/api/tags')
+      .then((res) => {
+        if (res.ok) setOllamaStatus('ok');
+        else setOllamaStatus('error');
+      })
+      .catch(() => {
+        setOllamaStatus('error');
+      });
+  }, []);
 
   const handleFinish = async () => {
     // Save credentials to backend
@@ -92,13 +124,81 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
               </span>
             </div>
           </div>
-          <Badge appearance="tint" color="brand">Step {step} of 4</Badge>
+          <Badge appearance="tint" color="brand">Step {step} of 5</Badge>
         </div>
 
         {/* Body Content */}
-        <div style={{ padding: '24px 28px', minHeight: 280, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* STEP 1: Language & Voice */}
+        <div style={{ padding: '24px 28px', minHeight: 310, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* STEP 1: System Prerequisites */}
           {step === 1 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38bdf8' }}>
+                <DesktopRegular style={{ fontSize: 18 }} />
+                <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>System Prerequisites Check</h2>
+              </div>
+              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: '20px', margin: 0 }}>
+                Phenom requires local runtime services for assistant reasoning and tool execution:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Python 3.11+ Check */}
+                <div style={{
+                  padding: '12px 16px',
+                  background: pythonStatus === 'ok' ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                  border: pythonStatus === 'ok' ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)',
+                  borderRadius: 10,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12
+                }}>
+                  {pythonStatus === 'ok' ? (
+                    <CheckmarkCircleFilled style={{ color: '#22c55e', fontSize: 20, marginTop: 2 }} />
+                  ) : (
+                    <DismissCircleFilled style={{ color: '#ef4444', fontSize: 20, marginTop: 2 }} />
+                  )}
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: pythonStatus === 'ok' ? '#86efac' : '#fca5a5' }}>
+                      Python 3.11+ Backend Engine
+                    </div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>
+                      {pythonStatus === 'ok'
+                        ? 'Python 3.11 or newer detected. FastAPI backend is connected and ready.'
+                        : 'Python 3.11+ is required. Please install Python 3.11 or newer from python.org and add it to your system PATH.'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ollama Local LLM Check */}
+                <div style={{
+                  padding: '12px 16px',
+                  background: ollamaStatus === 'ok' ? 'rgba(34, 197, 94, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                  border: ollamaStatus === 'ok' ? '1px solid rgba(34, 197, 94, 0.25)' : '1px solid rgba(245, 158, 11, 0.25)',
+                  borderRadius: 10,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12
+                }}>
+                  {ollamaStatus === 'ok' ? (
+                    <CheckmarkCircleFilled style={{ color: '#22c55e', fontSize: 20, marginTop: 2 }} />
+                  ) : (
+                    <DismissCircleFilled style={{ color: '#f59e0b', fontSize: 20, marginTop: 2 }} />
+                  )}
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: ollamaStatus === 'ok' ? '#86efac' : '#fcd34d' }}>
+                      Ollama Local LLM Service (Port 11434)
+                    </div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>
+                      {ollamaStatus === 'ok'
+                        ? 'Ollama is running locally. Ready for on-device private Llama 3 inference.'
+                        : 'Ollama is not running. Start Ollama and run `ollama pull llama3.1:8b` for local offline reasoning.'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Language & Voice */}
+          {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38bdf8' }}>
                 <Speaker2Regular style={{ fontSize: 18 }} />
@@ -116,10 +216,10 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
             </div>
           )}
 
-          {/* STEP 2: API Keys & Credentials */}
-          {step === 2 && (
+          {/* STEP 3: API Keys & Credentials */}
+          {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a855f7' }}>
+              <div style={{ display: 'center', alignItems: 'center', gap: 8, color: '#a855f7' }}>
                 <KeyRegular style={{ fontSize: 18 }} />
                 <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>API Credentials (Optional)</h2>
               </div>
@@ -169,8 +269,8 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
             </div>
           )}
 
-          {/* STEP 3: Safe Default Hotkeys */}
-          {step === 3 && (
+          {/* STEP 4: Safe Default Hotkeys */}
+          {step === 4 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#f59e0b' }}>
                 <KeyboardRegular style={{ fontSize: 18 }} />
@@ -205,8 +305,8 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
             </div>
           )}
 
-          {/* STEP 4: Privacy & Indexing Boundaries */}
-          {step === 4 && (
+          {/* STEP 5: Privacy & Indexing Boundaries */}
+          {step === 5 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#10b981' }}>
                 <FolderRegular style={{ fontSize: 18 }} />
@@ -255,7 +355,7 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
             </Button>
           ) : <div />}
 
-          {step < 4 ? (
+          {step < 5 ? (
             <Button appearance="primary" icon={<ArrowRightRegular />} iconPosition="after" onClick={() => setStep(step + 1)}>
               Continue
             </Button>

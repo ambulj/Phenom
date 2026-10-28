@@ -1,0 +1,13 @@
+[project]
+name = "phenom"
+version = "0.1.0"
+description = "Phenom: Personal Windows 11 Desktop Assistant"
+requires-python = ">=3.11"
+readme = "README.md"
+authors = [
+    { name = "Ambul Jaiswal" }
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["services/backend/tests"]

@@ -3,6 +3,7 @@ const path = require('path');
 const http = require('http');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const { detectPythonCommand } = require('./pythonVersion.cjs');
 
 // Generate fresh 32-byte session token at every launch
 const sessionToken = process.env.PHENOM_SESSION_TOKEN || crypto.randomBytes(32).toString('hex');
@@ -19,16 +20,27 @@ let isQuitting = false;
 let backendProcess = null;
 
 function startBackend() {
+  const pythonTarget = detectPythonCommand();
+  if (!pythonTarget) {
+    dialog.showErrorBox(
+      'Python 3.11+ Required',
+      'Phenom requires Python 3.11 or newer to run the assistant backend.\n\n' +
+      'Please install Python 3.11 or newer from https://www.python.org/downloads/ and ensure it is added to your system PATH.'
+    );
+    console.error('[Phenom] Aborting backend startup: Python 3.11+ not found on host.');
+    return;
+  }
+
   // If backend is already running (e.g. during dev), do not spawn duplicate
   const probe = http.get('http://127.0.0.1:8000/health', (res) => {
     console.log('[Phenom] Backend already active (Status: ' + res.statusCode + ')');
   });
   probe.on('error', () => {
-    console.log('[Phenom] Starting backend service with session token...');
-    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    console.log(`[Phenom] Starting backend service using ${pythonTarget.cmd} (${pythonTarget.version.raw})...`);
+    const spawnArgs = [...pythonTarget.execArgs, '-m', 'uvicorn', 'services.backend.main:app', '--host', '127.0.0.1', '--port', '8000'];
     backendProcess = spawn(
-      pythonCmd,
-      ['-m', 'uvicorn', 'services.backend.main:app', '--host', '127.0.0.1', '--port', '8000'],
+      pythonTarget.cmd,
+      spawnArgs,
       {
         cwd: path.join(__dirname, '../../..'),
         env: { ...process.env, PHENOM_SESSION_TOKEN: sessionToken },
