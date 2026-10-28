@@ -42,6 +42,7 @@ import services.backend.tools.memory_tools
 import services.backend.tools.integration_tools
 import services.backend.tools.media_tools
 import services.backend.tools.utility_tools
+import services.backend.tools.git_tools
 from services.backend.voice.sound_fx import sound_fx
 from services.backend.modes.mode_manager import mode_manager
 from services.backend.scheduler.cron import background_scheduler
@@ -53,6 +54,7 @@ from services.backend.remote.telegram_bot import telegram_controller
 from services.backend.remote.credentials import (
     is_remote_locked, set_remote_locked, set_telegram_token, set_telegram_owner_id, get_telegram_owner_id
 )
+from services.backend.memory.vault import vault_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -176,6 +178,28 @@ async def lifespan(app: FastAPI):
             "payload": evt
         }))
     background_scheduler.add_listener(on_scheduler_reminder)
+
+    # Register vault git nightly backup handler
+    async def run_vault_backup_job(payload):
+        return vault_manager.sync_vault_git()
+
+    background_scheduler.register_callback("vault_backup", run_vault_backup_job)
+
+    # Schedule 24h recurring nightly vault backup if not already present
+    try:
+        existing_jobs = [
+            j for j in background_scheduler.list_jobs(include_disabled=False)
+            if j.get("action_type") == "vault_backup"
+        ]
+        if not existing_jobs:
+            background_scheduler.add_recurring_job(
+                title="Nightly Vault Backup & Git Sync",
+                interval_seconds=86400,
+                action_type="vault_backup"
+            )
+    except Exception as e:
+        print(f"[Vault] Could not schedule recurring backup: {e}")
+
     background_scheduler.start()
     telegram_controller.start()
     asyncio.create_task(warm_up_ollama())
@@ -736,3 +760,36 @@ async def update_telegram_config(payload: Dict[str, Any]):
         "owner_id": get_telegram_owner_id(),
         "locked": is_remote_locked()
     }
+
+@app.get("/api/vault/status", dependencies=[Depends(verify_session_token)])
+async def get_vault_status():
+    return {
+        "vault_path": vault_manager.vault_path,
+        "remote_url": vault_manager.get_remote_url(),
+        "git_initialized": os.path.exists(os.path.join(vault_manager.vault_path, ".git")),
+        "has_token": bool(vault_manager.get_vault_token()),
+        "note_count": len(vault_manager.list_notes())
+    }
+
+@app.post("/api/vault/config", dependencies=[Depends(verify_session_token)])
+async def update_vault_config(payload: Dict[str, Any]):
+    remote_url = payload.get("remote_url")
+    token = payload.get("token")
+    if remote_url is not None:
+        vault_manager.set_remote_url(remote_url)
+    if token is not None:
+        vault_manager.set_vault_token(token)
+    return {
+        "status": "ok",
+        "remote_url": vault_manager.get_remote_url(),
+        "has_token": bool(vault_manager.get_vault_token())
+    }
+
+@app.post("/api/vault/test_connection", dependencies=[Depends(verify_session_token)])
+async def test_vault_connection(payload: Optional[Dict[str, Any]] = None):
+    url = (payload or {}).get("remote_url")
+    return vault_manager.test_remote_connection(remote_url=url)
+
+@app.post("/api/vault/sync", dependencies=[Depends(verify_session_token)])
+async def sync_vault_now():
+    return vault_manager.sync_vault_git()

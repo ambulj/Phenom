@@ -47,7 +47,7 @@ class SafetyExecutionEngine:
         if guardian.is_halted:
             action_log.log_action(
                 tool=tool_name,
-                tier=registry.get_tier(tool_name),
+                tier=registry.get_tier(tool_name, raw_args),
                 args=raw_args,
                 decision="denied",
                 result_status="FAILED",
@@ -71,22 +71,23 @@ class SafetyExecutionEngine:
             )
             raise PermissionError(f"Tool '{tool_name}' is not registered and is blocked under Tier 3.")
 
-        tier = tool_def.tier
-
         # Validate arguments using tool's Pydantic schema
         try:
             validated_args = tool_def.args_schema(**raw_args).model_dump()
         except Exception as e:
+            fallback_tier = tool_def.get_tier(raw_args)
             action_log.log_action(
                 tool=tool_name,
-                tier=tier,
+                tier=fallback_tier,
                 args=raw_args,
-                decision="auto" if tier == 0 else "denied",
+                decision="auto" if fallback_tier == 0 else "denied",
                 result_status="FAILED",
                 source=source,
                 error=f"Schema validation error: {e}"
             )
             raise ValueError(f"Invalid arguments for {tool_name}: {e}")
+
+        tier = tool_def.get_tier(validated_args)
 
         # Guard 3: Tier 3 Blocked Check
         if tier == 3:
@@ -198,6 +199,7 @@ class SafetyExecutionEngine:
         decision: DecisionType,
         source: str
     ) -> Dict[str, Any]:
+        action_tier = tool_def.get_tier(args)
         try:
             if asyncio.iscoroutinefunction(tool_def.handler_fn):
                 result = await tool_def.handler_fn(**args)
@@ -206,7 +208,7 @@ class SafetyExecutionEngine:
 
             action_log.log_action(
                 tool=tool_def.name,
-                tier=tool_def.tier,
+                tier=action_tier,
                 args=args,
                 decision=decision,
                 result_status="SUCCESS",
@@ -216,7 +218,7 @@ class SafetyExecutionEngine:
         except Exception as e:
             action_log.log_action(
                 tool=tool_def.name,
-                tier=tool_def.tier,
+                tier=action_tier,
                 args=args,
                 decision=decision,
                 result_status="ERROR",

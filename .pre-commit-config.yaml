@@ -1,0 +1,11 @@
+# Phenom Pre-Commit Configuration
+repos:
+  - repo: local
+    hooks:
+      - id: phenom-secret-scan
+        name: Phenom Secret & Vault Commit Guard
+        entry: python scripts/scan_secrets.py --staged
+        language: system
+        stages: [pre-commit]
+        always_run: true
+        pass_filenames: false

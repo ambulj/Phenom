@@ -31,6 +31,10 @@ jobs:
         run: |
           python services/backend/scripts/audit_imports.py
 
+      - name: Secret & Commit Guard Scan
+        run: |
+          python scripts/scan_secrets.py --all
+
       - name: Run Backend Tests
         run: |
           pytest -q -m "not (slow or needs_gpu)"
@@ -55,6 +59,10 @@ jobs:
           pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
           pip install -r services/backend/requirements.txt
           pip install pytest pytest-asyncio pytest-timeout
+
+      - name: Secret & Commit Guard Scan
+        run: |
+          python scripts/scan_secrets.py --all
 
       - name: Run Cross-Platform Tests
         run: |

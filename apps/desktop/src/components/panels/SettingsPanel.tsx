@@ -30,6 +30,75 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 }) => {
   const [editedHotkeys, setEditedHotkeys] = useState<Record<string, string>>(hotkeys);
   const [currentWakePhrase, setCurrentWakePhrase] = useState<string>(wakePhrase);
+  const [vaultStatus, setVaultStatus] = useState<any>(null);
+  const [vaultRemoteUrl, setVaultRemoteUrl] = useState<string>('');
+  const [vaultToken, setVaultToken] = useState<string>('');
+  const [vaultMessage, setVaultMessage] = useState<string>('');
+  const [vaultTesting, setVaultTesting] = useState<boolean>(false);
+  const [vaultSyncing, setVaultSyncing] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    apiFetch('/api/vault/status')
+      .then((res) => res.json())
+      .then((data) => {
+        setVaultStatus(data);
+        if (data.remote_url) setVaultRemoteUrl(data.remote_url);
+      })
+      .catch((err) => console.error('Error loading vault status:', err));
+  }, []);
+
+  const handleTestVaultConnection = async () => {
+    setVaultTesting(true);
+    setVaultMessage('Testing connection to remote...');
+    try {
+      const res = await apiFetch('/api/vault/test_connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ remote_url: vaultRemoteUrl })
+      });
+      const data = await res.json();
+      setVaultMessage(data.message || (data.status === 'success' ? 'Connection successful!' : 'Connection failed.'));
+    } catch (e: any) {
+      setVaultMessage(`Connection error: ${e.message}`);
+    } finally {
+      setVaultTesting(false);
+    }
+  };
+
+  const handleSaveVaultConfig = async () => {
+    try {
+      const res = await apiFetch('/api/vault/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ remote_url: vaultRemoteUrl, token: vaultToken || undefined })
+      });
+      await res.json();
+      setVaultMessage('Vault configuration saved. Token secured in Windows Credential Manager.');
+      setVaultToken('');
+      const statusRes = await apiFetch('/api/vault/status');
+      setVaultStatus(await statusRes.json());
+    } catch (e: any) {
+      setVaultMessage(`Error saving config: ${e.message}`);
+    }
+  };
+
+  const handleSyncVaultNow = async () => {
+    setVaultSyncing(true);
+    setVaultMessage('Syncing vault changes to remote git...');
+    try {
+      const res = await apiFetch('/api/vault/sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setVaultMessage(`Sync complete! Changes committed: ${data.committed}, Pushed: ${data.pushed}`);
+      } else {
+        setVaultMessage(`Sync response: ${data.output || data.status}`);
+      }
+    } catch (e: any) {
+      setVaultMessage(`Sync failed: ${e.message}`);
+    } finally {
+      setVaultSyncing(false);
+    }
+  };
 
   const handleKeyChange = (action: string, val: string) => {
     setEditedHotkeys((prev) => ({ ...prev, [action]: val }));
@@ -244,6 +313,90 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 }}
               >
                 Unlock Remote
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Obsidian Vault & Private Git Backup (Hardening Task 6) */}
+        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#38bdf8', marginBottom: 8 }}>Obsidian Vault & Private Git Backup</h3>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10 }}>
+            Stored outside the code repository. Versioned with git and backed up nightly to your private repo.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 2 }}>
+                Vault Path (Fixed Location)
+              </label>
+              <div style={{ fontSize: 12, color: '#f1f5f9', background: 'rgba(15, 23, 42, 0.5)', padding: '6px 10px', borderRadius: 4, fontFamily: 'monospace' }}>
+                {vaultStatus ? vaultStatus.vault_path : 'Loading...'}
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Private Git Remote URL
+              </label>
+              <Input
+                placeholder="https://github.com/your-username/private-vault.git"
+                value={vaultRemoteUrl}
+                onChange={(e) => setVaultRemoteUrl(e.target.value)}
+                style={{ width: '100%' }}
+                size="small"
+              />
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                Must be a private repo. Code repository URL is strictly refused.
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Fine-Grained Git Token {vaultStatus?.has_token ? '(Configured in Credential Manager)' : ''}
+              </label>
+              <Input
+                type="password"
+                placeholder={vaultStatus?.has_token ? '••••••••••••••••••••' : 'github_pat_... (contents-write only)'}
+                value={vaultToken}
+                onChange={(e) => setVaultToken(e.target.value)}
+                style={{ width: '100%' }}
+                size="small"
+              />
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                Stored securely in Windows Credential Manager under Phenom/vault-git-token. Never logged.
+              </div>
+            </div>
+
+            {vaultMessage && (
+              <div style={{ fontSize: 12, color: vaultMessage.includes('fail') || vaultMessage.includes('error') ? '#f87171' : '#34d399', marginTop: 4 }}>
+                {vaultMessage}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <Button
+                appearance="primary"
+                size="small"
+                onClick={handleSaveVaultConfig}
+              >
+                Save Vault Config
+              </Button>
+              <Button
+                appearance="secondary"
+                size="small"
+                disabled={vaultTesting || !vaultRemoteUrl}
+                onClick={handleTestVaultConnection}
+              >
+                {vaultTesting ? 'Testing...' : 'Test Connection'}
+              </Button>
+              <Button
+                appearance="subtle"
+                size="small"
+                disabled={vaultSyncing}
+                onClick={handleSyncVaultNow}
+              >
+                {vaultSyncing ? 'Syncing...' : 'Sync Now'}
               </Button>
             </div>
           </div>

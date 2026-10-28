@@ -1,0 +1,16 @@
+# Phenom Desktop Assistant Configuration
+
+[vault]
+# The Obsidian vault folder is stored outside the code repository.
+# Environment variables like %USERPROFILE% are automatically expanded.
+vault_path = "%USERPROFILE%\\Documents\\Phenom\\vault"
+remote_url = "C:\Users\sauja\AppData\Local\Temp\throwaway_remote_z7efmp5n"
+
+[hotkeys]
+push_to_talk = "alt+space"
+toggle_phenom = "ctrl+alt+p"
+kill_switch = "ctrl+alt+pause"
+
+[models]
+local_model = "llama3.1:8b"
+cloud_model = "meta/llama-3.1-405b-instruct"

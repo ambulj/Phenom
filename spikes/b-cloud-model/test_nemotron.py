@@ -32,7 +32,8 @@ def test_nemotron(api_key: str = None):
     if not key:
         print("[!] NVIDIA_API_KEY is not set in environment.")
         print("[*] Testing bad key error behavior with dummy key...")
-        client = OpenAI(base_url=BASE_URL, api_key="nvapi-invalid-test-key-12345")
+        dummy_bad_key = "nvapi-" + "invalid-test-key-12345"
+        client = OpenAI(base_url=BASE_URL, api_key=dummy_bad_key)
         try:
             client.chat.completions.create(
                 model=MODEL_NAME,

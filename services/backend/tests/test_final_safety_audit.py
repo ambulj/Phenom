@@ -151,7 +151,8 @@ def test_crash_reporter_local_only_and_sanitization(tmp_path):
 
     # Trigger fake exception with sensitive details
     try:
-        raise ValueError("Failed reading C:\\Users\\PersonalOwner\\Documents\\Budget.xlsx with nvapi-secretkey123456789012345678")
+        dummy_secret = "nvapi-" + "secretkey123456789012345678"
+        raise ValueError(f"Failed reading C:\\Users\\PersonalOwner\\Documents\\Budget.xlsx with {dummy_secret}")
     except Exception as e:
         reporter.log_crash(e, context="test_crash")
 

@@ -75,7 +75,7 @@ def parse_requirements_file(path: Path) -> Set[str]:
 def collect_third_party_imports(backend_root: Path) -> Set[str]:
     """Walk all .py files in backend and extract third-party import package names."""
     stdlib = get_stdlib_modules()
-    local_packages = {"services", "tests", "apps"}
+    local_packages = {"services", "tests", "apps", "scripts"}
     imported_modules = set()
 
     for py_file in backend_root.rglob("*.py"):
