@@ -35,6 +35,9 @@ import services.backend.tools.app_tools
 import services.backend.tools.automation_tools
 import services.backend.tools.memory_tools
 import services.backend.tools.integration_tools
+import services.backend.tools.media_tools
+import services.backend.tools.utility_tools
+from services.backend.voice.sound_fx import sound_fx
 from services.backend.modes.mode_manager import mode_manager
 from services.backend.scheduler.cron import background_scheduler
 from services.backend.integrations.finance import financial_engine
@@ -113,16 +116,30 @@ async def lifespan(app: FastAPI):
             # Process through Voice Coordinator pipeline (STT -> Orchestrator -> Piper TTS)
             await voice_coordinator.handle_spoken_audio(audio_data)
 
+            sound_fx.play_done_chime()
+
+            # Enter 5-second duplex follow-up conversation window
+            wake_detector.enter_duplex_followup_window(5.0)
+
             await broadcast_message({
-                "id": f"done-{os.urandom(2).hex()}",
+                "id": f"duplex-{os.urandom(2).hex()}",
                 "type": "state.change",
                 "ts": "",
-                "payload": {"state": "idle"}
+                "payload": {"state": "listening", "detail": "Listening for follow-up..."}
             })
 
         asyncio.run_coroutine_threadsafe(process_spoken_turn(), main_loop)
 
+    def on_duplex_timeout():
+        asyncio.run_coroutine_threadsafe(broadcast_message({
+            "id": f"duplex-end-{os.urandom(2).hex()}",
+            "type": "state.change",
+            "ts": "",
+            "payload": {"state": "idle"}
+        }), main_loop)
+
     wake_detector.set_command_callback(on_command_recorded)
+    wake_detector.set_duplex_timeout_callback(on_duplex_timeout)
     wake_detector.start()
 
     # Setup browser live view streaming callback

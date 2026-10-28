@@ -8,7 +8,9 @@ import {
   MoneyRegular,
   FolderOpenRegular,
   DeleteRegular,
-  MicRegular
+  MicRegular,
+  PlayRegular,
+  DocumentPdfRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
 
@@ -358,6 +360,75 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(234, 179, 8, 0.12)')}
         >
           <FolderOpenRegular fontSize={14} /> 🧹 Tidy Downloads
+        </button>
+
+        <button
+          onClick={() => handleQuickPrompt("Toggle media play/pause on Spotify")}
+          style={{
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            color: '#6ee7b7',
+            padding: '6px 12px',
+            borderRadius: 9999,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(16, 185, 129, 0.22)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(16, 185, 129, 0.12)')}
+        >
+          <PlayRegular fontSize={14} /> 🎵 Play/Pause
+        </button>
+
+        <button
+          onClick={() => handleQuickPrompt("Split pages from a PDF document")}
+          style={{
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            color: '#fca5a5',
+            padding: '6px 12px',
+            borderRadius: 9999,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.22)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)')}
+        >
+          <DocumentPdfRegular fontSize={14} /> 📄 Split PDF
+        </button>
+
+        <button
+          onClick={() => handleQuickPrompt("Calculate math formula: sqrt(144) + 15 * 8")}
+          style={{
+            background: 'rgba(244, 63, 94, 0.12)',
+            border: '1px solid rgba(244, 63, 94, 0.3)',
+            color: '#fda4af',
+            padding: '6px 12px',
+            borderRadius: 9999,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(244, 63, 94, 0.22)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(244, 63, 94, 0.12)')}
+        >
+          🧮 Math Calc
         </button>
 
         {hasHistory && onClearHistory && (
