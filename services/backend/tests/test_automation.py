@@ -47,6 +47,7 @@ async def test_scripted_browser_task_with_live_view():
     finally:
         await browser_controller.close()
 
+@pytest.mark.windows_only
 @pytest.mark.asyncio
 async def test_pause_on_input_within_one_second():
     takeover_manager.start_automation()
@@ -208,6 +209,7 @@ def test_automation_limits_and_stuck_detector():
     with pytest.raises(AutomationStuckError):
         stuck_limits.check_limits("click:#btn", state_repr="<html>state1</html>")
 
+@pytest.mark.windows_only
 def test_screen_privacy_in_memory_only():
     # Capture screen into RAM
     img = desktop_controller.capture_screen_ram()
@@ -215,8 +217,9 @@ def test_screen_privacy_in_memory_only():
     assert img.width > 0 and img.height > 0
 
     # Ensure no screenshot files were created in repo root
+    repo_root = str(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
     disk_screenshots = []
-    for root, dirs, files in os.walk("C:\\Phenom"):
+    for root, dirs, files in os.walk(repo_root):
         if ".git" in root or "node_modules" in root or ".venv" in root:
             continue
         for f in files:

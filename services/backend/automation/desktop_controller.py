@@ -15,7 +15,10 @@ from typing import Optional, Dict, Any, List, Tuple
 from PIL import Image
 import mss
 import pyautogui
-import uiautomation as auto
+try:
+    import uiautomation as auto
+except ImportError:
+    auto = None
 
 from services.backend.automation.human_takeover import takeover_manager
 from services.backend.automation.limits import AutomationLimitsManager

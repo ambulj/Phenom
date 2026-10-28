@@ -8,6 +8,7 @@ Verifies:
 5. Guardian killswitch trigger and resume cycle
 """
 
+import os
 import pytest
 import asyncio
 import json
@@ -39,9 +40,16 @@ def test_health_endpoint():
     assert resp.json()["status"] == "ok"
 
 def test_websocket_e2e_flow():
+    token = os.environ.get("PHENOM_SESSION_TOKEN") or "e2e_test_session_token_12345"
+    os.environ["PHENOM_SESSION_TOKEN"] = token
+    os.environ["PHENOM_DEV"] = "1"
     client = TestClient(app)
     try:
-        with client.websocket_connect("/ws") as ws:
+        with client.websocket_connect(
+            "/ws",
+            subprotocols=[f"phenom.{token}"],
+            headers={"origin": "http://localhost:5173"}
+        ) as ws:
             # 1. Expect initial rules and state messages (and mode, scheduler, watchlist)
             init_rules = ws.receive_json()
             assert init_rules["type"] == "rules.updated"

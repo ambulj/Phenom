@@ -9,7 +9,10 @@ or DB settings for development/testing.
 """
 
 import os
-import win32cred
+try:
+    import win32cred
+except ImportError:
+    win32cred = None
 from typing import Optional, Tuple
 from services.backend.memory.db import encrypted_db
 
@@ -21,6 +24,9 @@ def get_telegram_token() -> Optional[str]:
     env_token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if env_token:
         return env_token
+
+    if win32cred is None:
+        return encrypted_db.get_setting("telegram_bot_token")
 
     try:
         cred = win32cred.CredRead(CRED_TELEGRAM_TOKEN, win32cred.CRED_TYPE_GENERIC)

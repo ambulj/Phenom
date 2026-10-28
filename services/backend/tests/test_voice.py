@@ -38,6 +38,8 @@ def test_tts_sentence_streaming():
     tts.flush_buffer(buffer)
     assert len(buffer) == 0
 
+@pytest.mark.windows_only
+@pytest.mark.needs_audio
 def test_barge_in_latency():
     tts = TTSEngine()
     tts.speak("This is an extended response that will be interrupted by barge in.")
@@ -51,6 +53,7 @@ def test_barge_in_latency():
     assert latency_ms < 100.0
     assert tts.is_speaking is False
 
+@pytest.mark.windows_only
 def test_hotkey_conflict_detection():
     manager = HotkeyManager()
     

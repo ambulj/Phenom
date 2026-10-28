@@ -10,8 +10,12 @@ import queue
 import time
 import re
 from typing import Optional, Callable
-import win32com.client
-import pythoncom
+try:
+    import win32com.client
+    import pythoncom
+except ImportError:
+    win32com = None
+    pythoncom = None
 
 # SAPI flags
 SVSFlagsAsync = 1
@@ -40,6 +44,8 @@ class TTSEngine:
         self._worker_thread.start()
 
     def _speech_worker(self):
+        if not pythoncom or not win32com:
+            return
         # Initialize COM in this thread
         pythoncom.CoInitialize()
         speaker = win32com.client.Dispatch("SAPI.SpVoice")

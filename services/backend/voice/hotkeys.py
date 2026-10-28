@@ -8,7 +8,10 @@ Default shortcuts:
 """
 
 from typing import Dict, Optional, Tuple, Callable, Any
-import keyboard
+try:
+    import keyboard
+except ImportError:
+    keyboard = None
 
 DEFAULT_HOTKEYS = {
     "push_to_talk": "alt+space",
@@ -43,10 +46,11 @@ class HotkeyManager:
             seen_keys[norm_key] = action
 
             # Validate syntax by parsing with keyboard module
-            try:
-                keyboard.parse_hotkey(norm_key)
-            except Exception as e:
-                return False, f"Invalid key combination '{key_combo}' for '{action}': {e}"
+            if keyboard is not None:
+                try:
+                    keyboard.parse_hotkey(norm_key)
+                except Exception as e:
+                    return False, f"Invalid key combination '{key_combo}' for '{action}': {e}"
 
         return True, None
 

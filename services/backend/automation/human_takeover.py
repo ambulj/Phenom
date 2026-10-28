@@ -10,8 +10,12 @@ import asyncio
 import threading
 from contextlib import contextmanager
 from typing import Optional, Callable, Dict, Any
-import mouse
-import keyboard
+try:
+    import mouse
+    import keyboard
+except ImportError:
+    mouse = None
+    keyboard = None
 
 class HumanTakeoverAbort(Exception):
     pass
@@ -28,8 +32,10 @@ class HumanTakeoverManager:
 
         # Register global OS hooks
         try:
-            mouse.hook(self._on_mouse_event)
-            keyboard.hook(self._on_keyboard_event)
+            if mouse is not None:
+                mouse.hook(self._on_mouse_event)
+            if keyboard is not None:
+                keyboard.hook(self._on_keyboard_event)
         except Exception as e:
             # Fallback if hooks fail in certain non-interactive environments
             pass

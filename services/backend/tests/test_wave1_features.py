@@ -26,6 +26,7 @@ def setup_confirmation_handler():
     yield
     safety_engine.set_confirmation_handler(None)
 
+@pytest.mark.windows_only
 @pytest.mark.asyncio
 async def test_media_control_registered_and_executable():
     # Verify tool is registered in Safety Registry as Tier 1
@@ -41,6 +42,7 @@ async def test_media_control_registered_and_executable():
     res_mute = await safety_engine.execute_tool("control_media", {"action": "mute"})
     assert res_mute["status"] == "success"
 
+@pytest.mark.windows_only
 @pytest.mark.asyncio
 async def test_audio_ducking_execution():
     # Verify duck and unduck routines execute cleanly without exceptions

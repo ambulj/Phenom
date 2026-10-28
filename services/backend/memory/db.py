@@ -7,7 +7,10 @@ Manages: messages, facts, learned_rules, approvals_remembered, action_log, setti
 import os
 import secrets
 import sqlcipher3
-import win32cred
+try:
+    import win32cred
+except ImportError:
+    win32cred = None
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
@@ -16,6 +19,8 @@ DEFAULT_DB_PATH = os.path.abspath("services/backend/data/phenom_encrypted.db")
 
 def get_or_create_master_key() -> str:
     """Retrieves 256-bit encryption key from Windows Credential Manager, or creates one."""
+    if win32cred is None:
+        return os.environ.get("PHENOM_DB_KEY", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
     try:
         cred = win32cred.CredRead(CRED_TARGET, win32cred.CRED_TYPE_GENERIC)
         blob = cred["CredentialBlob"]

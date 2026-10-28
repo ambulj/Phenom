@@ -102,3 +102,15 @@ python services/backend/scripts/audit_imports.py
 ```powershell
 pytest -q
 ```
+
+---
+
+## 6. Continuous Integration (CI) Coverage
+
+GitHub Actions runs continuous integration workflows across two matrices on every push and pull request:
+
+| Runner | Scope | Covered | Excluded / Not Covered |
+| --- | --- | --- | --- |
+| **Windows (`windows-latest`)** | Full Windows assistant surface | Import audit, safety tier enforcement, WebSocket authentication, rate limiting, kill switch, Windows automation, scheduler, and Telegram bridge | `needs_gpu` (requires local NVIDIA GPU with CUDA 12.4), `slow` (heavy live model inference benchmarks) |
+| **Ubuntu (`ubuntu-latest`)** | Cross-platform core | Core API routes, schemas, protocol serialization, router heuristics, memory encryption roundtrips, and policy audits | `windows_only` (win32 APIs, Credential Manager, uiautomation, mouse hooks), `needs_audio` (PortAudio hardware), `needs_gpu` |
+
