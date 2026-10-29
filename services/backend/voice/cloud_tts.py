@@ -1,5 +1,5 @@
 """
-Phenom Cloud Hindi TTS Client (Sarvam AI Bulbul)
+Phenom Cloud Hindi TTS Client (Sarvam AI Bulbul v2)
 Implements natural Indian-language TTS synthesis for non-private replies.
 Strict Privacy Guarantee:
 - Evaluates text through privacy_classifier.is_private() BEFORE transmission.
@@ -23,6 +23,14 @@ logger = logging.getLogger("phenom.voice.cloud_tts")
 
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 CREDENTIAL_KEY = "Phenom/sarvam-api-key"
+
+# Aliases mapping legacy/generic voice names to current Sarvam Bulbul v2 production speakers
+SPEAKER_ALIASES = {
+    "arvind": "chirag_hi_social",
+    "meera": "suman_hi_companion",
+    "amartya": "vipul_hi_social",
+    "pavithra": "aarti_hi_customer",
+}
 
 # Hindi & Hinglish detection patterns
 DEVANAGARI_REGEX = re.compile(r"[\u0900-\u097F]")
@@ -59,7 +67,13 @@ class SarvamTTSClient:
         matching = tokens.intersection(HINGLISH_KEYWORDS)
         return len(matching) >= 2 or (len(matching) >= 1 and len(tokens) <= 5)
 
-    def synthesize(self, text: str, is_shareable: bool = False, speaker: str = "arvind") -> Optional[bytes]:
+    def synthesize(
+        self,
+        text: str,
+        is_shareable: bool = False,
+        speaker: str = "chirag_hi_social",
+        model: str = "bulbul:v2"
+    ) -> Optional[bytes]:
         """
         Synthesizes Hindi/Hinglish speech using Sarvam Bulbul API.
         Enforces strict pre-flight privacy check and in-memory audio return.
@@ -90,7 +104,10 @@ class SarvamTTSClient:
             logger.debug("Sarvam API key not configured; falling back to local voice.")
             return None
 
-        # 4. Invoke Sarvam Bulbul API
+        # 4. Resolve Speaker
+        actual_speaker = SPEAKER_ALIASES.get(speaker, speaker)
+
+        # 5. Invoke Sarvam Bulbul API
         headers = {
             "api-subscription-key": key,
             "Content-Type": "application/json"
@@ -98,13 +115,13 @@ class SarvamTTSClient:
         payload = {
             "inputs": [clean_text],
             "target_language_code": "hi-IN",
-            "speaker": speaker,
+            "speaker": actual_speaker,
             "pitch": 0,
             "pace": 1.0,
             "loudness": 1.5,
             "speech_sample_rate": 16000,
             "enable_preprocessing": True,
-            "model": "bulbul:v1"
+            "model": model
         }
 
         try:

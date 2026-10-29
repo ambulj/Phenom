@@ -1,10 +1,12 @@
 """
 Phenom Voice Audition Utility: Sarvam AI Bulbul Voices
-Auditions all 4 expressive Indian voices:
-- arvind   (Male, natural, professional)
-- meera    (Female, expressive, articulate)
-- amartya  (Male, warm, relaxed)
-- pavithra (Female, calm, friendly)
+Auditions current production Sarvam Hindi speakers (Bulbul v2):
+- chirag_hi_social   (Male, natural, social & casual - RECOMMENDED)
+- suman_hi_companion (Female, warm, friendly companion - RECOMMENDED)
+- vipul_hi_social    (Male, relaxed conversational)
+- aarti_hi_customer  (Female, clear, professional & articulate)
+- advait_hi_character(Male, expressive character voice)
+- vandana_hi_ecomm   (Female, polished & commercial)
 
 Plays in-memory (RAM only) directly through system audio output.
 """
@@ -21,10 +23,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from services.backend.voice.cloud_tts import sarvam_tts
 
 SPEAKERS = [
-    ("arvind", "Male, warm, natural & professional"),
-    ("meera", "Female, expressive & articulate"),
-    ("amartya", "Male, relaxed & conversational"),
-    ("pavithra", "Female, calm & friendly")
+    ("chirag_hi_social", "Male, natural & friendly [RECOMMENDED]"),
+    ("suman_hi_companion", "Female, warm companion [RECOMMENDED]"),
+    ("vipul_hi_social", "Male, relaxed conversational"),
+    ("aarti_hi_customer", "Female, clear & articulate"),
+    ("advait_hi_character", "Male, expressive character voice"),
+    ("vandana_hi_ecomm", "Female, polished & commercial")
 ]
 
 SAMPLE_UTTERANCES = [
@@ -39,12 +43,12 @@ def play_in_memory_wav(wav_bytes: bytes):
         data, samplerate = sf.read(io.BytesIO(wav_bytes))
         sd.play(data, samplerate=samplerate, blocking=True)
     except Exception as e:
-        print(f"  [AUDIO PLAYBACK ERROR]: {e}")
+        print(f"  [AUDIO PLAYBACK NOTICE]: {e}")
 
 def audition_voices(target_speaker: str = None):
     print("=" * 75)
     print("PHENOM VOICE AUDITION: SARVAM AI BULBUL (HINDI & HINGLISH)")
-    print("Owner Nickname: Abhi")
+    print("Owner Nickname: Abhi | Model: bulbul:v2")
     print("=" * 75)
 
     key = sarvam_tts.get_api_key()
@@ -63,7 +67,7 @@ def audition_voices(target_speaker: str = None):
         for label, display_text, synth_text in SAMPLE_UTTERANCES:
             print(f"  > Speaking ({label}): \"{display_text}\"")
             if key:
-                wav = sarvam_tts.synthesize(synth_text, is_shareable=True, speaker=speaker_name)
+                wav = sarvam_tts.synthesize(synth_text, is_shareable=True, speaker=speaker_name, model="bulbul:v2")
                 if wav:
                     print(f"    Synthesized {len(wav)} bytes in RAM. Playing audio...")
                     play_in_memory_wav(wav)
@@ -80,7 +84,7 @@ def audition_voices(target_speaker: str = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Audition Sarvam AI voices for Phenom")
-    parser.add_argument("--speaker", choices=["arvind", "meera", "amartya", "pavithra"], default=None,
-                        help="Select a specific speaker to audition, or audition all by default")
+    parser.add_argument("--speaker", default=None,
+                        help="Select a specific speaker to audition (e.g. chirag_hi_social, suman_hi_companion)")
     args = parser.parse_args()
     audition_voices(args.speaker)

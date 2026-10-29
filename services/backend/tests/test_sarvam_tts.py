@@ -61,13 +61,29 @@ def test_mock_successful_sarvam_synthesis(sarvam_client):
     mock_resp.json.return_value = {"audios": [b64_audio]}
 
     with patch("httpx.Client.post", return_value=mock_resp) as mock_post:
-        result = sarvam_client.synthesize("sab theek hai, batao kya karna hai", is_shareable=True)
+        result = sarvam_client.synthesize("sab theek hai, batao kya karna hai", is_shareable=True, speaker="chirag_hi_social")
         assert result == fake_wav_bytes
         mock_post.assert_called_once()
         # Verify request parameters
         call_kwargs = mock_post.call_args[1]
         assert call_kwargs["json"]["target_language_code"] == "hi-IN"
-        assert call_kwargs["json"]["model"] == "bulbul:v1"
+        assert call_kwargs["json"]["model"] == "bulbul:v2"
+        assert call_kwargs["json"]["speaker"] == "chirag_hi_social"
+
+def test_mock_sarvam_speaker_alias_resolution(sarvam_client):
+    fake_wav_bytes = b"RIFF....WAVEfmt ....data...."
+    b64_audio = base64.b64encode(fake_wav_bytes).decode("utf-8")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {"audios": [b64_audio]}
+
+    with patch("httpx.Client.post", return_value=mock_resp) as mock_post:
+        # Pass legacy alias 'arvind' -> must resolve to 'chirag_hi_social'
+        result = sarvam_client.synthesize("sab theek hai, batao kya karna hai", is_shareable=True, speaker="arvind")
+        assert result == fake_wav_bytes
+        call_kwargs = mock_post.call_args[1]
+        assert call_kwargs["json"]["speaker"] == "chirag_hi_social"
 
 def test_mock_sarvam_429_quota_fallback(sarvam_client):
     mock_resp = MagicMock()
@@ -92,5 +108,3 @@ def test_tts_engine_hindi_routing():
                 tts_engine.speak("kya haal hai")
                 import time
                 time.sleep(0.1)
-                # Ensure no crash and worker processed queue
-
