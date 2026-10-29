@@ -15,7 +15,9 @@ import {
   BriefcaseRegular,
   HatGraduationRegular,
   WeatherMoonRegular,
-  WindowAppsRegular
+  WindowAppsRegular,
+  SearchRegular,
+  CodeRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
 
@@ -32,6 +34,8 @@ interface HeaderBarProps {
   onCycleMode?: () => void;
   showMiniOverlay?: boolean;
   onToggleMiniOverlay?: () => void;
+  onOpenPalette?: () => void;
+  onToggleConsole?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -46,7 +50,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   currentMode = 'work',
   onCycleMode,
   showMiniOverlay = false,
-  onToggleMiniOverlay
+  onToggleMiniOverlay,
+  onOpenPalette,
+  onToggleConsole
 }) => {
   const isHalted = orbState === 'halted';
 
@@ -207,6 +213,28 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         >
           Overlay
         </Button>
+        {onOpenPalette && (
+          <Button
+            appearance="subtle"
+            icon={<SearchRegular />}
+            onClick={onOpenPalette}
+            style={{ color: '#00E5FF' }}
+            title="Command Palette (Alt+Space)"
+          >
+            Palette
+          </Button>
+        )}
+        {onToggleConsole && (
+          <Button
+            appearance="subtle"
+            icon={<CodeRegular />}
+            onClick={onToggleConsole}
+            style={{ color: '#FFB300' }}
+            title="Streaming Terminal Console (Ctrl+`)"
+          >
+            Console
+          </Button>
+        )}
         <Button
           appearance="subtle"
           icon={isMuted ? <MicOffRegular /> : <MicRegular />}

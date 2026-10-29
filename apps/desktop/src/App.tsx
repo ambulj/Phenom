@@ -14,6 +14,9 @@ import { MiniOverlay } from './components/MiniOverlay';
 import { FirstRunWizard } from './components/FirstRunWizard';
 import { ScreenBorderOverlay, ScreenOverlayState, ClickTarget, TickerItem } from './components/ScreenBorderOverlay';
 import { OrbState, ConfirmRequestPayload, LearnedRuleItem } from './types/protocol';
+import { CommandPalette, CommandItem } from './components/CommandPalette';
+import { HUDCard, HUDCardProps } from './components/HUDCard';
+import { StreamingConsole, ConsoleLine } from './components/StreamingConsole';
 
 export const App: React.FC = () => {
   const [showFirstRun, setShowFirstRun] = useState<boolean>(() => !localStorage.getItem('phenom_first_run_done'));
@@ -26,6 +29,13 @@ export const App: React.FC = () => {
   const [confirmRequest, setConfirmRequest] = useState<ConfirmRequestPayload | null>(null);
   const [learnedRules, setLearnedRules] = useState<LearnedRuleItem[]>([]);
   const [historyMessages, setHistoryMessages] = useState<Array<{ id: string; role: string; content: string }>>([]);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const [isConsoleOpen, setIsConsoleOpen] = useState<boolean>(false);
+  const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([
+    { text: 'Phenom Engine v0.1.0 initialized (Windows 11 Mica/Acrylic)', type: 'system', timestamp: new Date().toLocaleTimeString() },
+    { text: 'WebSocket link: ws://127.0.0.1:8000/ws', type: 'system', timestamp: new Date().toLocaleTimeString() }
+  ]);
+  const [activeHudCard, setActiveHudCard] = useState<HUDCardProps | null>(null);
 
   // Voice State (Phase 2)
   const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -345,6 +355,86 @@ export const App: React.FC = () => {
     );
   };
 
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Alt+Space or Ctrl+K opens Command Palette
+      if ((e.altKey && (e.code === 'Space' || e.key === ' ')) || (e.ctrlKey && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+      // Ctrl+` toggles terminal streaming console
+      if (e.ctrlKey && (e.key === '`' || e.key === '~')) {
+        e.preventDefault();
+        setIsConsoleOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
+  const paletteCommands: CommandItem[] = [
+    {
+      id: 'cmd-doctor',
+      title: 'Run Phenom Doctor',
+      subtitle: 'Inspect CUDA, GPU VRAM, Python, Node, Git, and Ollama toolchains',
+      category: 'Dev',
+      shortcut: 'Alt+D',
+      onExecute: () => handleSendMessage('/doctor')
+    },
+    {
+      id: 'cmd-pre-push',
+      title: 'Execute Git Pre-Push Gate',
+      subtitle: 'Audit secret leakage, verify tests, and draft PR release notes',
+      category: 'Git',
+      shortcut: 'Alt+G',
+      onExecute: () => handleSendMessage('/git-gate')
+    },
+    {
+      id: 'cmd-console',
+      title: 'Toggle Streaming Terminal Console',
+      subtitle: 'View live execution stdout/stderr and system logs',
+      category: 'Dev',
+      shortcut: 'Ctrl+`',
+      onExecute: () => setIsConsoleOpen((prev) => !prev)
+    },
+    {
+      id: 'cmd-mode-work',
+      title: 'Cycle Operating Mode',
+      subtitle: `Current mode: ${currentMode.toUpperCase()}`,
+      category: 'System',
+      onExecute: () => handleCycleMode()
+    },
+    {
+      id: 'cmd-killswitch',
+      title: 'Emergency Halt (Kill Switch)',
+      subtitle: 'Immediately abort all processes and speech',
+      category: 'System',
+      shortcut: 'Esc Esc Esc',
+      onExecute: handleTriggerKillswitch
+    },
+    {
+      id: 'cmd-persona-stark',
+      title: 'Switch Persona: Tony Stark',
+      subtitle: 'Default witty, high-banter lab partner tone',
+      category: 'Assistant',
+      onExecute: () => handleSendMessage('Switch to Tony Stark persona')
+    },
+    {
+      id: 'cmd-persona-prof',
+      title: 'Switch Persona: Professor Mode',
+      subtitle: 'Deep technical rigor, formal mechanics, zero slang',
+      category: 'Assistant',
+      onExecute: () => handleSendMessage('Switch to Professor persona')
+    },
+    {
+      id: 'cmd-persona-silent',
+      title: 'Switch Persona: Silent Co-Pilot',
+      subtitle: 'Visual HUD diffs and code summaries only',
+      category: 'Assistant',
+      onExecute: () => handleSendMessage('Switch to Silent Co-Pilot persona')
+    }
+  ];
+
   const isPanelOpen = activePanel !== null;
 
   return (
@@ -362,6 +452,8 @@ export const App: React.FC = () => {
         onCycleMode={handleCycleMode}
         showMiniOverlay={showMiniOverlay}
         onToggleMiniOverlay={() => setShowMiniOverlay((prev) => !prev)}
+        onOpenPalette={() => setIsCommandPaletteOpen(true)}
+        onToggleConsole={() => setIsConsoleOpen((prev) => !prev)}
       />
 
       {/* 3D Three.js Orb with Adaptive LOD */}
@@ -478,6 +570,33 @@ export const App: React.FC = () => {
         onResumeAutomation={() => handleTakeoverDecision('continue')}
         onStopAutomation={() => handleTakeoverDecision('stop')}
       />
+
+      {/* Raycast / Spotlight Centered Command Palette (Alt+Space) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        commands={paletteCommands}
+        onSubmitQuery={(q) => {
+          setIsCommandPaletteOpen(false);
+          handleSendMessage(q);
+        }}
+      />
+
+      {/* Collapsible Streaming Terminal Console Drawer */}
+      <StreamingConsole
+        isOpen={isConsoleOpen}
+        onToggle={() => setIsConsoleOpen((prev) => !prev)}
+        lines={consoleLines}
+        onClear={() => setConsoleLines([])}
+      />
+
+      {/* Floating HUD Card for Action Approvals and Diff Reviews */}
+      {activeHudCard && (
+        <HUDCard
+          {...activeHudCard}
+          onClose={() => setActiveHudCard(null)}
+        />
+      )}
     </div>
   );
 };
