@@ -319,3 +319,5 @@ esearch_papers).
   - Smoke test verification: **11/11 Subsystems PASS in 35.77s** (`python scripts/smoke_test_suite.py`).
   - Secret scanner: **235 tracked files clean, 0 secrets** (`python scripts/scan_secrets.py --all`).
 - **Desktop UI Integration**: Mounted `CommandPalette` (`Alt+Space` / `Ctrl+K`), `StreamingConsole` (`Ctrl+\``), and `HUDCard` directly in [`apps/desktop/src/App.tsx`](file:///c:/Phenom/apps/desktop/src/App.tsx) and added shortcut triggers to [`HeaderBar.tsx`](file:///c:/Phenom/apps/desktop/src/components/HeaderBar.tsx).
+- **Desktop Packaging & Portable Binary**: Built and verified standalone portable distribution via `electron-builder --dir` at `apps/desktop/dist/win-unpacked/Phenom.exe` (188 MB) bundling `app.asar` (220 MB) and `resources/backend/`.
+- **Git Security Hooks**: Pre-commit secret scanning hook active and enforced at `.git/hooks/pre-commit`.
