@@ -308,3 +308,13 @@ esearch_papers).
 - **Context-Adaptive Notifications**: Soft chime + badge if IDE focused; Action Center toast + voice summary if working in another application.
 - **Smart Ignore & 500ms Churn Debounce**: Auto-ignore build directories (`node_modules`, `.venv`, `dist`, `target`) + `.gitignore` with 500ms debounce during heavy file churn.
 - **Milestone Transition**: Completed 50 architectural rounds; initiated Phase Feature Wiring and end-to-end verification.
+
+### Feature Wiring & Verification (Round 50 Post-Milestone)
+- **`phenom_doctor` Tool**: Implemented in [`services/backend/tools/doctor.py`](file:///c:/Phenom/services/backend/tools/doctor.py) (Tier 0). Diagnostics for Python 3.10+, PyTorch CUDA & GPU VRAM, Node/npm, Git, Ripgrep, Disk (C:), RAM, Windows Credential Manager, and Ollama inference endpoint. Verified with 3 tests in [`services/backend/tests/test_doctor.py`](file:///c:/Phenom/services/backend/tests/test_doctor.py).
+- **`ripgrep_search` Engine**: Implemented in [`services/backend/tools/search_tools.py`](file:///c:/Phenom/services/backend/tools/search_tools.py) (Tier 0). Sub-10ms regex search honoring `.gitignore` with Windows drive-path normalization and seamless Python regex fallback. Verified with 4 tests in [`services/backend/tests/test_search_tools.py`](file:///c:/Phenom/services/backend/tests/test_search_tools.py).
+- **Port Conflict Helper**: Implemented `coding_inspect_port` (Tier 0) and `coding_resolve_port_conflict` (Dynamic Tier 0/2) in [`services/backend/tools/coding_tools.py`](file:///c:/Phenom/services/backend/tools/coding_tools.py). Inspects PIDs holding ports on `EADDRINUSE` and terminates process trees on confirmed resolution. Verified with 4 tests in [`services/backend/tests/test_port_conflict.py`](file:///c:/Phenom/services/backend/tests/test_port_conflict.py).
+- **Verification Suites**:
+  - Full backend test suite: **261 passed, 48 warnings in 85.31s** (`python -m pytest services/backend/tests/ -q`).
+  - Desktop frontend build: **Vite & TypeScript clean production build in 21.90s** (`npm --prefix apps/desktop run build`).
+  - Smoke test verification: **11/11 Subsystems PASS in 35.77s** (`python scripts/smoke_test_suite.py`).
+  - Secret scanner: **230 tracked files clean, 0 secrets** (`python scripts/scan_secrets.py --all`).
