@@ -231,3 +231,19 @@ undll32.exe user32.dll,LockWorkStation) + Guardian kill switch.
 - **In-Situ API Testing**: Integrated REST endpoint tester, header inspector, and mock fixture scaffolding.
 - **Obsidian Reading Queue**: 'Save this paper/link' extracts abstract/metadata to ault/Study/Reading List.md.
 - **Console Secret Masking**: Intercept stdout/stderr and auto-mask .env values with [REDACTED_SECRET].
+
+### Performance, Search & Voice Interactivity (Rounds 36-38)
+- **Quantized LoRA Adapters**: Dynamic adapter loading on Llama-3.1-8B for personalized styles.
+- **Historical Benchmark Tracking**: Log latency and VRAM metrics; alert if regression exceeds 15%.
+- **Native Ripgrep Backend**: Bundled 
+g.exe for sub-10ms regex/symbol search honoring .gitignore.
+- **Cloudflare / CAPTCHA Human Solve**: Pop up visible browser window for 1-click human verification.
+- **Virtual Desktop Navigation**: Switch Windows 11 virtual desktops on voice/chat command.
+- **Dual Wake-Word Support**: Recognize both 'Hey Phenom' and 'Jarvis' as valid wake words.
+- **Conventional SemVer Automation**: Automated version calculation and CHANGELOG.md generation.
+- **Local Whisper STT**: Local quantized Whisper on CUDA/CPU for offline speech-to-text.
+- **Interactive PTY in HUD**: Full pseudo-terminal stdin forwarding in the terminal drawer.
+- **Partitioned Vector Namespaces**: Scoped vector spaces (ault_notes, code_symbols, chat_facts, 
+esearch_papers).
+- **Dynamic Emotional Modulation**: Emotional voice modulation (energetic, crisp, measured).
+- **Safe Branch Pruning**: 1-click cleanup for feature branches merged into main.

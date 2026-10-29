@@ -1,5 +1,5 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-35)
+# Configured and locked per Owner Decisions (Rounds 8-38)
 
 [assistant]
 nickname = "Abhi"
@@ -41,6 +41,9 @@ offline_mode = "seamless_local"        # Seamless local offline mode (switch to 
 [display]
 summon_target = "active_cursor_monitor" # Summon Command Palette and HUD on whichever monitor holds mouse cursor
 
+[desktop]
+virtual_desktop_switching = true       # Switch Windows 11 Virtual Desktops via voice/chat ('Switch to Code desktop')
+
 [hotkeys]
 push_to_talk = "ctrl+space"
 toggle_phenom = "alt+space"
@@ -51,13 +54,19 @@ barge_in_latency_ms = 50               # Ultra-fast TTS cutoff within 50ms upon 
 wake_word_threshold = 0.65             # Strict 0.65+ confidence to reject background movie/speech triggers
 wake_word_sliding_ms = 500             # 500ms sliding confirmation window
 wake_word_debounce_seconds = 2         # 2-second debounce & 10s cooldown on false triggers
+wake_phrases = ["hey_phenom", "jarvis"] # Dual wake-phrases recognized
 speaker_verification = true            # Filter out background chatter/media using enrolled voiceprint
+offline_stt_engine = "whisper_base"    # Quantized Whisper on CUDA/CPU for seamless offline speech recognition
+dynamic_emotional_modulation = true    # Modulate pace/inflection based on task (energetic on build pass, crisp on alerts)
 task_completion_ping = "soft_chime_and_voice_summary" # Soft Jarvis chime + 1-sentence recap on tasks > 30s
 compound_macros = true                 # Chained multi-step macros ('wrap up today')
 
 [shell]
 default_runner = "pwsh"                # PowerShell 7 primary subprocess runner
 fallback_runner = "powershell"         # Windows PowerShell 5.1 fallback
+
+[terminal]
+pty_interactive_mode = true            # Interactive PTY in HUD console for stdin forwarding
 
 [security]
 uac_elevation = "strict_uac_prompt"    # Always require explicit Windows UAC confirmation; never bypass administrative gates
@@ -86,6 +95,10 @@ index_paths = [
     "%USERPROFILE%\\Desktop"
 ]
 
+[search]
+engine = "ripgrep"                     # Native Ripgrep (rg.exe) for sub-10ms regex and symbol search
+respect_gitignore = true
+
 [photos]
 indexing_mode = "exif_plus_visual_tags" # Read-only EXIF + local AI visual tagging (receipt, whiteboard, diagram, screenshot) stored encrypted
 
@@ -104,6 +117,11 @@ sources = ["hacker_news", "arxiv_ai", "github_trending", "indian_business"] # Cu
 
 [documents]
 visual_style = "modern_executive"      # Clean typography, styled tables, visual callout boxes, executive summary cover
+
+[git]
+semver_automation = true               # Parse commits and automate SemVer releases
+changelog_generation = true            # Generate formatted CHANGELOG.md entries
+safe_merged_branch_pruning = true      # Offer 1-click cleanup for branches merged into main (preserving main/release)
 
 [developer]
 toolchain_integration = "deep"         # Auto-detect active git repo, branch, uncommitted diffs, running Docker containers
@@ -153,6 +171,7 @@ analysis_mode = "dual_ocr_vision"      # Fast local Windows OCR for exact code/t
 
 [browser]
 playwright_mode = "open_with_tier2_notifications" # Open web browsing with Tier 2 notifications before interactive actions
+captcha_solve_mode = "visible_browser_popup" # Pop up visible browser window for 1-click human solve on Cloudflare/CAPTCHAs
 
 [audio]
 auto_ducking = true                    # Auto-lower background media volume (by 70%) while speaking
@@ -169,6 +188,12 @@ draft_voice = "authentic_concise"      # Concise, direct, minimal corporate jarg
 [rag]
 embedding_engine = "local_onnx"        # Local ONNX runtime: ultra-fast (<5ms) on CPU, zero VRAM usage
 embedding_model = "all-MiniLM-L6-v2"   # ~80MB high-efficiency local embedding
+partitioned_collections = [            # Domain-partitioned vector namespaces
+    "vault_notes",
+    "code_symbols",
+    "chat_facts",
+    "research_papers"
+]
 index_trigger = "file_watcher_incremental" # Auto-index notes & code changes within 2 seconds of saving for instant semantic search
 
 [research]
@@ -209,6 +234,10 @@ safety_wrapped = true                  # All custom tools automatically wrapped 
 gpu_resource_governor = true           # Auto-offload GPU VRAM when 3D game launches, pause background indexing on low battery
 busy_gpu_fallback = "dynamic_cloud_or_cpu_q4" # Cloud Nemotron if online, lightweight CPU Q4 GGUF if offline
 
+[benchmarks]
+track_historical_latency = true        # Track test execution, VRAM peak, and TTS latency
+regression_alert_threshold = 0.15      # Alert if regression exceeds 15%
+
 [telegram]
 remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status
 pairing_mode = "desktop_pin_handshake" # Desktop QR / 6-digit PIN handshake to bind owner user_id
@@ -230,3 +259,5 @@ command_mode = "conversational_with_slash_shortcuts" # Natural conversation by d
 local_model = "llama3.1:8b"
 local_runtime = "ollama"               # 4-bit quantized, ~5.5 GB VRAM, balanced speed & quality
 cloud_model = "meta/llama-3.1-405b-instruct"
+lora_adapters_enabled = true           # Support dynamic LoRA adapter loading on 8B model
+lora_directory = "%USERPROFILE%\\Documents\\Phenom\\lora"

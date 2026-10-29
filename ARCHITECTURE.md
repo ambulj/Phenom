@@ -181,3 +181,24 @@ undll32.exe user32.dll,LockWorkStation and the Guardian kill switch, confirming 
 3. **50/10 Focus Sprints**: 50-minute deep-work sprints queue non-urgent notifications into a digest and alert on social/video distraction patterns.
 4. **Obsidian Reading Queue**: 'Save paper/link' command extracts title, abstract, and tags into ault/Study/Reading List.md.
 5. **Audio Completion Ping**: Tasks taking > 30 seconds trigger a soft Jarvis chime and a concise 1-sentence spoken completion summary.
+
+
+---
+
+## 20. Performance, Search & LoRA Adaptation Architecture (Locked In)
+1. **Dynamic LoRA Adapters**: The local 8B model supports loading task-specific and personal coding LoRA adapter weights from ~/Documents/Phenom/lora/ without re-quantizing base weights.
+2. **Native Ripgrep Integration**: Global code and symbol lookups execute via bundled native 
+g.exe (< 10ms execution across > 100k lines), automatically respecting .gitignore.
+3. **Partitioned Vector Namespaces**: Embeddings are segregated into partitioned collections (ault_notes, code_symbols, chat_facts, 
+esearch_papers) for scoped cosine similarity retrieval.
+4. **Benchmark & Latency Governance**: Test runtimes, VRAM peaks, and TTS latency metrics are logged to SQLite; any regression exceeding 15% triggers a diagnostic HUD card.
+
+---
+
+## 21. Voice, PTY & Desktop Interactivity Architecture (Locked In)
+1. **Dual Wake-Word Activation**: Recognizes both 'Hey Phenom' and 'Jarvis' with a 0.65+ confidence threshold and 500ms sliding confirmation window.
+2. **Local Quantized Whisper STT**: Offline voice transcription runs on local quantized Whisper (ase.en/small), providing instant speech-to-text without internet access.
+3. **Dynamic Emotional TTS Modulation**: Speech cadence, pitch inflection, and tone adjust dynamically to context (celebratory on build success, crisp on alerts, calm on tutoring).
+4. **Interactive PTY Console**: The streaming console supports full interactive pseudo-terminal (PTY) emulation for stdin keyboard forwarding.
+5. **Windows 11 Virtual Desktop Switching**: Desktop control allows seamless voice navigation across virtual desktops (e.g. 'Switch to Code desktop').
+6. **SemVer & Changelog Automation**: Milestones automatically parse conventional commit headers, calculate SemVer version bumps, and generate CHANGELOG.md.
