@@ -218,3 +218,16 @@ In strict adherence to project rules, an item in this checklist is marked comple
   - Zero-drift self-help test generating tool capabilities directly from `registry.list_all()`.
   - Four granular reset tests (Settings, Memory, Voice, Factory) with verification of erased artifacts.
   - Secret scanner verification on export ZIP archive demonstrating zero credential leakage.
+
+---
+
+### [ ] Task 7l: Confirmations, Meeting Mode, Self-Check & Safe Mode
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - One-line confirmation formatting invariant test proving exact target and quantity for all Tier 2/3 requests.
+  - Preconditions re-validation test: proving modified files, changed mode, or engaged kill switch halts late approvals.
+  - Safe alternative engine test: proving declined tools are never repeated and untrusted suggestions are rejected.
+  - Meeting mode display-affinity test: proving `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)` excludes Phenom windows from capture.
+  - Daily self-check execution test: proving Telegram status omits paths/keys and critical alerts speak aloud.
+  - Automated 7-day rollback test on simulated post-update boot check failure.
+  - Safe mode test: proving `--safe-mode` locks execution to Tier 0 read-only tools and disables all cloud endpoints.

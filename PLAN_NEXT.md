@@ -655,6 +655,105 @@ The Settings Panel provides four distinct reset actions, each previewing affecte
 
 ---
 
+## 7l. Confirmations, Meeting Mode, Self-Check, and Safe Mode
+
+### 1. Unified Confirmation Object & One-Line Summary Guarantee
+- **Pydantic Schema**:
+```python
+class ConfirmationRequest(BaseModel):
+    id: str # e.g. "conf-recycle_delete-a1b2c3d4"
+    tier: RiskTier # Tier 1, 2, or 3
+    tool_name: str
+    one_line_summary: str
+    target_summary: str
+    item_count: int
+    details: Dict[str, Any]
+    preconditions: Dict[str, Any]
+    created_at: str
+    channel: str # "desktop" or "telegram"
+    timeout_seconds: Optional[int] # 900s for desktop, None for telegram
+```
+- **One-Line Summary Invariant (Tiers 2 & 3)**:
+  - For all Tier 2 and Tier 3 actions, `one_line_summary` must always follow the strict template:
+    `"[Tier {tier}] {action_verb} {item_count} item(s) in {target_summary}"`
+  - *Example*: `"[Tier 2] Recycle Delete 3 file(s) in C:\Projects\website (index.html, +2 others)"`
+  - Eliminates blind confirmations: the user never needs to tap "details" to know the exact target, quantity, and risk tier.
+- **Expanded Details View (On Tap)**:
+  - Plain-language description of intended change.
+  - Exact file paths or shell arguments.
+  - Snapshot location and rollback feasibility.
+  - Explicit warning explaining what happens if declined.
+
+### 2. Channel-Aware Timeouts & Late-Approval Re-validation
+- **Desktop Timeouts**: Physical desktop confirmation prompts auto-deny after **15 minutes** (900 seconds) if unaddressed; event is recorded in action log as `result_status="DENIED_TIMEOUT"`.
+- **Telegram Timeouts**: Remote Telegram confirmations have **no expiration timeout**; the background task remains paused indefinitely until the owner responds.
+- **Preconditions Re-validation Engine**:
+  - Before executing any delayed or Telegram-approved action, the engine inspects `preconditions`:
+    1. *File Integrity*: Re-calculates SHA-256 and modification timestamps (`mtime`) for target files. If any target file was modified or deleted since the confirmation was issued $\rightarrow$ abort execution, notify owner, and generate fresh confirmation with updated diff.
+    2. *Mode Drift*: Verifies assistant mode has not changed (e.g. user entered Meeting Mode or Gaming Mode) $\rightarrow$ abort execution.
+    3. *Kill Switch State*: Verifies Guardian kill switch is inactive $\rightarrow$ halt immediately if engaged.
+  - *Test Verification*: Unit test `test_late_approval_revalidation` proves modified files, altered modes, or active kill switches reject stale approvals.
+
+### 3. Safe Alternative Fallback Engine
+- When an action is declined by the owner or times out on desktop:
+  1. The orchestrator skips the rejected step cleanly without failing the broader goal.
+  2. The orchestrator evaluates if a safe alternative exists under strict invariants:
+     - **Tier Restriction**: The alternative must be equal to or lower tier than the declined action (never higher).
+     - **Re-use Block**: The alternative must **never** invoke a tool the owner just declined in that turn chain.
+     - **Taint Quarantine**: The alternative must **never** be suggested by untrusted content (web pages, emails, PDFs, OCR).
+     - If no safe alternative satisfies all three criteria, Phenom halts and asks the owner for direction.
+  3. Conversational notification: *"Declined [Tool]. Trying safe alternative: [Alternative Action]."*
+
+### 4. Meeting Mode & Windows Display Affinity
+- **Meeting Detection Signals**:
+  - Process scanning: `zoom.exe`, `teams.exe`, `slack.exe`, `webex.exe`, `discord.exe`.
+  - Window title scanning: Browser tabs containing `"Meet - "`, `"Zoom Meeting"`, `"Microsoft Teams"`.
+  - WASAPI Microphone Capture: Detects third-party applications actively capturing default microphone.
+  - Windows Graphics Capture: Detects active screen recording or presentation sessions.
+- **Display Affinity Protection (Capture Exclusion)**:
+  - Invokes Win32 API `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` on all Electron window handles (Main app, Orb, Mini overlay, Approvals panel).
+  - *Result*: Hardware desktop compositor blacks out or omits Phenom windows from screen shares, recordings, and screenshot capture in Zoom, Teams, and Google Meet.
+- **Meeting Mode State Adjustments**:
+  - TTS speech engine and sound effects muted immediately.
+  - Floating Orb switches to dim calm amber with microphone mute icon.
+  - Notifications silenced; incoming messages queued silently in Obsidian daily log.
+  - Private panels (Financial Watchlist, Vault notes, Action Log) hidden.
+
+### 5. Daily Self-Check & Critical Alerts
+- **Automated Schedule**: Executes daily at 04:00 AM (or next system wake):
+  1. *Disk Quota*: Verifies `%APPDATA%\Phenom` and user storage remain within 50 GB cap.
+  2. *Database Integrity*: Executes SQLite `PRAGMA integrity_check;` on encrypted SQLCipher database.
+  3. *Vault Sync State*: Verifies last nightly git backup push succeeded.
+  4. *Protected Rules Integrity*: Verifies SHA-256 checksums of `C:\ProgramData\Phenom\ProtectedRules\`.
+  5. *Model Availability*: Pings local Ollama service and verifies active cloud endpoints.
+  6. *Credential Health*: Confirms `Phenom/*` targets exist in Windows Credential Manager.
+- **Notification Formatting**:
+  - Detailed diagnostic output saved to Obsidian vault journal note (`Daily Logs/YYYY-MM-DD.md`).
+  - Telegram alert format: Strict short status strings omitting paths, keys, or file names:
+    `[Phenom Self-Check] All Systems Healthy.` or `[Phenom Self-Check Warning] Backup: Failed. Disk: Warning.`
+  - Spoken voice alerts: Spoken aloud **only** for critical hazards:
+    - Tampering detected (protected rules hash mismatch).
+    - Repeated backup or snapshot failure ($> 2$ consecutive attempts).
+    - Disk storage critically low ($< 2$ GB remaining).
+    - Database corruption reported by integrity check.
+
+### 6. Post-Update Health Check & 7-Day Rollback Window
+- On first boot following application update:
+  - Runs full automated diagnostic self-check suite.
+  - Retains complete previous version binaries, configuration, and database snapshot in `%APPDATA%\Phenom\version_backups\<version>\` for **7 days**.
+  - If post-update boot check fails: automatically initiates rollback, restores database, and alerts user.
+  - On clean startup: displays concise *"What's New in Phenom vX.Y.Z"* changelog card in UI.
+
+### 7. Manual Safe Mode
+- **Activation**: Manual launch only via CLI `phenom.exe --safe-mode` or holding `Shift` during launch.
+- **Enforced Constraints**:
+  - Tool execution restricted strictly to **Tier 0 read-only tools**.
+  - Cloud API networking disabled; inferences routed exclusively to local Ollama 8B.
+  - Script auto-runs, file modifications, and desktop mouse/keyboard automation completely disabled.
+  - Prominent UI top-banner: *"Safe Mode Active (Read-Only Tools / Local Inference Only)"*.
+
+---
+
 ## Implementation Roadmap & Effort Estimates
 
 | Area | Title / Focus | Deliverables | Risk Level | Effort Estimate |
@@ -670,11 +769,12 @@ The Settings Panel provides four distinct reset actions, each previewing affecte
 | **7i** | Coding Agent Safety | Workspace copier, diff engine, typosquat detection suite | High | 16 hrs |
 | **7j** | Gaming Mode & Notification Digest | DirectX detector, power plan switcher, notification filter | Low | 8 hrs |
 | **7k** | Providers, Onboarding, Reset & Uninstall | Multi-provider cascade, usage panel, reset flows, export zip | Medium | 16 hrs |
-| **Total** | **Comprehensive Hardening Implementation** | | | **144 hrs** |
+| **7l** | Confirmations, Meeting Mode & Self-Check | Late re-validation, display affinity, daily self-check, safe mode | Medium | 14 hrs |
+| **Total** | **Comprehensive Hardening Implementation** | | | **158 hrs** |
 
 ---
 
 ## Conclusion & Next Steps
-All architectural requirements from the review, owner decisions (rounds 1, 2, 3, and 4), and safety guidelines are fully articulated in this plan. [ARCHITECTURE.md](file:///c:/Phenom/ARCHITECTURE.md) Section 3 has been updated in place to codify the new non-private cloud escalation policy.
+All architectural requirements from the review, owner decisions (rounds 1 through 5), and safety guidelines are fully articulated in this plan. [ARCHITECTURE.md](file:///c:/Phenom/ARCHITECTURE.md) Section 3 has been updated in place to codify the new non-private cloud escalation policy.
 
 In accordance with user rules, implementation is halted. Standing by for owner review and approval before starting code implementation on any planned section.
