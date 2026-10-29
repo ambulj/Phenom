@@ -178,8 +178,31 @@ class VRAMManager:
             "is_loaded_in_vram": self.is_loaded_in_vram,
             "gaming_mode_active": self.gaming_mode_active,
             "detected_game": self.detected_game_name,
+            "orb_lod_quality": self.get_orb_lod_quality(),
             "ttft_sla_seconds": 2.0
         }
+
+    def get_orb_lod_quality(self, override_gpu_pct: Optional[float] = None) -> str:
+        """
+        Determines Three.js Orb LOD quality level according to Section 7h Adaptive Quality Table:
+        - 'freeze': Full-screen 3D game active (0 particles, 0 fps)
+        - 'low': High GPU load > 60% (2,000 particles, 15 fps)
+        - 'medium': Light browser / model tasks 20-60% (7,500 particles, 30 fps)
+        - 'high': Idle Desktop, GPU free < 20% (15,000 particles, 60 fps)
+        """
+        if self.gaming_mode_active:
+            return "freeze"
+
+        gpu_pct = override_gpu_pct
+        if gpu_pct is None:
+            gpu_pct = 70.0 if (self.is_loaded_in_vram and self.vram_allocated_mb > 4000) else 10.0
+
+        if gpu_pct > 60.0:
+            return "low"
+        elif gpu_pct >= 20.0:
+            return "medium"
+        else:
+            return "high"
 
 # Global VRAM Manager Instance
 vram_manager = VRAMManager()

@@ -2,13 +2,53 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbState } from '../types/protocol';
 
+export type OrbQualityLevel = 'high' | 'medium' | 'low' | 'freeze';
+
 interface OrbProps {
   state: OrbState;
   isShrunk: boolean;
   amplitude?: number;
+  qualityLevel?: OrbQualityLevel;
 }
 
-const PARTICLE_COUNT = 6000;
+export const MAX_PARTICLE_COUNT = 15000;
+
+export const QUALITY_LOD_CONFIGS: Record<OrbQualityLevel, {
+  particles: number;
+  fps: number;
+  speedFactor: number;
+  brightness: number;
+  gpuCondition: string;
+}> = {
+  high: {
+    particles: 15000,
+    fps: 60,
+    speedFactor: 1.0,
+    brightness: 1.0,
+    gpuCondition: 'Idle / Free (< 20%)'
+  },
+  medium: {
+    particles: 7500,
+    fps: 30,
+    speedFactor: 0.85,
+    brightness: 0.85,
+    gpuCondition: 'Light Tasks (20-60%)'
+  },
+  low: {
+    particles: 2000,
+    fps: 15,
+    speedFactor: 0.5,
+    brightness: 0.65,
+    gpuCondition: 'High Load (> 60%)'
+  },
+  freeze: {
+    particles: 0,
+    fps: 0,
+    speedFactor: 0.0,
+    brightness: 0.0,
+    gpuCondition: 'DirectX / 3D Game Exclusive'
+  }
+};
 
 const STATE_CONFIGS = {
   idle: {
@@ -43,10 +83,16 @@ const STATE_CONFIGS = {
   }
 };
 
-export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
+export const Orb: React.FC<OrbProps> = ({
+  state,
+  isShrunk,
+  amplitude = 0,
+  qualityLevel = 'high'
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const targetStateRef = useRef<OrbState>(state);
   const amplitudeRef = useRef<number>(amplitude);
+  const qualityRef = useRef<OrbQualityLevel>(qualityLevel);
 
   useEffect(() => {
     targetStateRef.current = state;
@@ -55,6 +101,10 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
   useEffect(() => {
     amplitudeRef.current = amplitude;
   }, [amplitude]);
+
+  useEffect(() => {
+    qualityRef.current = qualityLevel;
+  }, [qualityLevel]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -73,15 +123,15 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // Geometry & distribution
+    // Dynamic Geometry supporting up to MAX_PARTICLE_COUNT (15,000)
     const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(PARTICLE_COUNT * 3);
-    const basePositions = new Float32Array(PARTICLE_COUNT * 3);
-    const angles = new Float32Array(PARTICLE_COUNT);
-    const radii = new Float32Array(PARTICLE_COUNT);
-    const vSpeeds = new Float32Array(PARTICLE_COUNT);
+    const positions = new Float32Array(MAX_PARTICLE_COUNT * 3);
+    const basePositions = new Float32Array(MAX_PARTICLE_COUNT * 3);
+    const angles = new Float32Array(MAX_PARTICLE_COUNT);
+    const radii = new Float32Array(MAX_PARTICLE_COUNT);
+    const vSpeeds = new Float32Array(MAX_PARTICLE_COUNT);
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < MAX_PARTICLE_COUNT; i++) {
       const u = Math.random();
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
@@ -106,8 +156,9 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setDrawRange(0, QUALITY_LOD_CONFIGS[qualityRef.current].particles);
 
-    // Radial texture
+    // Radial gradient particle texture
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
@@ -141,17 +192,44 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
 
     const clock = new THREE.Clock();
     let animId: number;
+    let lastRenderTime = performance.now();
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
+
+      const activeLod = QUALITY_LOD_CONFIGS[qualityRef.current] || QUALITY_LOD_CONFIGS.high;
+
+      // Freeze mode: pause rendering loop and hide
+      if (activeLod.fps === 0 || activeLod.particles === 0) {
+        if (renderer.domElement.style.display !== 'none') {
+          renderer.domElement.style.display = 'none';
+        }
+        return;
+      } else {
+        if (renderer.domElement.style.display === 'none') {
+          renderer.domElement.style.display = 'block';
+        }
+      }
+
+      // Frame rate governor throttling
+      const now = performance.now();
+      const targetInterval = 1000 / activeLod.fps;
+      if (now - lastRenderTime < targetInterval - 2) {
+        return;
+      }
+      lastRenderTime = now;
+
+      // Update particle draw range dynamically
+      geometry.setDrawRange(0, activeLod.particles);
+
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
 
       const target = STATE_CONFIGS[targetStateRef.current] || STATE_CONFIGS.idle;
       currentColor.lerp(target.color, lerpFactor);
-      currentSpeed += (target.speed - currentSpeed) * lerpFactor;
+      currentSpeed += (target.speed * activeLod.speedFactor - currentSpeed) * lerpFactor;
       currentDispersion += (target.dispersion - currentDispersion) * lerpFactor;
-      currentBrightness += (target.brightness - currentBrightness) * lerpFactor;
+      currentBrightness += (target.brightness * activeLod.brightness - currentBrightness) * lerpFactor;
 
       material.color = currentColor;
       material.opacity = currentBrightness;
@@ -159,15 +237,16 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
       const pos = geometry.attributes.position.array as Float32Array;
       const tstate = targetStateRef.current;
       const ampMod = Math.min(1.0, Math.max(0.0, amplitudeRef.current || 0.0));
+      const activeCount = activeLod.particles;
 
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
+      for (let i = 0; i < activeCount; i++) {
         const idx = i * 3;
         const bx = basePositions[idx];
         const by = basePositions[idx + 1];
         const bz = basePositions[idx + 2];
 
         if (tstate === 'halted' && currentSpeed < 0.05) {
-          continue; // Frozen
+          continue; // Frozen in halted state
         }
 
         if (tstate === 'thinking') {
@@ -188,7 +267,7 @@ export const Orb: React.FC<OrbProps> = ({ state, isShrunk, amplitude = 0 }) => {
           pos[idx + 1] = by * pulse;
           pos[idx + 2] = bz * pulse;
         } else {
-          // Idle calm slow drift
+          // Idle calm drift
           const wave = Math.sin(elapsedTime * 0.8 + bx * 0.02) * 2.5;
           pos[idx] = bx + wave;
           pos[idx + 1] = by + Math.cos(elapsedTime * 0.8 + by * 0.02) * 2.5;

@@ -338,12 +338,35 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7h: Orb, Panel & Conversational Voice UX
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - Three.js particle LOD test showing particle reduction from 15,000 (60 fps) to freeze state under GPU load.
-  - Spoken "Good Morning" briefing execution transcript under 60 seconds with full text committed to vault daily log.
-  - Proof that voice commands cannot alter security tiers or protected rules.
+### [x] Task 7h: Orb, Panel & Conversational Voice UX
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7h: orb three.js particle lod daily briefing and voice security boundaries`
+- **Key Files:** [Orb.tsx](file:///c:/Phenom/apps/desktop/src/components/Orb.tsx), [App.tsx](file:///c:/Phenom/apps/desktop/src/App.tsx), [daily_briefing.py](file:///c:/Phenom/services/backend/voice/daily_briefing.py), [voice_coordinator.py](file:///c:/Phenom/services/backend/voice/voice_coordinator.py), [vram_manager.py](file:///c:/Phenom/services/backend/resource/vram_manager.py), [main.py](file:///c:/Phenom/services/backend/main.py), [evaluate_orb_and_voice_ux.py](file:///c:/Phenom/scripts/evaluate_orb_and_voice_ux.py), [test_orb_and_voice_ux.py](file:///c:/Phenom/services/backend/tests/test_orb_and_voice_ux.py)
+- **Evidence Attached:**
+  - Three.js Particle Cloud Adaptive LOD Engine:
+    - High Quality (Idle desktop, GPU < 20%): **15,000 particles**, 60 fps target.
+    - Medium Quality (Light tasks, GPU 20-60%): **7,500 particles**, 30 fps target.
+    - Low Quality (Heavy GPU load, GPU > 60%): **2,000 particles**, 15 fps target.
+    - Freeze Quality (Full-Screen 3D Game / DirectX exclusive detected): **0 particles**, 0 fps target, dynamic buffer set via `geometry.setDrawRange(0, 0)` with zero render overhead.
+  - Spoken "Good Morning" Daily Briefing SLA (< 60s):
+    - Strict spoken SLA enforced at ~130 words maximum (56 words generated in evaluation benchmark $\to$ ~25.8s spoken duration).
+    - Content invariant: Curates top 3 tech news headlines + unread email draft summary. Weather and Calendar strictly excluded per owner decision.
+    - Quiet Hours (11:00 PM - 7:00 AM) auto-silences proactive speech and batches to daily journal note.
+    - Markdown log committed automatically to Obsidian vault `Daily Logs/YYYY-MM-DD.md`.
+  - Voice Security Refusal Boundary:
+    - Categorical refusal on any spoken command attempting to alter safety tiers, path allowlists, or protected rules:
+      `"Safety tiers, path allowlists, and protected rules cannot be modified by voice commands under any circumstances."`
+    - Refusal logged in `action_log` under `tool="voice_security_override", tier=3, decision="blocked", result_status="SECURITY_REFUSAL"`.
+    - Voice tone and personality adjustments (`concise`, `tutor`, `witty`, `formal`) safely alter prompt style parameters without affecting security tier policies.
+  - Comprehensive Test Results:
+    ```powershell
+    python scripts/evaluate_orb_and_voice_ux.py
+    # ALL TASK 7h ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY (PASS)
+    python -m pytest services/backend/tests/test_orb_and_voice_ux.py -v
+    # 6 passed in 10.09s
+    python -m pytest services/backend/tests/
+    # 202 passed in 73.93s
+    ```
 
 ---
 

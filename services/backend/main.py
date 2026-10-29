@@ -57,6 +57,8 @@ from services.backend.remote.credentials import (
     unlock_remote_from_desktop
 )
 from services.backend.memory.vault import vault_manager
+from services.backend.voice.daily_briefing import daily_briefing_manager
+from services.backend.resource.vram_manager import vram_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -785,6 +787,19 @@ async def update_telegram_config(payload: Dict[str, Any]):
         "configured": telegram_controller.is_configured,
         "owner_id": get_telegram_owner_id(),
         "locked": is_remote_locked()
+    }
+
+@app.get("/api/briefing/morning", dependencies=[Depends(verify_session_token)])
+async def get_morning_briefing_api():
+    return await daily_briefing_manager.generate_briefing(dry_run_speech=True)
+
+@app.get("/api/orb/lod", dependencies=[Depends(verify_session_token)])
+async def get_orb_lod_api():
+    lod = vram_manager.get_orb_lod_quality()
+    return {
+        "quality_level": lod,
+        "is_gaming": vram_manager.gaming_mode_active,
+        "detected_game": vram_manager.detected_game_name
     }
 
 @app.get("/api/vault/status", dependencies=[Depends(verify_session_token)])

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HeaderBar } from './components/HeaderBar';
-import { Orb } from './components/Orb';
+import { Orb, OrbQualityLevel } from './components/Orb';
 import { ChatBox } from './components/ChatBox';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { HistoryPanel } from './components/panels/HistoryPanel';
@@ -18,6 +18,7 @@ import { OrbState, ConfirmRequestPayload, LearnedRuleItem } from './types/protoc
 export const App: React.FC = () => {
   const [showFirstRun, setShowFirstRun] = useState<boolean>(() => !localStorage.getItem('phenom_first_run_done'));
   const [orbState, setOrbState] = useState<OrbState>('idle');
+  const [orbQuality, setOrbQuality] = useState<OrbQualityLevel>('high');
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [streamingText, setStreamingText] = useState<string>('');
@@ -74,6 +75,8 @@ export const App: React.FC = () => {
 
           if (mtype === 'state.change') {
             setOrbState(payload.state);
+          } else if (mtype === 'orb.quality_level') {
+            setOrbQuality(payload.quality || 'high');
           } else if (mtype === 'chat.token') {
             setIsStreaming(true);
             setStreamingText((prev) => prev + payload.token);
@@ -361,8 +364,8 @@ export const App: React.FC = () => {
         onToggleMiniOverlay={() => setShowMiniOverlay((prev) => !prev)}
       />
 
-      {/* 3D Three.js Orb */}
-      <Orb state={orbState} isShrunk={isPanelOpen} amplitude={amplitude} />
+      {/* 3D Three.js Orb with Adaptive LOD */}
+      <Orb state={orbState} isShrunk={isPanelOpen} amplitude={amplitude} qualityLevel={orbQuality} />
 
       {/* Main Chat Interface */}
       <ChatBox
