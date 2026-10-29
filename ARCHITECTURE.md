@@ -78,3 +78,28 @@ Tables: `messages`, `facts`, `learned_rules`, `approvals_remembered`, `action_lo
 
 ## 7. Configuration
 `config.toml` for non-secret settings (hotkeys, folders, model names). Secrets only in environment variables or Credential Manager. A settings panel writes to config and never displays secrets.
+
+
+---
+
+## 8. Developer & Coding Agent Architecture (Locked In)
+1. **Subprocess Execution**: Commands run via PowerShell 7 (pwsh.exe) with fallback to Windows PowerShell 5.1, isolated inside workspace directories with path containment and execution timeout limits.
+2. **Autonomous Pre-Push Quality Gate**: Before preparing a Pull Request, the agent runs test suites, linting, and the zero-secrets scanner locally.
+3. **Smart Dev Clipboard**: Clipboard monitoring auto-detects stack traces, JSON, regex, and Git repository URLs, presenting 1-click actions in the desktop HUD.
+4. **Failure-Triggered Screen Sampling**: Contextual screen OCR snapshots are taken automatically on terminal test/build failure or IDE syntax error highlights.
+5. **Proactive Patch Remediation**: When a build or test fails, the agent analyzes the traceback, drafts a minimal fix diff in the HUD, and waits for 1-click user approval.
+
+---
+
+## 9. Multimodal Remote & Voice Architecture (Locked In)
+1. **Barge-in Performance**: Spoken output supports immediate barge-in interruption (< 50ms) via speech recognition or push-to-talk (Ctrl+Space).
+2. **Audio Ducking**: Active media volume is automatically ducked by 70% during TTS synthesis or speech input, and restored when idle.
+3. **Telegram Multimodal Bridge**: Remote channel processes voice audio notes via local Whisper, responds with audio notes, and inspects attached photos/documents via vision.
+4. **Emergency Stop**: Guardian Kill Switch is hard-wired to Triple-tap Escape as well as the UI emergency halt button.
+
+---
+
+## 10. RAG, Storage & Disaster Recovery Architecture (Locked In)
+1. **Local Vector Search**: Embedded using local ONNX runtime (ll-MiniLM-L6-v2), running on CPU in < 5ms with zero GPU VRAM consumption.
+2. **Daily Encrypted Snapshots**: Automatic daily local backup ZIP archiving SQLite memory, Obsidian vault, and configuration to ~/Documents/Phenom/backups/ with 30-day retention.
+3. **Transient Data Purge**: Temporary browser profiles, OCR temp images, and screen caches are auto-purged after 7 days; audit action logs are retained indefinitely.

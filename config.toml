@@ -1,5 +1,5 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-13)
+# Configured and locked per Owner Decisions (Rounds 8-19)
 
 [assistant]
 nickname = "Abhi"
@@ -13,9 +13,18 @@ study_mode = "deep_technical_dive"     # Exhaustive architecture breakdowns, for
 sound_effects = "futuristic_chimes"    # Soft Jarvis chime on wake, confirmation chime on action complete, alert on kill switch
 quiet_hours = "always_responsive"      # Sound and speech active whenever spoken to, 24/7
 cloud_escalation = "dynamic_per_task"  # Escalate dynamically based on task complexity while strictly respecting privacy
+speech_cadence = "adaptive"            # 1.1x brisk pace for banter/status; 0.95x measured pace for technical breakdowns
+break_reminders = "spoken_idle"        # Subtle 1-sentence voice nudge when an idle gap occurs during long focus
 
 [ui]
 orb_mode = "floating_dock"             # Subtle floating particle orb on desktop with auto-dock to screen edge
+orb_particle_modes = [                 # Selectable particle behavior presets
+    "reactive_dynamics",               # Gentle drift idle, pulsating thinking, audio-reactive waveform speaking
+    "minimal_halo",                    # Subtle low-overhead glowing ring
+    "wireframe_core"                   # Holographic wireframe icosahedron with orbital particles
+]
+orb_color_theme = "cyan_stark_gold"    # Electric Cyan (#00E5FF) idle; Amber Gold (#FFB300) thinking/alerts; Crimson halt
+hud_style = "anchored_transparent_card" # Custom transparent HUD card anchored near docked Orb
 window_control = "full"                # App launching, media keys, volume control, window snapping/minimizing
 offline_mode = "seamless_local"        # Seamless local offline mode (switch to local Ollama & offline TTS automatically; show offline badge)
 
@@ -23,12 +32,18 @@ offline_mode = "seamless_local"        # Seamless local offline mode (switch to 
 push_to_talk = "ctrl+space"
 toggle_phenom = "alt+space"
 kill_switch = "triple_escape"          # Triple-tap Escape for immediate emergency stop
+barge_in_latency_ms = 50               # Ultra-fast TTS cutoff within 50ms upon speech or push-to-talk tap
+
+[shell]
+default_runner = "pwsh"                # PowerShell 7 primary subprocess runner
+fallback_runner = "powershell"         # Windows PowerShell 5.1 fallback
 
 [vault]
 vault_path = "%USERPROFILE%\\Documents\\Phenom\\vault"
 remote_url = ""
 auto_push = false
 structure = "structured_folders"       # Structured folders: Daily Notes, Projects, Study/Research, People/Entities
+daily_log_mode = "automated_evening"   # Structured evening summary appended to Daily Notes/YYYY-MM-DD.md
 
 [storage]
 documents_path = "%USERPROFILE%\\Documents\\Phenom"
@@ -42,16 +57,51 @@ index_paths = [
 
 [developer]
 toolchain_integration = "deep"         # Auto-detect active git repo, branch, uncommitted diffs, running Docker containers
+auto_workspace_detect = true           # Detect active workspace and auto-switch context notes & history
 coding_sandbox = "workspace_subprocess" # Local workspace subprocess with strict path boundary & execution timeouts
 vision_background = true               # Automatic background screen context during active coding/debugging sessions
+vision_sample_trigger = "event_failure" # Capture screen on terminal failure or IDE error highlight
+error_remediation = "proactive_patch_proposal" # On test failure, analyze traceback and draft minimal fix diff in HUD
+git_pre_push_gate = "autonomous"       # Automatically run tests, linter, and secret scan before drafting clean PRs with changelogs
+layout_presets = true                  # Workspace presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%)
+clipboard_assistance = "smart_dev"     # Auto-detect stack traces, regex, JSON, or git URLs in clipboard and offer 1-click action
 context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
 
 [browser]
 playwright_mode = "open_with_tier2_notifications" # Open web browsing with Tier 2 notifications before interactive actions
 
+[audio]
+auto_ducking = true                    # Auto-lower background media volume (by 70%) while speaking
+ducking_level = 0.30                   # Retain 30% background volume during speech
+study_focus_playlists = true           # Option to launch focus/ambient playlists during study mode
+
+[calendar]
+smart_companion = true                 # Buffer 15 mins between meetings, flag conflicting commitments, suggest open slots
+conflict_buffer_minutes = 15
+
+[email]
+draft_voice = "authentic_concise"      # Concise, direct, minimal corporate jargon; learned from approved drafts
+
+[rag]
+embedding_engine = "local_onnx"        # Local ONNX runtime: ultra-fast (<5ms) on CPU, zero VRAM usage
+embedding_model = "all-MiniLM-L6-v2"   # ~80MB high-efficiency local embedding
+
+[research]
+synthesis_structure = "3_layer_technical" # High-level abstract + Key architectural innovations + Engineering implications
+
+[backup]
+schedule = "daily"                     # Daily automated encrypted snapshot
+backup_path = "%USERPROFILE%\\Documents\\Phenom\\backups"
+retention_days = 30                    # 30-day retention for disaster recovery snapshots
+
+[gaming_mode]
+gpu_resource_governor = true           # Auto-offload GPU VRAM when 3D game launches, pause background indexing on low battery
+busy_gpu_fallback = "dynamic_cloud_or_cpu_q4" # Cloud Nemotron if online, lightweight CPU Q4 GGUF if offline
+
 [telegram]
 remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status, push notifications
 push_alerts = ["urgent_system_alerts"] # Urgent system alerts: Guardian kill switch trigger, high resource usage, errors
+media_mode = "full_multimodal"         # Whisper voice note transcription + voice replies + photo/doc vision analysis
 
 [models]
 local_model = "llama3.1:8b"

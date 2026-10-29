@@ -108,7 +108,41 @@ npm run dev
 
 ---
 
-## 5. Owner Operational Decisions (Rounds 8-13 Locked In)
+## 5. Owner Operational Decisions (Rounds 8-19 Locked In)
+
+### Core Assistant & Daily Routines (Rounds 8-13)
+- **Morning Briefing**: On-demand triggered via 'Good morning Phenom' or Telegram greeting.
+- **Desktop UI**: Subtle floating particle orb with auto-dock to screen edge; full window & media controls.
+- **Coding Sandbox**: Local workspace subprocess with strict path boundary & execution timeouts.
+- **Browser Automation**: Open web browsing via Playwright with Tier 2 confirmations for interactive actions.
+- **Telegram Remote**: Full remote control (git tasks, test suites, health checks) with urgent system alerts only.
+- **Microphone & Wake Word**: Dual-mode (Local wake word 'Hey Phenom' + Push-to-Talk Ctrl+Space).
+- **Obsidian Vault**: Structured folders (Daily Notes, Projects, Study/Research, People/Entities); local-only.
+- **Local GPU Runtime**: Ollama with Llama-3.1-8B-Instruct (4-bit quantized, ~5.5 GB VRAM).
+- **Vision & Screen**: Automatic background screen context during active coding/debugging sessions.
+- **Storage & Reports**: Generated documents stored in ~/Documents/Phenom/ with ISO timestamps; transient caches purged after 7 days; action logs retained indefinitely.
+- **Personality & Tone**: High banter! Sharp comebacks, treats Abhi like Tony Stark, banter-heavy Romanized Hinglish.
+- **Study Mode**: Deep technical dive with exhaustive architectural breakdowns, formal equations, and complete code.
+- **Emergency Halt**: Triple-tap Escape for immediate Guardian Kill Switch halt.
+- **Offline Mode**: Seamless local offline mode (automatic fallback to local Ollama & offline TTS).
+
+### Advanced Toolchains & Multimodal UX (Rounds 14-19)
+- **Email Drafting**: Authentic concise voice matching Abhi's direct writing style (minimal corporate fluff).
+- **Calendar Management**: Smart calendar companion with 15-minute buffers between meetings and conflict detection.
+- **Screen Sampling**: Event-triggered OCR captures on terminal failure or IDE syntax error highlights.
+- **Window Snapping**: Workflow layout presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%).
+- **Git & GitHub**: Autonomous pre-push quality gate running tests, linter, and secret scanner before PR drafting.
+- **Audio Ducking**: Auto-lower media volume by 70% during TTS synthesis or speech input; focus playlist launching.
+- **Hardware Governor**: Auto-offload GPU VRAM when 3D game launches; pause background indexing on low battery.
+- **Barge-in Interruption**: Ultra-fast speech cutoff within 50ms upon speech recognition or push-to-talk tap.
+- **Telegram Media**: Full multi-modal processing (Whisper voice transcription, voice replies, photo/document OCR).
+- **Shell Runner**: PowerShell 7 (pwsh.exe) primary subprocess runner with PowerShell 5.1 fallback.
+- **Local RAG Embedding**: Local ONNX runtime using ll-MiniLM-L6-v2 (< 5ms on CPU, zero GPU VRAM consumption).
+- **Orb & HUD Styling**: Electric Cyan (#00E5FF) and Amber Gold (#FFB300) palette with anchored transparent HUD cards and selectable particle modes (reactive dynamics, minimal halo, wireframe core).
+- **Clipboard Intelligence**: Smart developer clipboard auto-detecting stack traces, regex, JSON, and git URLs.
+- **GPU Gaming Fallback**: Dynamic fallback to Cloud Nemotron if online, or lightweight CPU Q4 GGUF if offline.
+- **Health Reminders**: Subtle 1-sentence spoken voice nudges during focus gaps ('Hydrate, Abhi; coffee is not water').
+- **Disaster Recovery**: Automated daily encrypted snapshot archives of SQLite memory, vault, and config with 30-day retention.
 
 - **Morning Briefing**: On-demand triggered via 'Good morning Phenom' or Telegram greeting.
 - **Desktop UI**: Subtle floating particle orb with auto-dock to screen edge; full window & media controls.
