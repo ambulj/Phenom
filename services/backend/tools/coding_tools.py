@@ -9,6 +9,7 @@ Safety-wrapped tools for coding agent operations:
 """
 
 import os
+import psutil
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 
@@ -155,3 +156,83 @@ def handle_apply_changes(workspace_id: str) -> Dict[str, Any]:
     if not ws:
         raise ValueError(f"Workspace '{workspace_id}' not found.")
     return workspace_manager.apply_to_original(ws, confirmed=True)
+
+# ==========================================
+# Port Conflict Inspection & Resolution (Rounds 40 & 50)
+# ==========================================
+
+class InspectPortArgs(BaseModel):
+    port: int = Field(..., description="TCP port number to inspect for EADDRINUSE conflict.")
+
+def inspect_port_preview(args: Dict[str, Any]) -> str:
+    return f"Inspect TCP port {args.get('port')} conflict status."
+
+@registry.register(
+    name="coding_inspect_port",
+    tier=0,
+    description="Inspects active TCP port to identify which PID or process is holding it on EADDRINUSE.",
+    args_schema=InspectPortArgs,
+    preview_fn=inspect_port_preview
+)
+def handle_inspect_port(port: int) -> Dict[str, Any]:
+    try:
+        for conn in psutil.net_connections(kind="inet"):
+            if conn.laddr and conn.laddr.port == port and conn.status == "LISTEN":
+                pid = conn.pid
+                if pid:
+                    try:
+                        p = psutil.Process(pid)
+                        return {
+                            "status": "in_use",
+                            "port": port,
+                            "pid": pid,
+                            "process_name": p.name(),
+                            "cmdline": " ".join(p.cmdline()[:5]),
+                            "username": p.username() if hasattr(p, "username") else None
+                        }
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        return {
+                            "status": "in_use",
+                            "port": port,
+                            "pid": pid,
+                            "process_name": "unknown",
+                            "cmdline": ""
+                        }
+        return {"status": "free", "port": port}
+    except Exception as e:
+        return {"status": "error", "port": port, "error": str(e)}
+
+class ResolvePortConflictArgs(BaseModel):
+    port: int = Field(..., description="TCP port number to resolve.")
+    terminate: bool = Field(default=False, description="Whether to kill the process holding the port (Tier 2).")
+
+def resolve_port_tier(args: Dict[str, Any]) -> int:
+    return 2 if args.get("terminate", False) else 0
+
+def resolve_port_preview(args: Dict[str, Any]) -> str:
+    port = args.get("port")
+    if args.get("terminate", False):
+        return f"Terminate process holding TCP port {port} (Tier 2 confirmation required)."
+    return f"Check resolution status for TCP port {port}."
+
+@registry.register(
+    name="coding_resolve_port_conflict",
+    tier=resolve_port_tier,
+    description="Resolves EADDRINUSE port conflicts by identifying holding process and optionally terminating it.",
+    args_schema=ResolvePortConflictArgs,
+    preview_fn=resolve_port_preview
+)
+def handle_resolve_port_conflict(port: int, terminate: bool = False) -> Dict[str, Any]:
+    info = handle_inspect_port(port)
+    if info.get("status") == "in_use" and terminate:
+        pid = info.get("pid")
+        if pid:
+            killed = code_runner.terminate_process_tree(pid)
+            return {
+                "port": port,
+                "action": "terminated",
+                "pid": pid,
+                "processes_killed": killed,
+                "previous_process": info.get("process_name")
+            }
+    return info
