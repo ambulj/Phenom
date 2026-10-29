@@ -91,6 +91,20 @@ class SafetyExecutionEngine:
 
         tier = tool_def.get_tier(validated_args)
 
+        # Guard: Safe Mode Check (Task 7l)
+        from services.backend.packaging.safe_mode import safe_mode_manager
+        if safe_mode_manager.safe_mode_active and tier > 0:
+            action_log.log_action(
+                tool=tool_name,
+                tier=tier,
+                args=validated_args,
+                decision="blocked",
+                result_status="BLOCKED_SAFE_MODE",
+                source=source,
+                error="Safe Mode is active: only Tier 0 read-only tools permitted."
+            )
+            raise PermissionError(f"Execution of '{tool_name}' (Tier {tier}) is blocked while Safe Mode is active.")
+
         # Guard 3: Tier 3 Blocked Check
         if tier == 3:
             if source == "telegram":

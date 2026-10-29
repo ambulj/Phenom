@@ -967,3 +967,45 @@ async def perform_data_export(payload: Optional[Dict[str, Any]] = None):
     from services.backend.packaging.export_manager import export_manager
     out_dir = (payload or {}).get("output_dir")
     return export_manager.export_data(output_dir=out_dir)
+
+@app.get("/api/meeting/status", dependencies=[Depends(verify_session_token)])
+async def get_meeting_status():
+    from services.backend.automation.meeting_mode import meeting_manager
+    is_meeting, app_name, reason = meeting_manager.detect_meeting()
+    return {
+        "meeting_mode_active": meeting_manager.meeting_mode_active,
+        "meeting_app": meeting_manager.active_meeting_app or app_name,
+        "detection_source": meeting_manager.detection_source or reason,
+        "display_affinity": "WDA_EXCLUDEFROMCAPTURE" if meeting_manager.meeting_mode_active else "WDA_NONE"
+    }
+
+@app.post("/api/meeting/toggle", dependencies=[Depends(verify_session_token)])
+async def toggle_meeting_mode(payload: Dict[str, Any]):
+    from services.backend.automation.meeting_mode import meeting_manager
+    enable = payload.get("enable", not meeting_manager.meeting_mode_active)
+    if enable:
+        res = meeting_manager.enter_meeting_mode(payload.get("app_name", "manual_meeting"))
+    else:
+        res = meeting_manager.exit_meeting_mode()
+    return res
+
+@app.get("/api/system/self-check", dependencies=[Depends(verify_session_token)])
+async def run_daily_self_check():
+    from services.backend.packaging.self_check import self_check_engine
+    report = self_check_engine.run_diagnostic_suite()
+    return report
+
+@app.get("/api/system/safe-mode", dependencies=[Depends(verify_session_token)])
+async def get_safe_mode_status():
+    from services.backend.packaging.safe_mode import safe_mode_manager
+    return {"safe_mode_active": safe_mode_manager.safe_mode_active}
+
+@app.post("/api/system/safe-mode/toggle", dependencies=[Depends(verify_session_token)])
+async def toggle_safe_mode(payload: Dict[str, Any]):
+    from services.backend.packaging.safe_mode import safe_mode_manager
+    enable = payload.get("enable", not safe_mode_manager.safe_mode_active)
+    if enable:
+        safe_mode_manager.enable_safe_mode()
+    else:
+        safe_mode_manager.disable_safe_mode()
+    return {"safe_mode_active": safe_mode_manager.safe_mode_active}

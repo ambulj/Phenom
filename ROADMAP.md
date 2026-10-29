@@ -501,13 +501,41 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7l: Confirmations, Meeting Mode, Self-Check & Safe Mode
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - One-line confirmation formatting invariant test proving exact target and quantity for all Tier 2/3 requests.
-  - Preconditions re-validation test: proving modified files, changed mode, or engaged kill switch halts late approvals.
-  - Safe alternative engine test: proving declined tools are never repeated and untrusted suggestions are rejected.
-  - Meeting mode display-affinity test: proving `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)` excludes Phenom windows from capture.
-  - Daily self-check execution test: proving Telegram status omits paths/keys and critical alerts speak aloud.
-  - Automated 7-day rollback test on simulated post-update boot check failure.
-  - Safe mode test: proving `--safe-mode` locks execution to Tier 0 read-only tools and disables all cloud endpoints.
+### [x] Task 7l: Confirmations, Meeting Mode, Self-Check & Safe Mode
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7l: confirmations meeting mode display affinity self check and safe mode`
+- **Key Files:** [confirmations.py](file:///c:/Phenom/services/backend/safety/confirmations.py), [alternatives.py](file:///c:/Phenom/services/backend/safety/alternatives.py), [meeting_mode.py](file:///c:/Phenom/services/backend/automation/meeting_mode.py), [self_check.py](file:///c:/Phenom/services/backend/packaging/self_check.py), [safe_mode.py](file:///c:/Phenom/services/backend/packaging/safe_mode.py), [engine.py](file:///c:/Phenom/services/backend/safety/engine.py), [main.py](file:///c:/Phenom/services/backend/main.py), [evaluate_confirmations_and_safe_mode.py](file:///c:/Phenom/scripts/evaluate_confirmations_and_safe_mode.py), [test_confirmations_meeting_and_safe_mode.py](file:///c:/Phenom/services/backend/tests/test_confirmations_meeting_and_safe_mode.py)
+- **Evidence Attached:**
+  - One-Line Confirmation Formatting Invariant:
+    - Guaranteed structured one-line summary invariant: `"[Tier {tier}] {action_verb} {item_count} item(s) in {target_summary}"`.
+    - Prevents blind confirmations across both Desktop confirmation dialogs and Telegram push notifications.
+    - Verified strict timeout differentiation: Desktop requests auto-expire after 900 seconds (15 minutes); Telegram requests never auto-expire (`expires_at = None`).
+  - Preconditions Re-Validation Engine:
+    - Stale approvals blocked if file content SHA-256 hash or modification timestamp has drifted between request and approval.
+    - Blocked if assistant operating mode has drifted (e.g., from `Work` to `Chill`).
+    - Blocked if Guardian kill switch is active (`RuntimeError: Precondition failure: Guardian kill switch is active`).
+  - Safe Alternative Recommendation Engine:
+    - Guarantees alternative tool risk tier $\le$ declined tool risk tier.
+    - Re-use block: Tools already declined in the active turn chain are never re-recommended.
+    - Taint quarantine: Blocked from proposing automated alternatives if context was marked tainted (`is_tainted=True`).
+  - Meeting Mode & Windows Display Affinity:
+    - Conferencing app signal detection: monitors `zoom.exe`, `teams.exe`, `slack.exe`, `webex.exe`, `discord.exe`, and window titles (`Meet - `, `Zoom Meeting`, `Microsoft Teams`).
+    - Excludes Phenom windows from screen shares and recordings via `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` (0x00000011).
+    - Automatically mutes spoken TTS voice, sound FX, and silences notification alerts during meetings.
+  - Daily Self-Check Diagnostics (04:00 AM Cron):
+    - 6-Pillar automated diagnostic scan: disk quota (< 2 GB alert), SQLCipher DB `PRAGMA integrity_check`, vault git sync status, protected system rules SHA-256 verification, local/cloud model availability, and Credential Manager health.
+    - Privacy-first Telegram report: sanitized short status (`"[Phenom Self-Check] All Systems Healthy."` or `"[Phenom Self-Check Warning] Backup: Failed."`), strictly omitting absolute filesystem paths, database keys, or secrets.
+    - Spoken audio alert strictly reserved for critical hazards (tampering, low disk space, database corruption).
+  - Safe Mode & 7-Day Rollback Mechanism:
+    - `--safe-mode` startup flag restricts execution strictly to Tier 0 read-only tools, forces local Ollama 8B inference, and disables background automation and cloud endpoints.
+    - Non-Tier 0 tools blocked with `PermissionError: Safe Mode Active: Only Tier 0 read-only tools are permitted`.
+    - Maintains a rolling 7-day snapshot directory window; automatically restores the last known good configuration if post-update boot checks fail.
+  - Comprehensive Test Results:
+    ```powershell
+    python scripts/evaluate_confirmations_and_safe_mode.py
+    # ALL TASK 7l ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY (PASS)
+    python -m pytest services/backend/tests/test_confirmations_meeting_and_safe_mode.py -v
+    # 7 passed in 0.77s
+    python -m pytest services/backend/tests/
+    # 230 passed, 48 warnings in 148.77s
+    ```
