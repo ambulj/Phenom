@@ -52,7 +52,9 @@ from services.backend.browser.browser_controller import browser_controller
 from services.backend.automation.human_takeover import takeover_manager
 from services.backend.remote.telegram_bot import telegram_controller
 from services.backend.remote.credentials import (
-    is_remote_locked, set_remote_locked, set_telegram_token, set_telegram_owner_id, get_telegram_owner_id
+    is_remote_locked, set_remote_locked, set_telegram_token, set_telegram_owner_id, get_telegram_owner_id,
+    get_or_create_remote_pin, rotate_remote_pin, check_pin_rotation_status, get_failed_pin_attempts,
+    unlock_remote_from_desktop
 )
 from services.backend.memory.vault import vault_manager
 
@@ -732,18 +734,42 @@ async def get_telegram_status():
     return {
         "configured": telegram_controller.is_configured,
         "owner_id": get_telegram_owner_id(),
-        "locked": is_remote_locked()
+        "locked": is_remote_locked(),
+        "failed_attempts": get_failed_pin_attempts(),
+        "pin_status": check_pin_rotation_status()
     }
 
 @app.post("/api/telegram/unlock", dependencies=[Depends(verify_session_token)])
 async def unlock_telegram_remote():
-    set_remote_locked(False)
-    return {"locked": False, "status": "unlocked"}
+    unlock_remote_from_desktop()
+    return {"locked": False, "status": "unlocked", "failed_attempts": 0}
 
 @app.post("/api/telegram/lock", dependencies=[Depends(verify_session_token)])
 async def lock_telegram_remote():
     set_remote_locked(True)
     return {"locked": True, "status": "locked"}
+
+@app.get("/api/telegram/pin", dependencies=[Depends(verify_session_token)])
+async def get_telegram_pin_status():
+    rot_status = check_pin_rotation_status()
+    return {
+        "configured": True,
+        "created_at": rot_status.get("created_at"),
+        "age_days": rot_status.get("age_days"),
+        "needs_rotation": rot_status.get("needs_rotation"),
+        "failed_attempts": get_failed_pin_attempts(),
+        "locked": is_remote_locked()
+    }
+
+@app.get("/api/telegram/pin/reveal", dependencies=[Depends(verify_session_token)])
+async def reveal_telegram_pin():
+    pin = get_or_create_remote_pin()
+    return {"pin": pin}
+
+@app.post("/api/telegram/pin/rotate", dependencies=[Depends(verify_session_token)])
+async def rotate_telegram_pin_api():
+    new_pin = rotate_remote_pin()
+    return {"status": "rotated", "new_pin": new_pin}
 
 @app.post("/api/telegram/config", dependencies=[Depends(verify_session_token)])
 async def update_telegram_config(payload: Dict[str, Any]):

@@ -18,12 +18,12 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **186 passed, 28 warnings** (0 failed, 0 errors).
+- **Result**: **196 passed, 42 warnings** (0 failed, 0 errors).
 - **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
 
 ### Secret Scanner Run
 - **Command**: `python scripts/scan_secrets.py --all`
-- **Result**: **166 tracked files scanned. 0 secrets or blocked files found.**
+- **Result**: **182 tracked files scanned. 0 secrets or blocked files found.**
 
 ### Import Coverage Audit
 - **Audit Command**: `python services/backend/scripts/audit_imports.py`
@@ -31,7 +31,7 @@
 
 ### Desktop UI Build
 - **Build Command**: `cd apps/desktop; npm run build`
-- **Result**: **Clean TypeScript compilation (`tsc`) and Vite production bundle generated in 15.70s with 0 errors**.
+- **Result**: **Clean TypeScript compilation (`tsc`) and Vite production bundle generated in 24.19s with 0 errors**.
 
 ---
 

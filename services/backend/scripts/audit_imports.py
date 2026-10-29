@@ -26,6 +26,8 @@ IMPORT_TO_PYPI: Dict[str, str] = {
     "pythoncom": "pywin32",
     "win32api": "pywin32",
     "win32con": "pywin32",
+    "win32gui": "pywin32",
+    "win32process": "pywin32",
     "nest_asyncio": "nest-asyncio",
     "starlette": "fastapi",  # starlette is bundled/required by fastapi
 }

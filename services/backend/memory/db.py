@@ -48,9 +48,10 @@ class EncryptedDatabaseManager:
         self._init_schema()
 
     def get_connection(self):
-        conn = sqlcipher3.connect(self.db_path)
+        conn = sqlcipher3.connect(self.db_path, timeout=30.0)
         conn.execute(f"PRAGMA key = '{self.key}';")
         conn.execute("PRAGMA cipher_compatibility = 4;")
+        conn.execute("PRAGMA busy_timeout = 30000;")
         return conn
 
     def _init_schema(self):

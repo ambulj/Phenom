@@ -45,6 +45,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [workspaceMessage, setWorkspaceMessage] = useState<string>('');
   const [workspaceTesting, setWorkspaceTesting] = useState<boolean>(false);
 
+  // Telegram Remote states
+  const [telegramStatus, setTelegramStatus] = useState<any>(null);
+  const [revealedPin, setRevealedPin] = useState<string>('');
+  const [pinMessage, setPinMessage] = useState<string>('');
+
   React.useEffect(() => {
     apiFetch('/api/vault/status')
       .then((res) => res.json())
@@ -61,6 +66,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         if (data.gmail_address) setGmailAddress(data.gmail_address);
       })
       .catch((err) => console.error('Error loading workspace status:', err));
+    apiFetch('/api/telegram/status')
+      .then((res) => res.json())
+      .then((data) => setTelegramStatus(data))
+      .catch((err) => console.error('Error loading telegram status:', err));
   }, []);
 
   const handleTestVaultConnection = async () => {
@@ -379,6 +388,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ token: tokenEl.value, owner_id: ownerEl.value })
                     });
+                    const res = await apiFetch('/api/telegram/status');
+                    setTelegramStatus(await res.json());
                     alert('Telegram configuration saved to Windows Credential Manager.');
                   }
                 }}
@@ -390,11 +401,78 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 size="small"
                 onClick={async () => {
                   await apiFetch('/api/telegram/unlock', { method: 'POST' });
-                  alert('Remote control unlocked at physical desktop.');
+                  const res = await apiFetch('/api/telegram/status');
+                  setTelegramStatus(await res.json());
+                  alert('Remote control unlocked at physical desktop. Failed PIN counters reset.');
                 }}
               >
-                Unlock Remote
+                Unlock Remote (Reset Lockout)
               </Button>
+            </div>
+
+            {/* Remote PIN Security & Unattended Controls (Task 7g) */}
+            <div style={{ marginTop: 12, padding: 10, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#f8fafc' }}>Remote 6-Digit PIN Security</span>
+                <span style={{
+                  fontSize: 11,
+                  padding: '2px 8px',
+                  borderRadius: 10,
+                  background: telegramStatus?.locked ? '#ef4444' : '#10b981',
+                  color: '#ffffff',
+                  fontWeight: 600
+                }}>
+                  {telegramStatus?.locked ? 'REMOTE LOCKED' : 'REMOTE READY'}
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 8 }}>
+                Required for Tier 2 commands (/do &lt;task&gt;). Locks after 3 failed strikes. Messages auto-deleted in 15 seconds.
+              </div>
+
+              {telegramStatus?.failed_attempts > 0 && (
+                <div style={{ fontSize: 11, color: '#f87171', marginBottom: 6 }}>
+                  ⚠️ Failed PIN attempts: {telegramStatus.failed_attempts} / 3 strikes
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Button
+                  appearance="secondary"
+                  size="small"
+                  onClick={async () => {
+                    const res = await apiFetch('/api/telegram/pin/reveal');
+                    const data = await res.json();
+                    setRevealedPin(data.pin);
+                    setPinMessage('PIN displayed securely on physical desktop only.');
+                  }}
+                >
+                  Reveal Active PIN
+                </Button>
+                <Button
+                  appearance="secondary"
+                  size="small"
+                  onClick={async () => {
+                    const res = await apiFetch('/api/telegram/pin/rotate', { method: 'POST' });
+                    const data = await res.json();
+                    setRevealedPin(data.new_pin);
+                    setPinMessage('New 6-digit PIN generated and stored securely.');
+                    const statusRes = await apiFetch('/api/telegram/status');
+                    setTelegramStatus(await statusRes.json());
+                  }}
+                >
+                  Rotate PIN
+                </Button>
+                {revealedPin && (
+                  <span style={{ fontSize: 14, fontFamily: 'monospace', fontWeight: 700, color: '#38bdf8', letterSpacing: 2 }}>
+                    {revealedPin}
+                  </span>
+                )}
+              </div>
+              {pinMessage && (
+                <div style={{ fontSize: 11, color: '#38bdf8', marginTop: 4 }}>
+                  {pinMessage}
+                </div>
+              )}
             </div>
           </div>
         </div>
