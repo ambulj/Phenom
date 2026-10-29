@@ -31,3 +31,4 @@ soundfile==0.14.0
 easyocr==1.7.2
 mss==10.2.0
 pyautogui==0.9.54
+scipy==1.17.1

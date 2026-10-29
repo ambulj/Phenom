@@ -15,6 +15,7 @@ import numpy as np
 from services.backend.voice.stt import stt_engine
 from services.backend.voice.tts import tts_engine
 from services.backend.voice.wake_word import wake_detector
+from services.backend.voice.speaker_verification import speaker_verifier
 from services.backend.safety.engine import safety_engine
 from services.backend.orchestrator.engine import orchestrator
 
@@ -31,15 +32,45 @@ class VoiceCoordinator:
     async def handle_spoken_audio(self, audio_data: np.ndarray) -> Dict[str, Any]:
         """
         Processes in-memory audio input through STT, router, safety engine, and TTS.
+        Enforces speaker verification biometric gate and in-memory execution.
         Never writes audio to disk.
         """
-        # 1. Transcribe in-memory audio
+        # 1. Biometric Speaker Verification Gate
+        if speaker_verifier.is_locked():
+            return {
+                "status": "speaker_locked",
+                "message": "Voice command locked. Physical hotkey Alt+Space or typed input required.",
+                "transcript": ""
+            }
+
+        if speaker_verifier.is_enrolled():
+            v_res = speaker_verifier.verify(audio_data)
+            if not v_res.get("allowed", True):
+                return {
+                    "status": "speaker_mismatch" if v_res.get("status") == "retry" else "speaker_locked",
+                    "message": v_res.get("message", "Voice did not match."),
+                    "similarity": v_res.get("similarity", 0.0),
+                    "transcript": ""
+                }
+
+        # 2. Transcribe in-memory audio
         transcript, stt_latency = stt_engine.transcribe_audio_array(audio_data)
         if not transcript:
             return {"status": "empty", "transcript": ""}
 
-        # 2. Hard Voice Safety Rule: Spoken confirmation for Tier 2 is prohibited
+        # 3. Conversational voice wipe command ('forget this' / 'delete all voice data')
         lower_t = transcript.lower().strip()
+        if lower_t in ("forget this", "delete all voice data", "wipe voice data", "clear voice history"):
+            wipe_res = speaker_verifier.wipe_all_voice_data(wipe_db_profile=False)
+            tts_engine.speak("All voice data and recordings have been permanently wiped from disk.")
+            return {
+                "status": "voice_data_wiped",
+                "message": "All voice data and recordings have been permanently wiped from disk.",
+                "wipe_details": wipe_res,
+                "transcript": transcript
+            }
+
+        # 4. Hard Voice Safety Rule: Spoken confirmation for Tier 2 is prohibited
         if lower_t in ("yes", "confirm", "approve", "do it", "yes do it", "go ahead"):
             # Check if there is a pending confirmation
             # Disallow voice-only approval for Tier 2 destructive actions!

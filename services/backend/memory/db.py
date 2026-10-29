@@ -111,6 +111,15 @@ class EncryptedDatabaseManager:
             );
             """)
             conn.execute("""
+            CREATE TABLE IF NOT EXISTS speaker_profiles (
+                name TEXT PRIMARY KEY,
+                embedding_blob BLOB NOT NULL,
+                sample_count INTEGER NOT NULL,
+                threshold REAL DEFAULT 0.76,
+                updated_at TEXT NOT NULL
+            );
+            """)
+            conn.execute("""
             CREATE TABLE IF NOT EXISTS scheduled_jobs (
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
@@ -182,6 +191,45 @@ class EncryptedDatabaseManager:
         rows = cursor.fetchall()
         conn.close()
         return [{"id": r[0], "category": r[1], "fact": r[2], "created_at": r[3]} for r in rows]
+
+    def save_speaker_profile(self, name: str, embedding_bytes: bytes, sample_count: int, threshold: float = 0.76):
+        ts = datetime.now(timezone.utc).isoformat()
+        conn = self.get_connection()
+        with conn:
+            conn.execute("""
+                INSERT INTO speaker_profiles (name, embedding_blob, sample_count, threshold, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(name) DO UPDATE SET
+                    embedding_blob=excluded.embedding_blob,
+                    sample_count=excluded.sample_count,
+                    threshold=excluded.threshold,
+                    updated_at=excluded.updated_at;
+            """, (name, embedding_bytes, sample_count, threshold, ts))
+        conn.close()
+
+    def get_speaker_profile(self, name: str = "owner") -> Optional[Dict[str, Any]]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, embedding_blob, sample_count, threshold, updated_at FROM speaker_profiles WHERE name = ?;", (name,))
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return None
+        return {
+            "name": row[0],
+            "embedding_blob": row[1],
+            "sample_count": row[2],
+            "threshold": row[3],
+            "updated_at": row[4]
+        }
+
+    def delete_speaker_profile(self, name: str = "owner") -> bool:
+        conn = self.get_connection()
+        with conn:
+            cursor = conn.execute("DELETE FROM speaker_profiles WHERE name = ?;", (name,))
+            deleted = cursor.rowcount > 0
+        conn.close()
+        return deleted
 
 # Global Encrypted DB Manager
 encrypted_db = EncryptedDatabaseManager()

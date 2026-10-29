@@ -18,16 +18,16 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **162 passed, 28 warnings in 160.82s** (0 failed, 0 errors).
+- **Result**: **169 passed, 28 warnings** (0 failed, 0 errors).
 - **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
 
 ### Secret Scanner Run
 - **Command**: `python scripts/scan_secrets.py --all`
-- **Result**: **163 tracked files scanned. 0 secrets or blocked files found.**
+- **Result**: **166 tracked files scanned. 0 secrets or blocked files found.**
 
 ### Import Coverage Audit
 - **Audit Command**: `python services/backend/scripts/audit_imports.py`
-- **Result**: **33 third-party imports audited; 0 missing dependencies**. All imports declared in `requirements.txt`, `requirements-windows.txt`, and `requirements-dev.txt`.
+- **Result**: **34 third-party imports audited; 0 missing dependencies**. All imports declared in `requirements.txt`, `requirements-windows.txt`, and `requirements-dev.txt`.
 
 ### Desktop UI Build
 - **Build Command**: `cd apps/desktop; npm run build`
