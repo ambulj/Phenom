@@ -274,3 +274,16 @@ esearch_papers) for scoped cosine similarity retrieval.
 3. **Time-Aware Night Audio Mode**: After 11:00 PM, Phenom automatically attenuates TTS speech volume by 40%, adopts a softer, calm vocal cadence, and silences non-critical chimes.
 4. **Fast-Forward Wave Merging with HUD Review**: Autonomous feature waves maintain individual atomic task commits on the branch, presenting a 1-click merge button in the HUD alongside a generated changelog summary.
 
+---
+
+## 30. Persona Presets, Context Notifications & File-Watcher Throttling (Locked In)
+1. **Dynamic Persona Presets**: Phenom supports voice/HUD switching across three operational personas:
+   - `tony_stark` (Default): High-energy, witty, banter-heavy lab partner (*"scene sorted hai"*).
+   - `professor`: Deep technical rigor, formal mechanics, zero slang, high detail, and complete mathematical derivations.
+   - `silent_copilot`: Strictly visual HUD diffs and test badges, quiet chimes, zero unsolicited dialogue.
+2. **Context-Adaptive Build & Test Notifications**: When long-running builds or tests complete in the background:
+   - If IDE/editor has OS focus: play subtle completion chime and update HUD status badge.
+   - If another app/browser has OS focus: trigger native Windows 11 Action Center toast and speak a concise voice summary (*"Tests passed in 14s"*).
+3. **Smart Ignore Patterns & 500ms Churn Debounce**: File watchers auto-ignore standard build directories (`.git`, `node_modules`, `target`, `.venv`, `dist`, `__pycache__`) and `.gitignore`, throttling change events with a 500ms debounce during heavy file churn.
+
+

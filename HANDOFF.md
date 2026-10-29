@@ -302,3 +302,9 @@ esearch_papers).
 - **Automated Weekly Vector Maintenance**: Sunday 3:00 AM vacuuming, tombstone pruning, and embedding integrity validation.
 - **Time-Aware Night Audio Mode**: 40% volume reduction, calmer vocal pacing, and muted chimes after 11:00 PM.
 - **Fast-Forward Wave Merging**: Preserved atomic task commits on topic branches with 1-click merge button in HUD.
+
+### Persona Presets, Context Notifications & Churn Throttling (Round 50)
+- **Dynamic Persona Modes**: Support switching between 'tony_stark' (default witty banter), 'professor' (deep technical rigor, zero slang), and 'silent_copilot' (visual HUD diffs only).
+- **Context-Adaptive Notifications**: Soft chime + badge if IDE focused; Action Center toast + voice summary if working in another application.
+- **Smart Ignore & 500ms Churn Debounce**: Auto-ignore build directories (`node_modules`, `.venv`, `dist`, `target`) + `.gitignore` with 500ms debounce during heavy file churn.
+- **Milestone Transition**: Completed 50 architectural rounds; initiated Phase Feature Wiring and end-to-end verification.

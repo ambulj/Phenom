@@ -13,6 +13,8 @@ briefing_mode = "on_demand"            # Triggered on-demand via "Good morning P
 study_mode = "deep_technical_dive"     # Exhaustive architecture breakdowns, formal equations, complete reference code
 sound_effects = "futuristic_chimes"    # Soft Jarvis chime on wake, confirmation chime on action complete, alert on kill switch
 quiet_hours = "always_responsive"      # Sound and speech active whenever spoken to, 24/7
+active_persona = "tony_stark"          # Presets: 'tony_stark' (default witty banter), 'professor' (academic rigor, zero slang), 'silent_copilot' (strictly visual HUD, zero speech)
+persona_presets = ["tony_stark", "professor", "silent_copilot"]
 cloud_escalation = "dynamic_per_task"  # Escalate dynamically based on task complexity while strictly respecting privacy
 context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
 speech_cadence = "adaptive"            # 1.1x brisk pace for banter/status; 0.95x measured pace for technical breakdowns
@@ -40,6 +42,7 @@ offline_mode = "seamless_local"        # Seamless local offline mode (switch to 
 multi_instance_policy = "allow_multiple_independent" # Allow multiple independent instances across monitors
 material_style = "windows11_mica_acrylic" # Native Windows 11 translucent glass effect with glowing cyan borders
 action_center_toasts = true            # Deliver rich action toasts to Windows 11 Action Center
+build_notification_mode = "context_adaptive" # If IDE focused: soft chime + badge; if another app focused: Action Center toast + voice summary
 compact_environment_header = true      # Compact 2-line environment header in system prompt
 
 [display]
@@ -110,6 +113,9 @@ index_paths = [
     "%USERPROFILE%\\Documents",
     "%USERPROFILE%\\Desktop"
 ]
+
+file_watcher_debounce_ms = 500         # 500ms debounce during heavy file churn (e.g. npm install)
+auto_ignore_patterns = [".git", "node_modules", "target", ".venv", "dist", "__pycache__", ".next"]
 
 [search]
 engine = "ripgrep"                     # Native Ripgrep (rg.exe) for sub-10ms regex and symbol search
