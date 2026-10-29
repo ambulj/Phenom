@@ -242,3 +242,11 @@ esearch_papers) for scoped cosine similarity retrieval.
 7. **Safe Auto-Stash on Branch Switching**: Switching git branches via voice or command palette automatically creates a timestamped stash and re-applies changes cleanly.
 8. **Automated 'phenom doctor' Health Diagnostic**: A built-in CLI diagnostic inspects CUDA availability, GPU VRAM, Python/Node toolchains, Ollama status, and Windows Credential Manager integrity.
 
+---
+
+## 26. Ambient Controls, Power Governance & Continuous Learning (Locked In)
+1. **Interactive Disambiguation via HUD**: When ambiguity arises (e.g. conflicting files or stashes), Phenom vocalizes a concise 1-sentence prompt while popping an interactive HUD card with keyboard shortcut targets (1, 2, 3) and clickable chips.
+2. **Universal Media Controls (Win32 SMTC)**: System Media Transport Controls provide universal Play/Pause/Next/Volume key event synthesis across Spotify, YouTube, Chrome, and local players with browser session fallback.
+3. **Smart AC/Battery Power Governor**: On AC power, background Telegram polling and notification monitoring remain active during screen lock; on battery or Modern Standby sleep, all polling loops and file watchers pause, restoring instantly upon user unlock.
+4. **Instant Rules & Spaced Memory Learning**: When corrected by Abhi (e.g. preferring a specific linter or package manager), Phenom immediately commits the rule to a structured cache and injects the top-3 relevant rules into future prompt contexts.
+

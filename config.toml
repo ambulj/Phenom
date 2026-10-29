@@ -271,6 +271,21 @@ busy_gpu_fallback = "dynamic_cloud_or_cpu_q4" # Cloud Nemotron if online, lightw
 track_historical_latency = true        # Track test execution, VRAM peak, and TTS latency
 regression_alert_threshold = 0.15      # Alert if regression exceeds 15%
 
+[media]
+controls = "windows_smtc"              # Native Win32 System Media Transport Controls (Play/Pause/Next/Volume) universally supported
+browser_session_fallback = true        # Media Session API fallback for browser audio/video tabs
+
+[power]
+sleep_governor = "smart_ac_battery"    # On AC power keep lightweight Telegram polling; on Battery/sleep pause all loops
+power_state_monitoring = true          # Instant state restoration upon user unlock
+
+[clarification]
+mode = "spoken_hud_shortcuts"          # Spoken 1-sentence prompt + HUD option buttons with 1/2/3 keyboard shortcuts
+
+[learning]
+mode = "instant_rules_spaced_memory"   # Auto-append user corrections to preferences cache and inject top-3 rules dynamically into prompt
+top_rules_injection_count = 3
+
 [telegram]
 remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status
 pairing_mode = "desktop_pin_handshake" # Desktop QR / 6-digit PIN handshake to bind owner user_id

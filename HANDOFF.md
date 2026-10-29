@@ -278,3 +278,9 @@ esearch_papers).
 - **150-Line Edit Locality Cap**: Hard limit of 150 modified lines per file on automated refactorings.
 - **Automated 'phenom doctor' Health Check**: Built-in CLI health diagnostic inspecting CUDA, toolchains, and Credential Manager.
 - **Formula Audio Pacing**: Measured 0.85x voice speed for mathematical formulas with parallel KaTeX rendering in HUD.
+
+### Ambient Controls, Power & Continuous Learning (Round 46)
+- **Interactive Disambiguation via HUD**: 1-sentence spoken prompt with interactive HUD buttons & 1/2/3 keyboard shortcuts.
+- **Universal Media Controls (Win32 SMTC)**: Native Windows System Media Transport Controls (Play/Pause/Next/Volume) for Spotify/YouTube/Media Players.
+- **Smart AC/Battery Power Governor**: Lightweight Telegram polling on AC power; pause all background loops and save power on battery/sleep.
+- **Instant Rules & Spaced Memory**: Auto-commit user corrections to preferences cache and inject top-3 relevant rules into prompt context.
