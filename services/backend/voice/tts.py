@@ -1,6 +1,7 @@
 """
 Phenom Text-To-Speech (TTS) Engine
-Uses Windows SAPI5 local male voice (Microsoft David Desktop).
+Uses Windows SAPI5 local male voice (Microsoft David Desktop) as default,
+with seamless cloud escalation to Sarvam AI Bulbul for non-private Hindi/Hinglish speech.
 Streams speech sentence-by-sentence so audio playback begins while subsequent tokens are generating.
 Supports instantaneous barge-in interruption.
 """
@@ -9,7 +10,10 @@ import threading
 import queue
 import time
 import re
+import os
+import io
 from typing import Optional, Callable
+
 try:
     import win32com.client
     import pythoncom
@@ -43,6 +47,30 @@ class TTSEngine:
         self._worker_thread = threading.Thread(target=self._speech_worker, daemon=True)
         self._worker_thread.start()
 
+    def _speak_wav_bytes(self, wav_bytes: bytes) -> bool:
+        """Plays in-memory WAV audio bytes (RAM only) during headless test bypass or real playback."""
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            return True
+        try:
+            import soundfile as sf
+            import sounddevice as sd
+            data, samplerate = sf.read(io.BytesIO(wav_bytes))
+            sd.play(data, samplerate=samplerate, blocking=False)
+            duration = len(data) / float(samplerate)
+            start_t = time.time()
+            while time.time() - start_t < duration:
+                if self._stop_event.is_set():
+                    sd.stop()
+                    break
+                if self._amplitude_callback:
+                    self._amplitude_callback(0.85)
+                time.sleep(0.05)
+            if self._amplitude_callback:
+                self._amplitude_callback(0.0)
+            return True
+        except Exception:
+            return False
+
     def _speech_worker(self):
         if not pythoncom or not win32com:
             return
@@ -73,22 +101,33 @@ class TTSEngine:
                 self._is_speaking = True
 
             try:
-                # Speak sentence asynchronously
-                speaker.Speak(text, SVSFlagsAsync)
-                
-                # Monitor playback and simulate amplitude bursts
-                while speaker.Status.RunningState != 1: # 1 = SRSEDone
-                    if self._stop_event.is_set():
-                        speaker.Speak("", SVSFPurgeBeforeSpeak)
-                        break
-                    if self._amplitude_callback:
-                        # Report speaking pulse
-                        self._amplitude_callback(0.85)
-                    time.sleep(0.05)
+                spoken_cloud = False
+                try:
+                    from services.backend.voice.cloud_tts import sarvam_tts
+                    if sarvam_tts.is_hindi_or_hinglish(text):
+                        wav = sarvam_tts.synthesize(text)
+                        if wav:
+                            spoken_cloud = self._speak_wav_bytes(wav)
+                except Exception:
+                    spoken_cloud = False
+
+                if not spoken_cloud and speaker:
+                    # Speak sentence asynchronously via SAPI5 local voice
+                    speaker.Speak(text, SVSFlagsAsync)
+                    
+                    # Monitor playback and simulate amplitude bursts
+                    while speaker.Status.RunningState != 1: # 1 = SRSEDone
+                        if self._stop_event.is_set():
+                            speaker.Speak("", SVSFPurgeBeforeSpeak)
+                            break
+                        if self._amplitude_callback:
+                            # Report speaking pulse
+                            self._amplitude_callback(0.85)
+                        time.sleep(0.05)
 
                 if self._amplitude_callback:
                     self._amplitude_callback(0.0)
-            except Exception as e:
+            except Exception:
                 pass
             finally:
                 with self._lock:

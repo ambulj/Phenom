@@ -330,3 +330,35 @@ def _set_db_setting(key: str, value: str) -> None:
         conn.close()
     except Exception as e:
         print(f"[TelegramCredentials] Failed to update setting '{key}': {e}")
+
+def get_credential(name: str) -> Optional[str]:
+    """Generic reader for any target under 'Phenom/<name>' from Credential Manager or DB."""
+    target = f"Phenom/{name}"
+    if win32cred:
+        try:
+            cred = win32cred.CredRead(target, win32cred.CRED_TYPE_GENERIC)
+            blob = cred["CredentialBlob"]
+            if isinstance(blob, bytes):
+                return blob.decode("utf-16le")
+            return str(blob)
+        except Exception:
+            pass
+    return _get_db_setting(f"cred_{name}")
+
+def set_credential(name: str, value: str) -> None:
+    """Generic writer for any target under 'Phenom/<name>' to Credential Manager and DB."""
+    target = f"Phenom/{name}"
+    clean_val = value.strip()
+    if win32cred:
+        try:
+            cred = {
+                "Type": win32cred.CRED_TYPE_GENERIC,
+                "TargetName": target,
+                "CredentialBlob": clean_val,
+                "Persist": win32cred.CRED_PERSIST_LOCAL_MACHINE,
+                "Comment": f"Phenom Stored Credential for {name}"
+            }
+            win32cred.CredWrite(cred, 0)
+        except Exception:
+            pass
+    _set_db_setting(f"cred_{name}", clean_val)

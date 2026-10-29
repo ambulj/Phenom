@@ -1,0 +1,12 @@
+<Configuration>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>C:\Phenom\apps\desktop\dist</HostFolder>
+      <SandboxFolder>C:\PhenomInstaller</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>cmd.exe /c start explorer.exe C:\PhenomInstaller</Command>
+  </LogonCommand>
+</Configuration>

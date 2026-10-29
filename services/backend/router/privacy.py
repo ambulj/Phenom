@@ -185,4 +185,9 @@ class PrivacyClassifier:
         if label == "private":
             raise PrivacyViolationError(f"Cannot escalate to cloud: {reason}")
 
+    def is_private(self, text: str, file_paths: Optional[List[str]] = None) -> bool:
+        """Returns True if text contains private data, PII, secrets, or personal context."""
+        label, _ = self.classify(text, file_paths)
+        return label == "private"
+
 privacy_classifier = PrivacyClassifier()
