@@ -58,6 +58,18 @@ class ModelRouter:
             return self.ollama_model, "local", metadata
 
         # Rule 2: Short shareable inputs stay Local (faster, zero network overhead)
+        # Exception: When gaming mode is active, VRAM is freed (<100MB) and shareable tasks can escalate to Cloud
+        from services.backend.resource.vram_manager import vram_manager
+        if vram_manager.gaming_mode_active and self._cloud_approval_handler:
+            preview_text = prompt[:500] + (f"\n... [TRUNCATED {len(prompt)-500} chars]" if len(prompt) > 500 else "")
+            req_id = f"gaming-cloud-escalate-{os.urandom(4).hex()}"
+            user_approved = await self._cloud_approval_handler(req_id, preview_text, est_tokens)
+            if user_approved:
+                reason = f"Gaming mode active ({vram_manager.detected_game_name}); VRAM protected (<100MB). User approved routing to cloud Nemotron."
+                self._log_decision("cloud", self.cloud_model, reason, metadata)
+                metadata["routing_reason"] = reason
+                return self.cloud_model, "cloud", metadata
+
         # Threshold: 3,000 words (~4,000 tokens)
         if word_count <= 3000:
             reason = f"Shareable input is within local context capacity ({word_count} words <= 3,000). Handled locally."

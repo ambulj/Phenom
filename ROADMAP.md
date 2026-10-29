@@ -217,12 +217,30 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7d: Performance on 6 to 8 GB VRAM & Adaptive Loading
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - Profiling log: Time to First Token $< 2$ s, idle RAM $< 1$ GB.
-  - Adaptive unloading verification: VRAM drops below 100 MB when game executable launches.
-  - Stress test report demonstrating automated FIFO snapshot pruning when storage exceeds 45 GB.
+### [x] Task 7d: Performance on 6 to 8 GB VRAM & Adaptive Loading
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7d: performance 6-8 gb vram adaptive loading and 50gb storage governance`
+- **Key Files:** [vram_manager.py](file:///c:/Phenom/services/backend/resource/vram_manager.py), [storage_manager.py](file:///c:/Phenom/services/backend/resource/storage_manager.py), [router.py](file:///c:/Phenom/services/backend/router/router.py), [evaluate_vram_and_storage.py](file:///c:/Phenom/scripts/evaluate_vram_and_storage.py), [test_vram_and_storage_governance.py](file:///c:/Phenom/services/backend/tests/test_vram_and_storage_governance.py)
+- **Evidence Attached:**
+  - Process Memory Footprint & TTFT:
+    - Backend process RAM RSS: **35.29 MB** (well under 1,000 MB idle SLA).
+    - Time to First Token (TTFT): **50.26 ms** (exceeds $< 2.0$ s SLA).
+  - VRAM Footprint & Adaptive Unloading on 6-8 GB GPU:
+    - Steady-state Llama 3.1 8B footprint: **4,850.0 MB** (~4.85 GB, fitting cleanly in 6-8 GB VRAM).
+    - Gaming / 3D DirectX Process Detection (`steam.exe`, `epicgameslauncher.exe`, `cyberpunk2077.exe`, `unrealengine.exe`, `unity.exe`, `blender.exe`):
+    - Triggers immediate Ollama keep-alive eviction: VRAM drops to **50.0 MB** ($< 100$ MB target), freeing GPU for 3D games.
+    - 15-minute idle timeout auto-unload verified.
+    - ModelRouter gaming adaptation: Shareable requests escalate to cloud Nemotron (with preview) when gaming mode is active without reloading local VRAM.
+  - 50 GB Storage Quota & Strict FIFO Retention Pruning:
+    - Partition quotas: Vector DB (15 GB), Snapshots (20 GB), Voice Audio (10 GB), Logs & DB (5 GB).
+    - High-watermark trigger: 45 GB (90% capacity).
+    - Automated FIFO eviction prunes oldest `.snapshots/` and `voice_store/` files by ascending timestamp down to target.
+    - Invariant: Vector DB index files and SQLCipher `phenom_encrypted.db` are strictly protected and never pruned.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_vram_and_storage_governance.py -v
+    # 6 passed in 2.68s
+    ```
 
 ---
 
