@@ -142,3 +142,23 @@ Tables: `messages`, `facts`, `learned_rules`, `approvals_remembered`, `action_lo
 2. **Curated Feeds**: News aggregation across Hacker News, ArXiv AI daily, GitHub Trending, and Indian business headlines.
 3. **Modern Executive Document Styling**: Generated documents (.docx, .pptx, .xlsx, .pdf) formatted with modern executive aesthetics, crisp tables, and callouts.
 4. **Adaptive Modes**: Work (code & witty banter), Study (deep technical rigor & ambient focus audio), and Chill (relaxed banter & media control).
+
+
+---
+
+## 16. Phase 6: Telegram Remote Bridge & Security Invariants (Locked In)
+1. **Desktop PIN Handshake**: Pairing requires a single-use desktop QR code or 6-digit PIN handshake (/pair <PIN>), permanently binding Abhi's Telegram user ID.
+2. **Remote Emergency Locking**: /lock or /halt triggers 
+undll32.exe user32.dll,LockWorkStation and the Guardian kill switch, confirming back to Telegram.
+3. **Interactive Inline Approvals**: Remote Tier 2 actions display an inline card with [✅ Approve] and [❌ Deny] with a 60-second expiration window.
+4. **Redacted Screen Snapshots**: Remote /screen commands automatically redact passwords, credit cards, and OTPs.
+5. **Full Duplex Voice**: Voice notes are transcribed locally with Whisper and replied to with spoken audio notes.
+
+---
+
+## 17. Phase 7: Packaging, Auto-Update & Resilience (Locked In)
+1. **Dual Packaging**: Packaged as both an NSIS Windows installer (auto-start & uninstaller) and a portable unpacked application.
+2. **Silent Background Updates**: Updates download silently in the background and apply upon idle restart with a 7-day automatic rollback window.
+3. **Smart Watchdog Crash Recovery**: Process watchdog restarts crashed backend within 3 seconds, sanitizes memory dumps, and posts a notification in the HUD.
+4. **Staged Wave Refactoring**: Large-scale codebase refactoring executes in dependency waves with git checkpoints and preview diffs.
+5. **3-Way Conflict Detection**: Concurrent file modifications trigger an automated 3-way diff comparison in the HUD to prevent clobbering active edits.

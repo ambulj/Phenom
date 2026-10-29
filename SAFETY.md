@@ -105,3 +105,15 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 - **Meeting Mode & Screen Exclusion**: When video conferencing tools are active, Phenom automatically applies `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` (0x00000011) to hardware-exclude Phenom windows from capture, mutes voice/sound FX, and silences notifications.
 - **Safe Mode**: Startup flag `--safe-mode` restricts tool execution strictly to Tier 0 read-only tools, forces local inference, and blocks automation and cloud endpoints. A rolling 7-day rollback snapshot protects against boot failure.
 - **Daily Self-Check**: Runs at 04:00 AM checking disk space (< 2 GB alert), database integrity, vault sync, rule SHA-256 verification, and model status, reporting sanitized summaries to Telegram and reserving spoken alerts for critical integrity failures.
+
+
+---
+
+## 11. Extended Remote & Resilience Safety Contract (Rounds 26-31)
+1. **Telegram Pairing & Authentication**: Remote bridge requires a single-use desktop QR code or 6-digit PIN handshake (/pair <PIN>). Non-whitelisted strangers receive zero reply (silent drop) while pushing a high-priority security alert to Abhi's desktop and Telegram.
+2. **Workstation Locking on Remote Emergency**: Receiving /lock or /halt from Telegram immediately locks the Windows workstation (
+undll32.exe user32.dll,LockWorkStation) and engages the Guardian kill switch.
+3. **Remote Media Privacy**: Screenshots transmitted over Telegram automatically redact sensitive regions (passwords, OTPs, banking/card details). Large files (> 50MB) are delivered as chunked 45MB encrypted archives.
+4. **Prompt Injection Defense**: When untrusted web content or emails contain adversarial instructions ('Ignore previous instructions...'), Phenom sanitizes the text, strips malicious command vectors, and continues safe analytical evaluation.
+5. **Zero Telemetry & Local Crash Dumps**: No crash dumps, memory snapshots, or usage metrics depart the machine; logs reside strictly in ~/Documents/Phenom/logs/.
+6. **Strict UAC Elevation**: Any Windows process requiring elevated administrative privileges strictly triggers the standard Windows UAC prompt; background bypass is impossible by construction.

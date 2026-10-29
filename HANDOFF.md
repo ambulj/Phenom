@@ -188,3 +188,29 @@ npm run dev
 - **Reversible Cleanup**: Windows Recycle Bin only (Rule 7) with an automated rollback manifest note created in Obsidian.
 - **News Aggregation**: Curated feeds across Hacker News, ArXiv AI, GitHub Trending, and Indian business headlines.
 - **Adaptive Modes**: Work (code & high banter), Study (deep technical rigor & ambient focus audio), Chill (relaxed banter & music control).
+
+### Phase 6 & Phase 7 Remote, Packaging & Resilience (Rounds 26-31)
+- **Telegram Pairing Handshake**: Desktop QR code / 6-digit PIN handshake (/pair <PIN>).
+- **Remote Lock & Emergency Halt**: Windows workstation lock (
+undll32.exe user32.dll,LockWorkStation) + Guardian kill switch.
+- **Remote Inline Approvals**: Interactive [✅ Approve] / [❌ Deny] buttons with 60s timeout.
+- **Remote File Retrieval**: Unrestricted filesystem delivery up to 50MB (excluding system files & secrets).
+- **Remote Screen Inspection**: Redacted screenshot with passwords, OTPs, and credit cards auto-blacked out.
+- **Telegram Voice Duplex**: Voice note transcription (Whisper) + spoken audio reply (Sarvam/voice engine).
+- **Non-Owner Security**: Silent drop stranger message + push alert to Abhi's desktop & Telegram.
+- **Packaging Format**: Dual distribution (NSIS installer with startup registration + portable unpacked directory).
+- **Auto-Update**: Silent automatic update applied on idle restart with 7-day rollback safeguard.
+- **Smart Watchdog**: Auto-restart backend within 3s, sanitize crash dump (zero PII), notify in HUD.
+- **Guarded Reset**: Encrypted backup ZIP created before any reset, preserving Obsidian vault notes.
+- **System Startup**: Auto-launch on Windows login minimized to tray with floating docked Orb.
+- **Telemetry Policy**: Zero external telemetry; crash logs stored strictly local in ~/Documents/Phenom/logs/.
+- **Multi-Monitor Display**: Summon Command Palette and HUD on whichever monitor holds the active mouse cursor.
+- **Local Plugins**: Support custom Python tools in ~/Documents/Phenom/plugins/ wrapped by Safety layer.
+- **Cloud Stall Fallback**: Graceful local downgrade to 8B model if cloud connection stalls > 10s.
+- **Refactoring Waves**: Staged dependency wave execution with git checkpoints for large refactors.
+- **Prompt Injection Defense**: Sanitize & proceed (strip adversarial instruction patterns and continue).
+- **Speaker Verification**: Voiceprint enrollment to filter out ambient background conversations/media.
+- **IDE File Conflict**: 3-way diff comparison in HUD when local file changes concurrently.
+- **Low Power Profile**: Throttle LLM threads and set Orb to Low LOD when battery < 20%.
+- **Wake Word Debounce**: 2-second debounce & 10s cooldown on rapid fluttering triggers.
+- **Large Remote Delivery**: Chunked 45MB ZIP delivery for files exceeding 50MB.

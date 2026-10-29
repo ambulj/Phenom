@@ -1,5 +1,5 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-25)
+# Configured and locked per Owner Decisions (Rounds 8-31)
 
 [assistant]
 nickname = "Abhi"
@@ -38,6 +38,9 @@ terminal_output_style = "collapsible_streaming_console" # Live output stream ins
 window_control = "full"                # App launching, media keys, volume control, window snapping/minimizing
 offline_mode = "seamless_local"        # Seamless local offline mode (switch to local Ollama & offline TTS automatically; show offline badge)
 
+[display]
+summon_target = "active_cursor_monitor" # Summon Command Palette and HUD on whichever monitor holds mouse cursor
+
 [hotkeys]
 push_to_talk = "ctrl+space"
 toggle_phenom = "alt+space"
@@ -47,6 +50,8 @@ barge_in_latency_ms = 50               # Ultra-fast TTS cutoff within 50ms upon 
 [voice]
 wake_word_threshold = 0.65             # Strict 0.65+ confidence to reject background movie/speech triggers
 wake_word_sliding_ms = 500             # 500ms sliding confirmation window
+wake_word_debounce_seconds = 2         # 2-second debounce & 10s cooldown on false triggers
+speaker_verification = true            # Filter out background chatter/media using enrolled voiceprint
 
 [shell]
 default_runner = "pwsh"                # PowerShell 7 primary subprocess runner
@@ -113,6 +118,13 @@ layout_presets = true                  # Workspace presets (e.g. 'Setup coding m
 clipboard_assistance = "smart_dev"     # Auto-detect stack traces, regex, JSON, or git URLs in clipboard and offer 1-click action
 context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
 
+[resilience]
+cloud_stall_action = "graceful_local_downgrade" # Terminate stalled cloud stream, finish on local 8B, notify in HUD
+refactoring_execution = "staged_waves" # Batch multi-file changes into dependency waves with git checkpoints
+prompt_injection_defense = "sanitize_and_proceed" # Strip adversarial instruction patterns from text and continue tool evaluation
+file_conflict_resolution = "three_way_diff" # Detect concurrent file edits, generate clean diff, prompt choice in HUD
+low_power_profile = true               # Throttle LLM threads and set Orb to Low LOD when battery < 20%
+
 [vision]
 analysis_mode = "dual_ocr_vision"      # Fast local Windows OCR for exact code/text, paired with multimodal model for visual layouts
 
@@ -144,14 +156,51 @@ schedule = "daily"                     # Daily automated encrypted snapshot
 backup_path = "%USERPROFILE%\\Documents\\Phenom\\backups"
 retention_days = 30                    # 30-day retention for disaster recovery snapshots
 
+[packaging]
+distribution = "dual_nsis_and_portable" # NSIS installer + portable unpacked folder
+auto_launch_on_startup = true          # Launch on Windows login minimized to tray
+
+[updates]
+policy = "silent_idle_restart"         # Download in background; apply silently and restart when system is idle
+rollback_window_days = 7               # 7-day automated rollback if boot fails
+
+[watchdog]
+auto_restart_seconds = 3               # Auto-restart crashed backend within 3s
+sanitize_crash_dumps = true            # Sanitize crash dumps (strip memory dumps / PII)
+notify_hud = true                      # Notify in HUD on watchdog recovery
+
+[reset]
+policy = "guarded_backup_first"        # Always creates encrypted backup ZIP before reset, preserves Obsidian notes
+backup_destination = "%USERPROFILE%\\Documents\\Phenom\\backups"
+
+[telemetry]
+enabled = false                        # Zero external telemetry
+log_directory = "%USERPROFILE%\\Documents\\Phenom\\logs" # Crash dumps stored strictly local
+
+[plugins]
+enabled = true                         # Support custom Python plugins
+directory = "%USERPROFILE%\\Documents\\Phenom\\plugins"
+safety_wrapped = true                  # All custom tools automatically wrapped by Safety layer
+
 [gaming_mode]
 gpu_resource_governor = true           # Auto-offload GPU VRAM when 3D game launches, pause background indexing on low battery
 busy_gpu_fallback = "dynamic_cloud_or_cpu_q4" # Cloud Nemotron if online, lightweight CPU Q4 GGUF if offline
 
 [telegram]
-remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status, push notifications
+remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status
+pairing_mode = "desktop_pin_handshake" # Desktop QR / 6-digit PIN handshake to bind owner user_id
+remote_lock_action = "lock_workstation_and_halt" # Lock Windows screen + Guardian kill switch
+inline_approvals = true                # Interactive Telegram inline buttons with [Approve] and [Deny]
+approval_timeout_seconds = 60
+filesystem_access = "unrestricted_with_safety_caps" # Send requested files up to 50MB
+max_file_size_mb = 50
+large_file_delivery = "chunked_45mb_zip" # Split files > 50MB into 45MB chunks or tokenized link
+screen_privacy = "redacted_sensitive_pii" # Auto-blackout passwords, OTPs, and credit cards
+media_mode = "full_multimodal"         # Whisper voice transcription + voice replies + photo/doc vision
+voice_duplex = true
+unauthorized_policy = "silent_drop_and_alert" # Silent drop stranger message + security alert pushed to Abhi
 push_alerts = ["urgent_system_alerts"] # Urgent system alerts: Guardian kill switch trigger, high resource usage, errors
-media_mode = "full_multimodal"         # Whisper voice note transcription + voice replies + photo/doc vision analysis
+scheduled_pushes = false               # No scheduled pushes (Telegram used only when Abhi initiates)
 command_mode = "conversational_with_slash_shortcuts" # Natural conversation by default, with optional power shortcuts (/status, /test, /git, /halt)
 
 [models]
