@@ -24,13 +24,21 @@ FastAPI backend
 6. After the task, memory is saved automatically (summary, facts, learned rules).
 
 ## 3. Router rules
-| Condition | Model |
-| --- | --- |
-| Default | Local 8B |
-| Any input labelled private | Local 8B, always |
-| Long shareable input beyond the local context or quality limit | Cloud Nemotron, after previewed approval |
-| Cloud unreachable or approval denied | Local 8B with chunking, and say so |
-Every decision is logged with its reason.
+| Condition | Model | Handling |
+| --- | --- | --- |
+| Default (simple tasks, non-private) | Local 8B | Local inference, zero data departure |
+| Non-private content exceeding local context/quality limit, or when VRAM is full | Cloud Nemotron (build.nvidia.com) | Automatic escalation with UI notice ("sent to cloud") and action log entry |
+| Private content (files, email, calendar, contacts, screen, PII, keys, banking/financial, OTPs) | Local 8B (strictly required) | Kept on device; NEVER sent to cloud without explicit previewed approval |
+| Borderline / Uncertain privacy classification | Local 8B (default) | Prompt owner to approve or keep local before sending |
+| Cloud unreachable or rate limited | Local 8B fallback with chunking | Transparently surfaced to user and logged |
+
+### Privacy Classification & Escalation Specification
+- **Definition of Private Content**: Any data from the owner's files, email, calendar, contacts, or screen; PII (names, phone numbers, addresses, government IDs like Aadhaar/PAN); secrets (API keys, passwords, OTPs, financial/banking numbers); and voice transcripts matching any of these criteria.
+- **Two-Stage Classifier**:
+  1. *Rule-Based Fast Path*: Regex patterns detecting IDs, credit cards, bank accounts, UPI IDs, phone numbers, email addresses, file paths, API keys, and screen capture contexts.
+  2. *Local Model Verification*: When regex is clean but content context is ambiguous, the local 8B model performs classification.
+  3. *Uncertainty Rule*: If classification confidence is below threshold, fail-safe to "ask the owner" or run locally.
+- Every routing and escalation decision is recorded in the action log with its specific rationale.
 
 ## 4. WebSocket protocol & API Security
 All WebSocket messages have `id`, `type`, `ts`.
