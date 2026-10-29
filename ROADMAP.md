@@ -370,12 +370,57 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7i: Coding Agent Safety & Typosquat Protection
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - Workspace isolation proof showing original project directory unmodified during execution.
-  - Typosquatting detection test flagging 20/20 suspicious package names.
-  - Guardian kill switch test terminating active coding runner and all child processes.
+### [x] Task 7i: Coding Agent Safety & Typosquat Protection
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7i: coding agent workspace isolation typosquat protection and process tree kill switch`
+- **Key Files:** [workspace.py](file:///c:/Phenom/services/backend/coding/workspace.py), [typosquat_guard.py](file:///c:/Phenom/services/backend/coding/typosquat_guard.py), [runner.py](file:///c:/Phenom/services/backend/coding/runner.py), [coding_tools.py](file:///c:/Phenom/services/backend/tools/coding_tools.py), [path_guard.py](file:///c:/Phenom/services/backend/safety/path_guard.py), [main.py](file:///c:/Phenom/services/backend/main.py), [evaluate_coding_agent_safety.py](file:///c:/Phenom/scripts/evaluate_coding_agent_safety.py), [test_coding_agent_safety.py](file:///c:/Phenom/services/backend/tests/test_coding_agent_safety.py)
+- **Evidence Attached:**
+  - Workspace Isolation & Original Directory Integrity:
+    - Target projects cloned to `%USERPROFILE%\Projects\.workspaces\<project_name>_copy_<timestamp>\`.
+    - Mandatory pre-execution snapshot taken and archived into `snapshots/snapshot_<id>.zip` before modifying any files.
+    - Verified original project directory remains 100% pristine and unmodified during all edits, builds, and test runs (`verify_original_untouched() == True`).
+    - Unified diff preview (`difflib.unified_diff`) generated for user inspection before changes are applied.
+    - Tier 2 confirmation required to apply changes to original repository (`PermissionError` raised if unconfirmed) with secondary pre-apply rollback snapshot.
+  - Typosquatting Protection (20/20 Attack Corpus Flagged):
+    - Curated database of top popular PyPI and npm packages.
+    - Multi-tier similarity heuristics: Levenshtein edit distance ($\le 2$), hyphen/punctuation evasion, affix spoofing, token inversion, and truncation.
+    - Flagged **20/20 (100%)** attack strings in the specified test corpus with prominent red warning banners:
+      1. `reqeusts` $\to$ `requests` (transposition)
+      2. `colourama` $\to$ `colorama` (insertion)
+      3. `py-torch` $\to$ `torch` (prefix)
+      4. `cryptography-v2` $\to$ `cryptography` (suffix)
+      5. `fast-api` $\to$ `fastapi` (hyphenation)
+      6. `pydantic-core-fast` $\to$ `pydantic-core` (suffix)
+      7. `python-dateutil-lib` $\to$ `python-dateutil` (suffix)
+      8. `urlib3` $\to$ `urllib3` (deletion)
+      9. `beautifulsoup` $\to$ `beautifulsoup4` (truncation)
+      10. `numpy-tools` $\to$ `numpy` (suffix)
+      11. `pandas-data` $\to$ `pandas` (suffix)
+      12. `scikit` $\to$ `scikit-learn` (truncation)
+      13. `flaks` $\to$ `flask` (transposition)
+      14. `async-io` $\to$ `asyncio` (hyphenation)
+      15. `websockets-client` $\to$ `websockets` (suffix)
+      16. `ps-util` $\to$ `psutil` (hyphenation)
+      17. `pillow-imaging` $\to$ `pillow` (suffix)
+      18. `open-cv` $\to$ `opencv` (hyphenation)
+      19. `report-lab` $\to$ `reportlab` (hyphenation)
+      20. `docx-python` $\to$ `python-docx` (token order inversion)
+    - Warning banner format verified: *"Warning: '{name}' is within edit distance of popular package '{target}'. Proceed with caution."*
+  - Guardian Kill Switch Process Tree Termination:
+    - CodeRunner registers active process PIDs with `guardian.track_pid(proc.pid)`.
+    - Guardian kill switch triggers immediate recursive SIGKILL across process tree via `psutil`:
+      Infinite execution loop terminated cleanly in **0.42s** ($< 5.0$s SLA) with `killed_by_guardian=True`.
+    - Hard execution timeout capped at 120s; test run timeout terminated in 0.68s.
+    - Outbound network blocked by default during test execution (`HTTP_PROXY=http://127.0.0.1:0`, `PIP_NO_INDEX=1`).
+  - Comprehensive Test Results:
+    ```powershell
+    python scripts/evaluate_coding_agent_safety.py
+    # ALL TASK 7i ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY (PASS)
+    python -m pytest services/backend/tests/test_coding_agent_safety.py -v
+    # 9 passed in 1.95s
+    python -m pytest services/backend/tests/
+    # 211 passed in 134.29s
+    ```
 
 ---
 

@@ -43,6 +43,7 @@ import services.backend.tools.integration_tools
 import services.backend.tools.media_tools
 import services.backend.tools.utility_tools
 import services.backend.tools.git_tools
+import services.backend.tools.coding_tools
 from services.backend.voice.sound_fx import sound_fx
 from services.backend.modes.mode_manager import mode_manager
 from services.backend.scheduler.cron import background_scheduler
@@ -886,3 +887,20 @@ async def disconnect_workspace(payload: Optional[Dict[str, Any]] = None):
         "gmail_configured": google_workspace.is_gmail_configured(),
         "calendar_configured": google_workspace.is_calendar_configured()
     }
+
+@app.get("/api/coding/verify-package", dependencies=[Depends(verify_session_token)])
+async def verify_coding_package(name: str):
+    from services.backend.coding.typosquat_guard import typosquat_guard
+    report = typosquat_guard.evaluate_package(name)
+    return report.model_dump()
+
+@app.get("/api/coding/workspaces", dependencies=[Depends(verify_session_token)])
+async def list_coding_workspaces():
+    from services.backend.coding.workspace import workspace_manager
+    workspaces = []
+    if os.path.exists(workspace_manager.workspaces_root):
+        for entry in os.listdir(workspace_manager.workspaces_root):
+            p = os.path.join(workspace_manager.workspaces_root, entry)
+            if os.path.isdir(p):
+                workspaces.append({"id": entry, "path": p})
+    return {"workspaces_root": workspace_manager.workspaces_root, "workspaces": workspaces}

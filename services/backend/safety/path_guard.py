@@ -87,6 +87,7 @@ def get_user_allowlist_roots() -> List[str]:
         os.path.join(user_prof, "Pictures"),
         os.path.join(user_prof, "Videos"),
         os.path.join(user_prof, "Music"),
+        os.path.join(user_prof, "Projects"),
         tempfile.gettempdir()
     ]
     # Include configured external vault if available
