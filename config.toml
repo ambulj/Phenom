@@ -286,6 +286,23 @@ mode = "spoken_hud_shortcuts"          # Spoken 1-sentence prompt + HUD option b
 mode = "instant_rules_spaced_memory"   # Auto-append user corrections to preferences cache and inject top-3 rules dynamically into prompt
 top_rules_injection_count = 3
 
+[workspace]
+switching_mode = "seamless_reanchor"   # Re-anchor active workspace, load local .phenom/prompt.md, refocus/launch VS Code, re-scope git/vectors
+
+[shell]
+executable = "pwsh"                    # PowerShell 7
+environment = "isolated_clean_utf8"    # Isolated environment without profile side-effects, UTF-8 forced
+
+[scheduler]
+engine = "dual_task_scheduler_apscheduler" # Windows Task Scheduler for sleep-wake reliable runs, APScheduler for reactive runtime jobs
+wake_for_morning_briefing = true
+
+[context_budget]
+mode = "dynamic_vram_and_hybrid_offload" # 8k default scaling to 16k/32k via RoPE with >=1.5GB VRAM safety buffer, hybrid CPU offload for massive files
+default_tokens = 8192
+max_tokens = 32768
+min_free_vram_gb = 1.5
+
 [telegram]
 remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status
 pairing_mode = "desktop_pin_handshake" # Desktop QR / 6-digit PIN handshake to bind owner user_id

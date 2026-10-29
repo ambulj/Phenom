@@ -250,3 +250,11 @@ esearch_papers) for scoped cosine similarity retrieval.
 3. **Smart AC/Battery Power Governor**: On AC power, background Telegram polling and notification monitoring remain active during screen lock; on battery or Modern Standby sleep, all polling loops and file watchers pause, restoring instantly upon user unlock.
 4. **Instant Rules & Spaced Memory Learning**: When corrected by Abhi (e.g. preferring a specific linter or package manager), Phenom immediately commits the rule to a structured cache and injects the top-3 relevant rules into future prompt contexts.
 
+---
+
+## 27. Multi-Project Workspaces, Execution Shell & Dynamic Context Budgeting (Locked In)
+1. **Seamless Project Workspace Transition**: Switching projects re-anchors the active workspace root, parses local `.phenom/prompt.md`, focuses or launches the corresponding VS Code window, and re-scopes Git/vector index namespaces dynamically.
+2. **Clean UTF-8 PowerShell 7 Subprocess Execution**: Terminal commands run in an isolated `pwsh` session free from user `$PROFILE` side-effects, enforcing strict UTF-8 input/output encoding to eliminate Windows console encoding errors.
+3. **Dual Automation Scheduling (Task Scheduler + APScheduler)**: Time-critical wake-from-sleep automations (e.g. 8:00 AM morning standup) register with Windows Task Scheduler, while in-session background loops utilize in-process APScheduler.
+4. **Dynamic Context Budgeting & Hybrid Offloading**: The 8B local LLM defaults to an 8,192 token window, dynamically scaling to 16k/32k via RoPE scaling when analyzing large files (enforcing >=1.5 GB free GPU VRAM headroom), falling back to hybrid CPU/GPU offload for massive repositories.
+

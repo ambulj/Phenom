@@ -284,3 +284,9 @@ esearch_papers).
 - **Universal Media Controls (Win32 SMTC)**: Native Windows System Media Transport Controls (Play/Pause/Next/Volume) for Spotify/YouTube/Media Players.
 - **Smart AC/Battery Power Governor**: Lightweight Telegram polling on AC power; pause all background loops and save power on battery/sleep.
 - **Instant Rules & Spaced Memory**: Auto-commit user corrections to preferences cache and inject top-3 relevant rules into prompt context.
+
+### Workspaces, Shell & Memory Scaling (Round 47)
+- **Seamless Project Workspace Transition**: Dynamic re-anchoring of workspace root, local `.phenom/prompt.md` loading, VS Code focus, and scoped Git/vector index switching.
+- **Isolated Clean UTF-8 PowerShell 7**: Execution in clean `pwsh` environment without personal profile side-effects and strict UTF-8 encoding.
+- **Dual Automation Scheduling**: Native Windows Task Scheduler for morning briefings/wakes + APScheduler for runtime in-process jobs.
+- **Dynamic Context Budgeting & Hybrid Offload**: 8k baseline scaling to 16k/32k via RoPE with >=1.5GB VRAM safety buffer, with CPU offload support for massive files.
