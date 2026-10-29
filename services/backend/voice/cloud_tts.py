@@ -1,5 +1,5 @@
 """
-Phenom Cloud Hindi TTS Client (Sarvam AI Bulbul v2)
+Phenom Cloud Hindi TTS Client (Sarvam AI Bulbul v3)
 Implements natural Indian-language TTS synthesis for non-private replies.
 Strict Privacy Guarantee:
 - Evaluates text through privacy_classifier.is_private() BEFORE transmission.
@@ -24,21 +24,31 @@ logger = logging.getLogger("phenom.voice.cloud_tts")
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 CREDENTIAL_KEY = "Phenom/sarvam-api-key"
 
-# Valid production speakers for Sarvam Bulbul v2
-VALID_SPEAKERS = ["anushka", "abhilash", "manisha", "vidya", "arya", "karun", "hitesh"]
+# Valid production speakers for Sarvam Bulbul v3
+VALID_SPEAKERS = [
+    "chirag_hi_social",
+    "suman_hi_companion",
+    "vipul_hi_social",
+    "aarti_hi_customer",
+    "advait_hi_character",
+    "vandana_hi_ecomm",
+    "aryaman_hi_ads",
+    "mukul_hi_ads"
+]
 
-# Aliases mapping legacy/generic voice names to current Sarvam Bulbul v2 production speakers
+# Aliases mapping legacy/v2 voice names to current Sarvam Bulbul v3 production speakers
 SPEAKER_ALIASES = {
-    "arvind": "abhilash",
-    "meera": "anushka",
-    "amartya": "karun",
-    "pavithra": "vidya",
-    "chirag_hi_social": "abhilash",
-    "suman_hi_companion": "anushka",
-    "vipul_hi_social": "karun",
-    "aarti_hi_customer": "vidya",
-    "advait_hi_character": "hitesh",
-    "vandana_hi_ecomm": "manisha"
+    "abhilash": "chirag_hi_social",
+    "karun": "vipul_hi_social",
+    "hitesh": "advait_hi_character",
+    "anushka": "suman_hi_companion",
+    "manisha": "vandana_hi_ecomm",
+    "vidya": "aarti_hi_customer",
+    "arya": "suman_hi_companion",
+    "arvind": "chirag_hi_social",
+    "meera": "suman_hi_companion",
+    "amartya": "vipul_hi_social",
+    "pavithra": "aarti_hi_customer"
 }
 
 # Hindi & Hinglish detection patterns
@@ -80,8 +90,8 @@ class SarvamTTSClient:
         self,
         text: str,
         is_shareable: bool = False,
-        speaker: str = "abhilash",
-        model: str = "bulbul:v2"
+        speaker: str = "chirag_hi_social",
+        model: str = "bulbul:v3"
     ) -> Optional[bytes]:
         """
         Synthesizes Hindi/Hinglish speech using Sarvam Bulbul API.
@@ -116,7 +126,7 @@ class SarvamTTSClient:
         # 4. Resolve Speaker
         actual_speaker = SPEAKER_ALIASES.get(speaker, speaker)
         if actual_speaker not in VALID_SPEAKERS:
-            actual_speaker = "abhilash"
+            actual_speaker = "chirag_hi_social"
 
         # 5. Invoke Sarvam Bulbul API
         headers = {
