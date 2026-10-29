@@ -18,7 +18,7 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **246 passed, 48 warnings** (0 failed, 0 errors in 147s).
+- **Result**: **250 passed, 48 warnings** (0 failed, 0 errors in 108s).
 - **Test Command**: python -m pytest services/backend/tests/
 
 ### End-to-End Smoke Verification
@@ -172,3 +172,9 @@ npm run dev
 - **Audit Log Drawer**: Integrated 1-click HUD drawer to inspect chronological action logs, tool tiers, and rollbacks.
 - **Test Generation Policy**: Test-driven pairing (automatically authoring matching test suites for every new module).
 - **Screen Border Overlay**: Dynamic pulsing Electric Cyan while active, Amber on Tier 2 confirmation, Crimson on Guardian halt.
+
+### Core Safety, Wake Word & Vision Reasoning (Round 23)
+- **Wake Word Sensitivity**: Strict 0.65+ confidence threshold with 500ms sliding confirmation window to eliminate false triggers from media/conversations.
+- **Memory Decay Policy**: Spaced relevance weighting (frequently referenced profile/rules stay permanent; transient notes decay after 14 days).
+- **Screen & Vision Reasoning**: Dual OCR + Vision approach (fast local Windows OCR for exact code/text, paired with multimodal vision model for layout/diagram interpretation).
+- **Administrative Privileges**: Strict Windows UAC elevation required for any elevated commands; zero bypass of Windows security gates.

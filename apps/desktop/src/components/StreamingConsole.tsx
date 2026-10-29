@@ -1,0 +1,204 @@
+import React, { useState, useRef, useEffect } from 'react';
+
+export interface ConsoleLine {
+  text: string;
+  type?: 'stdout' | 'stderr' | 'system' | 'command';
+  timestamp?: string;
+}
+
+export interface StreamingConsoleProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  lines: ConsoleLine[];
+  onClear?: () => void;
+  title?: string;
+}
+
+export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
+  isOpen,
+  onToggle,
+  lines,
+  onClear,
+  title = 'TERMINAL OUTPUT'
+}) => {
+  const [autoScroll, setAutoScroll] = useState(true);
+  const consoleBottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (autoScroll && consoleBottomRef.current) {
+      consoleBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [lines, autoScroll]);
+
+  const copyToClipboard = () => {
+    const raw = lines.map(l => l.text).join('\n');
+    navigator.clipboard.writeText(raw);
+  };
+
+  if (!isOpen) {
+    return (
+      <button
+        onClick={onToggle}
+        style={{
+          position: 'fixed',
+          bottom: '16px',
+          left: '20px',
+          zIndex: 9998,
+          backgroundColor: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(0, 229, 255, 0.3)',
+          color: '#00E5FF',
+          padding: '6px 14px',
+          borderRadius: '8px',
+          fontSize: '12px',
+          fontWeight: 600,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)'
+        }}
+      >
+        <span>▲</span>
+        <span>{title} ({lines.length})</span>
+      </button>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '16px',
+        left: '20px',
+        width: '560px',
+        height: '240px',
+        zIndex: 9998,
+        backgroundColor: 'rgba(11, 19, 38, 0.94)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(0, 229, 255, 0.35)',
+        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(0, 229, 255, 0.1)',
+        borderRadius: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        fontFamily: "'Cascadia Code', Consolas, monospace"
+      }}
+    >
+      {/* Console Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '8px 12px',
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '11px', color: '#00E5FF', fontWeight: 700, letterSpacing: '0.5px' }}>
+            ● {title}
+          </span>
+          <span style={{ fontSize: '10px', color: '#64748B' }}>
+            {lines.length} lines
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={() => setAutoScroll(!autoScroll)}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${autoScroll ? '#00E5FF' : '#475569'}`,
+              color: autoScroll ? '#00E5FF' : '#94A3B8',
+              fontSize: '10px',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Auto-scroll: {autoScroll ? 'ON' : 'OFF'}
+          </button>
+          <button
+            onClick={copyToClipboard}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#CBD5E1',
+              fontSize: '10px',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Copy
+          </button>
+          {onClear && (
+            <button
+              onClick={onClear}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#CBD5E1',
+                fontSize: '10px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={onToggle}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#94A3B8',
+              fontSize: '14px',
+              padding: '2px 6px',
+              cursor: 'pointer'
+            }}
+          >
+            ▼
+          </button>
+        </div>
+      </div>
+
+      {/* Stream Lines Body */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '8px 12px',
+          fontSize: '12px',
+          lineHeight: '1.45',
+          color: '#E2E8F0',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px'
+        }}
+      >
+        {lines.length === 0 ? (
+          <div style={{ color: '#475569', fontStyle: 'italic', padding: '12px 0' }}>
+            Ready for execution commands...
+          </div>
+        ) : (
+          lines.map((l, i) => {
+            const isError = l.type === 'stderr';
+            const isCmd = l.type === 'command';
+            const isSys = l.type === 'system';
+            const color = isError ? '#F87171' : isCmd ? '#38BDF8' : isSys ? '#A78BFA' : '#CBD5E1';
+            return (
+              <div key={i} style={{ color, wordBreak: 'break-all' }}>
+                {isCmd && <span style={{ color: '#00E5FF', marginRight: '6px' }}>❯</span>}
+                {l.text}
+              </div>
+            );
+          })
+        )}
+        <div ref={consoleBottomRef} />
+      </div>
+    </div>
+  );
+};
