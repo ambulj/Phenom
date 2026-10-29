@@ -24,31 +24,28 @@ logger = logging.getLogger("phenom.voice.cloud_tts")
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 CREDENTIAL_KEY = "Phenom/sarvam-api-key"
 
-# Valid production speakers for Sarvam Bulbul v3
+# Valid standard speakers for Sarvam Bulbul v3
 VALID_SPEAKERS = [
-    "chirag_hi_social",
-    "suman_hi_companion",
-    "vipul_hi_social",
-    "aarti_hi_customer",
-    "advait_hi_character",
-    "vandana_hi_ecomm",
-    "aryaman_hi_ads",
-    "mukul_hi_ads"
+    "shubh", "aditya", "rahul", "rohan", "amit", "dev", "ratan",
+    "varun", "manan", "sumit", "kabir", "aayan", "ashutosh", "advait",
+    "priya", "pooja", "simran", "kavya", "ishita", "shreya", "roopa", "ritu", "neha"
 ]
 
-# Aliases mapping legacy/v2 voice names to current Sarvam Bulbul v3 production speakers
+# Aliases mapping legacy or alternative names to Bulbul v3 standard speakers
 SPEAKER_ALIASES = {
-    "abhilash": "chirag_hi_social",
-    "karun": "vipul_hi_social",
-    "hitesh": "advait_hi_character",
-    "anushka": "suman_hi_companion",
-    "manisha": "vandana_hi_ecomm",
-    "vidya": "aarti_hi_customer",
-    "arya": "suman_hi_companion",
-    "arvind": "chirag_hi_social",
-    "meera": "suman_hi_companion",
-    "amartya": "vipul_hi_social",
-    "pavithra": "aarti_hi_customer"
+    "arvind": "shubh",
+    "abhilash": "shubh",
+    "chirag_hi_social": "shubh",
+    "karun": "aditya",
+    "amartya": "aditya",
+    "vipul_hi_social": "aditya",
+    "meera": "priya",
+    "anushka": "priya",
+    "suman_hi_companion": "priya",
+    "pavithra": "pooja",
+    "vidya": "pooja",
+    "aarti_hi_customer": "simran",
+    "vandana_hi_ecomm": "kavya"
 }
 
 # Hindi & Hinglish detection patterns
@@ -90,11 +87,11 @@ class SarvamTTSClient:
         self,
         text: str,
         is_shareable: bool = False,
-        speaker: str = "chirag_hi_social",
+        speaker: str = "shubh",
         model: str = "bulbul:v3"
     ) -> Optional[bytes]:
         """
-        Synthesizes Hindi/Hinglish speech using Sarvam Bulbul API.
+        Synthesizes Hindi/Hinglish speech using Sarvam Bulbul v3 API.
         Enforces strict pre-flight privacy check and in-memory audio return.
         Returns WAV audio bytes if successful, None if bypassed or on fallback.
         """
@@ -126,9 +123,9 @@ class SarvamTTSClient:
         # 4. Resolve Speaker
         actual_speaker = SPEAKER_ALIASES.get(speaker, speaker)
         if actual_speaker not in VALID_SPEAKERS:
-            actual_speaker = "chirag_hi_social"
+            actual_speaker = "shubh"
 
-        # 5. Invoke Sarvam Bulbul API
+        # 5. Invoke Sarvam Bulbul v3 API (Note: v3 does not accept pitch or loudness)
         headers = {
             "api-subscription-key": key,
             "Content-Type": "application/json"
@@ -137,9 +134,7 @@ class SarvamTTSClient:
             "inputs": [clean_text],
             "target_language_code": "hi-IN",
             "speaker": actual_speaker,
-            "pitch": 0,
             "pace": 1.0,
-            "loudness": 1.5,
             "speech_sample_rate": 16000,
             "enable_preprocessing": True,
             "model": model
@@ -163,9 +158,11 @@ class SarvamTTSClient:
                     self._quota_alert_fired = True
                 return None
             else:
+                print(f"Sarvam TTS failed with HTTP {resp.status_code}: {resp.text}")
                 logger.error(f"Sarvam TTS failed with HTTP {resp.status_code}: {resp.text}")
                 return None
         except Exception as e:
+            print(f"Sarvam TTS request exception: {e}")
             logger.error(f"Sarvam TTS request exception: {e}")
             return None
 
