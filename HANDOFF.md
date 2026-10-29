@@ -2,9 +2,15 @@
 
 **Hardening Pass 1 Status Report**  
 - **Branch**: `hardening/pass-1`  
-- **Base Commit**: `200b65ece7bef60a1536e279d661789a7773a741`  
 - **Date**: October 29, 2026  
-- **Audit Findings Addressed**: F1 (WebSocket & REST Authentication), F2 (Complete Requirements Manifest), F3 (pytest.ini, conftest.py, and CI), F4 (Honest Documentation), F5 (Python Version Guard & Prerequisites).
+- **Audit Findings Addressed**:
+  - F1: WebSocket & REST Authentication (token in subprotocol, Origin validation, rate limiting)
+  - F2: Complete Requirements Manifest & lockfile (`requirements.lock.txt`, audit script)
+  - F3: Pytest & CI (`pytest.ini`, `conftest.py`, GitHub Actions workflow)
+  - F4: Honest Documentation (`HANDOFF.md` rewrite)
+  - F5: Python Version Guard (`>= 3.11` check in Electron `main.cjs`)
+  - F6: Obsidian Vault isolation outside code repo & pre-commit scan guard
+  - F7 & F8: Elimination of fabricated data across all integrations (`finance`, `live_data`, `news_briefing`, `research`), real Gmail IMAP over SSL (read-only `EXAMINE`, draft `IMAP APPEND`, strictly NO SMTP), and real Google Calendar API (reading/creating events, strictly NO edit/delete). Credentials secured in Windows Credential Manager under `Phenom/gmail-app-password` and `Phenom/google-calendar-token`.
 
 ---
 
@@ -12,20 +18,20 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **73 passed, 22 warnings in 42.12s** (0 failed, 0 errors).
+- **Result**: **121 passed, 28 warnings in 51.06s** (0 failed, 0 errors).
 - **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
 
-### Cross-Platform Core Test Run
-- **Test Command**: `python -m pytest -q -m "not (windows_only or needs_audio or slow or needs_gpu)"`
-- **Result**: **67 passed, 6 deselected, 21 warnings in 34.72s**.
+### Secret Scanner Run
+- **Command**: `python scripts/scan_secrets.py --all`
+- **Result**: **159 tracked files scanned. 0 secrets or blocked files found.**
 
 ### Import Coverage Audit
 - **Audit Command**: `python services/backend/scripts/audit_imports.py`
 - **Result**: **33 third-party imports audited; 0 missing dependencies**. All imports declared in `requirements.txt`, `requirements-windows.txt`, and `requirements-dev.txt`.
 
 ### Desktop UI Build
-- **Build Command**: `npm --prefix apps/desktop run build`
-- **Result**: **Clean TypeScript compilation (`tsc`) and Vite production bundle generated in 15.77s with 0 errors**.
+- **Build Command**: `cd apps/desktop; npm run build`
+- **Result**: **Clean TypeScript compilation (`tsc`) and Vite production bundle generated in 15.70s with 0 errors**.
 
 ---
 

@@ -5,13 +5,17 @@ Covers:
 - Semantic Scholar API (paper search & abstracts)
 - Crossref API (citations and DOI lookup)
 - Google Scholar (web scraping fallback, explicitly marked as less reliable)
+Never fabricates citations or fake papers on network failure.
 """
 
 import httpx
+import logging
 import xml.etree.ElementTree as ET
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 import urllib.parse
+
+logger = logging.getLogger("phenom.research")
 
 class ResearchEngine:
     def __init__(self):
@@ -45,7 +49,7 @@ class ResearchEngine:
                             "reliability": "high"
                         })
         except Exception as e:
-            print(f"[Research] arXiv search error: {e}")
+            logger.warning(f"arXiv search error: {e}")
         return papers
 
     async def search_semantic_scholar(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
@@ -71,7 +75,7 @@ class ResearchEngine:
                             "reliability": "high"
                         })
         except Exception as e:
-            print(f"[Research] Semantic Scholar error: {e}")
+            logger.warning(f"Semantic Scholar error: {e}")
         return papers
 
     async def lookup_doi_crossref(self, doi_or_query: str) -> Dict[str, Any]:
@@ -96,6 +100,7 @@ class ResearchEngine:
                             authors.append(name)
 
                     return {
+                        "ok": True,
                         "title": (item.get("title", [""])[0] if item.get("title") else "Unknown"),
                         "authors": authors,
                         "doi": item.get("DOI", ""),
@@ -103,23 +108,30 @@ class ResearchEngine:
                         "citations_count": item.get("is-referenced-by-count", 0),
                         "url": item.get("URL", ""),
                         "source": "crossref",
-                        "reliability": "official"
+                        "reliability": "official",
+                        "stale": False
                     }
         except Exception as e:
-            print(f"[Research] Crossref lookup error: {e}")
+            logger.warning(f"Crossref lookup error: {e}")
 
+        # On network failure or error: return typed error record, never fabricate citation
         return {
-            "title": f"Citation record for {doi_or_query}",
+            "ok": False,
+            "error": "network_unavailable",
+            "provider": "crossref",
             "doi": doi_or_query,
-            "citations_count": 0,
-            "source": "crossref",
-            "reliability": "official"
+            "title": None,
+            "authors": [],
+            "citations_count": None,
+            "source": "unreachable",
+            "stale": True
         }
 
     async def search_google_scholar_scraped(self, query: str) -> List[Dict[str, Any]]:
         """
         Scrapes Google Scholar.
         Explicitly marked with reliability="less_reliable" and source="scraped".
+        Returns empty list on failure, never fabricates papers.
         """
         url = f"https://scholar.google.com/scholar?q={urllib.parse.quote(query)}"
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -144,17 +156,9 @@ class ResearchEngine:
                             "reliability": "less_reliable"
                         })
         except Exception as e:
-            print(f"[Research] Google scholar scraping error: {e}")
+            logger.warning(f"Google scholar scraping error: {e}")
 
-        # Fallback entry
-        if not papers:
-            papers.append({
-                "title": f"Study on {query}",
-                "link": f"https://scholar.google.com/scholar?q={urllib.parse.quote(query)}",
-                "abstract": "Google Scholar scraped fallback result.",
-                "source": "scraped",
-                "reliability": "less_reliable"
-            })
+        # Returns empty list on failure: no fake paper entries
         return papers
 
     async def unified_search(self, query: str, limit_per_source: int = 3) -> Dict[str, Any]:
@@ -168,11 +172,25 @@ class ResearchEngine:
             scraped_res = await self.search_google_scholar_scraped(query)
             all_results.extend(scraped_res)
 
+        now_str = datetime.now(timezone.utc).isoformat()
+        if not all_results:
+            return {
+                "ok": False,
+                "error": "no_results_or_network_unavailable",
+                "query": query,
+                "total_found": 0,
+                "results": [],
+                "stale": True,
+                "timestamp": now_str
+            }
+
         return {
+            "ok": True,
             "query": query,
             "total_found": len(all_results),
             "results": all_results,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "stale": False,
+            "timestamp": now_str
         }
 
 # Global research engine

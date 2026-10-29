@@ -26,6 +26,9 @@ from services.backend.integrations.finance import FinancialEngine, TradingProhib
 from services.backend.integrations.google_workspace import (
     GoogleWorkspaceClient, EmailSendingProhibitedError, CalendarModificationProhibitedError
 )
+from services.backend.tests.mocks.mock_google_workspace import MockGoogleWorkspaceClient
+from unittest.mock import patch, AsyncMock, MagicMock
+import httpx
 from services.backend.integrations.live_data import LiveDataPipeline
 from services.backend.integrations.news_briefing import TechNewsBriefing
 from services.backend.integrations.research import ResearchEngine
@@ -82,19 +85,37 @@ async def test_live_data_fallback_to_scraping_and_labelled():
     # Force scrape mode to simulate API unavailability
     pipeline = LiveDataPipeline(force_scrape_for_testing=True)
 
-    # Weather
-    wx = await pipeline.get_weather("London")
-    assert wx["source"] == "scraped"
-    assert "location" in wx
+    # Mock scraped responses for determinism
+    async def mock_get(url, *args, **kwargs):
+        url_str = str(url)
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        if "wttr.in" in url_str:
+            mock_resp.text = "Sunny +20C 50% 10km/h"
+        elif "amfiindia.com" in url_str:
+            mock_resp.text = "120503;Axis Bluechip Fund - Direct Plan - Growth;INF846K01DP8;INF846K01DQ6;58.42;28-Oct-2026\n"
+        elif "bbc.com" in url_str:
+            mock_resp.text = "<html><head><title>Football - Arsenal vs Chelsea Live Score</title></head></html>"
+        else:
+            mock_resp.text = ""
+        return mock_resp
 
-    # Mutual fund
-    mf = await pipeline.get_mutual_fund("Axis Bluechip")
-    assert mf["source"] == "scraped"
-    assert mf["nav"] > 0
+    with patch("httpx.AsyncClient.get", side_effect=mock_get):
+        # Weather
+        wx = await pipeline.get_weather("London")
+        assert wx["source"] == "scraped"
+        assert "location" in wx
+        assert wx["temperature"] == "+20C"
 
-    # Sports
-    sports = await pipeline.get_sports_score("football", "Arsenal vs Chelsea")
-    assert sports["source"] == "scraped"
+        # Mutual fund
+        mf = await pipeline.get_mutual_fund("Axis Bluechip")
+        assert mf["source"] == "scraped"
+        assert mf["nav"] == 58.42
+
+        # Sports
+        sports = await pipeline.get_sports_score("football", "Arsenal vs Chelsea")
+        assert sports["source"] == "scraped"
+        assert "Arsenal vs Chelsea" in sports["status"]
 
 @pytest.mark.asyncio
 async def test_financial_watchlist_alert_triggers_once(temp_db):
@@ -281,7 +302,7 @@ async def test_tech_news_briefing_aggregation():
 @pytest.mark.asyncio
 async def test_google_workspace_draft_and_calendar():
     """Verifies allowed Google Workspace operations: drafts and calendar creation."""
-    gw = GoogleWorkspaceClient()
+    gw = MockGoogleWorkspaceClient()
 
     # Draft creation (allowed)
     draft = gw.create_draft("client@example.com", "Project Deliverables", "Attached are the docs.")
@@ -293,3 +314,8 @@ async def test_google_workspace_draft_and_calendar():
     event = gw.create_event("Sprint Demo", "2026-10-30T10:00:00Z", "2026-10-30T11:00:00Z", "Demo of Phase 5")
     assert event["summary"] == "Sprint Demo"
     assert len(gw.list_events()) >= 3
+
+    # Real client unauthenticated state contains zero fabricated data
+    real_gw = GoogleWorkspaceClient()
+    assert real_gw.search_emails() == []
+    assert real_gw.list_events() == []

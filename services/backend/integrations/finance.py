@@ -7,9 +7,12 @@ Fixed pipeline: Official API first, fallback to scraping, with explicit source l
 """
 
 import httpx
+import logging
 from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from services.backend.memory.db import encrypted_db
+
+logger = logging.getLogger("phenom.finance")
 
 class TradingProhibitedError(Exception):
     """Raised whenever a trade placement or buy/sell suggestion is attempted."""
@@ -18,6 +21,7 @@ class TradingProhibitedError(Exception):
 class FinancialEngine:
     def __init__(self, db_manager=None):
         self.db = db_manager or encrypted_db
+        self._cache: Dict[str, Dict[str, Any]] = {}
 
     # ----------------- HARD CODE-LEVEL PROHIBITIONS -----------------
     def place_trade(self, symbol: str, action: str, quantity: float, order_type: str = "market") -> None:
@@ -39,6 +43,7 @@ class FinancialEngine:
         """
         Gets live quote for stock or crypto.
         Order: Official API first -> Fallback to scraping -> labelled.
+        Never fabricates numbers on network failure.
         """
         sym = symbol.strip().upper()
         # Auto-detect crypto
@@ -56,6 +61,7 @@ class FinancialEngine:
             return await self._get_stock_quote(sym)
 
     async def _get_crypto_quote(self, symbol: str, coin_id: str) -> Dict[str, Any]:
+        fetch_time = datetime.now(timezone.utc).isoformat()
         # 1. API: CoinGecko public API
         url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true"
         try:
@@ -66,53 +72,72 @@ class FinancialEngine:
                     if coin_id in data:
                         price = float(data[coin_id]["usd"])
                         change = float(data[coin_id].get("usd_24h_change", 0.0))
-                        return {
+                        record = {
+                            "ok": True,
                             "symbol": symbol,
                             "asset_type": "crypto",
                             "price": price,
                             "currency": "USD",
                             "change_24h": round(change, 2),
-                            "source": "api",
+                            "source": "https://api.coingecko.com",
                             "disclaimer": "Informational only. Not financial advice.",
-                            "timestamp": datetime.now(timezone.utc).isoformat()
+                            "fetched_at": fetch_time,
+                            "stale": False
                         }
-        except Exception:
-            pass
+                        self._cache[symbol] = record
+                        return record
+        except Exception as e:
+            logger.warning(f"CoinGecko API fetch failed for {symbol}: {e}")
 
         # 2. Scraped / Alternative fallback
         try:
             fallback_url = f"https://cryptoprices.cc/{symbol}/"
             async with httpx.AsyncClient(timeout=4.0) as client:
                 resp = await client.get(fallback_url)
-                if resp.status_code == 200:
+                if resp.status_code == 200 and resp.text.strip():
                     price_val = float(resp.text.strip())
-                    return {
+                    record = {
+                        "ok": True,
                         "symbol": symbol,
                         "asset_type": "crypto",
                         "price": price_val,
                         "currency": "USD",
                         "change_24h": 0.0,
-                        "source": "scraped",
+                        "source": "https://cryptoprices.cc",
                         "disclaimer": "Informational only. Not financial advice.",
-                        "timestamp": datetime.now(timezone.utc).isoformat()
+                        "fetched_at": fetch_time,
+                        "stale": False
                     }
-        except Exception:
-            pass
+                    self._cache[symbol] = record
+                    return record
+        except Exception as e:
+            logger.warning(f"Alternative crypto scrape failed for {symbol}: {e}")
 
-        # Return simulated mock fallback if offline in isolated tests
+        # Check cached value if available (must be clearly marked stale: True)
+        if symbol in self._cache:
+            cached = dict(self._cache[symbol])
+            cached["stale"] = True
+            cached["ok"] = True
+            return cached
+
+        # Never fabricate numbers on failure: return typed error result
         return {
+            "ok": False,
+            "error": "network_unavailable",
+            "provider": "https://api.coingecko.com",
             "symbol": symbol,
             "asset_type": "crypto",
-            "price": 65000.0 if symbol == "BTC" else 3500.0,
+            "price": None,
             "currency": "USD",
-            "change_24h": 1.25,
-            "source": "scraped",
-            "disclaimer": "Informational only. Not financial advice.",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "stale": True,
+            "fetched_at": None,
+            "source": "unreachable",
+            "message": "Price not available right now."
         }
 
     async def _get_stock_quote(self, symbol: str) -> Dict[str, Any]:
-        # 1. API: Finnhub / public financial API or Yahoo query API
+        fetch_time = datetime.now(timezone.utc).isoformat()
+        # 1. API: Yahoo query API
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=1d"
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
         try:
@@ -125,18 +150,22 @@ class FinancialEngine:
                         price = float(meta["regularMarketPrice"])
                         prev_close = float(meta.get("chartPreviousClose", price))
                         change = ((price - prev_close) / prev_close) * 100.0 if prev_close else 0.0
-                        return {
+                        record = {
+                            "ok": True,
                             "symbol": symbol,
                             "asset_type": "stock",
                             "price": price,
                             "currency": meta.get("currency", "USD"),
                             "change_24h": round(change, 2),
-                            "source": "api",
+                            "source": "https://query1.finance.yahoo.com",
                             "disclaimer": "Informational only. Not financial advice.",
-                            "timestamp": datetime.now(timezone.utc).isoformat()
+                            "fetched_at": fetch_time,
+                            "stale": False
                         }
-        except Exception:
-            pass
+                        self._cache[symbol] = record
+                        return record
+        except Exception as e:
+            logger.warning(f"Yahoo chart API failed for {symbol}: {e}")
 
         # 2. Scraped fallback: Yahoo Finance quote summary page
         try:
@@ -149,29 +178,43 @@ class FinancialEngine:
                     fin_streamer = soup.find("fin-streamer", {"data-symbol": symbol, "data-field": "regularMarketPrice"})
                     if fin_streamer and fin_streamer.get("value"):
                         price_val = float(fin_streamer["value"].replace(",", ""))
-                        return {
+                        record = {
+                            "ok": True,
                             "symbol": symbol,
                             "asset_type": "stock",
                             "price": price_val,
                             "currency": "USD",
                             "change_24h": 0.0,
-                            "source": "scraped",
+                            "source": "https://finance.yahoo.com/quote",
                             "disclaimer": "Informational only. Not financial advice.",
-                            "timestamp": datetime.now(timezone.utc).isoformat()
+                            "fetched_at": fetch_time,
+                            "stale": False
                         }
-        except Exception:
-            pass
+                        self._cache[symbol] = record
+                        return record
+        except Exception as e:
+            logger.warning(f"Yahoo summary scrape failed for {symbol}: {e}")
 
-        # Simulated fallback if completely offline
+        # Return cached entry if present (marked stale)
+        if symbol in self._cache:
+            cached = dict(self._cache[symbol])
+            cached["stale"] = True
+            cached["ok"] = True
+            return cached
+
+        # Never fabricate numbers on failure: return typed error result
         return {
+            "ok": False,
+            "error": "network_unavailable",
+            "provider": "https://query1.finance.yahoo.com",
             "symbol": symbol,
             "asset_type": "stock",
-            "price": 185.50 if symbol == "AAPL" else 125.00,
+            "price": None,
             "currency": "USD",
-            "change_24h": 0.55,
-            "source": "scraped",
-            "disclaimer": "Informational only. Not financial advice.",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "stale": True,
+            "fetched_at": None,
+            "source": "unreachable",
+            "message": "Price not available right now."
         }
 
     # ----------------- WATCHLIST MANAGEMENT -----------------
@@ -251,6 +294,19 @@ class FinancialEngine:
                 current_price = quotes_override[sym]
             else:
                 quote = await self.get_market_quote(sym, item["asset_type"])
+                if not quote.get("ok") or quote.get("stale") or quote.get("price") is None:
+                    logger.info(f"Skipping alert evaluation for {sym}: quote is unavailable or stale.")
+                    continue
+                # Also verify freshness (< 15 min / 900 s)
+                fetched_at = quote.get("fetched_at")
+                if fetched_at:
+                    try:
+                        dt = datetime.fromisoformat(fetched_at)
+                        if (datetime.now(timezone.utc) - dt).total_seconds() > 900:
+                            logger.info(f"Skipping alert evaluation for {sym}: quote is older than 15 minutes.")
+                            continue
+                    except Exception:
+                        pass
                 current_price = quote["price"]
 
             # Evaluate condition

@@ -793,3 +793,55 @@ async def test_vault_connection(payload: Optional[Dict[str, Any]] = None):
 @app.post("/api/vault/sync", dependencies=[Depends(verify_session_token)])
 async def sync_vault_now():
     return vault_manager.sync_vault_git()
+
+# Google Workspace Integration Endpoints
+@app.get("/api/workspace/status", dependencies=[Depends(verify_session_token)])
+async def get_workspace_status():
+    addr, _ = google_workspace.get_gmail_credentials()
+    return {
+        "gmail_configured": google_workspace.is_gmail_configured(),
+        "calendar_configured": google_workspace.is_calendar_configured(),
+        "gmail_address": addr
+    }
+
+@app.post("/api/workspace/gmail/config", dependencies=[Depends(verify_session_token)])
+async def update_gmail_config(payload: Dict[str, Any]):
+    address = payload.get("address", "")
+    password = payload.get("password", "")
+    if address and password:
+        google_workspace.set_gmail_credentials(address, password)
+    return {
+        "gmail_configured": google_workspace.is_gmail_configured(),
+        "gmail_address": address
+    }
+
+@app.post("/api/workspace/calendar/config", dependencies=[Depends(verify_session_token)])
+async def update_calendar_config(payload: Dict[str, Any]):
+    token = payload.get("token", "")
+    if token:
+        google_workspace.set_calendar_token(token)
+    return {
+        "calendar_configured": google_workspace.is_calendar_configured()
+    }
+
+@app.post("/api/workspace/test_connection", dependencies=[Depends(verify_session_token)])
+async def test_workspace_connection():
+    gmail_res = google_workspace.test_gmail_connection()
+    cal_res = await google_workspace.test_calendar_connection()
+    return {
+        "gmail": gmail_res,
+        "calendar": cal_res
+    }
+
+@app.post("/api/workspace/disconnect", dependencies=[Depends(verify_session_token)])
+async def disconnect_workspace(payload: Optional[Dict[str, Any]] = None):
+    target = (payload or {}).get("target", "all")
+    if target in ["all", "gmail"]:
+        google_workspace.clear_gmail_credentials()
+    if target in ["all", "calendar"]:
+        google_workspace.clear_calendar_token()
+    return {
+        "status": "disconnected",
+        "gmail_configured": google_workspace.is_gmail_configured(),
+        "calendar_configured": google_workspace.is_calendar_configured()
+    }

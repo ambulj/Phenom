@@ -37,6 +37,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [vaultTesting, setVaultTesting] = useState<boolean>(false);
   const [vaultSyncing, setVaultSyncing] = useState<boolean>(false);
 
+  // Google Workspace states
+  const [workspaceStatus, setWorkspaceStatus] = useState<any>(null);
+  const [gmailAddress, setGmailAddress] = useState<string>('');
+  const [gmailPassword, setGmailPassword] = useState<string>('');
+  const [calendarToken, setCalendarToken] = useState<string>('');
+  const [workspaceMessage, setWorkspaceMessage] = useState<string>('');
+  const [workspaceTesting, setWorkspaceTesting] = useState<boolean>(false);
+
   React.useEffect(() => {
     apiFetch('/api/vault/status')
       .then((res) => res.json())
@@ -45,6 +53,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         if (data.remote_url) setVaultRemoteUrl(data.remote_url);
       })
       .catch((err) => console.error('Error loading vault status:', err));
+
+    apiFetch('/api/workspace/status')
+      .then((res) => res.json())
+      .then((data) => {
+        setWorkspaceStatus(data);
+        if (data.gmail_address) setGmailAddress(data.gmail_address);
+      })
+      .catch((err) => console.error('Error loading workspace status:', err));
   }, []);
 
   const handleTestVaultConnection = async () => {
@@ -97,6 +113,71 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       setVaultMessage(`Sync failed: ${e.message}`);
     } finally {
       setVaultSyncing(false);
+    }
+  };
+
+  const handleSaveWorkspaceConfig = async () => {
+    try {
+      if (gmailAddress && gmailPassword) {
+        await apiFetch('/api/workspace/gmail/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: gmailAddress, password: gmailPassword })
+        });
+        setGmailPassword('');
+      }
+      if (calendarToken) {
+        await apiFetch('/api/workspace/calendar/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: calendarToken })
+        });
+        setCalendarToken('');
+      }
+      setWorkspaceMessage('Google Workspace credentials saved to Windows Credential Manager.');
+      const res = await apiFetch('/api/workspace/status');
+      setWorkspaceStatus(await res.json());
+    } catch (e: any) {
+      setWorkspaceMessage(`Error saving workspace config: ${e.message}`);
+    }
+  };
+
+  const handleTestWorkspaceConnection = async () => {
+    setWorkspaceTesting(true);
+    setWorkspaceMessage('Testing Gmail IMAP & Calendar API connections...');
+    try {
+      const res = await apiFetch('/api/workspace/test_connection', { method: 'POST' });
+      const data = await res.json();
+      const parts = [];
+      if (data.gmail) {
+        parts.push(`Gmail: ${data.gmail.ok ? 'Connected' : data.gmail.message}`);
+      }
+      if (data.calendar) {
+        parts.push(`Calendar: ${data.calendar.ok ? 'Connected' : data.calendar.message}`);
+      }
+      setWorkspaceMessage(parts.join(' | '));
+    } catch (e: any) {
+      setWorkspaceMessage(`Connection test error: ${e.message}`);
+    } finally {
+      setWorkspaceTesting(false);
+    }
+  };
+
+  const handleDisconnectWorkspace = async () => {
+    try {
+      await apiFetch('/api/workspace/disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: 'all' })
+      });
+      setWorkspaceMessage('Workspace disconnected. Credentials removed from Windows Credential Manager.');
+      setGmailAddress('');
+      setGmailPassword('');
+      setCalendarToken('');
+      const res = await apiFetch('/api/workspace/status');
+      setWorkspaceStatus(await res.json());
+    } catch (e: any) {
+      setWorkspaceMessage(`Disconnect error: ${e.message}`);
     }
   };
 
@@ -397,6 +478,101 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 onClick={handleSyncVaultNow}
               >
                 {vaultSyncing ? 'Syncing...' : 'Sync Now'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Workspace (Gmail & Calendar) */}
+        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#38bdf8', margin: 0 }}>
+              Google Workspace (Gmail & Calendar)
+            </h3>
+            <span style={{ fontSize: 11, color: workspaceStatus?.gmail_configured || workspaceStatus?.calendar_configured ? '#34d399' : '#94a3b8' }}>
+              {workspaceStatus?.gmail_configured || workspaceStatus?.calendar_configured ? '● Connected' : '○ Not Configured'}
+            </span>
+          </div>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>
+            Real IMAP over SSL for Gmail (read-only search and draft creation; sending is impossible). Google Calendar API for viewing and creating events.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Gmail Address {workspaceStatus?.gmail_address ? `(${workspaceStatus.gmail_address})` : ''}
+              </label>
+              <Input
+                placeholder="your.email@gmail.com"
+                value={gmailAddress}
+                onChange={(e) => setGmailAddress(e.target.value)}
+                style={{ width: '100%' }}
+                size="small"
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Gmail App Password {workspaceStatus?.gmail_configured ? '(Configured in Credential Manager)' : ''}
+              </label>
+              <Input
+                type="password"
+                placeholder={workspaceStatus?.gmail_configured ? '••••••••••••••••' : '16-character Google App Password'}
+                value={gmailPassword}
+                onChange={(e) => setGmailPassword(e.target.value)}
+                style={{ width: '100%' }}
+                size="small"
+              />
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                Requires 2FA enabled on Google Account -&gt; Security -&gt; App passwords. Stored in Windows Credential Manager under Phenom/gmail-app-password.
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4 }}>
+                Google Calendar OAuth Token {workspaceStatus?.calendar_configured ? '(Configured in Credential Manager)' : ''}
+              </label>
+              <Input
+                type="password"
+                placeholder={workspaceStatus?.calendar_configured ? '••••••••••••••••' : 'ya29.a0... OAuth Bearer Token'}
+                value={calendarToken}
+                onChange={(e) => setCalendarToken(e.target.value)}
+                style={{ width: '100%' }}
+                size="small"
+              />
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                Stored securely under Phenom/google-calendar-token. Scopes: calendar.events.readonly and calendar.events.
+              </div>
+            </div>
+
+            {workspaceMessage && (
+              <div style={{ fontSize: 12, color: workspaceMessage.includes('fail') || workspaceMessage.includes('error') ? '#f87171' : '#34d399', marginTop: 4 }}>
+                {workspaceMessage}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <Button
+                appearance="primary"
+                size="small"
+                onClick={handleSaveWorkspaceConfig}
+              >
+                Save Workspace Config
+              </Button>
+              <Button
+                appearance="secondary"
+                size="small"
+                disabled={workspaceTesting || (!workspaceStatus?.gmail_configured && !workspaceStatus?.calendar_configured && !gmailAddress)}
+                onClick={handleTestWorkspaceConnection}
+              >
+                {workspaceTesting ? 'Testing...' : 'Test Connection'}
+              </Button>
+              <Button
+                appearance="subtle"
+                size="small"
+                onClick={handleDisconnectWorkspace}
+              >
+                Disconnect
               </Button>
             </div>
           </div>

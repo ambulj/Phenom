@@ -28,6 +28,9 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
   const [nvidiaKey, setNvidiaKey] = useState<string>('');
   const [telegramToken, setTelegramToken] = useState<string>('');
   const [telegramOwnerId, setTelegramOwnerId] = useState<string>('');
+  const [gmailAddress, setGmailAddress] = useState<string>('');
+  const [gmailPassword, setGmailPassword] = useState<string>('');
+  const [calendarToken, setCalendarToken] = useState<string>('');
 
   const [indexDocuments, setIndexDocuments] = useState<boolean>(true);
   const [indexDownloads, setIndexDownloads] = useState<boolean>(true);
@@ -67,6 +70,20 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: telegramToken, owner_id: telegramOwnerId })
+        });
+      }
+      if (gmailAddress && gmailPassword) {
+        await apiFetch('/api/workspace/gmail/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: gmailAddress, password: gmailPassword })
+        });
+      }
+      if (calendarToken) {
+        await apiFetch('/api/workspace/calendar/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: calendarToken })
         });
       }
     } catch (e) {
@@ -261,6 +278,41 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
                     placeholder="e.g. 123456789"
                     value={telegramOwnerId}
                     onChange={(_, d) => setTelegramOwnerId(d.value)}
+                    size="small"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#cbd5e1', display: 'block', marginBottom: 4 }}>
+                    Gmail Address & App Password (for read-only email summaries & draft creation)
+                  </label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Input
+                      placeholder="your.email@gmail.com"
+                      value={gmailAddress}
+                      onChange={(_, d) => setGmailAddress(d.value)}
+                      size="small"
+                      style={{ flex: 1 }}
+                    />
+                    <Input
+                      type="password"
+                      placeholder="16-character App Password"
+                      value={gmailPassword}
+                      onChange={(_, d) => setGmailPassword(d.value)}
+                      size="small"
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#cbd5e1', display: 'block', marginBottom: 4 }}>
+                    Google Calendar OAuth Token (for reading & creating events)
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="ya29.a0... Bearer Token"
+                    value={calendarToken}
+                    onChange={(_, d) => setCalendarToken(d.value)}
                     size="small"
                     style={{ width: '100%' }}
                   />

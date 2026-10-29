@@ -1,6 +1,7 @@
 """
 Phenom Tech News Briefing (Phase 5)
 Aggregates and formats tech briefings from Hacker News, TechCrunch, and The Verge RSS feeds.
+Never fabricates articles on network failure.
 """
 
 import feedparser
@@ -31,7 +32,7 @@ class TechNewsBriefing:
                     "summary": entry.get("summary", "")[:200].replace("\n", " ") + "..." if entry.get("summary") else ""
                 })
         except Exception as e:
-            print(f"[TechNewsBriefing] Error parsing {source_name}: {e}")
+            pass
         return items
 
     async def get_briefing(self, items_per_source: int = 3) -> Dict[str, Any]:
@@ -48,31 +49,19 @@ class TechNewsBriefing:
             if isinstance(res, list):
                 all_articles.extend(res)
 
-        # Fallback if network was unavailable
+        # On network failure or offline: return typed error record with 0 articles, never fabricate
         if not all_articles:
-            all_articles = [
-                {
-                    "source": "Hacker News",
-                    "title": "Show HN: Phenom - Personal Windows 11 AI Assistant",
-                    "link": "https://news.ycombinator.com",
-                    "published": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"),
-                    "summary": "Fast, local-first assistant with voice, safety tiers, and memory."
-                },
-                {
-                    "source": "TechCrunch",
-                    "title": "Next-Generation On-Device AI Models Redefine Privacy",
-                    "link": "https://techcrunch.com",
-                    "published": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"),
-                    "summary": "Edge devices and local models bring low-latency intelligence without cloud leakage."
-                },
-                {
-                    "source": "The Verge",
-                    "title": "Windows 11 AI Integration and GPU Acceleration Trends",
-                    "link": "https://theverge.com",
-                    "published": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"),
-                    "summary": "Exploring modern desktop assistant UX and particle orb animations."
-                }
-            ]
+            return {
+                "ok": False,
+                "error": "network_unavailable",
+                "provider": "rss_feeds",
+                "articles_count": 0,
+                "articles": [],
+                "briefing_markdown": "Tech news briefing unavailable: network offline.",
+                "stale": True,
+                "fetched_at": None,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
 
         # Formatted briefing text
         lines = ["**Phenom Tech Briefing:**\n"]
@@ -82,9 +71,52 @@ class TechNewsBriefing:
                 lines.append(f"  _{art['summary']}_")
 
         return {
+            "ok": True,
             "articles_count": len(all_articles),
             "articles": all_articles,
             "briefing_markdown": "\n".join(lines),
+            "stale": False,
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+
+    async def get_morning_briefing(self) -> Dict[str, Any]:
+        """
+        Produces full morning briefing:
+        1. Tech news briefing.
+        2. Unread email summary if Gmail is authenticated.
+        If Gmail is not authenticated, appends:
+        'Email summary skipped: Gmail integration is not connected or authenticated.'
+        """
+        from services.backend.integrations.google_workspace import google_workspace
+
+        news_res = await self.get_briefing()
+        briefing_parts = []
+        if news_res.get("ok", True) and news_res.get("briefing_markdown"):
+            briefing_parts.append(news_res["briefing_markdown"])
+        else:
+            briefing_parts.append("Tech news briefing unavailable: network offline.")
+
+        briefing_parts.append("\n**Email Updates:**")
+        if not google_workspace.is_gmail_configured():
+            briefing_parts.append("Email summary skipped: Gmail integration is not connected or authenticated.")
+        else:
+            try:
+                unread = google_workspace.search_emails(query="UNSEEN", max_results=5)
+                if unread:
+                    briefing_parts.append(f"You have {len(unread)} recent unread email(s):")
+                    for m in unread:
+                        briefing_parts.append(f"• From: {m.get('from', 'Unknown')} - {m.get('subject', 'No Subject')}")
+                else:
+                    briefing_parts.append("Inbox clean: no unread emails.")
+            except Exception as e:
+                briefing_parts.append(f"Could not retrieve unread emails: {e}")
+
+        full_markdown = "\n".join(briefing_parts)
+        return {
+            "ok": True,
+            "briefing_markdown": full_markdown,
+            "news": news_res,
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
