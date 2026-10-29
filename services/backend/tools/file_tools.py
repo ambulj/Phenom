@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 import send2trash
 from services.backend.safety.registry import registry
+from services.backend.safety.path_guard import validate_path
 
 # ==========================================
 # Tier 0 (Read-Only) File Tools
@@ -197,7 +198,7 @@ class RecycleDeleteArgs(BaseModel):
     can_remember_per_folder=False # Never remembered per SAFETY.md
 )
 def recycle_delete(path: str) -> Dict[str, Any]:
-    norm_path = os.path.abspath(path)
+    norm_path = validate_path(path, mode="delete")
     if not os.path.exists(norm_path):
         raise FileNotFoundError(f"Path does not exist: {path}")
     # Enforces Permanent Rule 7: Delete means recycle bin. Never permanent delete.

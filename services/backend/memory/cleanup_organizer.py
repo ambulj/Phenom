@@ -15,6 +15,7 @@ import uuid
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 import send2trash
+from services.backend.safety.path_guard import validate_batch_size, validate_path
 
 CATEGORY_MAP = {
     # Documents
@@ -110,6 +111,7 @@ class CleanupOrganizer:
         Returns execution summary and undo_token.
         """
         steps = dry_run_plan.get("steps", [])
+        validate_batch_size(steps, max_allowed=10, operation_name="organize_downloads_apply")
         undo_token = f"undo-{uuid.uuid4().hex[:12]}"
         undo_ledger = []
         executed_count = 0

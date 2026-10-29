@@ -12,6 +12,8 @@ from services.backend.safety.registry import registry, ToolDefinition
 from services.backend.safety.action_log import action_log
 from services.backend.safety.approvals import approvals
 from services.backend.safety.guardian import guardian
+from services.backend.safety.path_guard import validate_path, validate_batch_size, PathSecurityViolation, BatchLimitExceededError
+from services.backend.safety.taint import taint_tracker
 
 # Confirmation callback hook set by WebSocket server
 # Signature: async def request_confirmation(request_id, tool, tier, preview, args, can_remember, folder_path, timeout) -> (decision, remember_choice)
@@ -115,6 +117,55 @@ class SafetyExecutionEngine:
                 )
                 raise PermissionError(f"Tier 3 tool '{tool_name}' is blocked by default.")
 
+        # Guard 3b: Path Security & Guardrails (Task 7a)
+        path_mode = "read"
+        if tool_name in ["create_file", "write_file", "create_folder", "copy_file", "move_file", "generate_document", "pdf_merge_files", "pdf_split_pages"]:
+            path_mode = "write"
+        elif tool_name in ["recycle_delete", "delete_file", "delete_folder"]:
+            path_mode = "delete"
+
+        for arg_key in ["path", "src", "dest", "directory", "folder_path", "filename"]:
+            raw_val = validated_args.get(arg_key)
+            if raw_val and isinstance(raw_val, str):
+                try:
+                    validate_path(raw_val, mode=path_mode)
+                except PathSecurityViolation as pse:
+                    action_log.log_action(
+                        tool=tool_name,
+                        tier=tier,
+                        args=validated_args,
+                        decision="blocked",
+                        result_status="BLOCKED_BY_GUARDRAILS",
+                        source=source,
+                        error=str(pse)
+                    )
+                    raise PermissionError(str(pse))
+
+        # Check list of paths / batch size if present
+        for list_key in ["files", "file_paths", "items"]:
+            list_val = validated_args.get(list_key)
+            if list_val and isinstance(list_val, list):
+                try:
+                    validate_batch_size(list_val, max_allowed=10, operation_name=tool_name)
+                    for p in list_val:
+                        if isinstance(p, str):
+                            validate_path(p, mode=path_mode)
+                except (PathSecurityViolation, BatchLimitExceededError) as ge:
+                    action_log.log_action(
+                        tool=tool_name,
+                        tier=tier,
+                        args=validated_args,
+                        decision="blocked",
+                        result_status="BLOCKED_BY_GUARDRAILS",
+                        source=source,
+                        error=str(ge)
+                    )
+                    raise PermissionError(str(ge))
+
+        # Guard 3c: Taint & Injection Defense (Task 7a)
+        effective_tier, taint_warning = taint_tracker.check_tool_escalation(tool_name, tier)
+        tier = effective_tier
+
         # Guard 4: Tier 0 (Read-Only) -> Auto-run
         if tier == 0:
             return await self._run_and_log(tool_def, validated_args, decision="auto", source=source)
@@ -125,13 +176,15 @@ class SafetyExecutionEngine:
         if folder_for_approval and os.path.isfile(folder_for_approval):
             folder_for_approval = os.path.dirname(folder_for_approval)
 
-        if tier == 1 and approvals.is_remembered(tool_name, tier, folder_for_approval):
+        if tier == 1 and not taint_tracker.is_tainted and approvals.is_remembered(tool_name, tier, folder_for_approval):
             return await self._run_and_log(tool_def, validated_args, decision="auto", source=source)
 
         # Guard 6: Tier 1 or Tier 2 Confirmation
         preview_text = tool_def.generate_preview(validated_args)
+        if taint_warning:
+            preview_text = f"[{taint_warning}]\n{preview_text}"
         req_id = f"conf-{tool_name}-{os.urandom(4).hex()}"
-        can_remember = (tier == 1) and bool(folder_for_approval)
+        can_remember = (tier == 1) and bool(folder_for_approval) and not taint_tracker.is_tainted
 
         handler_to_use = (
             self._remote_confirmation_handler

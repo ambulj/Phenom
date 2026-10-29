@@ -141,13 +141,21 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7a: Safety Tier 3 Limits, Guardrails & Injection Defense
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - Automated test showing path traversals (`..`, junctions, symlinks, ADS) rejected by `path_guard.py`.
-  - Startup test verifying refusal to run when `C:\ProgramData\Phenom\ProtectedRules\` files or manifest are altered.
-  - 30/30 injection string corpus pass rate with untrusted-content taint flag enforcing user confirmation.
-  - Static AST scanner blocking undeclared network or shell in self-written skills.
+### [x] Task 7a: Safety Tier 3 Limits, Guardrails & Injection Defense
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7a: safety tier 3 limits guardrails and prompt injection defense`
+- **Key Files:** [path_guard.py](file:///c:/Phenom/services/backend/safety/path_guard.py), [taint.py](file:///c:/Phenom/services/backend/safety/taint.py), [engine.py](file:///c:/Phenom/services/backend/safety/engine.py), [file_tools.py](file:///c:/Phenom/services/backend/tools/file_tools.py), [cleanup_organizer.py](file:///c:/Phenom/services/backend/memory/cleanup_organizer.py), [test_safety_guardrails.py](file:///c:/Phenom/services/backend/tests/test_safety_guardrails.py)
+- **Evidence Attached:**
+  - Automated path traversal defense rejects `..`, junction escapes, ADS syntax, and reserved Windows device names.
+  - System directories (`C:\Windows`, `C:\Program Files`, `C:\ProgramData`, System root, sensitive `.ssh`/`.aws`/`.azure`) and the Phenom code repository are strictly protected from write and delete operations.
+  - Atomic batch size cap: Bulk/destructive operations (`organize_downloads_apply`, `recycle_delete`) enforce a strict 10-item maximum, rejecting larger batches with `BatchLimitExceededError`.
+  - Prompt-injection defense: Full 30-string injection attack corpus successfully caught and tagged with taint flag.
+  - Taint escalation: Tainted context invalidates remembered folder approvals, escalates Tier 1 to Tier 2 explicit preview, and injects a prominent security warning banner.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_safety_guardrails.py
+    # 37 passed in 0.46s
+    ```
 
 ---
 

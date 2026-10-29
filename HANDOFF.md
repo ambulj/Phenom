@@ -18,12 +18,12 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **121 passed, 28 warnings in 51.06s** (0 failed, 0 errors).
+- **Result**: **158 passed, 28 warnings in 42.68s** (0 failed, 0 errors).
 - **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
 
 ### Secret Scanner Run
 - **Command**: `python scripts/scan_secrets.py --all`
-- **Result**: **159 tracked files scanned. 0 secrets or blocked files found.**
+- **Result**: **163 tracked files scanned. 0 secrets or blocked files found.**
 
 ### Import Coverage Audit
 - **Audit Command**: `python services/backend/scripts/audit_imports.py`
