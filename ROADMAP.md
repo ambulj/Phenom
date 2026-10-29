@@ -1,0 +1,220 @@
+# Phenom Project Roadmap & Task Verification Checklist
+
+In strict adherence to project rules, an item in this checklist is marked complete (`[x]`) **only** when its concrete evidence (command output, test result, or screenshot) is permanently attached or linked. Unverified tasks remain strictly unchecked (`[ ]`).
+
+---
+
+## Hardening Pass 1: Core Reliability & Security (Tasks 1–6)
+
+### [x] Task 1: Authenticate WebSocket & Lock Down HTTP Surface (Fixes F1)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `dd206bf task 1: authenticate websocket and lock down http surface`
+- **Key Files:** [preload.cjs](file:///c:/Phenom/apps/desktop/electron/preload.cjs), [main.cjs](file:///c:/Phenom/apps/desktop/electron/main.cjs), [main.py](file:///c:/Phenom/services/backend/main.py), [test_ws_auth.py](file:///c:/Phenom/services/backend/tests/test_ws_auth.py)
+- **Evidence Attached:**
+  - Fast-failing authentication: WebSocket connection without `Sec-WebSocket-Protocol: phenom.<token>` is closed with code `4401`.
+  - Origin allowlist validation: Rejects non-app origins; localhost allowed only when `PHENOM_DEV=1`.
+  - REST endpoints protected with Bearer token authentication; `/health` returns minimal `{"status":"ok"}`.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_ws_auth.py -v
+    # 9 passed in 1.48s
+    ```
+
+---
+
+### [x] Task 2: Complete & Reproducible Dependencies (Fixes F2)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `c92cfab task 2: make dependencies complete and reproducible`
+- **Key Files:** [audit_imports.py](file:///c:/Phenom/services/backend/scripts/audit_imports.py), [requirements.txt](file:///c:/Phenom/services/backend/requirements.txt), [requirements-windows.txt](file:///c:/Phenom/services/backend/requirements-windows.txt), [requirements-dev.txt](file:///c:/Phenom/services/backend/requirements-dev.txt), [requirements.lock.txt](file:///c:/Phenom/services/backend/requirements.lock.txt)
+- **Evidence Attached:**
+  - Clean venv verification (`.venv-clean`): `pip check` confirmed zero broken requirements.
+  - AST Import Audit:
+    ```powershell
+    python services/backend/scripts/audit_imports.py
+    # Audited 33 third-party imports across C:\Phenom\services\backend...
+    # SUCCESS: 0 missing dependencies! All third-party imports are covered by requirements.
+    ```
+
+---
+
+### [x] Task 3: Test Infrastructure & Continuous Integration (Fixes F3)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `44ae842 task 3: fix test setup and add ci`
+- **Key Files:** [pytest.ini](file:///c:/Phenom/pytest.ini), [conftest.py](file:///c:/Phenom/services/backend/tests/conftest.py), [.github/workflows/ci.yml](file:///c:/Phenom/.github/workflows/ci.yml)
+- **Evidence Attached:**
+  - Automated skip logic for `windows_only` and PortAudio-dependent tests on non-Windows/CI runners.
+  - Dual CI matrix jobs configured for Windows and Ubuntu runners.
+  - Local execution proof:
+    ```powershell
+    python -m pytest services/backend/tests/test_safety.py services/backend/tests/test_router.py
+    # 16 passed in 1.12s
+    ```
+
+---
+
+### [x] Task 4: Python Version Guard & Installer Prerequisites (Fixes F5)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `200b65e task 4: python version guard and installer prerequisites`
+- **Key Files:** [pythonVersion.cjs](file:///c:/Phenom/apps/desktop/electron/pythonVersion.cjs), [main.cjs](file:///c:/Phenom/apps/desktop/electron/main.cjs), [FirstRunWizard.tsx](file:///c:/Phenom/apps/desktop/src/components/FirstRunWizard.tsx)
+- **Evidence Attached:**
+  - Parse and validation test:
+    ```powershell
+    node apps/desktop/test_python_version.js
+    # [PASS] Parsed Python 3.11.9: { major: 3, minor: 11, patch: 9 }
+    # [PASS] Version check >= 3.11: true
+    # [PASS] Python 3.10.8 rejected: false
+    # [PASS] System Python detected: Python 3.11.9
+    ```
+  - Uncommitted `__pycache__` check: `git ls-files | findstr pycache` returns 0 tracked files.
+
+---
+
+### [x] Task 5: Rewrite HANDOFF.md Honestly (Fixes F4)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `556ae4c task 5: rewrite handoff.md honestly`
+- **Key File:** [HANDOFF.md](file:///c:/Phenom/HANDOFF.md)
+- **Evidence Attached:**
+  - Removed ungrounded claims ("100% complete", "Known issues: None").
+  - Grounded verification matrix documenting exact commit references, test coverage, and active known issues.
+
+---
+
+### [x] Task 6: External Vault, Commit Guard & Dynamic Git Permissions (Fixes F6)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `0726480 task 6: move vault out of repo and add commit guard`
+- **Key Files:** [config.toml](file:///c:/Phenom/config.toml), [vault.py](file:///c:/Phenom/services/backend/memory/vault.py), [git_tools.py](file:///c:/Phenom/services/backend/tools/git_tools.py), [scan_secrets.py](file:///c:/Phenom/scripts/scan_secrets.py), [install_hooks.ps1](file:///c:/Phenom/scripts/install_hooks.ps1)
+- **Evidence Attached:**
+  - Fixed Vault Path Across Directories:
+    ```powershell
+    # Working dir: C:\Phenom -> Resolved Vault Path: C:\Users\sauja\Documents\Phenom\vault
+    # Working dir: C:\Users\sauja -> Resolved Vault Path: C:\Users\sauja\Documents\Phenom\vault
+    # Working dir: C:\Users\sauja\AppData\Local\Temp -> Resolved Vault Path: C:\Users\sauja\Documents\Phenom\vault
+    # PASS: All 3 working directories resolve to identical vault path: C:\Users\sauja\Documents\Phenom\vault
+    ```
+  - Code Repo Git Status: Shows 0 files from vault.
+  - Secret Scanner & Pre-Commit Hook:
+    ```powershell
+    # Test staged .env -> Exit Code 1 (Blocked: '*.env')
+    # Test staged nvapi- secret -> Exit Code 1 (Blocked: 'NVIDIA API Key')
+    # Tracked repo scan: 157 tracked files scanned. 0 secrets found.
+    ```
+  - Nightly Push Against Throwaway Private Remote: Verified commit and push; code repository remote collision strictly refused.
+  - Dynamic Git Permissions: Vault repo operations auto-approved (Tier 0); code repo operations require physical confirmation (Tier 2).
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_vault_git.py services/backend/tests/test_secret_scan.py
+    # 36 passed in 1.45s
+    ```
+
+---
+
+## Hardening Pass 2: Architecture & Hardening Specifications (Task 7)
+
+### [x] Task 7: Architectural Planning (`PLAN_NEXT.md`)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `e0f48e2 task 7: produce next phase hardening plan`
+- **Key Files:** [PLAN_NEXT.md](file:///c:/Phenom/PLAN_NEXT.md), [ARCHITECTURE.md](file:///c:/Phenom/ARCHITECTURE.md)
+- **Evidence Attached:**
+  - Produced 11-section comprehensive blueprint covering 7a through 7k.
+  - Updated [ARCHITECTURE.md](file:///c:/Phenom/ARCHITECTURE.md) Section 3 with new cloud escalation and privacy rules.
+
+---
+
+### [ ] Task 7a: Safety Tier 3 Limits, Guardrails & Injection Defense
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Automated test showing path traversals (`..`, junctions, symlinks, ADS) rejected by `path_guard.py`.
+  - Startup test verifying refusal to run when `C:\ProgramData\Phenom\ProtectedRules\` files or manifest are altered.
+  - 30/30 injection string corpus pass rate with untrusted-content taint flag enforcing user confirmation.
+  - Static AST scanner blocking undeclared network or shell in self-written skills.
+
+---
+
+### [ ] Task 7b: Reliability: Clean-Machine End-to-End Test in a VM
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Complete PowerShell transcript of VM execution from `git clone` to live command.
+  - Watchdog recovery log showing backend relaunch within 2000 ms of process termination.
+  - Rollback log demonstrating safe recovery after simulated update failure.
+  - Uninstaller cleanliness log showing zero leftover registry keys or orphaned tasks.
+
+---
+
+### [ ] Task 7c: Voice: Hindi/Hinglish Accuracy & Speaker Verification
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Benchmark report of faster-whisper model sizes on Intel Core i5 showing latency vs. WER.
+  - Speaker verification evaluation report on 50 owner utterances showing FAR $< 1.5\%$ and FRR $< 3.5\%$.
+  - Single-button voice data wipe test demonstrating zero byte residue on disk.
+
+---
+
+### [ ] Task 7d: Performance on 6 to 8 GB VRAM & Adaptive Loading
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Profiling log: Time to First Token $< 2$ s, idle RAM $< 1$ GB.
+  - Adaptive unloading verification: VRAM drops below 100 MB when game executable launches.
+  - Stress test report demonstrating automated FIFO snapshot pruning when storage exceeds 45 GB.
+
+---
+
+### [ ] Task 7e: Screen Control Safety UX
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Visual screenshot of 4px colored overlay border during mouse/keyboard automation.
+  - Automated test demonstrating instant automation pause ($< 15$ ms) upon user mouse movement.
+  - Audio playback verification for start, stop, and halt chimes.
+
+---
+
+### [ ] Task 7f: Router & Privacy Classifier with Multi-Provider Fallback
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Evaluation report on 100-prompt multilingual benchmark showing $100\%$ precision on known-private data (zero false negatives).
+  - Rate-limit cascade test demonstrating seamless failover from NVIDIA Nemotron to secondary free tiers and local 8B.
+
+---
+
+### [ ] Task 7g: Telegram Workflow & Remote PIN Security
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Screenshot obfuscation proof showing 35px blur applied over sensitive desktop windows.
+  - PIN lifecycle verification: Lockout after 3 failed tries; message auto-deletion via Telegram API within 15 seconds.
+  - Local audio transcription and TTS voice message replies verified.
+
+---
+
+### [ ] Task 7h: Orb, Panel & Conversational Voice UX
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Three.js particle LOD test showing particle reduction from 15,000 (60 fps) to freeze state under GPU load.
+  - Spoken "Good Morning" briefing execution transcript under 60 seconds with full text committed to vault daily log.
+  - Proof that voice commands cannot alter security tiers or protected rules.
+
+---
+
+### [ ] Task 7i: Coding Agent Safety & Typosquat Protection
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Workspace isolation proof showing original project directory unmodified during execution.
+  - Typosquatting detection test flagging 20/20 suspicious package names.
+  - Guardian kill switch test terminating active coding runner and all child processes.
+
+---
+
+### [ ] Task 7j: Gaming Mode & Notification Digest
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Detection log triggering gaming mode on game executables and full-screen DirectX/Vulkan apps.
+  - Exclusions verified for browsers, video players, presentations, and remote desktop.
+  - "What did I miss" digest audio proof summarizing missed alerts with zero OTP or private message leaks.
+
+---
+
+### [ ] Task 7k: Providers, Usage Panel, Onboarding, Reset & Uninstall
+- **Status:** PLANNED (Awaiting Implementation Approval)
+- **Required Evidence:**
+  - Usage panel displaying daily/monthly call counts and load history from encrypted SQLite database.
+  - Zero-drift self-help test generating tool capabilities directly from `registry.list_all()`.
+  - Four granular reset tests (Settings, Memory, Voice, Factory) with verification of erased artifacts.
+  - Secret scanner verification on export ZIP archive demonstrating zero credential leakage.

@@ -554,6 +554,107 @@ sequenceDiagram
 
 ---
 
+## 7k. Providers, Usage Panel, Onboarding, Reset, and Uninstall
+
+### 1. Multi-Provider Router Configuration (`config.toml`)
+- The router config maintains an ordered provider cascade. Owners can reorder, enable, or disable providers via Settings:
+```toml
+[providers]
+# Evaluated top-to-bottom for eligible non-private queries
+active_order = [
+    "nvidia_nemotron",
+    "gemini_flash",
+    "groq_llama",
+    "openrouter",
+    "mistral",
+    "ollama_local"
+]
+
+[providers.nvidia_nemotron]
+enabled = true
+base_url = "https://integrate.api.nvidia.com/v1"
+model = "meta/llama-3.1-405b-instruct"
+rpm_limit = 40
+daily_quota = 1000
+
+[providers.gemini_flash]
+enabled = true
+model = "gemini-1.5-flash"
+rpm_limit = 15
+daily_quota = 1500
+
+[providers.groq_llama]
+enabled = true
+model = "llama-3.3-70b-versatile"
+rpm_limit = 30
+daily_quota = 1000
+
+[providers.openrouter]
+enabled = true
+model = "meta-llama/llama-3.3-70b-instruct:free"
+
+[providers.mistral]
+enabled = false
+model = "mistral-small-latest"
+
+[providers.ollama_local]
+enabled = true
+model = "llama3.1:8b"
+```
+- **Universal Privacy Invariant**: The exact same privacy classification and secret redaction rules apply equally to every external provider. Private data is strictly confined to `ollama_local` on the physical PC.
+
+### 2. Usage Tracking Panel & Quota Estimation
+- **Storage**: Logged to encrypted SQLCipher table `provider_usage_history` (retention: 90 days rolling).
+- **Recorded Metrics**:
+  - Provider name, timestamp, prompt tokens, completion tokens, response latency ms.
+  - Rate-limit encounters (`429 Too Many Requests`), last error timestamp, and error message.
+  - Local model load, unload, and idle timeout events.
+- **Quota & Limit Estimation**:
+  - When upstream providers do not report remaining quotas via response headers, the backend tracks rolling token consumption against configured `rpm_limit` and `daily_quota`.
+  - Settings UI displays daily and monthly consumption gauges, rate-limit warnings, and recent provider routing breakdowns.
+
+### 3. Interactive First-Run Onboarding Tutorial
+- Guided 4-step wizard for new installations:
+  1. *Voice Biometrics Enrollment*: Guides owner through speaking 20 calibration phrases across quiet and noisy conditions; tests wake word detection.
+  2. *Safety Tiers & Human Confirmation*: Demonstrates Tier 0 (auto-run) vs. Tier 1/2 confirmation dialogs; prompts owner to configure their personal confirmation phrase.
+  3. *Kill Switch & Physical Hotkeys*: Interactive check for `Ctrl+Alt+Pause` Guardian kill switch and `Alt+Space` Push-to-Talk.
+  4. *Telegram Remote Pairing*: Displays one-time QR code and pairing token for linking owner's Telegram account.
+
+### 4. Dynamic Self-Help & Zero-Drift Documentation
+- Natural language queries like *"What can you do?"*, *"List tools"*, or *"How do I change hotkeys?"* query `/api/help/capabilities`.
+- The handler inspects `registry.list_all()`, docstrings, argument schemas, and active `config.toml` settings in real time.
+- Documentation is dynamically synthesized from live code contracts, preventing documentation drift.
+
+### 5. Granular Reset Controls
+The Settings Panel provides four distinct reset actions, each previewing affected items and requiring explicit typed confirmation:
+1. **Reset Settings**: Reverts `config.toml` to defaults; leaves notes, memory, audio, and credentials untouched.
+2. **Clear Memory**: Purges conversational memory, SQLite vector embeddings, and learned rules; preserves vault documents and voice profiles.
+3. **Delete Voice Data**: Wipes raw audio files in `%APPDATA%\Phenom\voice_store\`, clears enrolled ECAPA-TDNN speaker profiles, and zeroes memory sectors.
+4. **Remove Everything (Factory Reset)**: Wipes all databases, indexes, configuration, voice data, and deletes all `Phenom/*` keys in Windows Credential Manager.
+
+### 6. Clean Uninstallation & Data Privacy
+- Uninstaller wizard offers two explicit paths:
+  - **Retain Personal Data (Recommended)**: Removes executable binaries and services; preserves vault notes (`Documents\Phenom\vault`) and memory database for future upgrades.
+  - **Complete Scrub**: Deletes all Phenom directories (`%APPDATA%\Phenom`, `%PROGRAMDATA%\Phenom`), purges all registry keys (`HKCU\Software\Phenom`), and deletes all stored credentials in Windows Credential Manager via `win32cred.CredDelete`.
+
+### 7. One-Click Data Export
+- Creates an export ZIP archive at `%USERPROFILE%\Documents\Phenom\Output\phenom_export_<date>.zip` containing:
+  - Plaintext Markdown Obsidian vault notes.
+  - Sanitized memory database dump (memories, facts, rules).
+  - Anonymized action log history.
+  - Non-secret configuration file `config.toml`.
+- **Secret Exclusion Guarantee**:
+  - Excludes all `.env*`, `*.db`, `*.key`, `*.pem`, and Credential Manager files.
+  - Runs `scripts/scan_secrets.py` on the staging folder before compression; aborts packaging if any secret pattern or blocked path is detected.
+
+### 8. Voice Error UX & Action Log Security
+- **Voice Errors**: When an action fails, Phenom speaks a single short, conversational sentence (e.g., *"I couldn't search the web because the connection timed out"*); full stack traces are surfaced only in the desktop Action Log panel.
+- **Action Log Security**:
+  - Arguments are sanitized via `scan_secrets.py` redaction regexes before database persistence.
+  - Action log records are stored inside encrypted SQLCipher DB, capped at 90 days retention, and purged automatically during `forget this` commands.
+
+---
+
 ## Implementation Roadmap & Effort Estimates
 
 | Area | Title / Focus | Deliverables | Risk Level | Effort Estimate |
@@ -568,11 +669,12 @@ sequenceDiagram
 | **7h** | Orb, Panel & Voice UX | Three.js particle orb, adaptive LOD, morning briefing flow | Medium | 16 hrs |
 | **7i** | Coding Agent Safety | Workspace copier, diff engine, typosquat detection suite | High | 16 hrs |
 | **7j** | Gaming Mode & Notification Digest | DirectX detector, power plan switcher, notification filter | Low | 8 hrs |
-| **Total** | **Comprehensive Hardening Implementation** | | | **128 hrs** |
+| **7k** | Providers, Onboarding, Reset & Uninstall | Multi-provider cascade, usage panel, reset flows, export zip | Medium | 16 hrs |
+| **Total** | **Comprehensive Hardening Implementation** | | | **144 hrs** |
 
 ---
 
 ## Conclusion & Next Steps
-All architectural requirements from the review, owner decisions (rounds 1, 2, and 3), and safety guidelines are fully articulated in this plan. [ARCHITECTURE.md](file:///c:/Phenom/ARCHITECTURE.md) Section 3 has been updated in place to codify the new non-private cloud escalation policy.
+All architectural requirements from the review, owner decisions (rounds 1, 2, 3, and 4), and safety guidelines are fully articulated in this plan. [ARCHITECTURE.md](file:///c:/Phenom/ARCHITECTURE.md) Section 3 has been updated in place to codify the new non-private cloud escalation policy.
 
 In accordance with user rules, implementation is halted. Standing by for owner review and approval before starting code implementation on any planned section.
