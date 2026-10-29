@@ -258,3 +258,11 @@ esearch_papers) for scoped cosine similarity retrieval.
 3. **Dual Automation Scheduling (Task Scheduler + APScheduler)**: Time-critical wake-from-sleep automations (e.g. 8:00 AM morning standup) register with Windows Task Scheduler, while in-session background loops utilize in-process APScheduler.
 4. **Dynamic Context Budgeting & Hybrid Offloading**: The 8B local LLM defaults to an 8,192 token window, dynamically scaling to 16k/32k via RoPE scaling when analyzing large files (enforcing >=1.5 GB free GPU VRAM headroom), falling back to hybrid CPU/GPU offload for massive repositories.
 
+---
+
+## 28. AST Refactoring, Calibration & Ephemeral Privacy Architecture (Locked In)
+1. **AST-Aware Semantic Refactoring**: Multi-file refactorings leverage `ast-grep` / tree-sitter for syntax-tree aware replacements rather than brittle regex, presenting an aggregated multi-file diff preview in the HUD before disk modification.
+2. **Adaptive Acoustic False-Positive Calibration**: On accidental wake-word trigger, saying 'false trigger' or pressing Escape logs the 2-second pre-roll audio snippet to an encrypted local training dataset to fine-tune wake-word rejection.
+3. **Ephemeral In-Memory Clipboard Buffer**: Clipboard history retains a maximum of 20 items in volatile RAM only, automatically scrubbed of API keys/passwords, and purged immediately on Windows lock or app shutdown.
+4. **Permanent Obsidian Web Research Archive**: Scraped technical documentation and research articles are cleaned and saved permanently to `vault/Study/Web Research/YYYY-MM/` with source URLs, executive summaries, and key takeaways.
+

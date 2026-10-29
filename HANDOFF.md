@@ -290,3 +290,9 @@ esearch_papers).
 - **Isolated Clean UTF-8 PowerShell 7**: Execution in clean `pwsh` environment without personal profile side-effects and strict UTF-8 encoding.
 - **Dual Automation Scheduling**: Native Windows Task Scheduler for morning briefings/wakes + APScheduler for runtime in-process jobs.
 - **Dynamic Context Budgeting & Hybrid Offload**: 8k baseline scaling to 16k/32k via RoPE with >=1.5GB VRAM safety buffer, with CPU offload support for massive files.
+
+### AST Refactoring, Calibration & Ephemeral Privacy (Round 48)
+- **AST-Aware Semantic Refactoring**: Tree-sitter / ast-grep symbol replacement across files with aggregated visual diff in HUD.
+- **Adaptive Acoustic Calibration**: Saying 'false trigger' or hitting Escape saves 2s encrypted snippet to tune future rejection.
+- **Ephemeral In-Memory Clipboard Buffer**: Last 20 items in volatile RAM scrubbed of secrets, auto-wiped on Windows lock.
+- **Permanent Obsidian Web Archive**: Scraped web research filed in `vault/Study/Web Research/YYYY-MM/` with metadata and summaries.

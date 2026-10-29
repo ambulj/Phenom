@@ -69,6 +69,7 @@ formula_render_katex = true
 task_completion_ping = "soft_chime_and_voice_summary" # Soft Jarvis chime + 1-sentence recap on tasks > 30s
 compound_macros = true                 # Chained multi-step macros ('wrap up today')
 streaming_dictation = true             # Real-time streaming offline dictation with auto-punctuation into active cursor
+false_trigger_calibration = "adaptive_encrypted_snippet" # Saying 'false trigger' or Escape logs 2s audio to encrypted dataset for rejection tuning
 
 [shell]
 default_runner = "pwsh"                # PowerShell 7 primary subprocess runner
@@ -93,6 +94,8 @@ command_palette_fuzzy_finder = true    # Typing #tag or [[note]] in Command Pale
 attachments_path = "vault/Attachments" # Store assets in date-partitioned attachments directory
 attachments_date_partitioning = true   # vault/Attachments/YYYY-MM/
 export_one_click_enabled = true        # 1-click 'Export to Obsidian' note creation
+web_research_path = "vault/Study/Web Research" # Cleaned markdown research archive
+web_research_date_partitioning = true  # vault/Study/Web Research/YYYY-MM/
 
 [memory]
 decay_policy = "spaced_relevance"      # Frequently referenced facts stay permanent; transient notes decay after 14 days
@@ -160,6 +163,8 @@ error_remediation = "proactive_patch_proposal" # On test failure, analyze traceb
 git_pre_push_gate = "autonomous"       # Automatically run tests, linter, and secret scan before drafting clean PRs with changelogs
 layout_presets = true                  # Workspace presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%)
 clipboard_assistance = "smart_dev"     # Auto-detect stack traces, regex, JSON, or git URLs in clipboard and offer 1-click action
+clipboard_history_mode = "ephemeral_in_memory_20" # Last 20 items in memory only, scrubbed of secrets, wiped on screen lock
+refactoring_engine = "ast_grep_with_diff_preview" # Semantic AST-aware symbol renaming with multi-file diff preview in HUD
 context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
 offline_devdocs_cache = true           # Cache core docs (Python, React, FastAPI, PyTorch) locally in SQLite
 monorepo_context_aware = true          # Auto-detect sub-packages and scope tests/lints to touched workspace roots
