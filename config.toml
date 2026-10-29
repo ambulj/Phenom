@@ -4,7 +4,7 @@
 nickname = "Abhi"
 voice_language = "hi-IN"
 cloud_hindi_tts = true
-sarvam_speaker = "chirag_hi_social"
+sarvam_speaker = "abhilash"
 
 [vault]
 # The Obsidian vault folder is stored outside the code repository.

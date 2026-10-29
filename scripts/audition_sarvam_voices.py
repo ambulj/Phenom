@@ -1,12 +1,13 @@
 """
 Phenom Voice Audition Utility: Sarvam AI Bulbul Voices
-Auditions current production Sarvam Hindi speakers (Bulbul v2):
-- chirag_hi_social   (Male, natural, social & casual - RECOMMENDED)
-- suman_hi_companion (Female, warm, friendly companion - RECOMMENDED)
-- vipul_hi_social    (Male, relaxed conversational)
-- aarti_hi_customer  (Female, clear, professional & articulate)
-- advait_hi_character(Male, expressive character voice)
-- vandana_hi_ecomm   (Female, polished & commercial)
+Auditions current valid production Sarvam Hindi speakers (Bulbul v2):
+- abhilash (Male, clear & professional [RECOMMENDED MALE])
+- karun    (Male, warm & natural [RECOMMENDED MALE])
+- hitesh   (Male, friendly & conversational)
+- anushka  (Female, expressive & engaging [RECOMMENDED FEMALE])
+- manisha  (Female, clear & articulate)
+- vidya    (Female, warm & gentle)
+- arya     (Female, bright & modern)
 
 Plays in-memory (RAM only) directly through system audio output.
 """
@@ -23,12 +24,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from services.backend.voice.cloud_tts import sarvam_tts
 
 SPEAKERS = [
-    ("chirag_hi_social", "Male, natural & friendly [RECOMMENDED]"),
-    ("suman_hi_companion", "Female, warm companion [RECOMMENDED]"),
-    ("vipul_hi_social", "Male, relaxed conversational"),
-    ("aarti_hi_customer", "Female, clear & articulate"),
-    ("advait_hi_character", "Male, expressive character voice"),
-    ("vandana_hi_ecomm", "Female, polished & commercial")
+    ("abhilash", "Male, clear & professional [RECOMMENDED MALE]"),
+    ("karun", "Male, warm & natural [RECOMMENDED MALE]"),
+    ("hitesh", "Male, friendly & conversational"),
+    ("anushka", "Female, expressive & engaging [RECOMMENDED FEMALE]"),
+    ("manisha", "Female, clear & articulate"),
+    ("vidya", "Female, warm & gentle"),
+    ("arya", "Female, bright & modern")
 ]
 
 SAMPLE_UTTERANCES = [
@@ -85,6 +87,6 @@ def audition_voices(target_speaker: str = None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Audition Sarvam AI voices for Phenom")
     parser.add_argument("--speaker", default=None,
-                        help="Select a specific speaker to audition (e.g. chirag_hi_social, suman_hi_companion)")
+                        help="Select a specific speaker to audition (e.g. abhilash, karun, anushka)")
     args = parser.parse_args()
     audition_voices(args.speaker)

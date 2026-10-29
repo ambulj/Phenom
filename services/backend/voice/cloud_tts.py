@@ -24,12 +24,21 @@ logger = logging.getLogger("phenom.voice.cloud_tts")
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 CREDENTIAL_KEY = "Phenom/sarvam-api-key"
 
+# Valid production speakers for Sarvam Bulbul v2
+VALID_SPEAKERS = ["anushka", "abhilash", "manisha", "vidya", "arya", "karun", "hitesh"]
+
 # Aliases mapping legacy/generic voice names to current Sarvam Bulbul v2 production speakers
 SPEAKER_ALIASES = {
-    "arvind": "chirag_hi_social",
-    "meera": "suman_hi_companion",
-    "amartya": "vipul_hi_social",
-    "pavithra": "aarti_hi_customer",
+    "arvind": "abhilash",
+    "meera": "anushka",
+    "amartya": "karun",
+    "pavithra": "vidya",
+    "chirag_hi_social": "abhilash",
+    "suman_hi_companion": "anushka",
+    "vipul_hi_social": "karun",
+    "aarti_hi_customer": "vidya",
+    "advait_hi_character": "hitesh",
+    "vandana_hi_ecomm": "manisha"
 }
 
 # Hindi & Hinglish detection patterns
@@ -71,7 +80,7 @@ class SarvamTTSClient:
         self,
         text: str,
         is_shareable: bool = False,
-        speaker: str = "chirag_hi_social",
+        speaker: str = "abhilash",
         model: str = "bulbul:v2"
     ) -> Optional[bytes]:
         """
@@ -106,6 +115,8 @@ class SarvamTTSClient:
 
         # 4. Resolve Speaker
         actual_speaker = SPEAKER_ALIASES.get(speaker, speaker)
+        if actual_speaker not in VALID_SPEAKERS:
+            actual_speaker = "abhilash"
 
         # 5. Invoke Sarvam Bulbul API
         headers = {
