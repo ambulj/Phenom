@@ -1,10 +1,17 @@
 # Phenom Desktop Assistant Configuration
 
+[assistant]
+nickname = "Abhi"
+voice_language = "hi-IN"
+cloud_hindi_tts = true
+sarvam_speaker = "arvind"
+
 [vault]
 # The Obsidian vault folder is stored outside the code repository.
 # Environment variables like %USERPROFILE% are automatically expanded.
 vault_path = "%USERPROFILE%\\Documents\\Phenom\\vault"
-remote_url = "C:\Users\sauja\AppData\Local\Temp\throwaway_remote_z7efmp5n"
+remote_url = ""
+auto_push = false
 
 [hotkeys]
 push_to_talk = "alt+space"
