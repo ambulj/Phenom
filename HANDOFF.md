@@ -317,4 +317,5 @@ esearch_papers).
   - Full backend test suite: **261 passed, 48 warnings in 85.31s** (`python -m pytest services/backend/tests/ -q`).
   - Desktop frontend build: **Vite & TypeScript clean production build in 21.90s** (`npm --prefix apps/desktop run build`).
   - Smoke test verification: **11/11 Subsystems PASS in 35.77s** (`python scripts/smoke_test_suite.py`).
-  - Secret scanner: **230 tracked files clean, 0 secrets** (`python scripts/scan_secrets.py --all`).
+  - Secret scanner: **235 tracked files clean, 0 secrets** (`python scripts/scan_secrets.py --all`).
+- **Desktop UI Integration**: Mounted `CommandPalette` (`Alt+Space` / `Ctrl+K`), `StreamingConsole` (`Ctrl+\``), and `HUDCard` directly in [`apps/desktop/src/App.tsx`](file:///c:/Phenom/apps/desktop/src/App.tsx) and added shortcut triggers to [`HeaderBar.tsx`](file:///c:/Phenom/apps/desktop/src/components/HeaderBar.tsx).
