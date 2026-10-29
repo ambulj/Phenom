@@ -52,31 +52,31 @@ export const QUALITY_LOD_CONFIGS: Record<OrbQualityLevel, {
 
 const STATE_CONFIGS = {
   idle: {
-    color: new THREE.Color(0x2b7fff), // calm blue
+    color: new THREE.Color(0x00e5ff), // Electric Cyan (#00E5FF)
     speed: 0.35,
     dispersion: 1.0,
-    brightness: 0.85
+    brightness: 0.90
   },
   listening: {
-    color: new THREE.Color(0x00e5ff), // teal
-    speed: 0.6,
+    color: new THREE.Color(0x38bdf8), // Bright Aqua (#38BDF8)
+    speed: 0.65,
     dispersion: 0.85,
-    brightness: 0.95
-  },
-  thinking: {
-    color: new THREE.Color(0xa855f7), // violet
-    speed: 1.8,
-    dispersion: 1.1,
     brightness: 1.0
   },
+  thinking: {
+    color: new THREE.Color(0xffb300), // Amber Gold (#FFB300)
+    speed: 1.8,
+    dispersion: 1.15,
+    brightness: 1.05
+  },
   speaking: {
-    color: new THREE.Color(0xf59e0b), // amber
+    color: new THREE.Color(0xf59e0b), // Radiant Amber (#F59E0B)
     speed: 2.2,
     dispersion: 1.4,
-    brightness: 1.1
+    brightness: 1.15
   },
   halted: {
-    color: new THREE.Color(0xef4444), // red
+    color: new THREE.Color(0xd32f2f), // Stark Crimson (#D32F2F)
     speed: 0.0,
     dispersion: 0.75,
     brightness: 0.4

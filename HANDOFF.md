@@ -18,7 +18,7 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **237 passed, 48 warnings** (0 failed, 0 errors in 131s).
+- **Result**: **246 passed, 48 warnings** (0 failed, 0 errors in 147s).
 - **Test Command**: python -m pytest services/backend/tests/
 
 ### End-to-End Smoke Verification

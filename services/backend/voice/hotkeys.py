@@ -13,15 +13,29 @@ try:
 except ImportError:
     keyboard = None
 
+from services.backend.memory.vault import load_config
+
 DEFAULT_HOTKEYS = {
-    "push_to_talk": "alt+space",
-    "toggle_phenom": "ctrl+alt+p",
-    "kill_switch": "ctrl+alt+pause"
+    "push_to_talk": "ctrl+space",
+    "toggle_phenom": "alt+space",
+    "kill_switch": "triple_escape"
 }
+
+def get_config_hotkeys() -> Dict[str, str]:
+    try:
+        cfg = load_config()
+        hotkeys_cfg = cfg.get("hotkeys", {})
+        return {
+            "push_to_talk": hotkeys_cfg.get("push_to_talk", DEFAULT_HOTKEYS["push_to_talk"]),
+            "toggle_phenom": hotkeys_cfg.get("toggle_phenom", DEFAULT_HOTKEYS["toggle_phenom"]),
+            "kill_switch": hotkeys_cfg.get("kill_switch", DEFAULT_HOTKEYS["kill_switch"])
+        }
+    except Exception:
+        return dict(DEFAULT_HOTKEYS)
 
 class HotkeyManager:
     def __init__(self, initial_hotkeys: Optional[Dict[str, str]] = None):
-        self._hotkeys: Dict[str, str] = dict(initial_hotkeys or DEFAULT_HOTKEYS)
+        self._hotkeys: Dict[str, str] = dict(initial_hotkeys or get_config_hotkeys())
         self._hooks: Dict[str, Any] = {}
         self._callbacks: Dict[str, Callable[[], None]] = {}
 

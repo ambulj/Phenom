@@ -7,6 +7,7 @@ Safety enforcement:
 """
 
 import os
+import re
 import subprocess
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
@@ -81,3 +82,80 @@ def run_git_command(repo_path: str, command: str, args: Optional[List[str]] = No
 )
 def handle_git_command(repo_path: str, command: str, args: Optional[List[str]] = None) -> Dict[str, Any]:
     return run_git_command(repo_path, command, args)
+
+class GitPrePushArgs(BaseModel):
+    repo_path: str = Field(..., description="Path to the repository to audit before push.")
+    target_branch: Optional[str] = Field(default="main", description="Target base branch for PR.")
+
+def git_pre_push_preview(args: Dict[str, Any]) -> str:
+    repo = args.get("repo_path", "")
+    target = args.get("target_branch", "main")
+    return f"Execute autonomous pre-push quality gate and draft PR description for repo '{repo}' targeting '{target}'."
+
+def run_pre_push_gate(repo_path: str, target_branch: str = "main") -> Dict[str, Any]:
+    resolved = os.path.abspath(os.path.realpath(os.path.expandvars(os.path.expanduser(repo_path))))
+    if not os.path.exists(os.path.join(resolved, ".git")):
+        raise ValueError(f"Path '{resolved}' is not a valid git repository.")
+
+    branch_res = subprocess.run(["git", "branch", "--show-current"], cwd=resolved, capture_output=True, text=True, check=False)
+    current_branch = branch_res.stdout.strip() or "HEAD"
+
+    status_res = subprocess.run(["git", "status", "--porcelain"], cwd=resolved, capture_output=True, text=True, check=False)
+    uncommitted = [line for line in status_res.stdout.splitlines() if line.strip()]
+
+    log_res = subprocess.run(["git", "log", "-n", "5", "--oneline"], cwd=resolved, capture_output=True, text=True, check=False)
+    commits = [c.strip() for c in log_res.stdout.splitlines() if c.strip()]
+
+    diff_res = subprocess.run(["git", "diff", f"{target_branch}...HEAD"], cwd=resolved, capture_output=True, text=True, check=False)
+    diff_text = diff_res.stdout if diff_res.returncode == 0 else ""
+    
+    secret_findings = []
+    suspicious_patterns = [
+        r"(?i)api[_-]?key\s*=\s*['\"][A-Za-z0-9_\-]{16,}['\"]",
+        r"(?i)bearer\s+[A-Za-z0-9_\-\.]{20,}",
+        r"-----BEGIN (RSA|EC|PRIVATE) KEY-----"
+    ]
+    for pat in suspicious_patterns:
+        if re.search(pat, diff_text):
+            secret_findings.append(f"Suspicious pattern matched: {pat}")
+
+    quality_passed = len(secret_findings) == 0
+    commit_bullets = "\n".join(f"- {c}" for c in commits) if commits else "- Minor modifications"
+    check_secrets = "x" if quality_passed else " "
+    check_tree = "x" if not uncommitted else " "
+    verdict_text = "PASS - Ready for review & push" if quality_passed else "BLOCKED - Resolve security findings before push"
+
+    pr_description = f"""## Pull Request: `{current_branch}` -> `{target_branch}`
+
+### Summary of Changes
+{commit_bullets}
+
+### Quality Checklist
+- [{check_secrets}] Zero Secrets Detected ({len(secret_findings)} findings)
+- [{check_tree}] Working tree clean ({len(uncommitted)} uncommitted changes)
+- [x] Automated pre-push validation completed
+
+### Pre-Push Gate Verdict
+**{verdict_text}**
+"""
+
+    return {
+        "verdict": "PASS" if quality_passed else "BLOCKED",
+        "current_branch": current_branch,
+        "target_branch": target_branch,
+        "uncommitted_count": len(uncommitted),
+        "recent_commits": commits,
+        "secret_findings": secret_findings,
+        "pr_markdown": pr_description
+    }
+
+@registry.register(
+    name="git_pre_push_gate",
+    tier=2,
+    description="Runs autonomous pre-push quality gate (secret scanning, diff audit) and generates structured PR description.",
+    args_schema=GitPrePushArgs,
+    preview_fn=git_pre_push_preview,
+    can_remember_per_folder=False
+)
+def handle_git_pre_push_gate(repo_path: str, target_branch: Optional[str] = "main") -> Dict[str, Any]:
+    return run_pre_push_gate(repo_path, target_branch or "main")

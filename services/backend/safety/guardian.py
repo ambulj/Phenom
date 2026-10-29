@@ -7,6 +7,7 @@ in the 'halted' state until explicitly resumed by the user.
 
 import os
 import sys
+import time
 import threading
 import asyncio
 from typing import Set, Callable, Optional, List
@@ -109,10 +110,23 @@ class GuardianKillSwitch:
                 pass
 
     def setup_global_hotkey(self, hotkey: str = "ctrl+alt+pause"):
-        """Configures global system-wide hotkey listener."""
+        """Configures global system-wide hotkey listener, including triple_escape detection."""
         try:
             import keyboard
-            keyboard.add_hotkey(hotkey, lambda: self.trigger(f"global_hotkey_{hotkey}"))
+            clean_hotkey = hotkey.strip().lower()
+            if clean_hotkey == "triple_escape":
+                self._escape_timestamps: List[float] = []
+                def on_escape_press():
+                    now = time.time()
+                    self._escape_timestamps.append(now)
+                    # Keep timestamps within the last 1.0 second
+                    self._escape_timestamps = [t for t in self._escape_timestamps if now - t <= 1.0]
+                    if len(self._escape_timestamps) >= 3:
+                        self._escape_timestamps.clear()
+                        self.trigger("global_hotkey_triple_escape")
+                keyboard.on_press_key("esc", lambda _: on_escape_press())
+            else:
+                keyboard.add_hotkey(clean_hotkey, lambda: self.trigger(f"global_hotkey_{clean_hotkey}"))
         except Exception as e:
             # On non-elevated or background headless runs, graceful notification
             pass
