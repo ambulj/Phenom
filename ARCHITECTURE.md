@@ -219,3 +219,26 @@ esearch_papers) for scoped cosine similarity retrieval.
 3. **Smart Port Conflict Remediation**: When a dev server encounters EADDRINUSE, Phenom identifies the holding PID via psutil, reveals the process in HUD, and offers 1-click kill or alternative port allocation.
 4. **Command Palette Note Fuzzy Finder**: Typing #tag or [[note]] in the Command Palette (Alt+Space) provides instant fuzzy autocomplete and markdown note previews.
 5. **Real-Time Streaming Dictation**: Offline continuous speech dictation streams transcribed text with auto-punctuation directly into the active cursor in any Windows application.
+
+---
+
+## 24. Search, Retrieval & Model Execution Optimization (Locked In)
+1. **Hybrid SQLite FTS5 + Vector Search (RRF)**: Knowledge retrieval combines exact keyword matching via SQLite FTS5 and semantic vector embeddings via Reciprocal Rank Fusion (RRF) for optimal recall across technical code symbols and conversational notes.
+2. **Dynamic Task-Adaptive Sampling**: Model decoding temperature adapts to intent: 0.1 for deterministic coding/tests, 0.3 for architectural research/study notes, and 0.7 for witty conversational banter.
+3. **Sub-50ms Stream Cancellation**: Immediate cancellation of streaming LLM token generation and audio synthesis upon Escape tap, push-to-talk release, or barge-in trigger.
+4. **Offline DevDocs Local Cache**: Core technical documentation (Python, FastAPI, React, PyTorch, TypeScript) is bundled in a local SQLite cache for instantaneous offline query resolution.
+5. **Dynamic Prompt Biasing for Whisper**: Active workspace symbol tables, custom codenames, and recent git diff terminology are dynamically injected into Whisper's initial prompt to boost technical acronym transcription accuracy.
+6. **Mathematical Formula Audio Pacing**: Mathematical equations in study mode are vocalized at a measured 0.85x speed with parallel KaTeX visual rendering in the desktop HUD.
+
+---
+
+## 25. System Ergonomics, Desktop Windows & Developer Toolchain (Locked In)
+1. **Windows 11 Mica / Acrylic Translucency**: Desktop HUD, Command Palette, and Orb floating surfaces leverage Windows 11 Mica / Acrylic translucent glass materials with Electric Cyan and Stark Gold accents.
+2. **Multi-Instance Desktop Support**: Multiple independent Phenom windows can run across distinct monitors without process mutex conflicts.
+3. **Win32 Hotkey Collision Detection**: Global keyboard shortcuts (Alt+Space, Ctrl+Space) are pre-validated against registered OS hotkeys; collisions trigger HUD alerts with 1-click alternative keybinding suggestions.
+4. **Git Pre-Commit Hook Integration**: Local repository commits automatically verify secret leakage and vault references via an automated pre-commit hook before committing.
+5. **Monorepo-Aware Context Targeting**: File changes automatically scope context trees, linting, and unit test runners to the nearest package root rather than executing whole-repository sweeps.
+6. **Refactoring Edit Locality Cap**: Automated code refactorings are capped at 150 modified lines per file per turn, preventing uncontrolled sweeping diffs and enforcing incremental atomic changes.
+7. **Safe Auto-Stash on Branch Switching**: Switching git branches via voice or command palette automatically creates a timestamped stash and re-applies changes cleanly.
+8. **Automated 'phenom doctor' Health Diagnostic**: A built-in CLI diagnostic inspects CUDA availability, GPU VRAM, Python/Node toolchains, Ollama status, and Windows Credential Manager integrity.
+

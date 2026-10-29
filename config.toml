@@ -1,5 +1,5 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-40)
+# Configured and locked per Owner Decisions (Rounds 8-45)
 
 [assistant]
 nickname = "Abhi"
@@ -37,6 +37,10 @@ audit_drawer = "integrated_hud"        # 1-click button to view chronological ac
 terminal_output_style = "collapsible_streaming_console" # Live output stream inside a sleek HUD terminal drawer with syntax highlighting
 window_control = "full"                # App launching, media keys, volume control, window snapping/minimizing
 offline_mode = "seamless_local"        # Seamless local offline mode (switch to local Ollama & offline TTS automatically; show offline badge)
+multi_instance_policy = "allow_multiple_independent" # Allow multiple independent instances across monitors
+material_style = "windows11_mica_acrylic" # Native Windows 11 translucent glass effect with glowing cyan borders
+action_center_toasts = true            # Deliver rich action toasts to Windows 11 Action Center
+compact_environment_header = true      # Compact 2-line environment header in system prompt
 
 [display]
 summon_target = "active_cursor_monitor" # Summon Command Palette and HUD on whichever monitor holds mouse cursor
@@ -49,6 +53,7 @@ push_to_talk = "ctrl+space"
 toggle_phenom = "alt+space"
 kill_switch = "triple_escape"          # Triple-tap Escape for immediate emergency stop
 barge_in_latency_ms = 50               # Ultra-fast TTS cutoff within 50ms upon speech or push-to-talk tap
+conflict_detector_enabled = true       # Detect Win32 hotkey collisions and offer 1-click fallback in HUD
 
 [voice]
 wake_word_threshold = 0.65             # Strict 0.65+ confidence to reject background movie/speech triggers
@@ -57,7 +62,10 @@ wake_word_debounce_seconds = 2         # 2-second debounce & 10s cooldown on fal
 wake_phrases = ["hey_phenom", "jarvis"] # Dual wake-phrases recognized
 speaker_verification = true            # Filter out background chatter/media using enrolled voiceprint
 offline_stt_engine = "whisper_base"    # Quantized Whisper on CUDA/CPU for seamless offline speech recognition
+dynamic_prompt_biasing = true          # Inject project codenames and jargon into Whisper initial prompt
 dynamic_emotional_modulation = true    # Modulate pace/inflection based on task (energetic on build pass, crisp on alerts)
+formula_pronunciation_pace = 0.85      # Measured 0.85x speed on formulas, with KaTeX rendered in HUD
+formula_render_katex = true
 task_completion_ping = "soft_chime_and_voice_summary" # Soft Jarvis chime + 1-sentence recap on tasks > 30s
 compound_macros = true                 # Chained multi-step macros ('wrap up today')
 streaming_dictation = true             # Real-time streaming offline dictation with auto-punctuation into active cursor
@@ -82,6 +90,9 @@ daily_note_template = "structured_engineering" # ## 🎯 Focus & Goals, ## 🔨 
 linking_style = "deep_wikilinks_graph" # Auto-generate [[Topic]] and [[Project]] bidirectional links for rich Obsidian Graph View exploration
 rag_citation_style = "exact_wikilinks" # Exact clickable wikilink citations to note headers or lines ([[Architecture#L42]])
 command_palette_fuzzy_finder = true    # Typing #tag or [[note]] in Command Palette auto-completes vault notes
+attachments_path = "vault/Attachments" # Store assets in date-partitioned attachments directory
+attachments_date_partitioning = true   # vault/Attachments/YYYY-MM/
+export_one_click_enabled = true        # 1-click 'Export to Obsidian' note creation
 
 [memory]
 decay_policy = "spaced_relevance"      # Frequently referenced facts stay permanent; transient notes decay after 14 days
@@ -100,6 +111,7 @@ index_paths = [
 [search]
 engine = "ripgrep"                     # Native Ripgrep (rg.exe) for sub-10ms regex and symbol search
 respect_gitignore = true
+hybrid_fts5_vector_rrf = true          # SQLite FTS5 keyword matching + dense vector similarity with RRF
 
 [photos]
 indexing_mode = "exif_plus_visual_tags" # Read-only EXIF + local AI visual tagging (receipt, whiteboard, diagram, screenshot) stored encrypted
@@ -124,6 +136,8 @@ visual_style = "modern_executive"      # Clean typography, styled tables, visual
 semver_automation = true               # Parse commits and automate SemVer releases
 changelog_generation = true            # Generate formatted CHANGELOG.md entries
 safe_merged_branch_pruning = true      # Offer 1-click cleanup for branches merged into main (preserving main/release)
+install_pre_commit_hook = true         # Auto-scan for secrets and vault notes before every local git commit
+safe_auto_stash_on_switch = true       # Timestamped stash and re-apply on branch switches
 
 [developer]
 toolchain_integration = "deep"         # Auto-detect active git repo, branch, uncommitted diffs, running Docker containers
@@ -147,6 +161,10 @@ git_pre_push_gate = "autonomous"       # Automatically run tests, linter, and se
 layout_presets = true                  # Workspace presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%)
 clipboard_assistance = "smart_dev"     # Auto-detect stack traces, regex, JSON, or git URLs in clipboard and offer 1-click action
 context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
+offline_devdocs_cache = true           # Cache core docs (Python, React, FastAPI, PyTorch) locally in SQLite
+monorepo_context_aware = true          # Auto-detect sub-packages and scope tests/lints to touched workspace roots
+refactoring_diff_line_cap = 150        # Single-turn patches capped at <= 150 lines per file
+doctor_tool_enabled = true             # Automated 'phenom doctor' environment diagnostic checker
 
 [database]
 query_safety = "tiered_dml_preview"    # Read-only queries Tier 0 auto-approved; DDL/DML Tier 2 approval with row preview
@@ -181,6 +199,8 @@ captcha_solve_mode = "visible_browser_popup" # Pop up visible browser window for
 [audio]
 auto_ducking = true                    # Auto-lower background media volume (by 70%) while speaking
 ducking_level = 0.30                   # Retain 30% background volume during speech
+fade_down_ms = 150                     # 150ms exponential fade-down before speech
+fade_up_ms = 300                       # 300ms exponential fade-up after speech
 study_focus_playlists = true           # Option to launch focus/ambient playlists during study mode
 
 [hardware]
@@ -272,5 +292,10 @@ command_mode = "conversational_with_slash_shortcuts" # Natural conversation by d
 local_model = "llama3.1:8b"
 local_runtime = "ollama"               # 4-bit quantized, ~5.5 GB VRAM, balanced speed & quality
 cloud_model = "meta/llama-3.1-405b-instruct"
+quantization_format = "gguf_q4_k_m"    # Standard GGUF Q4_K_M quantization
+sampling_code_temp = 0.1               # 0.1 for code/tests
+sampling_study_temp = 0.3              # 0.3 for study architecture
+sampling_banter_temp = 0.7             # 0.7 for witty banter
+sub_50ms_stream_cancellation = true    # Terminate token generation immediately on Escape/PTT
 lora_adapters_enabled = true           # Support dynamic LoRA adapter loading on 8B model
 lora_directory = "%USERPROFILE%\\Documents\\Phenom\\lora"

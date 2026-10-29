@@ -257,3 +257,24 @@ esearch_papers).
 - **Port Conflict Helper**: Detect PID holding port on EADDRINUSE, offer 1-click kill or next port.
 - **Obsidian Fuzzy Autocomplete**: Command Palette #tag and [[note]] fuzzy completion with preview.
 - **Real-Time Voice Dictation**: Streaming offline dictation with auto-punctuation into active cursor.
+
+### Search, Ergonomics & Toolchain Hardening (Rounds 41-45)
+- **Hybrid FTS5 + Vector Search (RRF)**: Reciprocal Rank Fusion combining exact keyword matching and semantic dense embeddings.
+- **Task-Adaptive Sampling**: Model temperature 0.1 for coding/tests, 0.3 for research/study, 0.7 for conversational banter.
+- **Sub-50ms Stream Cancellation**: Immediate cancellation of streaming generation and audio playback on Escape/PTT.
+- **Date-Partitioned Attachments**: Obsidian attachments routed to vault/Attachments/YYYY-MM/ to keep vault root uncluttered.
+- **Multi-Instance Desktop Support**: Independent Phenom windows allowed across multi-monitor setups without mutex lockouts.
+- **Dynamic Prompt Biasing for Whisper**: Injecting active codebase symbols and branch terminology into Whisper initial prompt.
+- **Windows 11 Mica / Acrylic Styling**: Native translucent glass aesthetics for HUD and Command Palette with glowing accents.
+- **Automated Git Pre-Commit Hook**: Local pre-commit hook automatically validating secret leakage and note privacy.
+- **Compact Environment System Header**: 2-line minimal OS/workspace context header injected into system prompt.
+- **1-Click Export to Obsidian**: Integrated quick export action turning assistant chat/analyses into organized vault markdown.
+- **Win32 Hotkey Collision Detection**: Validating hotkey availability and surfacing 1-click rebinding in HUD on conflict.
+- **Offline DevDocs Cache**: Local SQLite-backed cache for standard documentation (Python, React, TypeScript, FastAPI).
+- **Windows 11 Action Center Toasts**: Rich background notifications with inline action buttons in Windows Action Center.
+- **Monorepo-Aware Context Targeting**: Scoping tests, linter, and context analysis to nearest sub-package workspace roots.
+- **Exponential Audio Ducking Curves**: 150ms fade-down and 300ms fade-up volume curves for seamless background music ducking.
+- **Safe Auto-Stash on Branch Switches**: Timestamped git stash and re-apply on voice/palette branch changes.
+- **150-Line Edit Locality Cap**: Hard limit of 150 modified lines per file on automated refactorings.
+- **Automated 'phenom doctor' Health Check**: Built-in CLI health diagnostic inspecting CUDA, toolchains, and Credential Manager.
+- **Formula Audio Pacing**: Measured 0.85x voice speed for mathematical formulas with parallel KaTeX rendering in HUD.
