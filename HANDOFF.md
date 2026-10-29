@@ -18,12 +18,17 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **230 passed, 48 warnings** (0 failed, 0 errors).
+- **Result**: **237 passed, 48 warnings** (0 failed, 0 errors in 131s).
+- **Test Command**: python -m pytest services/backend/tests/
+
+### End-to-End Smoke Verification
+- **Command**: python scripts/smoke_test_suite.py
+- **Result**: **11/11 Subsystems Verified (PASS)** in 40.06s.
 - **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
 
 ### Secret Scanner Run
 - **Command**: `python scripts/scan_secrets.py --all`
-- **Result**: **205 tracked files scanned. 0 secrets or blocked files found.**
+- **Result**: **222 tracked files scanned. 0 secrets or blocked files found.**
 
 ### Import Coverage Audit
 - **Audit Command**: `python services/backend/scripts/audit_imports.py`
@@ -99,3 +104,23 @@ npm --prefix apps/desktop run build
 # 8. Start development stack
 npm run dev
 ```
+
+
+---
+
+## 5. Owner Operational Decisions (Rounds 8-13 Locked In)
+
+- **Morning Briefing**: On-demand triggered via 'Good morning Phenom' or Telegram greeting.
+- **Desktop UI**: Subtle floating particle orb with auto-dock to screen edge; full window & media controls.
+- **Coding Sandbox**: Local workspace subprocess with strict path boundary & execution timeouts.
+- **Browser Automation**: Open web browsing via Playwright with Tier 2 confirmations for interactive actions.
+- **Telegram Remote**: Full remote control (git tasks, test suites, health checks) with urgent system alerts only.
+- **Microphone & Wake Word**: Dual-mode (Local wake word 'Hey Phenom' + Push-to-Talk Ctrl+Space).
+- **Obsidian Vault**: Structured folders (Daily Notes, Projects, Study/Research, People/Entities); local-only.
+- **Local GPU Runtime**: Ollama with Llama-3.1-8B-Instruct (4-bit quantized, ~5.5 GB VRAM).
+- **Vision & Screen**: Automatic background screen context during active coding/debugging sessions.
+- **Storage & Reports**: Generated documents stored in ~/Documents/Phenom/ with ISO timestamps; transient caches purged after 7 days; action logs retained indefinitely.
+- **Personality & Tone**: High banter! Sharp comebacks, treats Abhi like Tony Stark, banter-heavy Romanized Hinglish.
+- **Study Mode**: Deep technical dive with exhaustive architectural breakdowns, formal equations, and complete code.
+- **Emergency Halt**: Triple-tap Escape for immediate Guardian Kill Switch halt.
+- **Offline Mode**: Seamless local offline mode (automatic fallback to local Ollama & offline TTS).

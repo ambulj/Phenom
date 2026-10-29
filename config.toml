@@ -1,23 +1,59 @@
 # Phenom Desktop Assistant Configuration
+# Configured and locked per Owner Decisions (Rounds 8-13)
 
 [assistant]
 nickname = "Abhi"
 voice_language = "hi-IN"
 cloud_hindi_tts = true
 sarvam_speaker = "shubh"
+banter_level = "high"                  # High banter: Heavily playful, sharp comebacks, treats user like Tony Stark, banter-heavy Hinglish
+proactivity_mode = "active"            # Active proactive partner: Suggests next steps & reference docs, detects new projects/errors
+briefing_mode = "on_demand"            # Triggered on-demand via "Good morning Phenom" or Telegram greeting
+study_mode = "deep_technical_dive"     # Exhaustive architecture breakdowns, formal equations, complete reference code
+sound_effects = "futuristic_chimes"    # Soft Jarvis chime on wake, confirmation chime on action complete, alert on kill switch
+quiet_hours = "always_responsive"      # Sound and speech active whenever spoken to, 24/7
+cloud_escalation = "dynamic_per_task"  # Escalate dynamically based on task complexity while strictly respecting privacy
+
+[ui]
+orb_mode = "floating_dock"             # Subtle floating particle orb on desktop with auto-dock to screen edge
+window_control = "full"                # App launching, media keys, volume control, window snapping/minimizing
+offline_mode = "seamless_local"        # Seamless local offline mode (switch to local Ollama & offline TTS automatically; show offline badge)
+
+[hotkeys]
+push_to_talk = "ctrl+space"
+toggle_phenom = "alt+space"
+kill_switch = "triple_escape"          # Triple-tap Escape for immediate emergency stop
 
 [vault]
-# The Obsidian vault folder is stored outside the code repository.
-# Environment variables like %USERPROFILE% are automatically expanded.
 vault_path = "%USERPROFILE%\\Documents\\Phenom\\vault"
 remote_url = ""
 auto_push = false
+structure = "structured_folders"       # Structured folders: Daily Notes, Projects, Study/Research, People/Entities
 
-[hotkeys]
-push_to_talk = "alt+space"
-toggle_phenom = "ctrl+alt+p"
-kill_switch = "ctrl+alt+pause"
+[storage]
+documents_path = "%USERPROFILE%\\Documents\\Phenom"
+retention_days_transient = 7           # Auto-purge transient data (screenshots, temporary browser profiles) after 7 days
+action_log_retention = "indefinite"    # Retain audit action log indefinitely
+index_paths = [
+    "%USERPROFILE%\\Projects",
+    "%USERPROFILE%\\Documents",
+    "%USERPROFILE%\\Desktop"
+]
+
+[developer]
+toolchain_integration = "deep"         # Auto-detect active git repo, branch, uncommitted diffs, running Docker containers
+coding_sandbox = "workspace_subprocess" # Local workspace subprocess with strict path boundary & execution timeouts
+vision_background = true               # Automatic background screen context during active coding/debugging sessions
+context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
+
+[browser]
+playwright_mode = "open_with_tier2_notifications" # Open web browsing with Tier 2 notifications before interactive actions
+
+[telegram]
+remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status, push notifications
+push_alerts = ["urgent_system_alerts"] # Urgent system alerts: Guardian kill switch trigger, high resource usage, errors
 
 [models]
 local_model = "llama3.1:8b"
+local_runtime = "ollama"               # 4-bit quantized, ~5.5 GB VRAM, balanced speed & quality
 cloud_model = "meta/llama-3.1-405b-instruct"
