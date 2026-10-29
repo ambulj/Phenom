@@ -1,11 +1,12 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-19)
+# Configured and locked per Owner Decisions (Rounds 8-22)
 
 [assistant]
 nickname = "Abhi"
 voice_language = "hi-IN"
 cloud_hindi_tts = true
 sarvam_speaker = "shubh"
+voice_flavor = "modern_urban_indian"   # Metro English accent with punchy natural Hinglish idioms ('sorted', 'scene', 'phod diya')
 banter_level = "high"                  # High banter: Heavily playful, sharp comebacks, treats user like Tony Stark, banter-heavy Hinglish
 proactivity_mode = "active"            # Active proactive partner: Suggests next steps & reference docs, detects new projects/errors
 briefing_mode = "on_demand"            # Triggered on-demand via "Good morning Phenom" or Telegram greeting
@@ -13,6 +14,7 @@ study_mode = "deep_technical_dive"     # Exhaustive architecture breakdowns, for
 sound_effects = "futuristic_chimes"    # Soft Jarvis chime on wake, confirmation chime on action complete, alert on kill switch
 quiet_hours = "always_responsive"      # Sound and speech active whenever spoken to, 24/7
 cloud_escalation = "dynamic_per_task"  # Escalate dynamically based on task complexity while strictly respecting privacy
+context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
 speech_cadence = "adaptive"            # 1.1x brisk pace for banter/status; 0.95x measured pace for technical breakdowns
 break_reminders = "spoken_idle"        # Subtle 1-sentence voice nudge when an idle gap occurs during long focus
 
@@ -25,6 +27,10 @@ orb_particle_modes = [                 # Selectable particle behavior presets
 ]
 orb_color_theme = "cyan_stark_gold"    # Electric Cyan (#00E5FF) idle; Amber Gold (#FFB300) thinking/alerts; Crimson halt
 hud_style = "anchored_transparent_card" # Custom transparent HUD card anchored near docked Orb
+summon_style = "raycast_command_palette" # Centered glassmorphic command bar (Alt+Space) with app launcher, file search, and chat
+screen_border_accent = "dynamic_state" # Subtle Electric Cyan active, Amber on Tier 2 confirmation, Crimson on halt
+audit_drawer = "integrated_hud"        # 1-click button to view chronological action log, tool tiers, routing decisions, and rollbacks
+terminal_output_style = "collapsible_streaming_console" # Live output stream inside a sleek HUD terminal drawer with syntax highlighting
 window_control = "full"                # App launching, media keys, volume control, window snapping/minimizing
 offline_mode = "seamless_local"        # Seamless local offline mode (switch to local Ollama & offline TTS automatically; show offline badge)
 
@@ -44,6 +50,7 @@ remote_url = ""
 auto_push = false
 structure = "structured_folders"       # Structured folders: Daily Notes, Projects, Study/Research, People/Entities
 daily_log_mode = "automated_evening"   # Structured evening summary appended to Daily Notes/YYYY-MM-DD.md
+linking_style = "deep_wikilinks_graph" # Auto-generate [[Topic]] and [[Project]] bidirectional links for rich Obsidian Graph View exploration
 
 [storage]
 documents_path = "%USERPROFILE%\\Documents\\Phenom"
@@ -58,6 +65,9 @@ index_paths = [
 [developer]
 toolchain_integration = "deep"         # Auto-detect active git repo, branch, uncommitted diffs, running Docker containers
 auto_workspace_detect = true           # Detect active workspace and auto-switch context notes & history
+multi_agent_roles = "specialist_subagents" # Phenom summons specialist roles (Test Architect, Code Reviewer, Security Auditor)
+package_managers = "adaptive_auto_detect" # Detect and use active project managers (uv/pip, pnpm/npm, cargo)
+test_generation_policy = "test_driven_pairing" # Automatically write matching pytest / jest test suites alongside every new module or feature
 coding_sandbox = "workspace_subprocess" # Local workspace subprocess with strict path boundary & execution timeouts
 vision_background = true               # Automatic background screen context during active coding/debugging sessions
 vision_sample_trigger = "event_failure" # Capture screen on terminal failure or IDE error highlight
@@ -85,6 +95,7 @@ draft_voice = "authentic_concise"      # Concise, direct, minimal corporate jarg
 [rag]
 embedding_engine = "local_onnx"        # Local ONNX runtime: ultra-fast (<5ms) on CPU, zero VRAM usage
 embedding_model = "all-MiniLM-L6-v2"   # ~80MB high-efficiency local embedding
+index_trigger = "file_watcher_incremental" # Auto-index notes & code changes within 2 seconds of saving for instant semantic search
 
 [research]
 synthesis_structure = "3_layer_technical" # High-level abstract + Key architectural innovations + Engineering implications
@@ -102,6 +113,7 @@ busy_gpu_fallback = "dynamic_cloud_or_cpu_q4" # Cloud Nemotron if online, lightw
 remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status, push notifications
 push_alerts = ["urgent_system_alerts"] # Urgent system alerts: Guardian kill switch trigger, high resource usage, errors
 media_mode = "full_multimodal"         # Whisper voice note transcription + voice replies + photo/doc vision analysis
+command_mode = "conversational_with_slash_shortcuts" # Natural conversation by default, with optional power shortcuts (/status, /test, /git, /halt)
 
 [models]
 local_model = "llama3.1:8b"

@@ -158,3 +158,17 @@ npm run dev
 - **Study Mode**: Deep technical dive with exhaustive architectural breakdowns, formal equations, and complete code.
 - **Emergency Halt**: Triple-tap Escape for immediate Guardian Kill Switch halt.
 - **Offline Mode**: Seamless local offline mode (automatic fallback to local Ollama & offline TTS).
+
+### Multi-Agent Coordination, UX & Context (Rounds 20-22)
+- **Multi-Agent Coordination**: Specialist subagents (Test Architect, Code Reviewer, Security Auditor, Docs Writer) synthesized by Phenom.
+- **Obsidian Graph & Wikilinks**: Deep bidirectional [[Topic]] and [[Project]] wikilinks for interactive Obsidian Graph View.
+- **Telegram Commands**: Natural conversation by default, with optional power shortcuts (/status, /test, /git, /halt).
+- **Package Manager**: Adaptive auto-detection (uv/pip for Python, pnpm/npm for Node, cargo for Rust).
+- **Context Compaction & Escalation**: Dual approach (auto-compact local turns; escalate to Cloud Nemotron 128k context for massive diffs/logs).
+- **Terminal Execution UI**: Collapsible live streaming console drawer with syntax highlighting.
+- **Voice Linguistic Accent**: Modern Urban Indian / Tech-Savvy developer with natural metro Hinglish idioms ('sorted', 'scene', 'phod diya').
+- **Incremental Indexing**: File-watcher incremental vector embedding within 2 seconds of file save.
+- **Global Summon UI**: Raycast / Spotlight style centered glassmorphic command palette on Alt+Space.
+- **Audit Log Drawer**: Integrated 1-click HUD drawer to inspect chronological action logs, tool tiers, and rollbacks.
+- **Test Generation Policy**: Test-driven pairing (automatically authoring matching test suites for every new module).
+- **Screen Border Overlay**: Dynamic pulsing Electric Cyan while active, Amber on Tier 2 confirmation, Crimson on Guardian halt.

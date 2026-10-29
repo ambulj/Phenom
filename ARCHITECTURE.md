@@ -103,3 +103,25 @@ Tables: `messages`, `facts`, `learned_rules`, `approvals_remembered`, `action_lo
 1. **Local Vector Search**: Embedded using local ONNX runtime (ll-MiniLM-L6-v2), running on CPU in < 5ms with zero GPU VRAM consumption.
 2. **Daily Encrypted Snapshots**: Automatic daily local backup ZIP archiving SQLite memory, Obsidian vault, and configuration to ~/Documents/Phenom/backups/ with 30-day retention.
 3. **Transient Data Purge**: Temporary browser profiles, OCR temp images, and screen caches are auto-purged after 7 days; audit action logs are retained indefinitely.
+
+
+---
+
+## 11. Multi-Agent Subagent Specialist Architecture (Locked In)
+1. **Specialist Subagents**: For complex multi-step coding or refactoring challenges, Phenom coordinates specialized subagent roles (Test Architect, Code Reviewer, Security Auditor, Docs Writer).
+2. **Synthesis & Alignment**: Each subagent executes within isolated read-only or workspace sandboxes, and Phenom synthesizes their findings into an executable plan before modifying code.
+3. **Test-Driven Pairing**: Every newly authored module or feature is accompanied by matching automated tests (pytest / jest) covering happy paths and boundary edge cases.
+
+---
+
+## 12. Desktop UX & Command Architecture (Locked In)
+1. **Raycast / Spotlight Palette (Alt+Space)**: Pressing the global summon hotkey reveals a centered glassmorphic command bar for instant app launching, file search, and natural chat.
+2. **Dynamic Screen Border Accent**: A sleek border overlay (ScreenBorderOverlay.tsx) pulses Electric Cyan while listening/thinking, Amber on Tier 2 confirmation checkpoints, and Stark Crimson on Guardian emergency halt.
+3. **Integrated HUD Audit Drawer**: 1-click access from the HUD card or command palette to inspect the chronological action log, tool risk tiers, routing rationale, and rollback points.
+4. **Collapsible Streaming Console**: Live stdout/stderr output from test runs, builds, or scripts streams in real-time inside a collapsible syntax-highlighted terminal drawer.
+
+---
+
+## 13. Context Management & Dual Escalation (Locked In)
+1. **Auto-Compaction**: When conversations reach 80% of local context capacity, older turns are automatically summarized into structured facts and semantic memory.
+2. **Cloud Nemotron Rollover**: For ultra-long context operations (such as multi-file repository diffs or massive build logs), Phenom escalates to Cloud Nemotron's 128k context window, keeping privacy invariants intact.
