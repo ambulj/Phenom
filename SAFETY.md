@@ -97,3 +97,11 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 - [x] Auto-update with automatic rollback on boot failure verified
 - [x] Crash reporter operates strictly local-only with private path and secret redaction
 - [x] System resource benchmark complete: idle CPU 0.0%, RAM 211.9 MB, wake word 3.2% CPU
+
+## 10. Confirmation Invariants, Safe Mode & Privacy Controls (Hardening Pass 2)
+- **One-Line Confirmation Invariant**: Every confirmation dialog and Telegram push must generate a single descriptive summary string: `"[Tier {tier}] {action_verb} {item_count} item(s) in {target_summary}"`. Ambiguous or blind prompts are rejected by construction.
+- **Preconditions Re-Validation**: Stale approvals are re-validated before execution: file SHA-256 hashes and mtimes, system mode, and Guardian killswitch state must match the state at issuance.
+- **Safe Alternative Invariant**: When an action is declined, safe alternatives must have a risk tier $\le$ the declined action's tier, must never repeat a declined tool in the turn chain, and are blocked if the context is tainted (`is_tainted=True`).
+- **Meeting Mode & Screen Exclusion**: When video conferencing tools are active, Phenom automatically applies `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` (0x00000011) to hardware-exclude Phenom windows from capture, mutes voice/sound FX, and silences notifications.
+- **Safe Mode**: Startup flag `--safe-mode` restricts tool execution strictly to Tier 0 read-only tools, forces local inference, and blocks automation and cloud endpoints. A rolling 7-day rollback snapshot protects against boot failure.
+- **Daily Self-Check**: Runs at 04:00 AM checking disk space (< 2 GB alert), database integrity, vault sync, rule SHA-256 verification, and model status, reporting sanitized summaries to Telegram and reserving spoken alerts for critical integrity failures.
