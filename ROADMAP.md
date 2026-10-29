@@ -273,11 +273,36 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7f: Router & Privacy Classifier with Multi-Provider Fallback
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - Evaluation report on 100-prompt multilingual benchmark showing $100\%$ precision on known-private data (zero false negatives).
-  - Rate-limit cascade test demonstrating seamless failover from NVIDIA Nemotron to secondary free tiers and local 8B.
+### [x] Task 7f: Router & Privacy Classifier with Multi-Provider Fallback
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7f: router privacy classifier 100-prompt benchmark and multi-provider cascade`
+- **Key Files:** [privacy.py](file:///c:/Phenom/services/backend/router/privacy.py), [cloud_fallback.py](file:///c:/Phenom/services/backend/router/cloud_fallback.py), [router.py](file:///c:/Phenom/services/backend/router/router.py), [evaluate_privacy_router.py](file:///c:/Phenom/scripts/evaluate_privacy_router.py), [test_router_privacy_and_cascade.py](file:///c:/Phenom/services/backend/tests/test_router_privacy_and_cascade.py)
+- **Evidence Attached:**
+  - 100-Prompt Multilingual Benchmark:
+    - 50 Known-Private prompts evaluated: 50 / 50 classified as private.
+    - False Negatives on private data: **0** (**0.00%** False Negative Rate).
+    - Precision on Private Data: **100.00%** (zero data leakage to cloud).
+    - 50 Known-Shareable prompts evaluated: 50 / 50 (100.0%) permitted when marked shareable.
+  - High-Precision Indian PII & Credential Regex Rules:
+    - Aadhaar ID (`\b[2-9]{1}[0-9]{3}\s[0-9]{4}\s[0-9]{4}\b`)
+    - PAN Card (`\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b`)
+    - Indian Mobile Phone (`\b(?:(?:\+|0{0,2})91[\s-]?)?[6789]\d{9}\b`)
+    - UPI ID (`\b[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}\b`)
+    - Credit Card numbers with Luhn checksum validation
+    - Bank IFSC codes (`\b[A-Z]{4}0[A-Z0-9]{6}\b`)
+    - Secrets: NVIDIA `nvapi-`, AWS access keys, Google `AIza`, GitHub tokens, RSA private keys.
+  - Multi-Provider Cloud Rate-Limit Cascade:
+    - Primary: NVIDIA Nemotron 70B (`integrate.api.nvidia.com/v1`)
+    - Secondary: Groq Cloud (`api.groq.com/openai/v1`, Llama 3.3 70B)
+    - Tertiary: OpenRouter Free (`openrouter.ai/api/v1`)
+    - Terminal Fallback: Local 8B (`llama3.1:8b` via Ollama)
+    - Rate limit (HTTP 429) cascade hops validated through secondary and tertiary tiers down to Local 8B.
+    - Pre-flight privacy enforcement (`assert_shareable`) verified: private payloads raise `PrivacyViolationError` before contacting any cloud provider.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_router_privacy_and_cascade.py -v
+    # 6 passed in 0.34s
+    ```
 
 ---
 

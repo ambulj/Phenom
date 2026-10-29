@@ -52,10 +52,12 @@ SECRET_PATTERNS = [
     ("Private Key Header", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"))
 ]
 
-# Files excluded from content scanning (e.g. scanner itself and scanner tests)
+# Files excluded from content scanning (e.g. scanner itself and scanner/privacy tests)
 EXCLUDED_SCAN_FILES = {
     "scripts/scan_secrets.py",
-    "services/backend/tests/test_secret_scan.py"
+    "services/backend/tests/test_secret_scan.py",
+    "scripts/evaluate_privacy_router.py",
+    "services/backend/tests/test_router_privacy_and_cascade.py"
 }
 
 def normalize_path(path: str) -> str:
