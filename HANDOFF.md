@@ -18,7 +18,7 @@
 
 ### Local Windows Test Run
 - **Test Command**: `python -m pytest -q`
-- **Result**: **175 passed, 28 warnings** (0 failed, 0 errors).
+- **Result**: **180 passed, 28 warnings** (0 failed, 0 errors).
 - **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
 
 ### Secret Scanner Run

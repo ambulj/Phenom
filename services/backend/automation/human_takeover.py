@@ -102,14 +102,20 @@ class HumanTakeoverManager:
         if self._is_automating and not self._is_paused:
             self._trigger_pause(f"key_{event.name}")
 
-    async def wait_if_paused(self):
+    async def wait_if_paused(self, max_wait_seconds: float = 10.0):
         """
         Called before and after every automation step.
-        If user took over, pauses execution until decision is submitted.
+        If user took over, pauses execution until decision is submitted or 10s SLA expires.
         """
+        start_wait = time.time()
         while self._is_paused:
             if not self._is_automating:
                 raise HumanTakeoverAbort("Automation aborted by user takeover.")
+            if (time.time() - start_wait) > max_wait_seconds:
+                with self._lock:
+                    self._is_paused = False
+                    self._is_automating = False
+                raise HumanTakeoverAbort("Automation timed out after 10s waiting for takeover decision; aborted.")
             await asyncio.sleep(0.05)
 
     def resolve_takeover(self, decision: str):

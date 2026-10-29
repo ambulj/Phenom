@@ -20,13 +20,48 @@ try:
 except ImportError:
     auto = None
 
-from services.backend.automation.human_takeover import takeover_manager
+from services.backend.automation.human_takeover import takeover_manager, HumanTakeoverAbort
 from services.backend.automation.limits import AutomationLimitsManager
+from services.backend.voice.sound_fx import sound_fx
 
 class DesktopController:
     def __init__(self):
         self.limits = AutomationLimitsManager()
         self._step_history: List[Dict[str, Any]] = []
+        self._overlay_callback = None
+        self._start_time = 0.0
+
+        # Register takeover callback to push UI state & halt sound
+        takeover_manager.set_takeover_callback(self._on_human_takeover)
+
+    def set_overlay_callback(self, cb):
+        self._overlay_callback = cb
+
+    def _emit_overlay_event(self, event_type: str, payload: Dict[str, Any]):
+        if self._overlay_callback:
+            try:
+                import asyncio
+                if asyncio.iscoroutinefunction(self._overlay_callback):
+                    asyncio.create_task(self._overlay_callback(event_type, payload))
+                else:
+                    self._overlay_callback(event_type, payload)
+            except Exception:
+                pass
+
+    def _on_human_takeover(self):
+        sound_fx.play_automation_halt()
+        self._emit_overlay_event("screen.overlay_state", {
+            "state": "takeover",
+            "color": "#f97316",
+            "message": "User input detected. Resume automation or Stop?",
+            "timeout_seconds": 10
+        })
+
+    def _format_ticker_time(self) -> str:
+        elapsed = time.time() - self._start_time
+        mins = int(elapsed // 60)
+        secs = elapsed % 60
+        return f"{mins:02d}:{secs:04.1f}"
 
     def capture_screen_ram(self) -> Image.Image:
         """
@@ -98,12 +133,20 @@ class DesktopController:
 
     async def execute_step_plan(self, steps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Executes a sequence of steps with live step updates and takeover checks.
+        Executes a sequence of steps with live step updates, audio cues, click target rings, and takeover checks.
         Step format: {"action": "click"|"type"|"focus", "target": "...", "text": "..."}
         """
         results = []
+        self._start_time = time.time()
         self.limits.start_session()
         takeover_manager.start_automation()
+
+        # Audio cue and neon amber overlay
+        sound_fx.play_automation_start()
+        self._emit_overlay_event("screen.overlay_state", {
+            "state": "active",
+            "color": "#f59e0b"
+        })
 
         try:
             for idx, step in enumerate(steps):
@@ -113,6 +156,16 @@ class DesktopController:
                 text = step.get("text", "")
                 
                 self.limits.check_limits(f"{action}:{target}")
+
+                # Emit action ticker item
+                ts = self._format_ticker_time()
+                ticker_text = f"Step {idx + 1}/{len(steps)}: {action.capitalize()} '{target or text[:15]}'"
+                self._emit_overlay_event("screen.action_ticker", {
+                    "timestamp": ts,
+                    "text": ticker_text,
+                    "step": idx + 1,
+                    "total": len(steps)
+                })
 
                 # Step status
                 step_record = {
@@ -129,20 +182,27 @@ class DesktopController:
                         step_record["result"] = "focused" if success else "window_not_found"
 
                     elif action == "click":
+                        cx, cy = None, None
                         elem = self.find_element_by_name(target)
                         if elem:
                             cx, cy = elem["center"]
-                            pyautogui.click(cx, cy)
-                            step_record["result"] = f"clicked_element_at_{cx}_{cy}"
                             step_record["target_rect"] = elem["rect"]
+                        elif step.get("coords"):
+                            cx, cy = step.get("coords")
+
+                        if cx is not None and cy is not None:
+                            # 300ms Click Target Highlighting Ring per Plan 7e
+                            self._emit_overlay_event("screen.click_highlight", {
+                                "x": cx,
+                                "y": cy,
+                                "duration_ms": 300
+                            })
+                            import asyncio
+                            await asyncio.sleep(0.3)
+                            pyautogui.click(cx, cy)
+                            step_record["result"] = f"clicked_at_{cx}_{cy}"
                         else:
-                            # Fallback if coordinates specified
-                            coords = step.get("coords")
-                            if coords:
-                                pyautogui.click(coords[0], coords[1])
-                                step_record["result"] = f"clicked_coords_{coords}"
-                            else:
-                                step_record["result"] = "element_not_found"
+                            step_record["result"] = "target_not_found"
 
                     elif action == "type":
                         # Check password prohibition
@@ -155,7 +215,22 @@ class DesktopController:
                 results.append(step_record)
                 await takeover_manager.wait_if_paused()
 
+            # Automation completed successfully: Emerald green overlay & stop chime
+            sound_fx.play_automation_stop()
+            self._emit_overlay_event("screen.overlay_state", {
+                "state": "success",
+                "color": "#10b981"
+            })
             return results
+        except Exception as e:
+            # Error or abort: Ruby red overlay & halt chime
+            sound_fx.play_automation_halt()
+            self._emit_overlay_event("screen.overlay_state", {
+                "state": "error",
+                "color": "#ef4444",
+                "error": str(e)
+            })
+            raise
         finally:
             takeover_manager.end_automation()
 

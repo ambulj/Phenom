@@ -12,6 +12,7 @@ import { LiveViewPanel } from './components/panels/LiveViewPanel';
 import { DashboardPanel } from './components/panels/DashboardPanel';
 import { MiniOverlay } from './components/MiniOverlay';
 import { FirstRunWizard } from './components/FirstRunWizard';
+import { ScreenBorderOverlay, ScreenOverlayState, ClickTarget, TickerItem } from './components/ScreenBorderOverlay';
 import { OrbState, ConfirmRequestPayload, LearnedRuleItem } from './types/protocol';
 
 export const App: React.FC = () => {
@@ -39,6 +40,9 @@ export const App: React.FC = () => {
   // Automation & Screen State (Phase 3)
   const [liveFrame, setLiveFrame] = useState<string | null>(null);
   const [takeoverPrompt, setTakeoverPrompt] = useState<string | null>(null);
+  const [screenOverlayState, setScreenOverlayState] = useState<ScreenOverlayState>({ state: 'idle' });
+  const [clickTarget, setClickTarget] = useState<ClickTarget | null>(null);
+  const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
 
   // Modes, Scheduler, & Watchlist State (Phase 5)
   const [currentMode, setCurrentMode] = useState<string>('work');
@@ -100,6 +104,19 @@ export const App: React.FC = () => {
             }
           } else if (mtype === 'browser.frame') {
             setLiveFrame(payload.image_data);
+          } else if (mtype === 'screen.overlay_state') {
+            setScreenOverlayState(payload);
+            if (payload.state === 'success' || payload.state === 'error') {
+              setTimeout(() => {
+                setScreenOverlayState({ state: 'idle' });
+                setTickerItems([]);
+              }, 2500);
+            }
+          } else if (mtype === 'screen.click_highlight') {
+            setClickTarget({ x: payload.x, y: payload.y, durationMs: payload.duration_ms || 300 });
+            setTimeout(() => setClickTarget(null), payload.duration_ms || 300);
+          } else if (mtype === 'screen.action_ticker') {
+            setTickerItems((prev) => [...prev.slice(-5), payload]);
           } else if (mtype === 'automation.takeover_prompt') {
             setTakeoverPrompt(payload.reason || 'User interaction detected during automation.');
             setActivePanel('live_view'); // Automatically surface the Live View with prompt
@@ -449,6 +466,15 @@ export const App: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Screen Control Safety Overlay with Neon Amber/Emerald/Ruby Border & Action Ticker */}
+      <ScreenBorderOverlay
+        overlayState={screenOverlayState}
+        clickTarget={clickTarget}
+        tickerItems={tickerItems}
+        onResumeAutomation={() => handleTakeoverDecision('continue')}
+        onStopAutomation={() => handleTakeoverDecision('stop')}
+      />
     </div>
   );
 };

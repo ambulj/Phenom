@@ -57,4 +57,31 @@ class SoundEffectsManager:
         chime = np.concatenate([tone1, gap, tone2]).astype(np.float32)
         self._play_async(chime)
 
+    def play_automation_start(self):
+        """Low-latency 150ms rising chime (440Hz -> 660Hz -> 880Hz) on screen control acquisition."""
+        t = np.linspace(0, 0.05, int(SAMPLE_RATE * 0.05), endpoint=False)
+        tone1 = np.sin(2 * np.pi * 440.0 * t) * np.exp(-12 * t)
+        tone2 = np.sin(2 * np.pi * 660.0 * t) * np.exp(-12 * t)
+        tone3 = np.sin(2 * np.pi * 880.0 * t) * np.exp(-8 * t)
+        chime = np.concatenate([tone1, tone2, tone3]).astype(np.float32)
+        self._play_async(chime)
+
+    def play_automation_stop(self):
+        """120ms soft chime (880Hz -> 587Hz) on control release."""
+        t1 = np.linspace(0, 0.05, int(SAMPLE_RATE * 0.05), endpoint=False)
+        t2 = np.linspace(0, 0.07, int(SAMPLE_RATE * 0.07), endpoint=False)
+        tone1 = np.sin(2 * np.pi * 880.0 * t1) * np.exp(-14 * t1)
+        tone2 = np.sin(2 * np.pi * 587.33 * t2) * np.exp(-10 * t2)
+        chime = np.concatenate([tone1, tone2]).astype(np.float32)
+        self._play_async(chime)
+
+    def play_automation_halt(self):
+        """Sharp double beep (750Hz double pulse) when user interrupts or kill switch triggers."""
+        t = np.linspace(0, 0.06, int(SAMPLE_RATE * 0.06), endpoint=False)
+        tone1 = np.sin(2 * np.pi * 750.0 * t) * np.exp(-10 * t)
+        gap = np.zeros(int(SAMPLE_RATE * 0.03), dtype=np.float32)
+        tone2 = np.sin(2 * np.pi * 750.0 * t) * np.exp(-10 * t)
+        chime = np.concatenate([tone1, gap, tone2]).astype(np.float32)
+        self._play_async(chime)
+
 sound_fx = SoundEffectsManager()
