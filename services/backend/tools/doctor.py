@@ -81,9 +81,11 @@ class PhenomDoctor:
 
     def check_node(self) -> Dict[str, Any]:
         try:
-            node_out = subprocess.run(["node", "-v"], capture_output=True, text=True, timeout=3)
+            node_bin = shutil.which("node") or "node"
+            npm_bin = shutil.which("npm") or "npm"
+            node_out = subprocess.run([node_bin, "-v"], capture_output=True, text=True, timeout=3, shell=True)
             node_ver = node_out.stdout.strip() if node_out.returncode == 0 else None
-            npm_out = subprocess.run(["npm", "-v"], capture_output=True, text=True, timeout=3)
+            npm_out = subprocess.run([npm_bin, "-v"], capture_output=True, text=True, timeout=3, shell=True)
             npm_ver = npm_out.stdout.strip() if npm_out.returncode == 0 else None
 
             if node_ver and npm_ver:
