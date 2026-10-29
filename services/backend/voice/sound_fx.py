@@ -18,12 +18,14 @@ class SoundEffectsManager:
         self._lock = threading.Lock()
 
     def _play_async(self, audio_data: np.ndarray):
-        if not self.enabled:
+        import os
+        if not self.enabled or os.environ.get("PYTEST_CURRENT_TEST"):
             return
 
         def _worker():
             try:
-                sd.play(audio_data * self.volume, samplerate=SAMPLE_RATE, blocking=True)
+                with self._lock:
+                    sd.play(audio_data * self.volume, samplerate=SAMPLE_RATE, blocking=True)
             except Exception:
                 # In environments without audio playback devices, fail silently
                 pass

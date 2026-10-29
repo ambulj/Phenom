@@ -937,3 +937,33 @@ async def clear_notifications_digest():
     from services.backend.automation.notification_digest import notification_digest_manager
     cleared = notification_digest_manager.clear_buffer()
     return {"status": "cleared", "cleared_count": cleared}
+
+@app.get("/api/usage/summary", dependencies=[Depends(verify_session_token)])
+async def get_usage_summary(date: Optional[str] = None):
+    from services.backend.router.usage_tracker import usage_tracker
+    daily = usage_tracker.get_daily_summary(date)
+    recent = usage_tracker.get_recent_load_history(limit=20)
+    return {"daily": daily, "recent_history": recent}
+
+@app.get("/api/help/capabilities", dependencies=[Depends(verify_session_token)])
+async def get_capabilities_help(q: Optional[str] = None):
+    from services.backend.tools.self_help import self_help_engine
+    if q:
+        return self_help_engine.answer_query(q)
+    return self_help_engine.get_capabilities_manifest()
+
+@app.post("/api/system/reset", dependencies=[Depends(verify_session_token)])
+async def perform_system_reset(payload: Dict[str, Any]):
+    from services.backend.packaging.reset_manager import reset_manager
+    target = payload.get("target", "")
+    confirmation = payload.get("confirmation", "")
+    preview_only = payload.get("preview_only", False)
+    if preview_only:
+        return reset_manager.preview_reset(target)
+    return reset_manager.execute_reset(target, confirmation)
+
+@app.post("/api/system/export", dependencies=[Depends(verify_session_token)])
+async def perform_data_export(payload: Optional[Dict[str, Any]] = None):
+    from services.backend.packaging.export_manager import export_manager
+    out_dir = (payload or {}).get("output_dir")
+    return export_manager.export_data(output_dir=out_dir)

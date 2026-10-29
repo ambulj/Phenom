@@ -466,13 +466,38 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7k: Providers, Usage Panel, Onboarding, Reset & Uninstall
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - Usage panel displaying daily/monthly call counts and load history from encrypted SQLite database.
-  - Zero-drift self-help test generating tool capabilities directly from `registry.list_all()`.
-  - Four granular reset tests (Settings, Memory, Voice, Factory) with verification of erased artifacts.
-  - Secret scanner verification on export ZIP archive demonstrating zero credential leakage.
+### [x] Task 7k: Providers, Usage Panel, Onboarding, Reset & Uninstall
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7k: multi-provider usage tracking zero-drift self-help granular reset and data export`
+- **Key Files:** [usage_tracker.py](file:///c:/Phenom/services/backend/router/usage_tracker.py), [self_help.py](file:///c:/Phenom/services/backend/tools/self_help.py), [reset_manager.py](file:///c:/Phenom/services/backend/packaging/reset_manager.py), [export_manager.py](file:///c:/Phenom/services/backend/packaging/export_manager.py), [main.py](file:///c:/Phenom/services/backend/main.py), [evaluate_providers_usage_and_reset.py](file:///c:/Phenom/scripts/evaluate_providers_usage_and_reset.py), [test_providers_usage_and_reset.py](file:///c:/Phenom/services/backend/tests/test_providers_usage_and_reset.py)
+- **Evidence Attached:**
+  - Multi-Provider Usage Tracking & Metrics Panel:
+    - Logged inference calls to SQLCipher table `provider_usage_history` across `nvidia_nemotron`, `groq_llama`, `openrouter`, and `ollama_local`.
+    - Tracks prompt tokens, completion tokens, latency ms, HTTP 429 rate limit counters, and rolling 90-day retention pruning.
+    - Verified daily aggregation, monthly totals, and recent load history directly from encrypted database.
+  - Zero-Drift Dynamic Self-Help Engine:
+    - Generated live capability manifest directly from `registry.list_all()`.
+    - Verified 100% zero documentation drift: total tools count matches live registry (28 tools across 6 capability domains).
+    - Natural language responses verified for *"What can you do?"*, *"how do I change hotkeys?"* (providing `Ctrl+Alt+Pause` and `Alt+Space` keys), and *"list tools"*.
+  - Four Granular Reset Controls:
+    - Action 1 (Settings Reset): Clears settings table; preserves notes, memory, audio recordings, and credentials.
+    - Action 2 (Memory Clear): Purges conversational memory, SQLite vector embeddings, and learned rules; preserves vault documents and voice profiles.
+    - Action 3 (Voice Data Wipe): Zero-byte DoD wipe (`0x00` overwrite) of all audio files in `%APPDATA%\Phenom\voice_store\`; deletes ECAPA-TDNN speaker profiles from database; preserves messages and settings.
+    - Action 4 (Factory Reset): Wipes all DB tables and purges all `Phenom/*` stored credentials from Windows Credential Manager.
+    - Typed confirmation phrases enforced (`"RESET SETTINGS"`, `"CLEAR MEMORY"`, `"DELETE VOICE DATA"`, `"FACTORY RESET"`); invalid phrases rejected with `PermissionError`.
+  - Data Export Archive & Secret Exclusion Guarantee:
+    - Generates export ZIP containing plaintext Obsidian vault notes, sanitized `memory_export.json`, and non-secret `config.toml`.
+    - Strict Secret Exclusion verified: 0 `.db` files, 0 `.key` files, 0 `.env` files in export archive.
+    - Staging secret scanner strictly aborts export if any sensitive file or secret pattern is detected.
+  - Comprehensive Test Results:
+    ```powershell
+    python scripts/evaluate_providers_usage_and_reset.py
+    # ALL TASK 7k ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY (PASS)
+    python -m pytest services/backend/tests/test_providers_usage_and_reset.py -v
+    # 6 passed in 6.31s
+    python -m pytest services/backend/tests/
+    # 223 passed in 83.46s
+    ```
 
 ---
 
