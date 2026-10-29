@@ -108,6 +108,27 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
+### [x] Task 6b: Remove Fabricated Data & Real Gmail / Calendar Integration (Fixes F7, F8)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `163a222 task 6b: remove fabricated data and make gmail and calendar integration real`
+- **Key Files:** [finance.py](file:///c:/Phenom/services/backend/integrations/finance.py), [live_data.py](file:///c:/Phenom/services/backend/integrations/live_data.py), [news_briefing.py](file:///c:/Phenom/services/backend/integrations/news_briefing.py), [research.py](file:///c:/Phenom/services/backend/integrations/research.py), [google_workspace.py](file:///c:/Phenom/services/backend/integrations/google_workspace.py), [SettingsPanel.tsx](file:///c:/Phenom/apps/desktop/src/components/panels/SettingsPanel.tsx), [FirstRunWizard.tsx](file:///c:/Phenom/apps/desktop/src/components/FirstRunWizard.tsx), [test_no_fabricated_data.py](file:///c:/Phenom/services/backend/tests/test_no_fabricated_data.py), [test_real_workspace.py](file:///c:/Phenom/services/backend/tests/test_real_workspace.py)
+- **Evidence Attached:**
+  - Zero fabricated constants in production code: automated grep check proves 0 occurrences of `65000.0`, `185.50`, `142.85`, `"Partly Cloudy"`, `"MF-SCRAPED-001"`, `msg_001`, `event_sample_1`.
+  - Offline integrations return typed error records with `ok: False`, `stale: True`, and `None` metrics.
+  - Stale and unavailable quotes never trigger watchlist alerts (> 15 min freshness guard).
+  - Morning briefing skips unauthenticated Gmail with exact message: `"Email summary skipped: Gmail integration is not connected or authenticated."`
+  - Code-level prohibitions enforced: `send_email` raises `EmailSendingProhibitedError` (strictly no SMTP), `delete_calendar_event` and `edit_calendar_event` raise `CalendarModificationProhibitedError`.
+  - Real Gmail IMAP over SSL with read-only `EXAMINE` and RFC 5322 draft creation via `IMAP APPEND` to Drafts.
+  - Real Google Calendar API integration via REST endpoints.
+  - Windows Credential Manager integration for `Phenom/gmail-app-password` and `Phenom/google-calendar-token`.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_no_fabricated_data.py services/backend/tests/test_real_workspace.py
+    # 12 passed in 23.98s
+    ```
+
+---
+
 ## Hardening Pass 2: Architecture & Hardening Specifications (Task 7)
 
 ### [x] Task 7: Architectural Planning (`PLAN_NEXT.md`)
