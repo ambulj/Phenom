@@ -247,3 +247,13 @@ g.exe for sub-10ms regex/symbol search honoring .gitignore.
 esearch_papers).
 - **Dynamic Emotional Modulation**: Emotional voice modulation (energetic, crisp, measured).
 - **Safe Branch Pruning**: 1-click cleanup for feature branches merged into main.
+
+### Hardware Telemetry, Vision & Ergonomics (Rounds 39-40)
+- **Passive LAN Discovery**: mDNS/SSDP passive device detection under Tier 0.
+- **Hardware Telemetry Alerts**: Alerts for GPU > 85°C, NVMe < 10GB, Battery < 15%.
+- **Mermaid Diagram Reconstruction**: Transcribing image/PDF flowcharts into executable mermaid markdown.
+- **Bluetooth Audio Routing**: Seamless auto-routing on connect/disconnect + voice switching.
+- **Code Screenshot Extraction**: Clean syntax extraction with black/prettier formatting and 1-click insert.
+- **Port Conflict Helper**: Detect PID holding port on EADDRINUSE, offer 1-click kill or next port.
+- **Obsidian Fuzzy Autocomplete**: Command Palette #tag and [[note]] fuzzy completion with preview.
+- **Real-Time Voice Dictation**: Streaming offline dictation with auto-punctuation into active cursor.

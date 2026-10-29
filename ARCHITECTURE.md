@@ -202,3 +202,20 @@ esearch_papers) for scoped cosine similarity retrieval.
 4. **Interactive PTY Console**: The streaming console supports full interactive pseudo-terminal (PTY) emulation for stdin keyboard forwarding.
 5. **Windows 11 Virtual Desktop Switching**: Desktop control allows seamless voice navigation across virtual desktops (e.g. 'Switch to Code desktop').
 6. **SemVer & Changelog Automation**: Milestones automatically parse conventional commit headers, calculate SemVer version bumps, and generate CHANGELOG.md.
+
+
+---
+
+## 22. Hardware Telemetry & LAN Architecture (Locked In)
+1. **Passive LAN Discovery**: Local devices (NAS, Raspberry Pi, smart displays) are passively discovered via mDNS/SSDP under Tier 0 without intrusive active subnet scanning.
+2. **Proactive Hardware Sensor Monitoring**: GPU/CPU temperatures, NVMe free space, and battery metrics are continuously checked; alerts fire in the HUD if GPU > 85°C, NVMe < 10GB, or battery < 15%.
+3. **Bluetooth Audio Routing**: Headphone connections/disconnections auto-switch audio playback with volume ducking during Bluetooth handshakes; explicit voice commands can also switch outputs.
+
+---
+
+## 23. Multimodal Vision & Workspace Ergonomics (Locked In)
+1. **Mermaid Diagram Reconstruction**: Architecture flowcharts, UML diagrams, and system schemas in screenshots/PDFs are automatically transcribed into executable mermaid markdown.
+2. **Code Screenshot Reconstruction**: Code images from videos or tweets are OCR-transcribed, formatted with black/prettier conventions, and offered via 1-click insert in the HUD.
+3. **Smart Port Conflict Remediation**: When a dev server encounters EADDRINUSE, Phenom identifies the holding PID via psutil, reveals the process in HUD, and offers 1-click kill or alternative port allocation.
+4. **Command Palette Note Fuzzy Finder**: Typing #tag or [[note]] in the Command Palette (Alt+Space) provides instant fuzzy autocomplete and markdown note previews.
+5. **Real-Time Streaming Dictation**: Offline continuous speech dictation streams transcribed text with auto-punctuation directly into the active cursor in any Windows application.

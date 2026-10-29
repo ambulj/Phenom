@@ -1,5 +1,5 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-38)
+# Configured and locked per Owner Decisions (Rounds 8-40)
 
 [assistant]
 nickname = "Abhi"
@@ -60,6 +60,7 @@ offline_stt_engine = "whisper_base"    # Quantized Whisper on CUDA/CPU for seaml
 dynamic_emotional_modulation = true    # Modulate pace/inflection based on task (energetic on build pass, crisp on alerts)
 task_completion_ping = "soft_chime_and_voice_summary" # Soft Jarvis chime + 1-sentence recap on tasks > 30s
 compound_macros = true                 # Chained multi-step macros ('wrap up today')
+streaming_dictation = true             # Real-time streaming offline dictation with auto-punctuation into active cursor
 
 [shell]
 default_runner = "pwsh"                # PowerShell 7 primary subprocess runner
@@ -80,6 +81,7 @@ daily_log_mode = "automated_evening"   # Structured evening summary appended to 
 daily_note_template = "structured_engineering" # ## 🎯 Focus & Goals, ## 🔨 Code & Commits, ## 🧠 Technical Learnings, ## 📌 Follow-ups
 linking_style = "deep_wikilinks_graph" # Auto-generate [[Topic]] and [[Project]] bidirectional links for rich Obsidian Graph View exploration
 rag_citation_style = "exact_wikilinks" # Exact clickable wikilink citations to note headers or lines ([[Architecture#L42]])
+command_palette_fuzzy_finder = true    # Typing #tag or [[note]] in Command Palette auto-completes vault notes
 
 [memory]
 decay_policy = "spaced_relevance"      # Frequently referenced facts stay permanent; transient notes decay after 14 days
@@ -136,6 +138,7 @@ debugging_approach = "scientific_hypothesis_loop" # Hypothesis -> Minimal repro 
 secret_intervention = "proactive_block_and_migrate" # Block commit, offer 1-click migration to Credential Manager or .env
 api_testing_utility = "in_situ_inspector" # Test local REST endpoints, inspect headers, scaffold mocks
 console_secret_masking = true          # Intercept stdout/stderr and auto-mask any values from .env with [REDACTED_SECRET]
+port_conflict_helper = true            # Detect PID holding port, show in HUD, offer 1-click kill or next available port
 coding_sandbox = "workspace_subprocess" # Local workspace subprocess with strict path boundary & execution timeouts
 vision_background = true               # Automatic background screen context during active coding/debugging sessions
 vision_sample_trigger = "event_failure" # Capture screen on terminal failure or IDE error highlight
@@ -168,6 +171,8 @@ low_power_profile = true               # Throttle LLM threads and set Orb to Low
 
 [vision]
 analysis_mode = "dual_ocr_vision"      # Fast local Windows OCR for exact code/text, paired with multimodal model for visual layouts
+diagram_reconstruction = "mermaid_markdown" # Transcribe visual diagrams/flowcharts to executable mermaid syntax
+code_image_formatting = "clean_syntax_reconstructed" # Extract code from screenshots with black/prettier formatting
 
 [browser]
 playwright_mode = "open_with_tier2_notifications" # Open web browsing with Tier 2 notifications before interactive actions
@@ -177,6 +182,14 @@ captcha_solve_mode = "visible_browser_popup" # Pop up visible browser window for
 auto_ducking = true                    # Auto-lower background media volume (by 70%) while speaking
 ducking_level = 0.30                   # Retain 30% background volume during speech
 study_focus_playlists = true           # Option to launch focus/ambient playlists during study mode
+
+[hardware]
+lan_discovery = "passive_mdns_ssdp"    # Passive discovery of local devices (NAS, Raspberry Pi) under Tier 0
+proactive_alerts = true                # Proactive sensor monitoring
+gpu_temp_alert_celsius = 85            # Warn if GPU exceeds 85°C
+disk_space_alert_gb = 10               # Warn if NVMe SSD free space < 10GB
+battery_alert_percent = 15             # Warn if battery drops below 15%
+bluetooth_audio_auto_route = true      # Auto-switch to connected Bluetooth headphones, restore on disconnect
 
 [calendar]
 smart_companion = true                 # Buffer 15 mins between meetings, flag conflicting commitments, suggest open slots
