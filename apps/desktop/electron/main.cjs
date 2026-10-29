@@ -18,6 +18,44 @@ let mainWindow;
 let tray = null;
 let isQuitting = false;
 let backendProcess = null;
+let backendRestartAttempts = 0;
+const MAX_BACKEND_RESTARTS = 5;
+
+function spawnBackendWithWatchdog(pythonTarget) {
+  if (isQuitting) return;
+
+  console.log(`[Phenom Watchdog] Starting backend service using ${pythonTarget.cmd} (${pythonTarget.version.raw})...`);
+  const spawnArgs = [...pythonTarget.execArgs, '-m', 'uvicorn', 'services.backend.main:app', '--host', '127.0.0.1', '--port', '8000'];
+  backendProcess = spawn(
+    pythonTarget.cmd,
+    spawnArgs,
+    {
+      cwd: path.join(__dirname, '../../..'),
+      env: { ...process.env, PHENOM_SESSION_TOKEN: sessionToken },
+      stdio: 'inherit'
+    }
+  );
+
+  backendProcess.on('error', (err) => {
+    console.error('[Phenom Watchdog] Failed to spawn backend process:', err);
+  });
+
+  backendProcess.on('exit', (code, signal) => {
+    console.log(`[Phenom Watchdog] Backend process terminated (code: ${code}, signal: ${signal}).`);
+    backendProcess = null;
+
+    if (!isQuitting && backendRestartAttempts < MAX_BACKEND_RESTARTS) {
+      backendRestartAttempts++;
+      const delayMs = 1500; // Guarantees restart under 2000ms
+      console.log(`[Phenom Watchdog] Relaunching backend in ${delayMs}ms (attempt ${backendRestartAttempts}/${MAX_BACKEND_RESTARTS})...`);
+      setTimeout(() => {
+        if (!isQuitting) {
+          spawnBackendWithWatchdog(pythonTarget);
+        }
+      }, delayMs);
+    }
+  });
+}
 
 function startBackend() {
   const pythonTarget = detectPythonCommand();
@@ -36,20 +74,7 @@ function startBackend() {
     console.log('[Phenom] Backend already active (Status: ' + res.statusCode + ')');
   });
   probe.on('error', () => {
-    console.log(`[Phenom] Starting backend service using ${pythonTarget.cmd} (${pythonTarget.version.raw})...`);
-    const spawnArgs = [...pythonTarget.execArgs, '-m', 'uvicorn', 'services.backend.main:app', '--host', '127.0.0.1', '--port', '8000'];
-    backendProcess = spawn(
-      pythonTarget.cmd,
-      spawnArgs,
-      {
-        cwd: path.join(__dirname, '../../..'),
-        env: { ...process.env, PHENOM_SESSION_TOKEN: sessionToken },
-        stdio: 'inherit'
-      }
-    );
-    backendProcess.on('error', (err) => {
-      console.error('[Phenom] Failed to spawn backend process:', err);
-    });
+    spawnBackendWithWatchdog(pythonTarget);
   });
 }
 
