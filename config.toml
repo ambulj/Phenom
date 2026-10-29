@@ -141,11 +141,13 @@ changelog_generation = true            # Generate formatted CHANGELOG.md entries
 safe_merged_branch_pruning = true      # Offer 1-click cleanup for branches merged into main (preserving main/release)
 install_pre_commit_hook = true         # Auto-scan for secrets and vault notes before every local git commit
 safe_auto_stash_on_switch = true       # Timestamped stash and re-apply on branch switches
+wave_merge_strategy = "fast_forward_atomic_with_hud_button" # Preserved atomic commits with 1-click merge and changelog
 
 [developer]
 toolchain_integration = "deep"         # Auto-detect active git repo, branch, uncommitted diffs, running Docker containers
 auto_workspace_detect = true           # Detect active workspace and auto-switch context notes & history
 multi_agent_roles = "specialist_subagents" # Phenom summons specialist roles (Test Architect, Code Reviewer, Security Auditor)
+subagent_arbitration = "chief_architect_synthesis" # Phenom synthesizes trade-offs into unified recommendation in HUD
 package_managers = "adaptive_auto_detect" # Detect and use active project managers (uv/pip, pnpm/npm, cargo)
 test_generation_policy = "test_driven_pairing" # Automatically write matching pytest / jest test suites alongside every new module or feature
 code_review_rigor = "5_pillar"         # Security, Performance, Null safety, Test coverage, Typing
@@ -207,6 +209,9 @@ ducking_level = 0.30                   # Retain 30% background volume during spe
 fade_down_ms = 150                     # 150ms exponential fade-down before speech
 fade_up_ms = 300                       # 300ms exponential fade-up after speech
 study_focus_playlists = true           # Option to launch focus/ambient playlists during study mode
+time_aware_night_mode = true           # After 11:00 PM lower volume by 40%, soften tone, mute non-critical chimes
+night_mode_start = "23:00"
+night_volume_reduction = 0.40
 
 [hardware]
 lan_discovery = "passive_mdns_ssdp"    # Passive discovery of local devices (NAS, Raspberry Pi) under Tier 0
@@ -233,6 +238,8 @@ partitioned_collections = [            # Domain-partitioned vector namespaces
     "research_papers"
 ]
 index_trigger = "file_watcher_incremental" # Auto-index notes & code changes within 2 seconds of saving for instant semantic search
+weekly_maintenance = true              # Sunday 3:00 AM vector vacuuming, dead chunk pruning, and integrity checks
+maintenance_schedule = "sunday_0300"
 
 [research]
 synthesis_structure = "3_layer_technical" # High-level abstract + Key architectural innovations + Engineering implications

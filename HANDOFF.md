@@ -296,3 +296,9 @@ esearch_papers).
 - **Adaptive Acoustic Calibration**: Saying 'false trigger' or hitting Escape saves 2s encrypted snippet to tune future rejection.
 - **Ephemeral In-Memory Clipboard Buffer**: Last 20 items in volatile RAM scrubbed of secrets, auto-wiped on Windows lock.
 - **Permanent Obsidian Web Archive**: Scraped web research filed in `vault/Study/Web Research/YYYY-MM/` with metadata and summaries.
+
+### Multi-Agent Arbitration, Database Hygiene & Night Mode (Round 49)
+- **Chief Architect Synthesis**: Phenom balances subagent recommendations, prioritizing security and testability with unified HUD cards.
+- **Automated Weekly Vector Maintenance**: Sunday 3:00 AM vacuuming, tombstone pruning, and embedding integrity validation.
+- **Time-Aware Night Audio Mode**: 40% volume reduction, calmer vocal pacing, and muted chimes after 11:00 PM.
+- **Fast-Forward Wave Merging**: Preserved atomic task commits on topic branches with 1-click merge button in HUD.

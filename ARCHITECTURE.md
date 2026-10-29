@@ -266,3 +266,11 @@ esearch_papers) for scoped cosine similarity retrieval.
 3. **Ephemeral In-Memory Clipboard Buffer**: Clipboard history retains a maximum of 20 items in volatile RAM only, automatically scrubbed of API keys/passwords, and purged immediately on Windows lock or app shutdown.
 4. **Permanent Obsidian Web Research Archive**: Scraped technical documentation and research articles are cleaned and saved permanently to `vault/Study/Web Research/YYYY-MM/` with source URLs, executive summaries, and key takeaways.
 
+---
+
+## 29. Multi-Agent Arbitration, Database Hygiene & Time-Aware Audio (Locked In)
+1. **Chief Architect Synthesis**: When specialist subagents (Code Reviewer, Test Architect, Security Auditor) generate conflicting suggestions, Phenom synthesizes a unified recommendation balancing security and testability, presenting a single cohesive proposal in the HUD.
+2. **Automated Weekly Vector Index Maintenance**: Every Sunday at 3:00 AM (or on next idle), the background engine vacuums SQLite/SQLCipher databases, prunes orphaned vector chunks from deleted files, and validates embedding integrity.
+3. **Time-Aware Night Audio Mode**: After 11:00 PM, Phenom automatically attenuates TTS speech volume by 40%, adopts a softer, calm vocal cadence, and silences non-critical chimes.
+4. **Fast-Forward Wave Merging with HUD Review**: Autonomous feature waves maintain individual atomic task commits on the branch, presenting a 1-click merge button in the HUD alongside a generated changelog summary.
+
