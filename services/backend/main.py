@@ -904,3 +904,36 @@ async def list_coding_workspaces():
             if os.path.isdir(p):
                 workspaces.append({"id": entry, "path": p})
     return {"workspaces_root": workspace_manager.workspaces_root, "workspaces": workspaces}
+
+@app.get("/api/gaming/status", dependencies=[Depends(verify_session_token)])
+async def get_gaming_status():
+    from services.backend.automation.gaming_mode import gaming_manager
+    is_game, game_name, reason = gaming_manager.detect_gaming_state()
+    return {
+        "gaming_mode_active": gaming_manager.gaming_mode_active,
+        "active_game": gaming_manager.active_game_name or game_name,
+        "detection_reason": gaming_manager.detection_reason or reason,
+        "power_plan": gaming_manager.active_power_plan
+    }
+
+@app.post("/api/gaming/toggle", dependencies=[Depends(verify_session_token)])
+async def toggle_gaming_mode(payload: Dict[str, Any]):
+    from services.backend.automation.gaming_mode import gaming_manager
+    enable = payload.get("enable", not gaming_manager.gaming_mode_active)
+    if enable:
+        res = await gaming_manager.enter_gaming_mode(payload.get("game_name", "manual_override"))
+    else:
+        res = await gaming_manager.exit_gaming_mode()
+    return res
+
+@app.get("/api/notifications/digest", dependencies=[Depends(verify_session_token)])
+async def get_notifications_digest():
+    from services.backend.automation.notification_digest import notification_digest_manager
+    digest = notification_digest_manager.generate_spoken_digest()
+    return digest
+
+@app.post("/api/notifications/digest/clear", dependencies=[Depends(verify_session_token)])
+async def clear_notifications_digest():
+    from services.backend.automation.notification_digest import notification_digest_manager
+    cleared = notification_digest_manager.clear_buffer()
+    return {"status": "cleared", "cleared_count": cleared}

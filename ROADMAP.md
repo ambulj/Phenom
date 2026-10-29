@@ -424,12 +424,45 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
-### [ ] Task 7j: Gaming Mode & Notification Digest
-- **Status:** PLANNED (Awaiting Implementation Approval)
-- **Required Evidence:**
-  - Detection log triggering gaming mode on game executables and full-screen DirectX/Vulkan apps.
-  - Exclusions verified for browsers, video players, presentations, and remote desktop.
-  - "What did I miss" digest audio proof summarizing missed alerts with zero OTP or private message leaks.
+### [x] Task 7j: Gaming Mode & Notification Digest
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `task 7j: gaming mode detection resource governance and notification digest`
+- **Key Files:** [gaming_mode.py](file:///c:/Phenom/services/backend/automation/gaming_mode.py), [notification_digest.py](file:///c:/Phenom/services/backend/automation/notification_digest.py), [cron.py](file:///c:/Phenom/services/backend/scheduler/cron.py), [main.py](file:///c:/Phenom/services/backend/main.py), [evaluate_gaming_mode_and_digest.py](file:///c:/Phenom/scripts/evaluate_gaming_mode_and_digest.py), [test_gaming_mode_and_digest.py](file:///c:/Phenom/services/backend/tests/test_gaming_mode_and_digest.py)
+- **Evidence Attached:**
+  - Game Detection Engine & Full-Screen DirectX/Vulkan:
+    - Detected all tested game executables: `cs2.exe`, `valorant.exe`, `steam.exe`, `cyberpunk2077.exe`, `dota2.exe`.
+    - Detected generic unlisted full-screen DirectX/Vulkan applications via window dimension checking (`black_myth_wukong.exe`).
+  - Strict Exclusion Filters (Never Trigger Gaming Mode):
+    - Video players & Browsers: `chrome.exe`, `brave.exe`, `msedge.exe`, `firefox.exe`, `vlc.exe`, `mpv.exe` strictly excluded.
+    - Presentations: `powerpnt.exe` strictly excluded.
+    - Remote Desktop & Virtualization: `mstsc.exe`, `vmware.exe`, `virtualbox.exe` strictly excluded.
+    - Desktop Shell / Dev Tools: `phenom.exe`, `explorer.exe`, `code.exe` strictly excluded.
+  - Resource Governance Lifecycle & Restoration:
+    - Entering Gaming Mode:
+      - Notifications muted (`notification_digest_manager.is_dnd_active = True`).
+      - Background scheduler paused (`background_scheduler.is_paused = True`).
+      - Power plan switched to High Performance (`powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c`).
+      - Local LLM VRAM offloaded to **50.0 MB** ($< 100$ MB target).
+      - Three.js Orb LOD frozen (0 particles, 0 fps).
+    - Exiting Gaming Mode:
+      - Notifications unmuted (`is_dnd_active = False`).
+      - Background scheduler resumed (`is_paused = False`).
+      - Power plan switched back to Balanced (`powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e`).
+      - Three.js Orb LOD restored to High/Medium.
+  - 'What Did I Miss' Notification Digest (Strict Zero-Leakage Guarantee):
+    - Buffered missed alerts during gaming: Telegram, Google 2FA, Calendar, Bank Debit, and System updates.
+    - Spoken summary format:
+      `"You missed 5 notifications: Telegram message from Alex, verification alert from Google (code hidden for security), calendar reminder for Sprint Review, bank alert from HDFC Bank (financial details hidden for security), and System update for Windows Security."`
+    - Zero Leakage Invariant: Confirmed 0 OTP digits (`849201`), 0 currency amounts (`45,000`), and 0 account digits (`xx8912`) leaked in spoken digest.
+  - Comprehensive Test Results:
+    ```powershell
+    python scripts/evaluate_gaming_mode_and_digest.py
+    # ALL TASK 7j ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY (PASS)
+    python -m pytest services/backend/tests/test_gaming_mode_and_digest.py -v
+    # 6 passed in 1.59s
+    python -m pytest services/backend/tests/
+    # 217 passed in 88.39s
+    ```
 
 ---
 

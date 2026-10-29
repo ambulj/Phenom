@@ -18,9 +18,22 @@ class BackgroundScheduler:
     def __init__(self, db_manager=None):
         self.db = db_manager or encrypted_db
         self._running = False
+        self._paused = False
         self._task: Optional[asyncio.Task] = None
         self._callbacks: Dict[str, Callable] = {}
         self._listeners: List[Callable[[Dict[str, Any]], None]] = []
+
+    def pause(self):
+        """Pauses scheduled execution (e.g. during gaming mode)."""
+        self._paused = True
+
+    def resume(self):
+        """Resumes scheduled execution."""
+        self._paused = False
+
+    @property
+    def is_paused(self) -> bool:
+        return self._paused
 
     def register_callback(self, action_type: str, fn: Callable):
         """Registers a handler for a specific action type (e.g. notify, check_alerts)."""
@@ -168,6 +181,9 @@ class BackgroundScheduler:
 
     async def execute_due_jobs(self) -> int:
         """Finds and executes any due jobs. Returns count of executed jobs."""
+        if self._paused:
+            return 0
+
         now = datetime.now(timezone.utc)
         now_str = now.isoformat()
         conn = self.db.get_connection()
