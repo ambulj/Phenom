@@ -162,3 +162,22 @@ undll32.exe user32.dll,LockWorkStation and the Guardian kill switch, confirming 
 3. **Smart Watchdog Crash Recovery**: Process watchdog restarts crashed backend within 3 seconds, sanitizes memory dumps, and posts a notification in the HUD.
 4. **Staged Wave Refactoring**: Large-scale codebase refactoring executes in dependency waves with git checkpoints and preview diffs.
 5. **3-Way Conflict Detection**: Concurrent file modifications trigger an automated 3-way diff comparison in the HUD to prevent clobbering active edits.
+
+
+---
+
+## 18. Advanced Engineering Architecture (Locked In)
+1. **5-Pillar Code Reviews**: PR reviews enforce security (secret/injection prevention), performance, null safety, test coverage, and typing integrity.
+2. **Scientific Hypothesis Debugging**: Root-cause investigation follows a structured loop: Hypothesis formulation -> Minimal reproducible test -> Git bisect -> Patch proposal -> Regression verification.
+3. **Database Tiered Safety**: Read-only SQL queries are Tier 0 auto-approved; DDL/DML mutations (UPDATE, DELETE, DROP) require Tier 2 confirmation with preview of affected rows.
+4. **Environment Secret Masking**: Console stdout/stderr streams and action logs automatically intercept and mask values found in active .env files with [REDACTED_SECRET].
+5. **In-Situ API Testing**: Integrated developer tooling to inspect local HTTP endpoints, validate headers/payloads, and scaffold mock test fixtures.
+
+---
+
+## 19. Daily Engineering Routines & Focus (Locked In)
+1. **Interactive 3-Point Standup**: Morning briefings prioritize: 1. Top 3 daily objectives; 2. Calendar focus blocks; 3. Urgent PR reviews; followed by conversational priority selection.
+2. **Full Engineering Wrap-Up**: Evening macro audits git repositories for uncommitted changes, appends a structured daily summary to Obsidian, reviews open checklists, and locks the workstation.
+3. **50/10 Focus Sprints**: 50-minute deep-work sprints queue non-urgent notifications into a digest and alert on social/video distraction patterns.
+4. **Obsidian Reading Queue**: 'Save paper/link' command extracts title, abstract, and tags into ault/Study/Reading List.md.
+5. **Audio Completion Ping**: Tasks taking > 30 seconds trigger a soft Jarvis chime and a concise 1-sentence spoken completion summary.

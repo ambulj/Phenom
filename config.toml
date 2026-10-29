@@ -1,5 +1,5 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-31)
+# Configured and locked per Owner Decisions (Rounds 8-35)
 
 [assistant]
 nickname = "Abhi"
@@ -52,6 +52,8 @@ wake_word_threshold = 0.65             # Strict 0.65+ confidence to reject backg
 wake_word_sliding_ms = 500             # 500ms sliding confirmation window
 wake_word_debounce_seconds = 2         # 2-second debounce & 10s cooldown on false triggers
 speaker_verification = true            # Filter out background chatter/media using enrolled voiceprint
+task_completion_ping = "soft_chime_and_voice_summary" # Soft Jarvis chime + 1-sentence recap on tasks > 30s
+compound_macros = true                 # Chained multi-step macros ('wrap up today')
 
 [shell]
 default_runner = "pwsh"                # PowerShell 7 primary subprocess runner
@@ -109,6 +111,13 @@ auto_workspace_detect = true           # Detect active workspace and auto-switch
 multi_agent_roles = "specialist_subagents" # Phenom summons specialist roles (Test Architect, Code Reviewer, Security Auditor)
 package_managers = "adaptive_auto_detect" # Detect and use active project managers (uv/pip, pnpm/npm, cargo)
 test_generation_policy = "test_driven_pairing" # Automatically write matching pytest / jest test suites alongside every new module or feature
+code_review_rigor = "5_pillar"         # Security, Performance, Null safety, Test coverage, Typing
+docstring_style = "google_sphinx"      # Complete parameter descriptions, return types, usage examples
+prompt_override_file = ".phenom/prompt.md" # Automatically load workspace prompt override if present
+debugging_approach = "scientific_hypothesis_loop" # Hypothesis -> Minimal repro -> Git bisect -> Patch -> Regression test
+secret_intervention = "proactive_block_and_migrate" # Block commit, offer 1-click migration to Credential Manager or .env
+api_testing_utility = "in_situ_inspector" # Test local REST endpoints, inspect headers, scaffold mocks
+console_secret_masking = true          # Intercept stdout/stderr and auto-mask any values from .env with [REDACTED_SECRET]
 coding_sandbox = "workspace_subprocess" # Local workspace subprocess with strict path boundary & execution timeouts
 vision_background = true               # Automatic background screen context during active coding/debugging sessions
 vision_sample_trigger = "event_failure" # Capture screen on terminal failure or IDE error highlight
@@ -117,6 +126,20 @@ git_pre_push_gate = "autonomous"       # Automatically run tests, linter, and se
 layout_presets = true                  # Workspace presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%)
 clipboard_assistance = "smart_dev"     # Auto-detect stack traces, regex, JSON, or git URLs in clipboard and offer 1-click action
 context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
+
+[database]
+query_safety = "tiered_dml_preview"    # Read-only queries Tier 0 auto-approved; DDL/DML Tier 2 approval with row preview
+
+[docker]
+container_controls = "tiered_safety"   # Status/logs Tier 0, Start/restart Tier 1, Volume wipe/prune Tier 2
+
+[routines]
+wrap_up_sequence = "full_audit_and_tidy" # Audit git repos, append daily summary, review open items, offer lock/sleep
+morning_standup = "interactive_3_point" # Top 3 daily objectives + Calendar focus blocks + Pending PRs
+dependency_vulnerability_audit = "proactive_patch_pr" # Scan CVEs, draft bump PRs with release notes and tests
+focus_sprint_duration_minutes = 50     # 50m deep work + 10m break
+focus_break_duration_minutes = 10
+reading_queue_path = "vault/Study/Reading List.md" # 'Save this paper/link' extracts abstract/metadata
 
 [resilience]
 cloud_stall_action = "graceful_local_downgrade" # Terminate stalled cloud stream, finish on local 8B, notify in HUD

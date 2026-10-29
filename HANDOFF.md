@@ -214,3 +214,20 @@ undll32.exe user32.dll,LockWorkStation) + Guardian kill switch.
 - **Low Power Profile**: Throttle LLM threads and set Orb to Low LOD when battery < 20%.
 - **Wake Word Debounce**: 2-second debounce & 10s cooldown on rapid fluttering triggers.
 - **Large Remote Delivery**: Chunked 45MB ZIP delivery for files exceeding 50MB.
+
+### Advanced Engineering Workflows & Daily Routines (Rounds 32-35)
+- **5-Pillar Code Reviews**: Security, performance, null safety, test coverage, and typing rigor.
+- **Compound Chained Macros**: 'Phenom, wrap up today' (tests -> commit -> Obsidian log -> lock screen).
+- **Workspace Prompt Overrides**: Auto-load .phenom/prompt.md from active workspace if present.
+- **Docstring Standard**: Google / Sphinx formatted docstrings with typing and examples.
+- **Scientific Debugging Loop**: Hypothesis -> minimal repro test -> git bisect -> patch -> regression test.
+- **Database Query Safety**: Read-only queries Tier 0; DDL/DML mutations Tier 2 with preview.
+- **Proactive Secret Migration**: Block commits on exposed secrets; offer 1-click migration to Credential Manager.
+- **Audio Completion Ping**: Soft Jarvis chime + 1-sentence voice recap on long background tasks (>30s).
+- **Tiered Docker Controls**: Status/logs Tier 0, Start/restart Tier 1, Volume wipe/prune Tier 2.
+- **Interactive 3-Point Standup**: Top 3 daily objectives + calendar focus blocks + pending PRs.
+- **Dependency CVE Auditing**: Proactive vulnerability scans drafting non-breaking bump PRs with test suites.
+- **50/10 Focus Sprints**: 50m deep work + 10m break with notification queuing and distraction nudges.
+- **In-Situ API Testing**: Integrated REST endpoint tester, header inspector, and mock fixture scaffolding.
+- **Obsidian Reading Queue**: 'Save this paper/link' extracts abstract/metadata to ault/Study/Reading List.md.
+- **Console Secret Masking**: Intercept stdout/stderr and auto-mask .env values with [REDACTED_SECRET].

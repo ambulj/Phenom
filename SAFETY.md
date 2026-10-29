@@ -117,3 +117,12 @@ undll32.exe user32.dll,LockWorkStation) and engages the Guardian kill switch.
 4. **Prompt Injection Defense**: When untrusted web content or emails contain adversarial instructions ('Ignore previous instructions...'), Phenom sanitizes the text, strips malicious command vectors, and continues safe analytical evaluation.
 5. **Zero Telemetry & Local Crash Dumps**: No crash dumps, memory snapshots, or usage metrics depart the machine; logs reside strictly in ~/Documents/Phenom/logs/.
 6. **Strict UAC Elevation**: Any Windows process requiring elevated administrative privileges strictly triggers the standard Windows UAC prompt; background bypass is impossible by construction.
+
+
+---
+
+## 12. Database, Container & Secret Safety Guarantees (Rounds 32-35)
+1. **Database Query Safety**: Read-only SQL queries (SELECT, PRAGMA) are classified as Tier 0. Any mutation query (UPDATE, DELETE, DROP, ALTER, TRUNCATE) is classified as Tier 2, requiring explicit preview of affected tables and estimated row impact before execution.
+2. **Container Lifecycle Controls**: Docker status inspection and log reading are Tier 0. Starting, stopping, or restarting containers is Tier 1. Removing containers, pruning networks, or wiping data volumes is Tier 2, strictly requiring interactive confirmation.
+3. **Automatic Secret Masking in Logs & Console**: Console streams, stdout/stderr pipelines, and action logs automatically cross-reference active .env values and Windows Credential Manager entries, replacing sensitive strings with [REDACTED_SECRET] before rendering or persisting to disk.
+4. **Proactive Secret Migration**: If an uncommitted file contains hardcoded API keys or private tokens, git commit actions are blocked, prompting a 1-click migration to Windows Credential Manager or .env referenced in .gitignore.
