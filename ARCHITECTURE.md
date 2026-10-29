@@ -125,3 +125,20 @@ Tables: `messages`, `facts`, `learned_rules`, `approvals_remembered`, `action_lo
 ## 13. Context Management & Dual Escalation (Locked In)
 1. **Auto-Compaction**: When conversations reach 80% of local context capacity, older turns are automatically summarized into structured facts and semantic memory.
 2. **Cloud Nemotron Rollover**: For ultra-long context operations (such as multi-file repository diffs or massive build logs), Phenom escalates to Cloud Nemotron's 128k context window, keeping privacy invariants intact.
+
+
+---
+
+## 14. Phase 4: Obsidian Vault, RAG & Media Governance (Locked In)
+1. **Structured Engineering Daily Notes**: Daily notes formatted under ault/Daily Notes/YYYY-MM-DD.md containing ## 🎯 Focus & Goals, ## 🔨 Code & Commits, ## 🧠 Technical Learnings, and ## 📌 Follow-ups.
+2. **Exact Wikilink Citations**: RAG and document question answering cites sources with exact clickable wikilinks (e.g. [[Architecture#L42]]).
+3. **Read-Only Photo Indexing**: Photos in ~/Pictures indexed with EXIF metadata and local AI visual tags (receipt, diagram, screenshot) stored encrypted in SQLCipher; zero file edits/moves per Rule 6.
+4. **Reversible Cleanup & Rollback Manifest**: Temporary/download cleanups move files to Windows Recycle Bin only (Rule 7), automatically generating a rollback manifest note in Obsidian.
+
+---
+
+## 15. Phase 5: Financial Feeds, Documents & Modes (Locked In)
+1. **Financial Watchlist Invariants**: Informational tracking only (Rule 5: never trade, never suggest buy/sell). Features ±3% intraday swing threshold alerts and an automated 04:00 PM IST market closing digest.
+2. **Curated Feeds**: News aggregation across Hacker News, ArXiv AI daily, GitHub Trending, and Indian business headlines.
+3. **Modern Executive Document Styling**: Generated documents (.docx, .pptx, .xlsx, .pdf) formatted with modern executive aesthetics, crisp tables, and callouts.
+4. **Adaptive Modes**: Work (code & witty banter), Study (deep technical rigor & ambient focus audio), and Chill (relaxed banter & media control).

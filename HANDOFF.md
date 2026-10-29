@@ -178,3 +178,13 @@ npm run dev
 - **Memory Decay Policy**: Spaced relevance weighting (frequently referenced profile/rules stay permanent; transient notes decay after 14 days).
 - **Screen & Vision Reasoning**: Dual OCR + Vision approach (fast local Windows OCR for exact code/text, paired with multimodal vision model for layout/diagram interpretation).
 - **Administrative Privileges**: Strict Windows UAC elevation required for any elevated commands; zero bypass of Windows security gates.
+
+### Phase 4 & Phase 5 Architecture Decisions (Rounds 24-25)
+- **Daily Engineering Notes**: Structured template (## 🎯 Focus & Goals, ## 🔨 Code & Commits, ## 🧠 Technical Learnings, ## 📌 Follow-ups).
+- **RAG Source Citations**: Exact clickable wikilinks to note headers or lines (e.g. [[Architecture#L42]]).
+- **Financial Watchlist Tracking**: ±3% intraday swing threshold alerts + daily 04:00 PM IST market closing summary (Rule 5: informational only, never trade/recommend).
+- **Document Generation Styling**: Modern Executive visual branding (clean typography, styled tables, callout blocks, executive summary covers).
+- **Photo Indexing**: Read-only EXIF + local AI visual tagging (receipt, diagram, screenshot) stored encrypted in SQLCipher (Rule 6: never edit/move).
+- **Reversible Cleanup**: Windows Recycle Bin only (Rule 7) with an automated rollback manifest note created in Obsidian.
+- **News Aggregation**: Curated feeds across Hacker News, ArXiv AI, GitHub Trending, and Indian business headlines.
+- **Adaptive Modes**: Work (code & high banter), Study (deep technical rigor & ambient focus audio), Chill (relaxed banter & music control).

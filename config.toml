@@ -1,5 +1,5 @@
 # Phenom Desktop Assistant Configuration
-# Configured and locked per Owner Decisions (Rounds 8-23)
+# Configured and locked per Owner Decisions (Rounds 8-25)
 
 [assistant]
 nickname = "Abhi"
@@ -17,6 +17,10 @@ cloud_escalation = "dynamic_per_task"  # Escalate dynamically based on task comp
 context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
 speech_cadence = "adaptive"            # 1.1x brisk pace for banter/status; 0.95x measured pace for technical breakdowns
 break_reminders = "spoken_idle"        # Subtle 1-sentence voice nudge when an idle gap occurs during long focus
+
+[modes]
+active_mode = "work"
+profiles = ["work", "study", "chill"]  # Work (code & banter), Study (deep technical rigor & focus audio), Chill (relaxed banter)
 
 [ui]
 orb_mode = "floating_dock"             # Subtle floating particle orb on desktop with auto-dock to screen edge
@@ -57,7 +61,9 @@ remote_url = ""
 auto_push = false
 structure = "structured_folders"       # Structured folders: Daily Notes, Projects, Study/Research, People/Entities
 daily_log_mode = "automated_evening"   # Structured evening summary appended to Daily Notes/YYYY-MM-DD.md
+daily_note_template = "structured_engineering" # ## 🎯 Focus & Goals, ## 🔨 Code & Commits, ## 🧠 Technical Learnings, ## 📌 Follow-ups
 linking_style = "deep_wikilinks_graph" # Auto-generate [[Topic]] and [[Project]] bidirectional links for rich Obsidian Graph View exploration
+rag_citation_style = "exact_wikilinks" # Exact clickable wikilink citations to note headers or lines ([[Architecture#L42]])
 
 [memory]
 decay_policy = "spaced_relevance"      # Frequently referenced facts stay permanent; transient notes decay after 14 days
@@ -72,6 +78,25 @@ index_paths = [
     "%USERPROFILE%\\Documents",
     "%USERPROFILE%\\Desktop"
 ]
+
+[photos]
+indexing_mode = "exif_plus_visual_tags" # Read-only EXIF + local AI visual tagging (receipt, whiteboard, diagram, screenshot) stored encrypted
+
+[cleanup]
+recycle_bin_only = true                # Delete means Recycle Bin; never permanent delete
+rollback_manifest = true               # Generate automated rollback manifest note in Obsidian
+
+[finance]
+intraday_alert_threshold = 0.03        # Alert on ±3% intraday swings on tracked watchlist tickers
+daily_closing_summary = true
+closing_summary_time = "16:00"         # 04:00 PM IST market closing summary
+disclaimer = "Informational only, not financial advice"
+
+[news]
+sources = ["hacker_news", "arxiv_ai", "github_trending", "indian_business"] # Curated tech & market feeds
+
+[documents]
+visual_style = "modern_executive"      # Clean typography, styled tables, visual callout boxes, executive summary cover
 
 [developer]
 toolchain_integration = "deep"         # Auto-detect active git repo, branch, uncommitted diffs, running Docker containers
