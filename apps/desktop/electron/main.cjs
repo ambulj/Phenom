@@ -1,5 +1,6 @@
 const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeImage, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
@@ -82,8 +83,27 @@ function startBackend() {
 const isHiddenStart = process.argv.includes('--hidden') || process.argv.includes('--quiet');
 
 function createTray() {
-  const icon = nativeImage.createEmpty();
-  tray = new Tray(icon);
+  let icon = nativeImage.createEmpty();
+  const iconCandidates = [
+    path.join(__dirname, '../dist/icon.ico'),
+    path.join(__dirname, '../public/icon.ico'),
+    path.join(__dirname, 'icon.ico'),
+    path.join(process.resourcesPath || '', 'icon.ico')
+  ];
+  for (const c of iconCandidates) {
+    if (fs.existsSync(c)) {
+      try {
+        icon = nativeImage.createFromPath(c);
+        break;
+      } catch (e) {}
+    }
+  }
+  try {
+    tray = new Tray(icon);
+  } catch (err) {
+    console.warn('[Phenom] Tray initialization skipped:', err.message);
+    return;
+  }
   tray.setToolTip('Phenom - Windows 11 Personal AI Assistant');
 
   const contextMenu = Menu.buildFromTemplate([
