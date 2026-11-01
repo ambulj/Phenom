@@ -52,7 +52,7 @@ mouse==0.7.1; sys_platform == "win32"
 mouseinfo==0.1.3
 mpmath==1.3.0
 mss==10.2.0
-multidict==7.1.0
+multidict==7.2.1
 nest-asyncio==1.6.0
 networkx==3.6.1
 numpy==2.4.6
