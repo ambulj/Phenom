@@ -101,17 +101,29 @@ class TTSEngine:
                 self._is_speaking = True
 
             try:
-                spoken_cloud = False
+                spoken_audio = False
+                # 1. Sarvam AI (if explicitly configured and valid key present)
                 try:
                     from services.backend.voice.cloud_tts import sarvam_tts
-                    if sarvam_tts.is_hindi_or_hinglish(text):
+                    if sarvam_tts.get_api_key() and sarvam_tts.is_hindi_or_hinglish(text):
                         wav = sarvam_tts.synthesize(text)
                         if wav:
-                            spoken_cloud = self._speak_wav_bytes(wav)
+                            spoken_audio = self._speak_wav_bytes(wav)
                 except Exception:
-                    spoken_cloud = False
+                    spoken_audio = False
 
-                if not spoken_cloud and speaker:
+                # 2. Madhur (hi-IN-MadhurNeural) - Primary Indian Voice
+                if not spoken_audio:
+                    try:
+                        from services.backend.voice.madhur_tts import madhur_tts
+                        audio_bytes = madhur_tts.synthesize(text)
+                        if audio_bytes:
+                            spoken_audio = self._speak_wav_bytes(audio_bytes)
+                    except Exception:
+                        spoken_audio = False
+
+                # 3. Local SAPI5 Fallback (if offline or Madhur unreachable)
+                if not spoken_audio and speaker:
                     # Speak sentence asynchronously via SAPI5 local voice
                     speaker.Speak(text, SVSFlagsAsync)
                     

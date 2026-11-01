@@ -4,6 +4,8 @@
 [assistant]
 nickname = "Abhi"
 voice_language = "hi-IN"
+primary_voice = "madhur"                # Primary default voice (Madhur - Indian Hindi & Hinglish)
+voice_model = "hi-IN-MadhurNeural"
 cloud_hindi_tts = true
 tts_mode = "hybrid"                   # Hybrid: Local offline TTS for quick commands, Sarvam Bulbul v3 for briefings and summaries
 sarvam_speaker = "shubh"
