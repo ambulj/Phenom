@@ -11,6 +11,6 @@
     "generate-types": "python services/backend/scripts/generate_types.py"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^10.0.6"
   }
 }
