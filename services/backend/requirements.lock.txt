@@ -79,7 +79,7 @@ pypdf==6.21.1
 pyperclip==1.11.0
 pyrect==0.2.0
 pyscreeze==1.0.1
-pytest==9.1.1
+pytest==9.2.0
 pytest-asyncio==1.4.1
 pytest-timeout==2.4.0
 python-bidi==0.6.11
