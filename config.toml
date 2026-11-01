@@ -5,6 +5,7 @@
 nickname = "Abhi"
 voice_language = "hi-IN"
 cloud_hindi_tts = true
+tts_mode = "hybrid"                   # Hybrid: Local offline TTS for quick commands, Sarvam Bulbul v3 for briefings and summaries
 sarvam_speaker = "shubh"
 voice_flavor = "modern_urban_indian"   # Metro English accent with punchy natural Hinglish idioms ('sorted', 'scene', 'phod diya')
 banter_level = "high"                  # High banter: Heavily playful, sharp comebacks, treats user like Tony Stark, banter-heavy Hinglish
@@ -62,7 +63,7 @@ conflict_detector_enabled = true       # Detect Win32 hotkey collisions and offe
 wake_word_threshold = 0.65             # Strict 0.65+ confidence to reject background movie/speech triggers
 wake_word_sliding_ms = 500             # 500ms sliding confirmation window
 wake_word_debounce_seconds = 2         # 2-second debounce & 10s cooldown on false triggers
-wake_phrases = ["hey_phenom", "jarvis"] # Dual wake-phrases recognized
+wake_phrases = ["hey_phenom"]           # Dedicated wake phrase selected by owner
 speaker_verification = true            # Filter out background chatter/media using enrolled voiceprint
 offline_stt_engine = "whisper_base"    # Quantized Whisper on CUDA/CPU for seamless offline speech recognition
 dynamic_prompt_biasing = true          # Inject project codenames and jargon into Whisper initial prompt
@@ -83,6 +84,9 @@ pty_interactive_mode = true            # Interactive PTY in HUD console for stdi
 
 [security]
 uac_elevation = "strict_uac_prompt"    # Always require explicit Windows UAC confirmation; never bypass administrative gates
+confirmation_phrase = "Phenom execute" # Fixed spoken/typed confirmation phrase for risky commands
+speaker_verification_for_phrase = true # Spoken confirmation requires biometric speaker verification
+coding_agent_boundary = "prompt_on_out_of_bounds" # Out-of-project edits trigger explicit Tier 2 confirmation dialog
 
 [vault]
 vault_path = "%USERPROFILE%\\Documents\\Phenom\\vault"
@@ -184,6 +188,17 @@ query_safety = "tiered_dml_preview"    # Read-only queries Tier 0 auto-approved;
 
 [docker]
 container_controls = "tiered_safety"   # Status/logs Tier 0, Start/restart Tier 1, Volume wipe/prune Tier 2
+
+
+[briefing]
+scheduled_time = "08:30"
+enabled_modules = [
+    "weather_aqi",                   # Local Weather & Air Quality Index
+    "calendar_schedule",             # Today's Google Calendar appointments
+    "gmail_unread_and_drafts"        # Priority unread count and draft status
+]
+tts_provider = "sarvam_bulbul"       # High-fidelity natural Indian speech for morning briefing
+max_spoken_duration_seconds = 60
 
 [routines]
 wrap_up_sequence = "full_audit_and_tidy" # Audit git repos, append daily summary, review open items, offer lock/sleep
