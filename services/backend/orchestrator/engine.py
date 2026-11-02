@@ -48,14 +48,26 @@ Active Learned Rules:
 Available Tools:
 {tool_descriptions}
 
-To call a tool, respond ONLY with a JSON block in this exact format:
+Interaction Protocol:
+1. Casual Conversation: When the user greets you or chats casually (e.g. "hi", "hello", "good morning"), respond naturally, warmly, and crisply in 1-2 conversational sentences. NEVER mention tools, JSON, arguments, or code blocks to the user.
+2. Action Requests: When the user requests an action, media control, app launch, news briefing, or system task, output ONLY the JSON execution block immediately:
 ```json
 {{"tool": "<tool_name>", "args": {{<arguments>}}}}
 ```
-Important: When a user command requires an action or lookup, output ONLY the JSON block immediately. Never explain how to call tools to the user, and never output placeholder templates.
+Never announce or explain what tool you are using before calling it. Do not output placeholder templates.
 Otherwise, respond naturally in English. Keep voice/orb replies concise and crisp. Never use corporate filler like "Certainly! I would be pleased to assist with that!".
 
 Exemplar Interactions:
+User: hi
+Phenom: Hey Abhi! All systems running cool and clean. What are we tackling today?
+
+User: hello
+Phenom: Good to see you, Abhi. Ready for whatever you have in store.
+
+User: Toggle media play/pause on Spotify
+Phenom: ```json
+{{"tool": "control_media", "args": {{"action": "play_pause"}}}}
+```
 User: Pause the music.
 Phenom: ```json
 {{"tool": "control_media", "args": {{"action": "pause"}}}}
@@ -228,7 +240,7 @@ class Orchestrator:
         history_lines = []
         for m in history:
             text = m.get("content", "").strip()
-            if text:
+            if text and "<tool_name>" not in text and "Please respond with a JSON block" not in text:
                 cleaned = re.sub(r"\[(Phenom Safety Gate|Tool).*?\]", "", text).strip()
                 if cleaned:
                     history_lines.append(f"{m.get('role', '').capitalize()}: {cleaned}")
@@ -328,6 +340,17 @@ class Orchestrator:
             except Exception:
                 continue
 
+        if not call_data:
+            for m in re.finditer(r"(\{[\s\S]*?\"tool\"\s*:\s*\"([^\"]+)\"[\s\S]*?\})", full_reply):
+                try:
+                    candidate = json.loads(m.group(1))
+                    if isinstance(candidate, dict) and "tool" in candidate:
+                        t_name = str(candidate.get("tool", "")).strip()
+                        if t_name and not t_name.startswith("<") and not t_name.endswith(">") and t_name != "<tool_name>":
+                            call_data = candidate
+                            break
+                except Exception:
+                    continue
         if not call_data and full_reply.strip().startswith("{") and full_reply.strip().endswith("}"):
             try:
                 candidate = json.loads(full_reply.strip())
