@@ -24,6 +24,9 @@ from services.backend.automation.human_takeover import takeover_manager, HumanTa
 from services.backend.automation.limits import AutomationLimitsManager
 from services.backend.voice.sound_fx import sound_fx
 from services.backend.safety.guardian import guardian
+from services.backend.vision.frame_grabber import frame_grabber
+from services.backend.vision.delta_detector import delta_detector
+from services.backend.vision.privacy_masker import privacy_masker
 
 class DesktopController:
     def __init__(self):
@@ -64,28 +67,29 @@ class DesktopController:
         secs = elapsed % 60
         return f"{mins:02d}:{secs:04.1f}"
 
-    def capture_screen_ram(self) -> Image.Image:
+    def capture_screen_ram(self, apply_privacy: bool = True) -> Image.Image:
         """
         Captures the primary monitor into an in-memory PIL Image.
         Never written to disk per screen privacy rule.
+        Optionally applies automatic window privacy masking.
         """
-        try:
-            with mss.mss() as sct:
-                monitor = sct.monitors[1] # Primary monitor
-                sct_img = sct.grab(monitor)
-                img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-                return img
-        except Exception:
-            try:
-                from PIL import ImageGrab
-                return ImageGrab.grab()
-            except Exception:
-                # In headless or non-interactive service sessions where GDI BitBlt is unavailable,
-                # provide an in-memory canvas so pipeline never crashes or writes to disk
-                return Image.new("RGB", (1920, 1080), color=(15, 23, 42))
+        raw_img = frame_grabber.grab_frame()
+        if apply_privacy:
+            masked_img, _ = privacy_masker.mask_sensitive_windows(raw_img)
+            return masked_img
+        return raw_img
 
-    def capture_screen_base64(self) -> str:
-        img = self.capture_screen_ram()
+    def capture_screen_delta(self, apply_privacy: bool = True) -> Tuple[Image.Image, bool, float, int]:
+        """
+        Captures the screen and computes delta against previous frame.
+        Returns (image, has_changed, delta_score, masked_count).
+        """
+        img = self.capture_screen_ram(apply_privacy=apply_privacy)
+        has_changed, delta_score = delta_detector.compute_delta(img)
+        return img, has_changed, delta_score, privacy_masker.last_masked_count
+
+    def capture_screen_base64(self, apply_privacy: bool = True) -> str:
+        img = self.capture_screen_ram(apply_privacy=apply_privacy)
         img.thumbnail((1280, 720)) # Lightweight size for UI live stream
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=50)

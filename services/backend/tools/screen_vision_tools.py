@@ -49,7 +49,7 @@ class AskScreenVisionCloudArgs(BaseModel):
 )
 async def inspect_screen(query: str = "Describe what is on the screen and highlight any open windows, dialogs, buttons, or errors.", include_elements: bool = True) -> Dict[str, Any]:
     """Captures screen in RAM and performs visual analysis with local Moondream2."""
-    img = _desktop_controller.capture_screen_ram()
+    img, has_changed, delta_score, masked_count = _desktop_controller.capture_screen_delta(apply_privacy=True)
     vlm_result = await moondream_client.query_image(img, prompt=query)
     description = vlm_result.get("description") or vlm_result.get("error") or "Screen captured but no details extracted."
 
@@ -65,6 +65,9 @@ async def inspect_screen(query: str = "Describe what is on the screen and highli
         "visual_summary": description,
         "elements_count": len(elements),
         "elements": elements,
+        "has_changed": has_changed,
+        "delta_score": round(delta_score, 4),
+        "privacy_masked_windows": masked_count,
         "message": f"Screen inspection complete: {description}"
     }
 
