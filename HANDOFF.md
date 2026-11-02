@@ -811,3 +811,16 @@ pm run build).
   - Target Combined Backend Suite: 55/55 passed in 35.83s.
   - Desktop Frontend Tests: 36/36 passed across all 7 test suites.
   - Desktop Production Build: Clean Vite bundle generated in 5.46s with 0 errors (`npm run build`).
+
+
+### Phase 3: Deep Obsidian Second-Brain Knowledge Graph Co-Pilot (Completed)
+- **Bidirectional Obsidian Knowledge Graph Indexer**: `services/backend/memory/graph_index.py` parses markdown notes in `vault/` for `[[wikilinks]]`, inline `#tags`, and YAML frontmatter (`tags`, `aliases`, `title`). Maintains forward links, incoming backlinks, and tag maps.
+- **Graph Topology Analytics**: Discovers isolated orphan notes (zero forward links and backlinks), detects dangling links to missing notes, and ranks concept hubs by degree centrality.
+- **Vault-Grounded Conversational Co-Pilot**: `services/backend/memory/graph_copilot.py` combines on-device CUDA text vector embeddings with graph neighborhood expansion to synthesize grounded answers citing `[[wikilinks]]`.
+- **Unlinked Mention Detection & Reversible Link Insertion**: Scans notes for unlinked mentions of vault note titles. `link_notes()` inserts `[[TargetNote]]`, creates an `undo_token`, and commits to the vault's local git repository. 100% reversible via `rollback_vault_note()`.
+- **Safety Registry Integration**: `services/backend/tools/obsidian_graph_tools.py` exposes `query_obsidian_graph` (Tier 0), `find_orphan_notes` (Tier 0), `synthesize_vault_topic` (Tier 0), and `link_vault_notes` (Tier 1).
+- **Verification Suites**:
+  - Phase 3 Backend Test Suite: 6/6 passed in 11.75s (`services/backend/tests/test_obsidian_graph_copilot.py`).
+  - Target Combined Backend Suite: 61/61 passed in 36.77s.
+  - Desktop Frontend Tests: 36/36 passed across all 7 test suites.
+  - Desktop Production Build: Clean Vite bundle generated in 5.14s with 0 errors (`npm run build`).

@@ -423,3 +423,24 @@ otification_policy == 'silent').
    - `abort_swarm_task`: Tier 1 tool requiring confirmation.
 7. **Guardian Kill Switch Full-Swarm Abort (< 25ms SLA)**:
    - Triggering the Guardian kill switch immediately invokes `swarm_manager.abort_all("guardian_halt")`, terminating all running headless browsers and subprocesses synchronously in < 25ms (verified ~20.9ms).
+
+
+---
+
+## 20. Deep Obsidian Second-Brain Knowledge Graph Guarantees (Phenom 6.0 Phase 3)
+
+1. **Strict Vault Sandboxing & Path Containment**:
+   - Every file read, link insertion, and graph traversal operation is constrained strictly within the configured vault directory (`resolve_and_sandbox_vault_path()`).
+   - Any path traversal (`..`), directory junction, or code repository collision is rejected with `VaultSandboxViolation`.
+2. **1-Click Reversible Link Insertions & Mandatory Git Commits**:
+   - Any automated modification to Obsidian notes (e.g., adding `[[wikilinks]]`) records a pre-mutation snapshot in the crystallizer undo registry, generating a unique `undo_token`.
+   - Every mutation is committed automatically to the vault's local git repository (`vault.commit_changes()`).
+   - Calling `rollback_vault_note(undo_token)` reverses link additions and restores original note contents cleanly.
+3. **Local-First Graph Privacy**:
+   - The bidirectional graph index (`ObsidianGraphIndex`) and semantic topic co-pilot (`ObsidianGraphCoPilot`) operate 100% locally using on-device CUDA text embeddings (`all-MiniLM-L6-v2`).
+   - Vault notes, daily logs, and personal ideas are never transmitted to cloud models without explicit user-previewed confirmation.
+4. **Safety Registry Classifications**:
+   - `query_obsidian_graph`: Tier 0 read-only tool.
+   - `find_orphan_notes`: Tier 0 read-only tool.
+   - `synthesize_vault_topic`: Tier 0 read-only tool.
+   - `link_vault_notes`: Tier 1 tool requiring interactive preview approval.
