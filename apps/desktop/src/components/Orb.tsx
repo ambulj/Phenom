@@ -117,7 +117,70 @@ export const Orb: React.FC<OrbProps> = ({
     const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
     camera.position.z = 240;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    let renderer: THREE.WebGLRenderer | null = null;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, depth: false, stencil: false });
+    } catch (e1) {
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, depth: false, stencil: false, powerPreference: 'low-power' });
+      } catch (e2) {
+        console.warn('WebGL initialization failed, using 2D Canvas fallback:', e2);
+      }
+    }
+
+    if (!renderer) {
+      const fallbackCanvas = document.createElement('canvas');
+      fallbackCanvas.width = width;
+      fallbackCanvas.height = height;
+      fallbackCanvas.style.width = '100%';
+      fallbackCanvas.style.height = '100%';
+      const fctx = fallbackCanvas.getContext('2d');
+      container.innerHTML = '';
+      container.appendChild(fallbackCanvas);
+
+      let animId: number;
+      const animateFallback = () => {
+        animId = requestAnimationFrame(animateFallback);
+        if (!fctx) return;
+        fctx.clearRect(0, 0, width, height);
+
+        const activeLod = QUALITY_LOD_CONFIGS[qualityRef.current] || QUALITY_LOD_CONFIGS.high;
+        if (activeLod.fps === 0 || activeLod.particles === 0) return;
+
+        const target = STATE_CONFIGS[targetStateRef.current] || STATE_CONFIGS.idle;
+        const colorHex = '#' + target.color.getHexString();
+        const t = performance.now() * 0.002;
+        const cx = width / 2;
+        const cy = height / 2;
+
+        const grad = fctx.createRadialGradient(cx, cy, 10, cx, cy, 90 + Math.sin(t * 3) * 15);
+        grad.addColorStop(0, colorHex);
+        grad.addColorStop(0.4, colorHex + '99');
+        grad.addColorStop(1, 'transparent');
+        fctx.fillStyle = grad;
+        fctx.beginPath();
+        fctx.arc(cx, cy, 110, 0, Math.PI * 2);
+        fctx.fill();
+
+        const pCount = Math.min(250, activeLod.particles);
+        for (let i = 0; i < pCount; i++) {
+          const angle = (i / pCount) * Math.PI * 2 + t * 0.8 * (i % 2 === 0 ? 1 : -1);
+          const dist = 70 + (i % 5) * 12 + Math.sin(t * 4 + i) * 8;
+          const px = cx + Math.cos(angle) * dist;
+          const py = cy + Math.sin(angle) * (dist * 0.65);
+          fctx.fillStyle = colorHex;
+          fctx.beginPath();
+          fctx.arc(px, py, 2.0, 0, Math.PI * 2);
+          fctx.fill();
+        }
+      };
+      animateFallback();
+
+      return () => {
+        cancelAnimationFrame(animId);
+      };
+    }
+
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     container.innerHTML = '';

@@ -6,6 +6,9 @@ const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { detectPythonCommand } = require('./pythonVersion.cjs');
 
+// Disable GPU hardware acceleration to avoid driver crashes (exit_code=-1073741819)
+app.disableHardwareAcceleration();
+
 // Generate fresh 32-byte session token at every launch
 const sessionToken = process.env.PHENOM_SESSION_TOKEN || crypto.randomBytes(32).toString('hex');
 process.env.PHENOM_SESSION_TOKEN = sessionToken;
