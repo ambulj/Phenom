@@ -32,10 +32,18 @@ function spawnBackendWithWatchdog(pythonTarget) {
     spawnArgs,
     {
       cwd: path.join(__dirname, '../../..'),
-      env: { ...process.env, PHENOM_SESSION_TOKEN: sessionToken },
-      stdio: 'inherit'
+      env: { ...process.env, PYTHONUNBUFFERED: '1', PHENOM_SESSION_TOKEN: sessionToken },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: process.platform === 'win32'
     }
   );
+
+  backendProcess.stdout.on('data', (d) => {
+    console.log(`[Backend] ${d.toString().trim()}`);
+  });
+  backendProcess.stderr.on('data', (d) => {
+    console.log(`[Backend] ${d.toString().trim()}`);
+  });
 
   backendProcess.on('error', (err) => {
     console.error('[Phenom Watchdog] Failed to spawn backend process:', err);
@@ -83,28 +91,45 @@ function startBackend() {
 const isHiddenStart = process.argv.includes('--hidden') || process.argv.includes('--quiet');
 
 function createTray() {
-  let icon = nativeImage.createEmpty();
   const iconCandidates = [
-    path.join(__dirname, '../dist/icon.ico'),
-    path.join(__dirname, '../public/icon.ico'),
+    path.join(__dirname, 'icon.png'),
     path.join(__dirname, 'icon.ico'),
+    path.join(__dirname, '../public/icon.png'),
+    path.join(__dirname, '../public/icon.ico'),
+    path.join(__dirname, '../dist/icon.png'),
+    path.join(__dirname, '../dist/icon.ico'),
+    path.join(process.resourcesPath || '', 'icon.png'),
     path.join(process.resourcesPath || '', 'icon.ico')
   ];
+
+  let icon = null;
   for (const c of iconCandidates) {
     if (fs.existsSync(c)) {
       try {
-        icon = nativeImage.createFromPath(c);
-        break;
-      } catch (e) {}
+        const loaded = nativeImage.createFromPath(c);
+        if (!loaded.isEmpty()) {
+          icon = loaded;
+          console.log('[Phenom] Tray icon loaded from:', c);
+          break;
+        }
+      } catch (e) {
+        console.warn('[Phenom] Failed to load icon from candidate:', c, e.message);
+      }
     }
   }
+
+  if (!icon || icon.isEmpty()) {
+    console.warn('[Phenom] Warning: No valid icon found for tray. Skipping tray setup.');
+    return;
+  }
+
   try {
     tray = new Tray(icon);
+    tray.setToolTip('Phenom - Windows 11 Personal AI Assistant');
   } catch (err) {
     console.warn('[Phenom] Tray initialization skipped:', err.message);
     return;
   }
-  tray.setToolTip('Phenom - Windows 11 Personal AI Assistant');
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -142,6 +167,19 @@ function createTray() {
   ]);
 
   tray.setContextMenu(contextMenu);
+
+  // Single click restores/focuses window
+  tray.on('click', () => {
+    if (mainWindow) {
+      if (mainWindow.isVisible()) {
+        mainWindow.focus();
+      } else {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    }
+  });
+
   tray.on('double-click', () => {
     if (mainWindow) {
       if (mainWindow.isVisible()) {
@@ -164,14 +202,16 @@ function checkPrerequisites() {
 }
 
 function createWindow() {
+  const iconPath = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
     width: 1080,
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    show: !isHiddenStart,
+    show: true,
     backgroundColor: '#0b0f19',
     title: 'Phenom',
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     frame: true,
     titleBarStyle: 'default',
     webPreferences: {
@@ -181,10 +221,47 @@ function createWindow() {
     }
   });
 
-  const devUrl = 'http://localhost:5173';
-  mainWindow.loadURL(devUrl).catch(() => {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+  const distPath = path.join(__dirname, '../dist/index.html');
+  let loaded = false;
+  const loadDist = () => {
+    if (loaded) return;
+    loaded = true;
+    console.log('[Phenom] Loading frontend from local dist:', distPath);
+    mainWindow.loadFile(distPath);
+  };
+
+  const req = http.get('http://localhost:5173', (res) => {
+    if (!loaded) {
+      loaded = true;
+      console.log('[Phenom] Connected to Vite dev server on 5173');
+      mainWindow.loadURL('http://localhost:5173');
+    }
   });
+  req.on('error', loadDist);
+  req.setTimeout(300, () => {
+    req.destroy();
+    loadDist();
+  });
+
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[Renderer Console] ${message}`);
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    console.log('[Phenom] Window ready-to-show event fired.');
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.moveTop();
+  });
+
+  // Fallback: force show after 1500ms
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      console.log('[Phenom] Fallback force-showing window.');
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  }, 1500);
 
   // Minimize to tray on close
   mainWindow.on('close', (e) => {
@@ -223,6 +300,22 @@ app.whenReady().then(() => {
 
   registerKillHotkey('CommandOrControl+Alt+P');
   registerKillHotkey('CommandOrControl+Alt+Escape');
+
+  try {
+    globalShortcut.register('Alt+Space', () => {
+      if (mainWindow) {
+        if (mainWindow.isVisible() && mainWindow.isFocused()) {
+          mainWindow.hide();
+        } else {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    });
+    console.log('[Phenom] Registered Alt+Space global summon hotkey.');
+  } catch (err) {
+    console.warn('[Phenom] Could not register Alt+Space:', err);
+  }
 
   app.on('activate', () => {
     if (mainWindow) {
