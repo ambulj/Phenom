@@ -7,5 +7,19 @@ contextBridge.exposeInMainWorld('phenom', {
     } catch {
       return '';
     }
+  },
+  isFirstRunDone: () => {
+    try {
+      return ipcRenderer.sendSync('phenom:is-first-run-done');
+    } catch {
+      return true;
+    }
+  },
+  setFirstRunDone: () => {
+    try {
+      return ipcRenderer.sendSync('phenom:set-first-run-done');
+    } catch {
+      return true;
+    }
   }
 });

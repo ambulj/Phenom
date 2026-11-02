@@ -19,7 +19,13 @@ import { HUDCard, HUDCardProps } from './components/HUDCard';
 import { StreamingConsole, ConsoleLine } from './components/StreamingConsole';
 
 export const App: React.FC = () => {
-  const [showFirstRun, setShowFirstRun] = useState<boolean>(() => !localStorage.getItem('phenom_first_run_done'));
+  const [showFirstRun, setShowFirstRun] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      if ((window as any).phenom?.isFirstRunDone?.()) return false;
+      if (localStorage.getItem('phenom_first_run_done') === 'true') return false;
+    }
+    return false;
+  });
   const [orbState, setOrbState] = useState<OrbState>('idle');
   const [orbQuality, setOrbQuality] = useState<OrbQualityLevel>('high');
   const [isConnected, setIsConnected] = useState<boolean>(false);

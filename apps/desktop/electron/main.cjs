@@ -15,6 +15,46 @@ ipcMain.on('phenom:get-session-token', (event) => {
   event.returnValue = sessionToken;
 });
 
+function getSettingsFilePath() {
+  try {
+    return path.join(app.getPath('userData'), 'phenom-settings.json');
+  } catch {
+    return path.join(__dirname, 'phenom-settings.json');
+  }
+}
+
+function isFirstRunDone() {
+  try {
+    const p = getSettingsFilePath();
+    if (fs.existsSync(p)) {
+      const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (data.first_run_done !== undefined) return Boolean(data.first_run_done);
+    }
+  } catch (e) {}
+  return true; // Already configured in config.toml
+}
+
+function setFirstRunDone() {
+  try {
+    const p = getSettingsFilePath();
+    let data = {};
+    if (fs.existsSync(p)) {
+      try { data = JSON.parse(fs.readFileSync(p, 'utf8')); } catch {}
+    }
+    data.first_run_done = true;
+    fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {}
+}
+
+ipcMain.on('phenom:is-first-run-done', (event) => {
+  event.returnValue = isFirstRunDone();
+});
+
+ipcMain.on('phenom:set-first-run-done', (event) => {
+  setFirstRunDone();
+  event.returnValue = true;
+});
+
 let mainWindow;
 let tray = null;
 let isQuitting = false;
@@ -27,11 +67,17 @@ function spawnBackendWithWatchdog(pythonTarget) {
 
   console.log(`[Phenom Watchdog] Starting backend service using ${pythonTarget.cmd} (${pythonTarget.version.raw})...`);
   const spawnArgs = [...pythonTarget.execArgs, '-m', 'uvicorn', 'services.backend.main:app', '--host', '127.0.0.1', '--port', '8000'];
+  const backendCwd = app.isPackaged
+    ? path.join(process.resourcesPath, 'backend')
+    : path.join(__dirname, '../../..');
+
+  console.log('[Phenom Watchdog] Spawning backend from working directory:', backendCwd);
+
   backendProcess = spawn(
     pythonTarget.cmd,
     spawnArgs,
     {
-      cwd: path.join(__dirname, '../../..'),
+      cwd: backendCwd,
       env: { ...process.env, PYTHONUNBUFFERED: '1', PHENOM_SESSION_TOKEN: sessionToken },
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: process.platform === 'win32'
@@ -221,7 +267,19 @@ function createWindow() {
     }
   });
 
-  const distPath = path.join(__dirname, '../dist/index.html');
+  const candidates = [
+    path.join(__dirname, '../dist/index.html'),
+    path.join(app.getAppPath(), 'dist/index.html'),
+    path.join(__dirname, 'dist/index.html')
+  ];
+  let distPath = candidates[0];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      distPath = c;
+      break;
+    }
+  }
+
   let loaded = false;
   const loadDist = () => {
     if (loaded) return;

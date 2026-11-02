@@ -89,7 +89,11 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
     } catch (e) {
       console.error('Failed to save wizard config:', e);
     }
+    try {
+      await apiFetch('/api/system/complete-setup', { method: 'POST' });
+    } catch {}
     localStorage.setItem('phenom_first_run_done', 'true');
+    (window as any).phenom?.setFirstRunDone?.();
     onComplete();
   };
 

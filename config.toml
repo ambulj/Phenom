@@ -4,6 +4,7 @@
 [assistant]
 nickname = "Abhi"
 address_form = "Bro"                     # Kabir addresses user as "Bro" ('Scene sorted, Bro!')
+first_run_completed = true              # First-run setup completed; do not display setup wizard again
 voice_language = "hi-IN"
 primary_voice = "kabir_v4"                # Primary voice: Sarvam Bulbul v4-flash (Deep Jarvis Indian baritone)
 voice_model = "bulbul:v4-flash"

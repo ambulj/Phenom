@@ -5,6 +5,8 @@ __pycache__/
 *.sqlite*
 *.log
 dist/
+release/
+apps/desktop/release/
 .cache/
 user_data/
 vault/

@@ -1107,3 +1107,16 @@ async def toggle_safe_mode(payload: Dict[str, Any]):
     else:
         safe_mode_manager.disable_safe_mode()
     return {"safe_mode_active": safe_mode_manager.safe_mode_active}
+
+@app.get("/api/system/setup-status")
+async def get_system_setup_status():
+    """Returns whether the initial first-run setup wizard has been completed."""
+    env_done = os.environ.get("PHENOM_FIRST_RUN_DONE", "true").lower() in ("true", "1")
+    return {"first_run_completed": env_done}
+
+@app.post("/api/system/complete-setup")
+async def complete_system_setup():
+    """Permanently records that the first-run setup wizard has been finished."""
+    os.environ["PHENOM_FIRST_RUN_DONE"] = "true"
+    return {"status": "ok", "first_run_completed": True}
+
