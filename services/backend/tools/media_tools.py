@@ -39,19 +39,22 @@ def _send_virtual_key(vk_code: int):
         print(f"[Phenom Media] Virtual key error: {e}")
 
 class MediaControlArgs(BaseModel):
-    action: Literal["play_pause", "next", "prev", "stop", "volume_up", "volume_down", "mute"] = Field(
-        description="Playback or volume action: 'play_pause', 'next', 'prev', 'stop', 'volume_up', 'volume_down', 'mute'"
+    action: Literal["play", "pause", "resume", "play_pause", "next", "prev", "stop", "volume_up", "volume_down", "mute"] = Field(
+        description="Playback or volume action: 'play', 'pause', 'resume', 'play_pause', 'next', 'prev', 'stop', 'volume_up', 'volume_down', 'mute'"
     )
 
 @registry.register(
     name="control_media",
     tier=1,
-    description="Controls Windows media playback (Spotify, browser audio, VLC) or system volume",
+    description="Controls Windows media playback (Spotify, browser audio, VLC, YouTube) or system volume: play, pause, resume, next, prev, stop, volume_up, volume_down, mute",
     args_schema=MediaControlArgs,
     preview_fn=lambda a: f"Execute media command: {a.get('action')}"
 )
 def control_media(action: str) -> Dict[str, Any]:
     action_map = {
+        "play": VK_MEDIA_PLAY_PAUSE,
+        "pause": VK_MEDIA_PLAY_PAUSE,
+        "resume": VK_MEDIA_PLAY_PAUSE,
         "play_pause": VK_MEDIA_PLAY_PAUSE,
         "next": VK_MEDIA_NEXT_TRACK,
         "prev": VK_MEDIA_PREV_TRACK,

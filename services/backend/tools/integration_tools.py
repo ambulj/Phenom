@@ -126,14 +126,14 @@ def get_weather(city: str = "New York") -> Dict[str, Any]:
         return asyncio.run(live_data_pipeline.get_weather(city))
 
 class GetTechNewsArgs(BaseModel):
-    items_per_source: int = Field(default=3, description="Articles per outlet (Hacker News, TechCrunch, The Verge)")
+    items_per_source: int = Field(default=3, description="Articles per outlet (Hacker News, TechCrunch, The Verge, BBC World News)")
 
 @registry.register(
     name="get_tech_news",
     tier=0,
-    description="Gets aggregated tech news briefing from Hacker News, TechCrunch, and The Verge RSS feeds.",
+    description="Gets aggregated tech and world news briefing from Hacker News, TechCrunch, The Verge, and BBC World News RSS feeds.",
     args_schema=GetTechNewsArgs,
-    preview_fn=lambda a: "Fetch tech news briefing from Hacker News, TechCrunch, and The Verge"
+    preview_fn=lambda a: "Fetch news briefing from RSS feeds"
 )
 def get_tech_news(items_per_source: int = 3) -> Dict[str, Any]:
     try:
@@ -145,6 +145,16 @@ def get_tech_news(items_per_source: int = 3) -> Dict[str, Any]:
         return asyncio.run(tech_news.get_briefing(items_per_source))
     except Exception:
         return asyncio.run(tech_news.get_briefing(items_per_source))
+
+@registry.register(
+    name="get_news",
+    tier=0,
+    description="Gets top news and technology headlines from live RSS feeds (Hacker News, TechCrunch, BBC).",
+    args_schema=GetTechNewsArgs,
+    preview_fn=lambda a: "Fetch live news headlines"
+)
+def get_news(items_per_source: int = 3) -> Dict[str, Any]:
+    return get_tech_news(items_per_source)
 
 class GetMutualFundArgs(BaseModel):
     query: str = Field(default="HDFC", description="Mutual fund scheme name or code")

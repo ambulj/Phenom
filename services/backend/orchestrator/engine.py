@@ -51,9 +51,39 @@ To call a tool, respond ONLY with a JSON block in this exact format:
 ```json
 {{"tool": "<tool_name>", "args": {{<arguments>}}}}
 ```
+Important: When a user command requires an action or lookup, output ONLY the JSON block immediately. Never explain how to call tools to the user, and never output placeholder templates.
 Otherwise, respond naturally in English. Keep voice/orb replies concise and crisp. Never use corporate filler like "Certainly! I would be pleased to assist with that!".
 
 Exemplar Interactions:
+User: Pause the music.
+Phenom: ```json
+{{"tool": "control_media", "args": {{"action": "pause"}}}}
+```
+
+User: Play the song.
+Phenom: ```json
+{{"tool": "control_media", "args": {{"action": "play"}}}}
+```
+
+User: Next track.
+Phenom: ```json
+{{"tool": "control_media", "args": {{"action": "next"}}}}
+```
+
+User: Turn the volume up.
+Phenom: ```json
+{{"tool": "control_media", "args": {{"action": "volume_up"}}}}
+```
+
+User: What's the latest news?
+Phenom: ```json
+{{"tool": "get_news", "args": {{"items_per_source": 3}}}}
+```
+
+User: What is the weather in Delhi?
+Phenom: ```json
+{{"tool": "get_weather", "args": {{"city": "Delhi"}}}}
+```
 User: How is the system running?
 Phenom: All systems running cool and nominal, Abhi. CPU at 12%, GPU idling at 40°C, and all background services active. Standing by for instructions.
 
@@ -265,13 +295,33 @@ class Orchestrator:
         full_reply = "".join(collected_tokens)
 
         # 2. Check for Tool Call in Reply
-        tool_call_match = re.search(r"```json\s*(\{.*?\})\s*```", full_reply, re.DOTALL)
-        if not tool_call_match and full_reply.strip().startswith("{") and full_reply.strip().endswith("}"):
-            tool_call_match = re.search(r"(\{.*\})", full_reply, re.DOTALL)
-
-        if tool_call_match:
+        call_data = None
+        for m in re.finditer(r"```json\s*(\{.*?\})\s*```", full_reply, re.DOTALL):
             try:
-                call_data = json.loads(tool_call_match.group(1))
+                candidate = json.loads(m.group(1))
+                if isinstance(candidate, dict) and "tool" in candidate:
+                    t_name = str(candidate.get("tool", "")).strip()
+                    if t_name and not t_name.startswith("<") and not t_name.endswith(">"):
+                        call_data = candidate
+                        break
+            except Exception:
+                continue
+
+        if not call_data and full_reply.strip().startswith("{") and full_reply.strip().endswith("}"):
+            try:
+                candidate = json.loads(full_reply.strip())
+                if isinstance(candidate, dict) and "tool" in candidate:
+                    t_name = str(candidate.get("tool", "")).strip()
+                    if t_name and not t_name.startswith("<") and not t_name.endswith(">"):
+                        call_data = candidate
+            except Exception:
+                pass
+
+
+
+        if call_data:
+            try:
+                pass # call_data parsed above
                 tool_name = call_data.get("tool")
                 tool_args = call_data.get("args", {})
                 if tool_name:
@@ -282,7 +332,13 @@ class Orchestrator:
                     tool_result = await safety_engine.execute_tool(tool_name, tool_args)
                     
                     yield {"type": "state.change", "payload": {"state": "speaking"}}
-                    result_msg = f"[Tool {tool_name} Result: {json.dumps(tool_result.get('result'))}]\nAll set."
+                    res_val = tool_result.get('result')
+                    if isinstance(res_val, dict) and 'briefing_markdown' in res_val:
+                        result_msg = f"\n{res_val['briefing_markdown']}\n"
+                    elif isinstance(res_val, dict) and 'message' in res_val and len(res_val.keys()) <= 3:
+                        result_msg = f"\n{res_val['message']}\n"
+                    else:
+                        result_msg = f"[Tool {tool_name} Result: {json.dumps(res_val)}]\nAll set."
                     yield {"type": "chat.token", "payload": {"token": result_msg, "index": token_index + 2}}
                     full_reply += f"\n{result_msg}"
             except Exception as tool_err:

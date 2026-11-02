@@ -12,7 +12,8 @@ from datetime import datetime, timezone
 FEED_SOURCES = {
     "Hacker News": "https://news.ycombinator.com/rss",
     "TechCrunch": "https://techcrunch.com/feed/",
-    "The Verge": "https://theverge.com/rss/index.xml"
+    "The Verge": "https://theverge.com/rss/index.xml",
+    "BBC World News": "https://feeds.bbci.co.uk/news/world/rss.xml"
 }
 
 class TechNewsBriefing:
