@@ -230,6 +230,7 @@ container_controls = "tiered_safety"   # Status/logs Tier 0, Start/restart Tier 
 [briefing]
 scheduled_time = "08:30"
 trigger_mode = "on_demand_voice_only" # Spoken briefing only when explicitly told 'Hey Phenom, good morning'
+weather_location_mode = "ip_geolocation_auto" # Automatically resolve local city weather & AQI via IP geolocation
 enabled_modules = [
     "weather_aqi",                   # Local Weather & Air Quality Index
     "calendar_schedule",             # Today's Google Calendar appointments
