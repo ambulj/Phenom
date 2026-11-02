@@ -25,7 +25,7 @@ persona_presets = ["tony_stark", "professor", "silent_copilot"]
 cloud_escalation = "balanced"          # Balanced: Local RTX 3050 GPU for routine & private; Cloud Nemotron for complex multi-file tasks
 context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
 speech_cadence = "adaptive"            # 1.1x brisk pace for banter/status; 0.95x measured pace for technical breakdowns
-break_reminders = "spoken_idle"        # Subtle 1-sentence voice nudge when an idle gap occurs during long focus
+break_reminders = "spoken_idle_nudge"  # Kabir speaks a 1-sentence reminder during an idle pause after 50 minutes
 
 [modes]
 active_mode = "work"
@@ -199,7 +199,12 @@ clipboard_smart_toasts = true           # Show subtle 1-click action toast (Expl
 clipboard_history_mode = "ephemeral_in_memory_20" # Last 20 items in memory only, scrubbed of secrets, wiped on screen lock
 refactoring_engine = "ast_grep_with_diff_preview" # Semantic AST-aware symbol renaming with multi-file diff preview in HUD
 context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
-offline_devdocs_cache = true           # Cache core docs (Python, React, FastAPI, PyTorch) locally in SQLite
+offline_devdocs_cache = true           # Cache selected developer docs locally in SQLite
+offline_devdocs_libraries = [
+    "core_web_python",                  # Python, FastAPI, TypeScript, React, Electron
+    "ai_and_data",                      # PyTorch, Hugging Face, NumPy, Pandas, Scikit-learn
+    "systems_and_devops"                # Docker, PowerShell, Git, Linux/Bash
+]
 monorepo_context_aware = true          # Auto-detect sub-packages and scope tests/lints to touched workspace roots
 refactoring_diff_line_cap = 150        # Single-turn patches capped at <= 150 lines per file
 doctor_tool_enabled = true             # Automated 'phenom doctor' environment diagnostic checker
@@ -248,7 +253,8 @@ diagram_reconstruction = "mermaid_markdown" # Transcribe visual diagrams/flowcha
 code_image_formatting = "clean_syntax_reconstructed" # Extract code from screenshots with black/prettier formatting
 
 [browser]
-playwright_mode = "open_with_tier2_notifications" # Open web browsing with Tier 2 notifications before interactive actions
+playwright_mode = "headless_by_default"   # Runs silently headless in background; pops up visible window for CAPTCHA/human solve
+headless = true
 captcha_solve_mode = "visible_browser_popup" # Pop up visible browser window for 1-click human solve on Cloudflare/CAPTCHAs
 
 [audio]
