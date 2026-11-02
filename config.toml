@@ -194,7 +194,8 @@ error_remediation = "proactive_patch_proposal" # On test failure, analyze traceb
 git_pre_push_gate = "autonomous"       # Automatically run tests, linter, and secret scan before drafting clean PRs with changelogs
 layout_presets = true                  # Workspace presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%)
 coding_workspace_layout = "ide_60_term_40" # Snap VS Code 60% left, Terminal 40% right upon 'Setup coding mode'
-clipboard_assistance = "smart_dev"     # Auto-detect stack traces, regex, JSON, or git URLs in clipboard and offer 1-click action
+clipboard_assistance = "smart_dev"     # Auto-detect stack traces, regex, JSON, or git URLs in clipboard
+clipboard_smart_toasts = true           # Show subtle 1-click action toast (Explain error, Format JSON, Clone repo)
 clipboard_history_mode = "ephemeral_in_memory_20" # Last 20 items in memory only, scrubbed of secrets, wiped on screen lock
 refactoring_engine = "ast_grep_with_diff_preview" # Semantic AST-aware symbol renaming with multi-file diff preview in HUD
 context_sliding_window = 15            # Last 10-15 turns verbatim, summarize older context into episodic memory with keyword recall
@@ -222,9 +223,10 @@ tts_provider = "sarvam_bulbul"       # High-fidelity natural Indian speech for m
 max_spoken_duration_seconds = 60
 
 [routines]
+wrap_up_mode = "on_demand_only"         # Trigger evening review only when told 'Wrap up today'
 wrap_up_sequence = "full_audit_and_tidy" # Audit git repos, append daily summary, review open items, offer lock/sleep
-wrap_up_time = "21:00"                  # 09:00 PM automated evening engineering journal into Obsidian Vault
-wrap_up_auto_scheduled = true
+wrap_up_time = "21:00"                  # 09:00 PM target
+wrap_up_auto_scheduled = false
 morning_standup = "interactive_3_point" # Top 3 daily objectives + Calendar focus blocks + Pending PRs
 dependency_vulnerability_audit = "proactive_patch_pr" # Scan CVEs, draft bump PRs with release notes and tests
 focus_sprint_duration_minutes = 50     # 50m deep work + 10m break
@@ -262,7 +264,8 @@ night_volume_reduction = 0.40
 [hardware]
 lan_discovery = "passive_mdns_ssdp"    # Passive discovery of local devices (NAS, Raspberry Pi) under Tier 0
 proactive_alerts = true                # Proactive sensor monitoring
-gpu_temp_alert_celsius = 85            # Warn if GPU exceeds 85°C
+alert_delivery_mode = "voice_warning_plus_actionable_toast" # Kabir voice warning + rich Action Center toast
+gpu_temp_alert_celsius = 80            # Warn if GPU exceeds 80°C
 disk_space_alert_gb = 10               # Warn if NVMe SSD free space < 10GB
 battery_alert_percent = 15             # Warn if battery drops below 15%
 bluetooth_audio_auto_route = true      # Auto-switch to connected Bluetooth headphones, restore on disconnect
