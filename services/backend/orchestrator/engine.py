@@ -28,6 +28,7 @@ OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
 SYSTEM_PROMPT_TEMPLATE = """You are Phenom, a personal Windows 11 desktop assistant.
+Current Date & Time: {current_time}
 {mode_prompt}
 Personality: Witty, playful, Jarvis-style sidekick. Confident and warm, never smug.
 Humor is light and short; at most one brief quip per reply, and none during errors, warnings, or destructive actions.
@@ -95,6 +96,16 @@ Phenom: ```json
 {{"tool": "open_app", "args": {{"name": "chrome"}}}}
 ```
 
+User: Remind me in 5 minutes to drink water.
+Phenom: ```json
+{{"tool": "schedule_reminder", "args": {{"title": "Drink water", "delay_seconds": 300}}}}
+```
+
+User: Calculate 15 percent of 120.
+Phenom: ```json
+{{"tool": "safe_calculate", "args": {{"expression": "0.15 * 120"}}}}
+```
+
 User: Search my notes for the auth architecture.
 Phenom: ```json
 {{"tool": "search_vault", "args": {{"query": "auth architecture"}}}}
@@ -120,7 +131,10 @@ def build_system_prompt() -> str:
     tools_str = get_cached_tool_descriptions()
     rules_str = learned_rules.format_rules_for_prompt() or "(None yet)"
     mode_prompt = mode_manager.get_tone_prompt()
+    from datetime import datetime
+    current_time_str = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
     return SYSTEM_PROMPT_TEMPLATE.format(
+        current_time=current_time_str,
         mode_prompt=mode_prompt,
         learned_rules=rules_str,
         tool_descriptions=tools_str
@@ -211,7 +225,14 @@ class Orchestrator:
 
         system_prompt = build_system_prompt()
         history = encrypted_db.get_recent_messages(limit=6)
-        history_context = "\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in history])
+        history_lines = []
+        for m in history:
+            text = m.get("content", "").strip()
+            if text:
+                cleaned = re.sub(r"\[(Phenom Safety Gate|Tool).*?\]", "", text).strip()
+                if cleaned:
+                    history_lines.append(f"{m.get('role', '').capitalize()}: {cleaned}")
+        history_context = "\n".join(history_lines)
 
         full_prompt = f"{system_prompt}\n{memory_context}\nRecent History:\n{history_context}\n\nUser: {prompt}\nAssistant:"
 

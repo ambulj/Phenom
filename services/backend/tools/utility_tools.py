@@ -9,6 +9,7 @@ import os
 import ast
 import math
 import operator
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 import pypdf
@@ -187,3 +188,33 @@ def safe_calculate(expression: str) -> Dict[str, Any]:
             "expression": expression,
             "message": str(e)
         }
+
+@registry.register(
+    name="calculate",
+    tier=0,
+    description="Evaluates mathematical expressions and formulas safely without arbitrary code execution",
+    args_schema=SafeCalculateArgs,
+    preview_fn=lambda a: f"Calculate expression: {a.get('expression')}"
+)
+def calculate(expression: str) -> Dict[str, Any]:
+    return safe_calculate(expression)
+
+class GetCurrentTimeArgs(BaseModel):
+    pass
+
+@registry.register(
+    name="get_current_time",
+    tier=0,
+    description="Returns current local system date, time, day of the week, and timezone",
+    args_schema=GetCurrentTimeArgs,
+    preview_fn=lambda a: "Check current system time and date"
+)
+def get_current_time() -> Dict[str, Any]:
+    now = datetime.now()
+    return {
+        "status": "success",
+        "time": now.strftime("%I:%M:%S %p"),
+        "date": now.strftime("%A, %B %d, %Y"),
+        "iso": now.isoformat(),
+        "message": f"It is currently {now.strftime('%I:%M %p on %A, %B %d, %Y')}."
+    }
