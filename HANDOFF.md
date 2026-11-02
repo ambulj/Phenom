@@ -837,3 +837,21 @@ pm run build).
   - Phase 4 Backend Test Suite: 7/7 passed in 34.26s (`services/backend/tests/test_voice_duplex_and_presence.py`).
   - Target Combined Phenom 6.0 Backend Suite: 36/36 passed in 67.99s across all 4 phases.
   - Desktop Production Build: Clean Vite bundle generated in 33.46s with 0 errors (`npm run build`).
+
+
+---
+
+## Milestone 7.0: Proactive Autonomous Executive & Ambient Anticipation
+
+### Phase 1: Ambient Context Sensing & Proactive Event Architecture (Completed)
+- **Win32 User Inactivity Sensor**: `services/backend/sensors/idle_sensor.py` (`Win32IdleDetector`) uses `ctypes.windll.user32.GetLastInputInfo` and `kernel32.GetTickCount64()` to measure user idle time in milliseconds with zero low-level keyboard/mouse hooks (`WH_KEYBOARD_LL` strictly prohibited). Emits `USER_IDLE` (> 300s configurable threshold) and `USER_RETURNED`.
+- **Active Window Context Sensor & Privacy Redaction**: `services/backend/sensors/context_sensor.py` (`Win32ContextSensor`) uses `win32gui` and `win32process` to inspect foreground windows and process executable names. Automatically redacts sensitive titles (`bitwarden`, `keepass`, `1password`, `whatsapp`, `telegram`, `banking`, `password`, `credential`, `authenticator`, etc.) to `[REDACTED_SENSITIVE_APP]`.
+- **Proactive Event Dispatcher**: `services/backend/proactive/dispatcher.py` (`ProactiveEventDispatcher`) manages priority queues (`BACKGROUND=1`, `NORMAL=2`, `URGENT=3`), anti-fatigue cooldown rate-limiting (default 15 minutes), and automatic quiet period suppression during `DEEP_FOCUS` and `STUDY` modes.
+- **Multimodal Presentation Bridge**: WebSocket event handler in `apps/desktop/src/App.tsx` and `apps/desktop/src/components/CyberHUD/ProactiveCardToast.tsx` delivers slide-in non-focus-stealing HUD cards with 1-click execution chips and pulses the Three.js particle Orb with cobalt (`#0052FF`) or acid lime (`#CCFF00`).
+- **Safety Registry Tools**: Registered `get_proactive_status` (Tier 0), `configure_proactive_cooldown` (Tier 1), and `dismiss_proactive_card` (Tier 0) in `services/backend/tools/proactive_tools.py`.
+- **Synchronous Guardian Kill Switch Halt (< 25ms SLA)**: Hooked `idle_detector.halt()`, `context_sensor.halt()`, and `proactive_dispatcher.halt()` into `services/backend/main.py`. Verified synchronous halt latency well under 25ms SLA.
+- **Verification Suites**:
+  - Phase 1 Backend Test Suite: 6/6 passed in 10.64s (`services/backend/tests/test_ambient_sensing_and_proactive_dispatcher.py`).
+  - Target Combined Backend Suite: 28/28 passed in 14.13s.
+  - Dependency Audit: 100% PASS (0 missing dependencies).
+  - Desktop Production Build: Clean Vite bundle generated in 5.67s with 0 errors (`npm run build`).

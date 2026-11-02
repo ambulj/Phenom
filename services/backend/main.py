@@ -271,6 +271,7 @@ import services.backend.tools.desktop_macro_tools
 import services.backend.tools.swarm_tools
 import services.backend.tools.obsidian_graph_tools
 import services.backend.tools.voice_tools
+import services.backend.tools.proactive_tools
 
 
 
@@ -307,6 +308,9 @@ from services.backend.automation.autonomous_engine import autonomous_engine
 from services.backend.vision.visual_memory_monitor import visual_memory_monitor
 from services.backend.automation.swarm_manager import swarm_manager
 from services.backend.voice.duplex_pipeline import duplex_pipeline
+from services.backend.sensors.idle_sensor import idle_detector
+from services.backend.sensors.context_sensor import context_sensor
+from services.backend.proactive.dispatcher import proactive_dispatcher
 
 
 
@@ -944,6 +948,14 @@ async def lifespan(app: FastAPI):
 
     asyncio.create_task(warm_up_ollama())
 
+    # Initialize ambient sensing and proactive dispatcher
+    try:
+        proactive_dispatcher.ws_broadcast_fn = broadcast_message
+        idle_detector.start()
+        context_sensor.start()
+    except Exception as exc:
+        print(f'[Proactive] Could not start sensors: {exc}')
+
 
 
 
@@ -963,6 +975,11 @@ async def lifespan(app: FastAPI):
 
 
     wake_detector.stop()
+    try:
+        idle_detector.stop()
+        context_sensor.stop()
+    except Exception:
+        pass
 
 
 
@@ -1408,6 +1425,14 @@ def on_guardian_state_change(new_state: str):
         # Synchronously halt full-duplex voice pipeline and audio stream
         try:
             duplex_pipeline.halt()
+        except Exception:
+            pass
+
+        # Synchronously halt ambient sensors and proactive dispatcher
+        try:
+            idle_detector.halt()
+            context_sensor.halt()
+            proactive_dispatcher.halt()
         except Exception:
             pass
 

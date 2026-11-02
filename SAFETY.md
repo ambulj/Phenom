@@ -471,3 +471,22 @@ otification_policy == 'silent').
    - `get_voice_duplex_status`: Tier 0 read-only tool for real-time duplex metrics and active modulation status.
    - `configure_voice_presence`: Tier 1 tool requiring user preview confirmation to alter volume scale, cadence rate, or mode overrides.
    - `trigger_voice_barge_in`: Tier 0 low-risk tool for instantaneous speech interruption.
+
+## 22. Ambient Context Sensing & Proactive Event Architecture Guarantees (Phenom 7.0 Phase 1)
+
+1. **Zero Low-Level Input Hooks (`WH_KEYBOARD_LL` Prohibited)**:
+   - User inactivity monitoring in `Win32IdleDetector` uses `ctypes.windll.user32.GetLastInputInfo` and `kernel32.GetTickCount64()`.
+   - No keyboard or mouse event hooks are installed. The assistant cannot log keystrokes, intercept user input, or trigger antivirus heuristics.
+2. **Automatic Privacy Redaction of Sensitive Window Titles**:
+   - `Win32ContextSensor` inspects active foreground windows and processes.
+   - Any window title or process containing sensitive terms (`bitwarden`, `keepass`, `1password`, `whatsapp`, `telegram`, `banking`, `login`, `password`, `credential`, `authenticator`, etc.) is strictly sanitized to `[REDACTED_SENSITIVE_APP]`.
+3. **Anti-Fatigue Rate Limiting & Cooldown Engine**:
+   - `ProactiveEventDispatcher` enforces a default cooldown (e.g. 15 minutes) between non-urgent recommendation cards to prevent notification spam.
+   - Non-urgent cards (`priority < URGENT`) are completely suppressed and queued silently during `DEEP_FOCUS` and `STUDY` modes.
+   - Urgent calendar reminders (< 15 min to meeting) bypass non-critical cooldowns and pulse the Three.js Orb with Acid Lime (`#CCFF00`).
+4. **Synchronous Guardian Kill Switch Halt (< 25ms SLA)**:
+   - `guardian.trigger()` synchronously invokes `idle_detector.halt()`, `context_sensor.halt()`, and `proactive_dispatcher.halt()`, cancelling all background polling tasks in < 25ms.
+5. **Safety Registry Classifications**:
+   - `get_proactive_status`: Tier 0 read-only tool for idle duration, active window context, and active card list.
+   - `configure_proactive_cooldown`: Tier 1 tool requiring confirmation to modify idle thresholds or event cooldowns.
+   - `dismiss_proactive_card`: Tier 0 tool for dismissing active recommendation cards.

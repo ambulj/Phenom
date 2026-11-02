@@ -330,6 +330,54 @@ export const App: React.FC = () => {
 
             setWatchlistItems(payload.items || []);
 
+          } else if (mtype === 'PROACTIVE_CARD' || mtype === 'proactive.card') {
+            const card = payload.card || msg.card || payload;
+            setActiveHudCard({
+              title: card.title || 'Proactive Recommendation',
+              message: card.description || '',
+              badge: "PROACTIVE: " + (card.event_type || "INTEL"),
+              type: card.priority >= 3 ? 'approval' : 'info',
+              actions: card.action_chip ? [
+                {
+                  label: card.action_chip,
+                  onClick: () => {
+                    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                      wsRef.current.send(JSON.stringify({
+                        type: 'proactive.action',
+                        payload: { card_id: card.id, action_payload: card.action_payload }
+                      }));
+                    }
+                    setActiveHudCard(null);
+                  },
+                  variant: card.priority >= 3 ? 'danger' : 'primary'
+                },
+                {
+                  label: 'Dismiss',
+                  onClick: () => {
+                    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                      wsRef.current.send(JSON.stringify({
+                        type: 'proactive.dismiss',
+                        payload: { card_id: card.id }
+                      }));
+                    }
+                    setActiveHudCard(null);
+                  },
+                  variant: 'secondary'
+                }
+              ] : [
+                {
+                  label: 'Dismiss',
+                  onClick: () => setActiveHudCard(null),
+                  variant: 'secondary'
+                }
+              ]
+            });
+          } else if (mtype === 'PROACTIVE_ORB_PULSE' || mtype === 'proactive.orb_pulse') {
+            setOrbState((prev) => (prev === 'idle' ? 'listening' : prev));
+            setTimeout(() => {
+              setOrbState((prev) => (prev === 'listening' ? 'idle' : prev));
+            }, 3000);
+
           }
 
         } catch (e) {
