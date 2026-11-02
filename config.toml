@@ -41,7 +41,8 @@ orb_particle_modes = [                 # Selectable particle behavior presets
 ]
 orb_color_theme = "cyan_stark_gold"    # Electric Cyan (#00E5FF) idle; Amber Gold (#FFB300) thinking/alerts; Crimson halt
 hud_style = "anchored_transparent_card" # Custom transparent HUD card anchored near docked Orb
-summon_style = "raycast_command_palette" # Centered glassmorphic command bar (Alt+Space) with app launcher, file search, and chat
+summon_style = "raycast_command_palette" # Centered glassmorphic command bar (Alt+Space)
+command_palette_dispatch = "smart_hybrid_dispatcher" # Auto-routes: natural questions -> Kabir chat; app names -> launch; filenames -> file search
 screen_border_accent = "dynamic_state" # Subtle Electric Cyan active, Amber on Tier 2 confirmation, Crimson on halt
 audit_drawer = "integrated_hud"        # 1-click button to view chronological action log, tool tiers, routing decisions, and rollbacks
 terminal_output_style = "collapsible_streaming_console" # Live output stream inside a sleek HUD terminal drawer with syntax highlighting
@@ -138,7 +139,13 @@ respect_gitignore = true
 hybrid_fts5_vector_rrf = true          # SQLite FTS5 keyword matching + dense vector similarity with RRF
 
 [photos]
-indexing_mode = "exif_plus_visual_tags" # Read-only EXIF + local AI visual tagging (receipt, whiteboard, diagram, screenshot) stored encrypted
+indexing_mode = "tech_stack_visual_tags" # Read-only EXIF + local AI visual tagging
+tagging_categories = [
+    "code_screenshots",                 # Terminal errors, IDE snippets
+    "whiteboard_diagrams",              # Architecture drawings, hand sketches
+    "receipts_and_bills",               # Financial invoices and tax receipts
+    "document_scans"                    # Official forms, agreements, certificates
+]
 
 [cleanup]
 downloads_policy = "weekly_dry_run_review" # Prepares tidy plan sorting installers/PDFs with 1-click approval
@@ -333,6 +340,7 @@ directory = "%USERPROFILE%\\Documents\\Phenom\\plugins"
 safety_wrapped = true                  # All custom tools automatically wrapped by Safety layer
 
 [gaming_mode]
+mode = "full_vram_unload_ghost_mode"   # Full VRAM Unload + Ghost Mode during fullscreen 3D gaming
 gpu_resource_governor = true           # Auto-offload GPU VRAM when 3D game launches, pause background indexing on low battery
 auto_unload_vram = true               # Unload Ollama 8B from RTX 3050 VRAM upon full-screen 3D game launch
 mute_voice_alerts = true              # Mute voice and sound effects while gaming
