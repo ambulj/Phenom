@@ -312,3 +312,22 @@ undll32.exe user32.dll,LockWorkStation) and engages the Guardian kill switch.
    - After each step execution, a TaskCheckpoint is recorded with step index, state, and results, allowing interrupted sessions to safely resume from the exact point of interruption without repeating side-effect actions.
 5. **Real-Time Cyber HUD Telemetry**:
    - During execution, the engine broadcasts continuous screen.action_ticker events with step progress and descriptions, and screen.click_highlight ripples around active click coordinates.
+
+
+---
+
+## 15. Obsidian Second Brain & Note Crystallization Guarantees (Phenom 5.0 Phase 2)
+
+1. **Strict Vault Path Sandboxing (
+esolve_and_sandbox_vault_path)**:
+   - All note creation, reading, and appending operations are strictly sandboxed inside the external Obsidian vault directory.
+   - Any path traversal escape attempts (.., junctions, drive-switching) or attempts to target the Phenom code repository immediately trigger VaultSandboxViolation.
+2. **Rule 4 Vault Privacy Invariant**:
+   - Vault markdown files are classified as private by default. Note extraction and crystallization operate locally without sending private vault contents to cloud models without explicit approval.
+3. **1-Click Reversible Rollback Engine**:
+   - Every note crystallization or daily log modification generates an undo_token storing the pre-mutation state (or new-file marker).
+   - 
+ollback_vault_note(undo_token) restores previous note contents or removes newly created files cleanly, committing the reversal to the vault's local Git repository.
+4. **Safety Registry Tier 1 Classification (crystallize_session_notes, 
+ollback_vault_note)**:
+   - Registered as Tier 1 tools with interactive previews and immutable logging in SQLite ction_log.

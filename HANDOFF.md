@@ -732,3 +732,18 @@ pm run build).
   - Desktop Frontend Tests: 32/32 passed across all 6 test suites (pps/desktop/tests/test_*.js).
   - Desktop Production Build: Clean Vite bundle generated in 5.37s with 0 errors (
 pm run build).
+
+### Phase 2: Obsidian Second Brain & Note Crystallization (Completed)
+- **Session Crystallization Engine**: services/backend/memory/crystallizer.py automatically extracts decisions, actionable tasks, and research insights from session dialogue into structured Obsidian Markdown notes with YAML frontmatter, wikilinks, and checkboxes.
+- **Strict Path Sandboxing**: services/backend/memory/vault.py enforces 
+esolve_and_sandbox_vault_path() across all note operations, using canonical paths (os.path.realpath, os.path.commonpath) to strictly block directory traversal (.., symlinks, drive-switching) and code repo collisions with VaultSandboxViolation.
+- **1-Click Reversible Rollback**: Undo tokens capture pre-mutation state (or new-file marker); 
+ollback_vault_note() restores prior content or deletes created notes, committing the reversal to the vault's local Git repository.
+- **Safety Registry Tools**: Exposes crystallize_session_notes (Tier 1) and 
+ollback_vault_note (Tier 1) with preview functions and action logging.
+- **Verification Suites**:
+  - Phase 2 Test Suite: 13/13 passed in 1.48s (services/backend/tests/test_obsidian_crystallizer.py).
+  - Target Combined Suite (Phase 1 + Phase 2 + Memory): 22/22 passed in 14.54s.
+  - Desktop Frontend Tests: 32/32 passed across all 6 test suites (pps/desktop/tests/test_*.js).
+  - Desktop Production Build: Clean Vite bundle generated in 10.96s with 0 errors (
+pm run build).
