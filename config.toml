@@ -49,7 +49,7 @@ offline_mode = "seamless_local"        # Seamless local offline mode (switch to 
 multi_instance_policy = "allow_multiple_independent" # Allow multiple independent instances across monitors
 material_style = "windows11_mica_acrylic" # Native Windows 11 translucent glass effect with glowing cyan borders
 action_center_toasts = true            # Deliver rich action toasts to Windows 11 Action Center
-build_notification_mode = "context_adaptive" # If IDE focused: soft chime + badge; if another app focused: Action Center toast + voice summary
+build_notification_mode = "context_adaptive_voice_and_toast" # Voice summary when looking away, toast if reading code
 compact_environment_header = true      # Compact 2-line environment header in system prompt
 
 [display]
@@ -153,6 +153,7 @@ sources = ["hacker_news", "arxiv_ai", "github_trending", "indian_business"] # Cu
 visual_style = "modern_executive"      # Clean typography, styled tables, visual callout boxes, executive summary cover
 
 [git]
+commit_convention = "conventional_commits" # Strict feat:, fix:, docs:, test: convention
 semver_automation = true               # Parse commits and automate SemVer releases
 changelog_generation = true            # Generate formatted CHANGELOG.md entries
 safe_merged_branch_pruning = true      # Offer 1-click cleanup for branches merged into main (preserving main/release)
