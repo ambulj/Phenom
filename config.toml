@@ -208,6 +208,8 @@ max_spoken_duration_seconds = 60
 
 [routines]
 wrap_up_sequence = "full_audit_and_tidy" # Audit git repos, append daily summary, review open items, offer lock/sleep
+wrap_up_time = "21:00"                  # 09:00 PM automated evening engineering journal into Obsidian Vault
+wrap_up_auto_scheduled = true
 morning_standup = "interactive_3_point" # Top 3 daily objectives + Calendar focus blocks + Pending PRs
 dependency_vulnerability_audit = "proactive_patch_pr" # Scan CVEs, draft bump PRs with release notes and tests
 focus_sprint_duration_minutes = 50     # 50m deep work + 10m break
