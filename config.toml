@@ -23,6 +23,7 @@ sound_effects = "futuristic_chimes"    # Soft Jarvis chime on wake, confirmation
 quiet_hours = "always_responsive"      # Sound and speech active whenever spoken to, 24/7
 active_persona = "tony_stark"          # Presets: 'tony_stark' (default witty banter), 'professor' (academic rigor, zero slang), 'silent_copilot' (strictly visual HUD, zero speech)
 persona_presets = ["tony_stark", "professor", "silent_copilot"]
+persona_switching = "dynamic_voice_trigger" # Dynamically switch via voice ('Phenom study mode', 'Phenom chill mode')
 cloud_escalation = "balanced"          # Balanced: Local RTX 3050 GPU for routine & private; Cloud Nemotron for complex multi-file tasks
 context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
 speech_cadence = "natural_conversational_1.0x" # Natural 1.00x calm, relaxed human conversational cadence
@@ -50,6 +51,7 @@ window_control = "full"                # App launching, media keys, volume contr
 offline_mode = "seamless_local"        # Seamless local offline mode (switch to local Ollama & offline TTS automatically; show offline badge)
 multi_instance_policy = "allow_multiple_independent" # Allow multiple independent instances across monitors
 material_style = "adaptive_mica_and_oled" # Windows 11 Mica Acrylic on AC power; Deep OLED Black on battery
+notification_delivery = "dual_hud_and_action_center" # Show live glassy HUD toast, keep unread copy in Windows Action Center
 action_center_toasts = true            # Deliver rich action toasts to Windows 11 Action Center
 build_notification_mode = "context_adaptive_voice_and_toast" # Voice summary when looking away, toast if reading code
 compact_environment_header = true      # Compact 2-line environment header in system prompt
@@ -195,6 +197,7 @@ secret_intervention = "proactive_block_and_migrate" # Block commit, offer 1-clic
 api_testing_utility = "in_situ_inspector" # Test local REST endpoints, inspect headers, scaffold mocks
 console_secret_masking = true          # Intercept stdout/stderr and auto-mask any values from .env with [REDACTED_SECRET]
 port_conflict_helper = true            # Detect PID holding port, show in HUD, offer 1-click kill or next available port
+port_conflict_action = "proactive_one_click_kill" # Detect occupied port, show process name in HUD, offer 1-click kill
 coding_sandbox = "workspace_subprocess" # Local workspace subprocess with strict path boundary & execution timeouts
 vision_background = true               # Automatic background screen context during active coding/debugging sessions
 vision_sample_trigger = "event_failure" # Capture screen on terminal failure or IDE error highlight
@@ -315,7 +318,8 @@ retention_days = 30                    # 30-day retention for disaster recovery 
 
 [packaging]
 distribution = "dual_nsis_and_portable" # NSIS installer + portable unpacked folder
-auto_launch_on_startup = true          # Launch on Windows login minimized to tray
+auto_launch_on_startup = true          # Launch on Windows login
+startup_presentation = "minimized_to_system_tray" # Sits silently in system tray ready for hotkey/wake word
 
 [updates]
 policy = "silent_idle_restart"         # Download in background; apply silently and restart when system is idle
