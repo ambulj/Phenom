@@ -10,13 +10,21 @@ import json
 import os
 import time
 
-try:
-    from dotenv import load_dotenv
-    _env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
-    if os.path.exists(_env_path):
-        load_dotenv(_env_path)
-except ImportError:
-    pass
+# Load root .env if present (pure stdlib, zero extra dependencies)
+_env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
+if os.path.exists(_env_path):
+    try:
+        with open(_env_path, 'r', encoding='utf-8') as _env_f:
+            for _line in _env_f:
+                _line = _line.strip()
+                if _line and not _line.startswith('#') and '=' in _line:
+                    _k, _v = _line.split('=', 1)
+                    _k = _k.strip()
+                    _v = _v.strip().strip('"').strip("'")
+                    if _k and _k not in os.environ:
+                        os.environ[_k] = _v
+    except Exception:
+        pass
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from typing import Dict, Any, Optional
