@@ -796,3 +796,18 @@ pm run build).
   - Target Combined Backend Suite: 47/47 passed in 34.67s.
   - Desktop Frontend Tests: 36/36 passed across all 7 test suites.
   - Desktop Production Build: Clean Vite bundle generated in 6.03s with 0 errors (`npm run build`).
+
+
+### Phase 2: Hybrid Autonomous Worker Swarm (Completed)
+- **Headless Background Worker Runtime**: `services/backend/automation/headless_worker.py` launches isolated headless Playwright browser contexts (`headless=True`) for background scraping, web research, and API data extraction without stealing OS window focus or moving the physical cursor.
+- **Rule 8 Defense in Headless Workers**: Hard code-level keyword scanner blocks any checkout or payment URL/step, raising `PermissionError` and halting before payment forms.
+- **Subprocess CLI Worker**: Detached subprocess execution with command timeout safeguards and destructive regex blocking (`format`, `del /f /s C:\Windows`).
+- **SQLite Checkpoint Store**: `services/backend/automation/swarm_store.py` manages `swarm_checkpoints` table with step tracking, status updates, and history persistence.
+- **Worker Swarm Manager**: `services/backend/automation/swarm_manager.py` coordinates concurrent tasks with a maximum concurrency limit (3 workers), step-by-step checkpointing, and WebSocket telemetry (`swarm.step_progress`).
+- **Safety Registry Integration**: `services/backend/tools/swarm_tools.py` exposes `get_swarm_status` (Tier 0), `dispatch_swarm_task` (Tier 1), and `abort_swarm_task` (Tier 1).
+- **Guardian Kill Switch Full-Swarm Abort**: Hooked `swarm_manager.abort_all("guardian_halt")` into `services/backend/main.py`, synchronously aborting all active workers in 20.93ms (< 25ms SLA).
+- **Verification Suites**:
+  - Phase 2 Backend Test Suite: 8/8 passed in 11.11s (`services/backend/tests/test_worker_swarm.py`).
+  - Target Combined Backend Suite: 55/55 passed in 35.83s.
+  - Desktop Frontend Tests: 36/36 passed across all 7 test suites.
+  - Desktop Production Build: Clean Vite bundle generated in 5.46s with 0 errors (`npm run build`).

@@ -1392,6 +1392,13 @@ def on_guardian_state_change(new_state: str):
         except Exception:
             pass
 
+        # Abort all active background worker swarms immediately
+        try:
+            from services.backend.automation.swarm_manager import swarm_manager
+            swarm_manager.abort_all("guardian_halt")
+        except Exception:
+            pass
+
         # Clear live HUD annotations
         try:
             asyncio.create_task(broadcast_message({
