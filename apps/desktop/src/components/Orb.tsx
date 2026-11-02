@@ -50,33 +50,35 @@ export const QUALITY_LOD_CONFIGS: Record<OrbQualityLevel, {
   }
 };
 
-const STATE_CONFIGS = {
+export const SPEAKING_PEAK_COLOR = new THREE.Color(0xccff00); // Acid Lime (#CCFF00) on voice peaks
+
+export const STATE_CONFIGS = {
   idle: {
-    color: new THREE.Color(0x00e5ff), // Electric Cyan (#00E5FF)
+    color: new THREE.Color(0x0052ff), // Electric Cobalt (#0052FF)
     speed: 0.35,
     dispersion: 1.0,
     brightness: 0.90
   },
   listening: {
-    color: new THREE.Color(0x38bdf8), // Bright Aqua (#38BDF8)
+    color: new THREE.Color(0x1a66ff), // Vivid Electric Cobalt (#1A66FF)
     speed: 0.65,
     dispersion: 0.85,
     brightness: 1.0
   },
   thinking: {
-    color: new THREE.Color(0xffb300), // Amber Gold (#FFB300)
+    color: new THREE.Color(0xccff00), // Acid Lime (#CCFF00)
     speed: 1.8,
     dispersion: 1.15,
     brightness: 1.05
   },
   speaking: {
-    color: new THREE.Color(0xf59e0b), // Radiant Amber (#F59E0B)
+    color: new THREE.Color(0x0052ff), // Electric Cobalt base (#0052FF)
     speed: 2.2,
     dispersion: 1.4,
     brightness: 1.15
   },
   halted: {
-    color: new THREE.Color(0xd32f2f), // Stark Crimson (#D32F2F)
+    color: new THREE.Color(0xef4444), // Stark Crimson (#EF4444)
     speed: 0.0,
     dispersion: 0.75,
     brightness: 0.4
@@ -148,7 +150,10 @@ export const Orb: React.FC<OrbProps> = ({
         if (activeLod.fps === 0 || activeLod.particles === 0) return;
 
         const target = STATE_CONFIGS[targetStateRef.current] || STATE_CONFIGS.idle;
-        const colorHex = '#' + target.color.getHexString();
+        const targetColor = targetStateRef.current === 'speaking'
+          ? STATE_CONFIGS.speaking.color.clone().lerp(SPEAKING_PEAK_COLOR, Math.min(1.0, Math.max(0.0, amplitudeRef.current || 0.0)) * 0.85)
+          : target.color;
+        const colorHex = '#' + targetColor.getHexString();
         const t = performance.now() * 0.002;
         const cx = width / 2;
         const cy = height / 2;
@@ -289,7 +294,11 @@ export const Orb: React.FC<OrbProps> = ({
       const elapsedTime = clock.getElapsedTime();
 
       const target = STATE_CONFIGS[targetStateRef.current] || STATE_CONFIGS.idle;
-      currentColor.lerp(target.color, lerpFactor);
+      const targetColor = targetStateRef.current === 'speaking'
+        ? STATE_CONFIGS.speaking.color.clone().lerp(SPEAKING_PEAK_COLOR, Math.min(1.0, Math.max(0.0, amplitudeRef.current || 0.0)) * 0.85)
+        : target.color;
+
+      currentColor.lerp(targetColor, lerpFactor);
       currentSpeed += (target.speed * activeLod.speedFactor - currentSpeed) * lerpFactor;
       currentDispersion += (target.dispersion - currentDispersion) * lerpFactor;
       currentBrightness += (target.brightness * activeLod.brightness - currentBrightness) * lerpFactor;
@@ -380,9 +389,9 @@ export const Orb: React.FC<OrbProps> = ({
               width: 110,
               height: 110,
               borderRadius: '50%',
-              background: 'rgba(15, 23, 42, 0.85)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
+              background: 'rgba(8, 11, 16, 0.90)',
+              border: '1px solid rgba(0, 82, 255, 0.4)',
+              boxShadow: '0 4px 25px rgba(0, 82, 255, 0.25), 0 0 10px rgba(0, 0, 0, 0.8)',
               zIndex: 30
             }
           : {
