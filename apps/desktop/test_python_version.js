@@ -1,4 +1,7 @@
 const assert = require('assert');
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const { parsePythonVersion, detectPythonCommand } = require('./electron/pythonVersion.cjs');
 
 console.log('Testing Python Version Guard and Parser Logic...');
@@ -29,9 +32,34 @@ assert.strictEqual(v312.isSupported, true, 'Python 3.12 must be accepted');
 assert.strictEqual(parsePythonVersion(''), null);
 assert.strictEqual(parsePythonVersion('Not python at all'), null);
 
-// 4. Detects local system Python
+// 4. Detects local dev / system Python
 const detected = detectPythonCommand();
 assert.ok(detected, 'Local Python 3.11+ must be detected');
 assert.ok(detected.version.isSupported, 'Detected Python must be >= 3.11');
 
-console.log(`PASS: All Python version guard tests passed! Detected: ${detected.cmd} ${detected.execArgs.join(' ')} (${detected.version.raw})`);
+// 5. Packaged runtime takes top priority when present
+const tempResDir = fs.mkdtempSync(path.join(os.tmpdir(), 'phenom-res-test-'));
+const mockRuntimeDir = path.join(tempResDir, 'runtime');
+const mockScriptsDir = path.join(mockRuntimeDir, 'Scripts');
+fs.mkdirSync(mockScriptsDir, { recursive: true });
+
+const venvCfgPath = path.resolve(__dirname, '../../.venv-clean/pyvenv.cfg');
+if (fs.existsSync(venvCfgPath)) {
+  fs.copyFileSync(venvCfgPath, path.join(mockRuntimeDir, 'pyvenv.cfg'));
+}
+const realPythonPath = detected.cmd;
+const mockPythonExe = path.join(mockScriptsDir, 'python.exe');
+
+try {
+  fs.copyFileSync(realPythonPath, mockPythonExe);
+  const detectedPackaged = detectPythonCommand(tempResDir);
+  assert.ok(detectedPackaged, 'Must detect packaged runtime');
+  assert.strictEqual(detectedPackaged.source, 'packaged_runtime', 'Packaged runtime must take top priority');
+  assert.strictEqual(path.resolve(detectedPackaged.cmd), path.resolve(mockPythonExe));
+} finally {
+  try {
+    fs.rmSync(tempResDir, { recursive: true, force: true });
+  } catch {}
+}
+
+console.log(`PASS: All Python version guard and bundling hierarchy tests passed! Detected: ${detected.cmd} (${detected.source})`);

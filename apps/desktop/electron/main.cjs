@@ -93,9 +93,73 @@ ipcMain.on('phenom:set-first-run-done', (event) => {
 let mainWindow;
 let tray = null;
 let isQuitting = false;
+let isVoiceMuted = false;
 let backendProcess = null;
 let backendRestartAttempts = 0;
 const MAX_BACKEND_RESTARTS = 5;
+
+function updateTrayContextMenu() {
+  if (!tray) return;
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show Phenom',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    },
+    {
+      label: 'Hide to Tray',
+      click: () => {
+        if (mainWindow) mainWindow.hide();
+      }
+    },
+    { type: 'separator' },
+    {
+      label: isVoiceMuted ? 'Unmute Voice' : 'Mute Voice',
+      click: () => {
+        isVoiceMuted = !isVoiceMuted;
+        updateTrayContextMenu();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('voice:set-muted', isVoiceMuted);
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Guardian Kill Switch (HALT)',
+      click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('guardian:hotkey');
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit Phenom',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+  tray.setContextMenu(contextMenu);
+}
+
+ipcMain.on('phenom:get-voice-muted', (event) => {
+  event.returnValue = isVoiceMuted;
+});
+
+ipcMain.on('phenom:set-voice-muted', (event, muted) => {
+  isVoiceMuted = Boolean(muted);
+  updateTrayContextMenu();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('voice:set-muted', isVoiceMuted);
+  }
+  event.returnValue = isVoiceMuted;
+});
 
 function spawnBackendWithWatchdog(pythonTarget) {
   if (isQuitting) return;
@@ -240,42 +304,7 @@ function createTray() {
     return;
   }
 
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Show Phenom',
-      click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-          mainWindow.focus();
-        }
-      }
-    },
-    {
-      label: 'Hide to Tray',
-      click: () => {
-        if (mainWindow) mainWindow.hide();
-      }
-    },
-    { type: 'separator' },
-    {
-      label: 'Guardian Kill Switch (HALT)',
-      click: () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('guardian:hotkey');
-        }
-      }
-    },
-    { type: 'separator' },
-    {
-      label: 'Quit Phenom',
-      click: () => {
-        isQuitting = true;
-        app.quit();
-      }
-    }
-  ]);
-
-  tray.setContextMenu(contextMenu);
+  updateTrayContextMenu();
 
   // Single click restores/focuses window
   tray.on('click', () => {

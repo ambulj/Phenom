@@ -14,6 +14,7 @@
   "build": {
     "appId": "com.phenom.assistant",
     "productName": "Phenom",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
     "win": {
       "target": [
         "nsis"
@@ -25,7 +26,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Phenom Assistant"
+      "shortcutName": "Phenom Assistant",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
     },
     "extraResources": [
       {

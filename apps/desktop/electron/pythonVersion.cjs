@@ -11,10 +11,23 @@ function parsePythonVersion(versionStr) {
   return { major, minor, patch, isSupported, raw: versionStr.trim() };
 }
 
-function detectPythonCommand() {
+function detectPythonCommand(overrideResourcesPath = null) {
   const path = require('path');
   const fs = require('fs');
-  const venvCandidates = [
+
+  const resPath = overrideResourcesPath || process.resourcesPath || '';
+
+  // 1. Packaged standalone/embedded Python runtime candidates (highest priority in production)
+  const packagedCandidates = [
+    path.join(resPath, 'runtime', 'Scripts', 'python.exe'),
+    path.join(resPath, 'runtime', 'python.exe'),
+    path.join(resPath, 'python', 'python.exe'),
+    path.join(resPath, '.venv-clean', 'Scripts', 'python.exe'),
+    path.join(resPath, '.venv', 'Scripts', 'python.exe')
+  ];
+
+  // 2. Development virtual environment candidates
+  const devVenvCandidates = [
     path.resolve(__dirname, '../../../.venv-clean/Scripts/python.exe'),
     path.resolve(__dirname, '../../../.venv/Scripts/python.exe'),
     'C:\\Phenom\\.venv-clean\\Scripts\\python.exe',
@@ -22,16 +35,27 @@ function detectPythonCommand() {
   ];
 
   const candidates = [];
-  for (const venvPath of venvCandidates) {
-    if (fs.existsSync(venvPath)) {
-      candidates.push({ cmd: venvPath, args: ['--version'], execArgs: [] });
+
+  // Add existing packaged candidates
+  for (const p of packagedCandidates) {
+    if (p && fs.existsSync(p)) {
+      candidates.push({ cmd: p, args: ['--version'], execArgs: [], source: 'packaged_runtime' });
     }
   }
+
+  // Add existing dev venvs
+  for (const venvPath of devVenvCandidates) {
+    if (fs.existsSync(venvPath)) {
+      candidates.push({ cmd: venvPath, args: ['--version'], execArgs: [], source: 'dev_venv' });
+    }
+  }
+
+  // 3. System installed Python binaries
   candidates.push(
-    { cmd: 'python', args: ['--version'], execArgs: [] },
-    { cmd: 'py', args: ['-3.11', '--version'], execArgs: ['-3.11'] },
-    { cmd: 'py', args: ['--version'], execArgs: [] },
-    { cmd: 'python3', args: ['--version'], execArgs: [] }
+    { cmd: 'python', args: ['--version'], execArgs: [], source: 'system' },
+    { cmd: 'py', args: ['-3.11', '--version'], execArgs: ['-3.11'], source: 'system' },
+    { cmd: 'py', args: ['--version'], execArgs: [], source: 'system' },
+    { cmd: 'python3', args: ['--version'], execArgs: [], source: 'system' }
   );
 
   for (const candidate of candidates) {
@@ -43,7 +67,8 @@ function detectPythonCommand() {
         return {
           cmd: candidate.cmd,
           execArgs: candidate.execArgs,
-          version: parsed
+          version: parsed,
+          source: candidate.source
         };
       }
     } catch {
