@@ -7,6 +7,8 @@ Strictly respects SAFETY.md:
 - ask_screen_vision_cloud (Tier 2): Cloud vision escalation requiring preview approval.
 """
 
+import time
+import asyncio
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
@@ -14,6 +16,7 @@ from services.backend.automation.desktop_controller import DesktopController
 from services.backend.vision.moondream_client import moondream_client
 from services.backend.vision.ocr_engine import ocr_engine
 from services.backend.vision.multimodal_coordinator import multimodal_coordinator
+from services.backend.vision.annotation_streamer import annotation_streamer, HudAnnotation
 
 _desktop_controller = DesktopController()
 
@@ -59,6 +62,19 @@ async def inspect_screen(query: str = "Describe what is on the screen and highli
         all_uia = ocr_engine.extract_elements_from_uia(max_depth=3)
         # Limit to 10 prominent elements
         elements = all_uia[:10]
+        if elements:
+            hud_annos = [
+                HudAnnotation(
+                    id=f"elem-{idx}",
+                    name=e.get("name", "Element"),
+                    control_type=e.get("control_type", "element"),
+                    bbox=e.get("bbox", [e.get("x", 0) - 20, e.get("y", 0) - 10, 40, 20]),
+                    confidence=0.95,
+                    color="#0052FF"
+                )
+                for idx, e in enumerate(elements)
+            ]
+            asyncio.create_task(annotation_streamer.broadcast_annotations(hud_annos, duration_ms=4000))
 
     return {
         "status": "success",
@@ -86,6 +102,16 @@ async def find_on_screen(element_name: str) -> Dict[str, Any]:
     match = ocr_engine.find_element_coordinates(element_name, img)
 
     if match:
+        anno = HudAnnotation(
+            id=f"find-{int(time.time() * 1000)}",
+            name=element_name,
+            control_type=match.get("method", "element"),
+            bbox=match.get("bbox", [match["x"] - 20, match["y"] - 10, 40, 20]),
+            confidence=1.0,
+            color="#CCFF00"  # Acid Lime highlight for located target
+        )
+        asyncio.create_task(annotation_streamer.broadcast_annotations([anno], duration_ms=3000))
+
         return {
             "status": "success",
             "found": True,

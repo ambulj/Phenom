@@ -22,10 +22,20 @@ export interface TickerItem {
   totalSteps?: number;
 }
 
+export interface HudAnnotationItem {
+  id: string;
+  name: string;
+  control_type?: string;
+  bbox: [number, number, number, number]; // [x, y, width, height]
+  confidence?: number;
+  color?: string; // hex color, default #0052FF
+}
+
 interface ScreenBorderOverlayProps {
   overlayState: ScreenOverlayState;
   clickTarget: ClickTarget | null;
   tickerItems: TickerItem[];
+  annotations?: HudAnnotationItem[];
   onResumeAutomation?: () => void;
   onStopAutomation?: () => void;
 }
@@ -34,6 +44,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
   overlayState,
   clickTarget,
   tickerItems,
+  annotations = [],
   onResumeAutomation,
   onStopAutomation
 }) => {
@@ -59,7 +70,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
     }
   }, [overlayState.state, overlayState.timeoutSeconds, onStopAutomation]);
 
-  if (overlayState.state === 'idle' && !clickTarget && tickerItems.length === 0) {
+  if (overlayState.state === 'idle' && !clickTarget && tickerItems.length === 0 && (!annotations || annotations.length === 0)) {
     return null;
   }
 
@@ -105,6 +116,65 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
           50% { opacity: 0.4; }
         }
       `}</style>
+
+      {/* Live Cyber HUD Bounding Box Annotations (Electric Cobalt & Acid Lime) */}
+      {annotations && annotations.map((anno) => {
+        const [x, y, w, h] = anno.bbox;
+        const accentColor = anno.color || '#0052FF';
+        return (
+          <div
+            key={anno.id}
+            data-testid={`hud-annotation-${anno.id}`}
+            style={{
+              position: 'absolute',
+              left: x,
+              top: y,
+              width: Math.max(w, 24),
+              height: Math.max(h, 24),
+              boxSizing: 'border-box',
+              border: `2px solid ${accentColor}`,
+              boxShadow: `0 0 14px ${accentColor}88, inset 0 0 8px ${accentColor}44`,
+              borderRadius: 4,
+              pointerEvents: 'none',
+              transition: 'all 0.2s ease-out'
+            }}
+          >
+            {/* Cyber Corner Bracket Accents (Acid Lime) */}
+            <div style={{ position: 'absolute', top: -3, left: -3, width: 8, height: 8, borderTop: '3px solid #CCFF00', borderLeft: '3px solid #CCFF00' }} />
+            <div style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderTop: '3px solid #CCFF00', borderRight: '3px solid #CCFF00' }} />
+            <div style={{ position: 'absolute', bottom: -3, left: -3, width: 8, height: 8, borderBottom: '3px solid #CCFF00', borderLeft: '3px solid #CCFF00' }} />
+            <div style={{ position: 'absolute', bottom: -3, right: -3, width: 8, height: 8, borderBottom: '3px solid #CCFF00', borderRight: '3px solid #CCFF00' }} />
+
+            {/* Floating Tag Badge */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '100%',
+                left: 0,
+                marginBottom: 4,
+                background: 'rgba(8, 11, 16, 0.94)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(0, 82, 255, 0.45)',
+                borderRadius: 4,
+                padding: '2px 7px',
+                color: '#CCFF00',
+                fontFamily: 'Consolas, monospace',
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.8)'
+              }}
+            >
+              <span style={{ color: '#0052FF', marginRight: 4 }}>
+                {anno.control_type ? `[${anno.control_type}]` : '[TARGET]'}
+              </span>
+              {anno.name}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Click Target Concentric Ring Animation (Cobalt & Acid Lime) */}
       {clickTarget && (
@@ -198,35 +268,33 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
               <WarningRegular style={{ fontSize: 36, color: '#F97316' }} />
             </div>
           </div>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600, color: '#f8fafc' }}>
-            User Interaction Detected
-          </h3>
+          <h2 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: 600, color: '#f8fafc' }}>Automation Paused</h2>
           <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#94a3b8', lineHeight: 1.5 }}>
-            Physical mouse or keyboard activity was detected while automation was controlling the screen. Automation is safely paused.
+            {overlayState.message || 'User interaction detected. Automation has been paused for safety.'}
           </p>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#cbd5e1', marginBottom: 6 }}>
-              <span>Auto-abort in:</span>
-              <span style={{ fontWeight: 600, color: '#F97316' }}>{countdown}s</span>
+          <div style={{ margin: '16px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', marginBottom: 4 }}>
+              <span>Auto-stop in</span>
+              <span>{countdown}s</span>
             </div>
-            <ProgressBar value={countdown / 10} color="warning" />
+            <ProgressBar value={countdown / (overlayState.timeoutSeconds || 10)} color="warning" />
           </div>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 20 }}>
             <Button
               appearance="primary"
               icon={<PlayRegular />}
               onClick={onResumeAutomation}
-              style={{ background: 'linear-gradient(135deg, #0052FF, #1a66ff)', borderColor: '#0052FF', color: '#ffffff', fontWeight: 600 }}
+              style={{ background: '#CCFF00', color: '#080B10', fontWeight: 600, border: 'none' }}
             >
-              Resume Automation
+              Continue Task
             </Button>
             <Button
               appearance="secondary"
               icon={<DismissRegular />}
               onClick={onStopAutomation}
-              style={{ background: '#EF4444', borderColor: '#EF4444', color: '#ffffff' }}
+              style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
             >
-              Stop & Abort
+              Stop & Cancel
             </Button>
           </div>
         </div>
