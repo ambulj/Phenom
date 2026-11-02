@@ -13,7 +13,8 @@ from collections import defaultdict
 from contextlib import asynccontextmanager
 from typing import Dict, Any, Optional
 import numpy as np
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Security, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Security, status, Request
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from services.backend.schemas.protocol import (
@@ -698,6 +699,103 @@ async def websocket_endpoint(websocket: WebSocket):
             active_task.cancel()
 
 # Minimal unauthenticated health endpoints
+@app.get("/")
+async def root_dashboard(request: Request):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Phenom Assistant - Online</title>
+  <style>
+    body {
+      background: #0b0f19;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 16px;
+      padding: 32px 40px;
+      max-width: 520px;
+      box-shadow: 0 10px 30px rgba(0, 229, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+    h1 {
+      color: #00e5ff;
+      margin: 0 0 8px 0;
+      font-size: 26px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(0, 229, 255, 0.12);
+      color: #00e5ff;
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    p { color: #94a3b8; font-size: 15px; line-height: 1.6; margin: 8px 0; }
+    strong { color: #f8fafc; }
+    code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; color: #38bdf8; }
+    .links { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block;
+      background: #00e5ff;
+      color: #0b0f19;
+      text-decoration: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚡ Phenom Assistant</h1>
+    <span class="badge">● Backend Online</span>
+    <p><strong>Primary Voice:</strong> Kabir v4-flash (0.95x Deliberate Pace)</p>
+    <p><strong>Offline Voice:</strong> Madhur Neural (Silent Failover)</p>
+    <p><strong>Desktop UI:</strong> Connected via WebSocket (<code>/ws</code>)</p>
+    <p><strong>Controls:</strong> Press <code>Alt + Space</code> for Command Bar or <code>Ctrl + Space</code> to talk to Kabir.</p>
+    <div class="links">
+      <a class="btn" href="/docs">API Docs (Swagger)</a>
+      <a class="btn btn-secondary" href="/health">Health Check</a>
+    </div>
+  </div>
+</body>
+</html>"""
+        return HTMLResponse(content=html_content)
+    return {
+        "app": "Phenom Assistant",
+        "status": "online",
+        "version": "0.1.0",
+        "voice": "Kabir v4-flash (0.95x pace)",
+        "websocket": "ws://127.0.0.1:8000/ws",
+        "health": "/health",
+        "docs": "/docs"
+    }
+
 @app.get("/health")
 @app.get("/api/health")
 async def health_check():
