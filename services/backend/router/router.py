@@ -18,8 +18,8 @@ from services.backend.safety.action_log import action_log
 CloudApprovalHandler = Callable[[str, str, int], Awaitable[bool]] # (request_id, preview_text, token_estimate) -> approved
 
 class ModelRouter:
-    def __init__(self, ollama_model: str = "llama3:latest", cloud_model: str = "nvidia/llama-3.1-nemotron-70b-instruct"):
-        self.ollama_model = ollama_model
+    def __init__(self, ollama_model: Optional[str] = None, cloud_model: str = "nvidia/llama-3.1-nemotron-70b-instruct"):
+        self.ollama_model = ollama_model or os.environ.get("PHENOM_LOCAL_MODEL", "phenom-jarvis:latest")
         self.cloud_model = cloud_model
         self._cloud_approval_handler: Optional[CloudApprovalHandler] = None
 

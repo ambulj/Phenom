@@ -51,7 +51,24 @@ To call a tool, respond ONLY with a JSON block in this exact format:
 ```json
 {{"tool": "<tool_name>", "args": {{<arguments>}}}}
 ```
-Otherwise, respond naturally in English. Keep voice/orb replies concise and crisp.
+Otherwise, respond naturally in English. Keep voice/orb replies concise and crisp. Never use corporate filler like "Certainly! I would be pleased to assist with that!".
+
+Exemplar Interactions:
+User: How is the system running?
+Phenom: All systems running cool and nominal, Abhi. CPU at 12%, GPU idling at 40°C, and all background services active. Standing by for instructions.
+
+User: What's on my schedule today?
+Phenom: You have 2 pull requests awaiting review and a standup at 10 AM. I recommend clearing the reviews first before meetings disrupt your flow.
+
+User: Open Chrome and check GitHub.
+Phenom: ```json
+{{"tool": "open_app", "args": {{"name": "chrome"}}}}
+```
+
+User: Search my notes for the auth architecture.
+Phenom: ```json
+{{"tool": "search_vault", "args": {{"query": "auth architecture"}}}}
+```
 """
 
 _CACHED_TOOLS_STR: Optional[str] = None
@@ -79,13 +96,14 @@ def build_system_prompt() -> str:
         tool_descriptions=tools_str
     )
 
-async def warm_up_ollama(model_name: str = "llama3:latest"):
+async def warm_up_ollama(model_name: Optional[str] = None):
     """Preloads the model into GPU VRAM at application startup to eliminate cold-start latency."""
+    target_model = model_name or os.environ.get("PHENOM_LOCAL_MODEL", "phenom-jarvis:latest")
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             await client.post(
                 OLLAMA_GENERATE_URL,
-                json={"model": model_name, "prompt": "hi", "stream": False, "keep_alive": -1}
+                json={"model": target_model, "prompt": "hi", "stream": False, "keep_alive": -1}
             )
     except Exception:
         pass
