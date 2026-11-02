@@ -47,7 +47,7 @@ terminal_output_style = "collapsible_streaming_console" # Live output stream ins
 window_control = "full"                # App launching, media keys, volume control, window snapping/minimizing
 offline_mode = "seamless_local"        # Seamless local offline mode (switch to local Ollama & offline TTS automatically; show offline badge)
 multi_instance_policy = "allow_multiple_independent" # Allow multiple independent instances across monitors
-material_style = "windows11_mica_acrylic" # Native Windows 11 translucent glass effect with glowing cyan borders
+material_style = "adaptive_mica_and_oled" # Windows 11 Mica Acrylic on AC power; Deep OLED Black on battery
 action_center_toasts = true            # Deliver rich action toasts to Windows 11 Action Center
 build_notification_mode = "context_adaptive_voice_and_toast" # Voice summary when looking away, toast if reading code
 compact_environment_header = true      # Compact 2-line environment header in system prompt
@@ -137,10 +137,18 @@ hybrid_fts5_vector_rrf = true          # SQLite FTS5 keyword matching + dense ve
 indexing_mode = "exif_plus_visual_tags" # Read-only EXIF + local AI visual tagging (receipt, whiteboard, diagram, screenshot) stored encrypted
 
 [cleanup]
+downloads_policy = "weekly_dry_run_review" # Prepares tidy plan sorting installers/PDFs with 1-click approval
+max_files_per_batch = 10               # Hard safety cap: max 10 files per approval
 recycle_bin_only = true                # Delete means Recycle Bin; never permanent delete
 rollback_manifest = true               # Generate automated rollback manifest note in Obsidian
 
 [finance]
+tracked_tickers = [
+    "^NSEI", "^BSESN",                 # Indian Benchmark Indices (NIFTY 50 & SENSEX)
+    "BTC-USD", "ETH-USD",              # Crypto Assets
+    "TCS.NS", "INFY.NS", "RELIANCE.NS", # Top Indian Tech Equities
+    "NVDA", "AAPL", "GOOGL", "MSFT"    # US Tech Equities
+]
 intraday_alert_threshold = 0.03        # Alert on ±3% intraday swings on tracked watchlist tickers
 daily_closing_summary = true
 closing_summary_time = "16:00"         # 04:00 PM IST market closing summary
