@@ -378,3 +378,24 @@ otification_policy == 'silent').
 
 5. **In-RAM Voice Memo Decryption & Transcription**:
    - Remote voice memos are decoded and transcribed via local Whisper entirely in memory. Zero voice audio bytes or credentials are ever written to disk.
+
+
+---
+
+## 18. Continuous Desktop Visual Memory & Temporal Recall (Phenom 6.0 Phase 1)
+
+1. **Strictly Zero Screen Frame Disk Writes**:
+   - Screen frames captured by `FrameGrabber` and processed by `VisualMemoryMonitor` exist solely in transient RAM buffers. No screenshot image files (PNG, JPEG, BMP) are ever written to disk.
+2. **Perceptual Delta Triggering (< 1.5% Delta Gate)**:
+   - Screen differences are evaluated via downsampled 64x36 grayscale thumbnail hashing (`DeltaDetector`).
+   - If the normalized pixel difference is below 0.015, all text extraction and embedding generation are skipped, ensuring near-zero idle resource consumption.
+3. **Sensitive Application Exclusion & Window Redaction**:
+   - `PrivacyMasker` monitors top-level and foreground windows. Any window matching sensitive patterns (1Password, Bitwarden, KeePass, private browsing / incognito tabs, online banking, crypto wallets, Credential Manager) is blacked out in memory or completely excluded from OCR extraction.
+   - Text elements whose bounding boxes overlap sensitive window rects are automatically discarded.
+4. **100% Local GPU Vector Embeddings & Encrypted SQLCipher Storage**:
+   - Text vector embeddings are computed locally using `sentence-transformers` (`all-MiniLM-L6-v2`) on NVIDIA CUDA or local CPU. Zero visual or text history is ever transmitted off the machine without explicit preview approval.
+   - Extracted text chunks and 384-dimensional dense vectors are persisted in an encrypted SQLCipher database (`visual_history.db`) with rolling 7-day retention pruning.
+5. **Safety Registry Tier 0 Classification (search_visual_memory)**:
+   - `search_visual_memory` is registered as a Tier 0 read-only tool with structured preview descriptions.
+6. **Guardian Kill Switch Synchronization**:
+   - Triggering the Guardian kill switch immediately halts the `VisualMemoryMonitor` ingestion loop synchronously alongside speech and automation aborts.

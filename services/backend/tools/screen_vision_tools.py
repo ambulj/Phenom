@@ -151,3 +151,34 @@ async def ask_screen_vision_cloud(question: str) -> Dict[str, Any]:
         "privacy_masked_windows": res.get("privacy_masked_windows", 0),
         "message": res.get("message", "Cloud vision analysis complete.")
     }
+
+
+
+class SearchVisualMemoryArgs(BaseModel):
+    query: str = Field(
+        description="Natural language question or search query for what was seen on screen (e.g. 'error in terminal 15 mins ago', 'CUDA chart')"
+    )
+    limit: int = Field(
+        default=5,
+        description="Maximum number of historical matching text occurrences to return"
+    )
+
+
+@registry.register(
+    name="search_visual_memory",
+    tier=0,
+    description="Searches continuous desktop visual memory for text, windows, or commands seen on screen with temporal natural language recall. Read-only.",
+    args_schema=SearchVisualMemoryArgs,
+    preview_fn=lambda a: f"Search visual memory (Read-only): query='{a.get('query')}' (limit={a.get('limit', 5)})"
+)
+async def search_visual_memory(query: str, limit: int = 5) -> Dict[str, Any]:
+    """Queries local encrypted visual memory using hybrid temporal parsing and vector similarity."""
+    from services.backend.vision.temporal_recall import temporal_recall_engine
+    matches = temporal_recall_engine.recall(query=query, limit=limit)
+    return {
+        "status": "success",
+        "query": query,
+        "matches_count": len(matches),
+        "matches": matches,
+        "message": f"Found {len(matches)} matching visual memory records." if matches else "No matching visual history found."
+    }

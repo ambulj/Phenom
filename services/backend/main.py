@@ -1385,6 +1385,13 @@ def on_guardian_state_change(new_state: str):
         except Exception:
             pass
 
+        # Stop continuous visual memory monitoring
+        try:
+            from services.backend.vision.visual_memory_monitor import visual_memory_monitor
+            visual_memory_monitor.stop()
+        except Exception:
+            pass
+
         # Clear live HUD annotations
         try:
             asyncio.create_task(broadcast_message({
