@@ -23,6 +23,7 @@ except ImportError:
 from services.backend.automation.human_takeover import takeover_manager, HumanTakeoverAbort
 from services.backend.automation.limits import AutomationLimitsManager
 from services.backend.voice.sound_fx import sound_fx
+from services.backend.safety.guardian import guardian
 
 class DesktopController:
     def __init__(self):
@@ -150,6 +151,8 @@ class DesktopController:
 
         try:
             for idx, step in enumerate(steps):
+                if guardian.is_halted:
+                    raise RuntimeError("Automation immediately halted by Guardian kill switch.")
                 await takeover_manager.wait_if_paused()
                 action = step.get("action", "")
                 target = step.get("target", "")
@@ -183,12 +186,23 @@ class DesktopController:
 
                     elif action == "click":
                         cx, cy = None, None
-                        elem = self.find_element_by_name(target)
+                        elem = self.find_element_by_name(target) if target else None
                         if elem:
                             cx, cy = elem["center"]
                             step_record["target_rect"] = elem["rect"]
                         elif step.get("coords"):
                             cx, cy = step.get("coords")
+                        elif target:
+                            # Fallback to Phase 2 In-Memory Visual OCR Coordinate Locator
+                            try:
+                                from services.backend.vision.ocr_engine import ocr_engine
+                                img = self.capture_screen_ram()
+                                ocr_match = ocr_engine.find_element_coordinates(target, img)
+                                if ocr_match:
+                                    cx, cy = ocr_match["x"], ocr_match["y"]
+                                    step_record["target_rect"] = ocr_match.get("bbox")
+                            except Exception:
+                                pass
 
                         if cx is not None and cy is not None:
                             # 300ms Click Target Highlighting Ring per Plan 7e
@@ -210,6 +224,20 @@ class DesktopController:
                             raise PermissionError("Typing passwords is strictly prohibited by SAFETY.md.")
                         pyautogui.write(text, interval=0.03)
                         step_record["result"] = f"typed_{len(text)}_chars"
+
+                    elif action in ["hotkey", "press"]:
+                        keys = step.get("keys") or [step.get("key")]
+                        if isinstance(keys, str):
+                            keys = [keys]
+                        keys = [str(k).lower().strip() for k in keys if k]
+                        if keys:
+                            if len(keys) == 1:
+                                pyautogui.press(keys[0])
+                            else:
+                                pyautogui.hotkey(*keys)
+                            step_record["result"] = f"pressed_{'+'.join(keys)}"
+                        else:
+                            step_record["result"] = "no_keys_provided"
 
                 step_record["status"] = "done"
                 results.append(step_record)
