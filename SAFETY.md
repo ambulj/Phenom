@@ -331,3 +331,23 @@ ollback_vault_note(undo_token) restores previous note contents or removes newly 
 4. **Safety Registry Tier 1 Classification (crystallize_session_notes, 
 ollback_vault_note)**:
    - Registered as Tier 1 tools with interactive previews and immutable logging in SQLite ction_log.
+
+
+---
+
+## 16. Proactive Ambient Intelligence & Context Guarantees (Phenom 5.0 Phase 3)
+
+1. **Non-Intrusive Ambient Alert Invariant**:
+   - Ambient alerts rendered on the Cyber HUD must never steal window focus, disrupt active user keyboard inputs, or interrupt foreground fullscreen workflows.
+   - Alert toasts auto-dismiss after 6 seconds and display non-blocking category pills with dismiss controls.
+2. **Deep Focus & Meeting Mode Silence**:
+   - In DEEP_FOCUS mode (or when video conferencing is active in Meeting Mode), all non-critical notifications are strictly suppressed by policy (
+otification_policy == 'silent').
+   - Procedural audio chimes are muted (udio_volume_scale == 0.0) in Deep Focus.
+3. **Alert Fatigue Prevention via 5-Minute Cooldowns**:
+   - Hardware resource alerts (CPU, RAM, GPU VRAM) enforce a minimum 5-minute cooldown between repeated alerts.
+   - Calendar alerts are deduplicated per unique meeting ID, ensuring each meeting triggers at most once.
+4. **Zero Audio Disk I/O**:
+   - Ambient chimes (play_ambient_toast_chime, play_subtle_alert_chime) are synthesized directly in RAM using NumPy sine waves with zero temporary audio files created on disk.
+5. **Safety Registry Tier 0 Status**:
+   - get_ambient_status and set_assistant_mode are registered as Tier 0 read-only / safe configuration tools.

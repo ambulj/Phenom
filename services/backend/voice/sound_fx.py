@@ -22,10 +22,19 @@ class SoundEffectsManager:
         if not self.enabled or os.environ.get("PYTEST_CURRENT_TEST"):
             return
 
+        try:
+            from services.backend.modes.mode_manager import mode_manager
+            scale = mode_manager.get_volume_scale()
+        except Exception:
+            scale = 1.0
+
+        if scale <= 0.0:
+            return
+
         def _worker():
             try:
                 with self._lock:
-                    sd.play(audio_data * self.volume, samplerate=SAMPLE_RATE, blocking=True)
+                    sd.play(audio_data * (self.volume * scale), samplerate=SAMPLE_RATE, blocking=True)
             except Exception:
                 # In environments without audio playback devices, fail silently
                 pass
@@ -85,5 +94,20 @@ class SoundEffectsManager:
         tone2 = np.sin(2 * np.pi * 750.0 * t) * np.exp(-10 * t)
         chime = np.concatenate([tone1, gap, tone2]).astype(np.float32)
         self._play_async(chime)
+
+    def play_ambient_toast_chime(self):
+        """Soft dual-tone chime (E5 -> A5) for non-intrusive ambient toast notifications."""
+        t1 = np.linspace(0, 0.07, int(SAMPLE_RATE * 0.07), endpoint=False)
+        t2 = np.linspace(0, 0.16, int(SAMPLE_RATE * 0.16), endpoint=False)
+        tone1 = np.sin(2 * np.pi * 659.25 * t1) * np.exp(-16 * t1)
+        tone2 = np.sin(2 * np.pi * 880.00 * t2) * np.exp(-10 * t2)
+        chime = np.concatenate([tone1, tone2]).astype(np.float32)
+        self._play_async(chime)
+
+    def play_subtle_alert_chime(self):
+        """Single mellow chime (C5) for subtle ambient status alerts."""
+        t = np.linspace(0, 0.14, int(SAMPLE_RATE * 0.14), endpoint=False)
+        tone = (np.sin(2 * np.pi * 523.25 * t) * np.exp(-12 * t)).astype(np.float32)
+        self._play_async(tone)
 
 sound_fx = SoundEffectsManager()

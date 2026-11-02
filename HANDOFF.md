@@ -747,3 +747,15 @@ ollback_vault_note (Tier 1) with preview functions and action logging.
   - Desktop Frontend Tests: 32/32 passed across all 6 test suites (pps/desktop/tests/test_*.js).
   - Desktop Production Build: Clean Vite bundle generated in 10.96s with 0 errors (
 pm run build).
+
+### Phase 3: Proactive Ambient Intelligence & Context Engine (Completed)
+- **Mode Expansion & Automatic Context Adaptation**: `services/backend/modes/mode_manager.py` expanded with `AssistantMode.DEEP_FOCUS = "deep_focus"` (silent notification policy, volume scale 0.0). `services/backend/ambient/context_detector.py` samples active foreground processes via Win32/psutil and adapts modes across Work, Study, Chill, and Deep Focus with a 5-second hysteresis stabilization window.
+- **Proactive Ambient Event Monitor**: `services/backend/ambient/ambient_monitor.py` monitors CPU (>90%), RAM (>85%), GPU VRAM (>90%), and upcoming Google Calendar meetings (<15m) with 5-minute cooldowns and meeting deduplication, emitting typed `ambient.alert` events.
+- **In-RAM Procedural Audio Chimes**: `services/backend/voice/sound_fx.py` synthesizes `play_ambient_toast_chime()` (soft dual-tone chime) and `play_subtle_alert_chime()` in RAM with zero disk audio writes, dynamically scaled by active mode volume.
+- **Cyber HUD Ambient Toasts**: `apps/desktop/src/components/ScreenBorderOverlay.tsx` and `App.tsx` render floating ambient toast cards in Midnight Black glass with Electric Cobalt glow and Acid Lime category pills with 6-second auto-dismissal.
+- **Verification Suites**:
+  - Phase 3 Backend Test Suite: 10/10 passed in 0.58s (`services/backend/tests/test_ambient_intelligence.py`).
+  - Target Combined Suite (Phases 1-3 + Modes): 41/41 passed in 5.37s.
+  - Phase 3 Desktop UI Suite: 4/4 passed (`apps/desktop/tests/test_ambient_toasts.js`).
+  - Total Desktop Suites: 36/36 passed across all 7 test suites.
+  - Desktop Production Build: Clean Vite bundle generated in 6.44s with 0 errors (`npm run build`).

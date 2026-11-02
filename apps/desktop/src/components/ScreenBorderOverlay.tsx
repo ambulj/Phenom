@@ -22,6 +22,16 @@ export interface TickerItem {
   totalSteps?: number;
 }
 
+export interface AmbientAlertItem {
+  id: string;
+  title: string;
+  message: string;
+  category: 'calendar' | 'system' | 'task' | 'general';
+  urgency: 'low' | 'medium' | 'high' | 'critical';
+  timestamp: string;
+  auto_dismiss_seconds?: number;
+}
+
 export interface HudAnnotationItem {
   id: string;
   name: string;
@@ -36,6 +46,8 @@ interface ScreenBorderOverlayProps {
   clickTarget: ClickTarget | null;
   tickerItems: TickerItem[];
   annotations?: HudAnnotationItem[];
+  ambientAlerts?: AmbientAlertItem[];
+  onDismissAlert?: (id: string) => void;
   onResumeAutomation?: () => void;
   onStopAutomation?: () => void;
 }
@@ -45,6 +57,8 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
   clickTarget,
   tickerItems,
   annotations = [],
+  ambientAlerts = [],
+  onDismissAlert,
   onResumeAutomation,
   onStopAutomation
 }) => {
@@ -70,7 +84,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
     }
   }, [overlayState.state, overlayState.timeoutSeconds, onStopAutomation]);
 
-  if (overlayState.state === 'idle' && !clickTarget && tickerItems.length === 0 && (!annotations || annotations.length === 0)) {
+  if (overlayState.state === 'idle' && !clickTarget && tickerItems.length === 0 && (!annotations || annotations.length === 0) && (!ambientAlerts || ambientAlerts.length === 0)) {
     return null;
   }
 
@@ -241,6 +255,89 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
               <span style={{ color: '#0052FF', fontWeight: 600 }}>[{item.timestamp}]</span> {item.text}
             </div>
           ))}
+        </div>
+      )}
+
+            {/* Proactive Ambient Alert Toasts (Top-Right) */}
+      {ambientAlerts && ambientAlerts.length > 0 && (
+        <div
+          data-testid="ambient-alerts-container"
+          style={{
+            position: 'absolute',
+            top: tickerItems.length > 0 ? 110 : 20,
+            right: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            maxWidth: 380,
+            pointerEvents: 'auto',
+            zIndex: 999999
+          }}
+        >
+          {ambientAlerts.map((alert) => {
+            const isCritical = alert.urgency === 'critical';
+            const borderColor = isCritical ? 'rgba(239, 68, 68, 0.7)' : 'rgba(0, 82, 255, 0.45)';
+            const glowColor = isCritical ? 'rgba(239, 68, 68, 0.25)' : 'rgba(0, 82, 255, 0.2)';
+
+            return (
+              <div
+                key={alert.id}
+                className="ambient-toast-card"
+                style={{
+                  background: 'rgba(8, 11, 16, 0.94)',
+                  backdropFilter: 'blur(20px)',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: 12,
+                  padding: '12px 16px',
+                  boxShadow: `0 12px 36px rgba(0, 0, 0, 0.75), 0 0 16px ${glowColor}`,
+                  color: '#f8fafc',
+                  fontFamily: 'Segoe UI, system-ui, sans-serif'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span
+                      style={{
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        background: alert.category === 'calendar' ? 'rgba(0, 82, 255, 0.25)' : 'rgba(204, 255, 0, 0.2)',
+                        color: alert.category === 'calendar' ? '#60a5fa' : '#CCFF00',
+                        border: `1px solid ${alert.category === 'calendar' ? 'rgba(0, 82, 255, 0.4)' : 'rgba(204, 255, 0, 0.4)'}`
+                      }}
+                    >
+                      {alert.category}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
+                      {alert.title}
+                    </span>
+                  </div>
+                  {onDismissAlert && (
+                    <button
+                      onClick={() => onDismissAlert(alert.id)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        padding: 2,
+                        lineHeight: 1
+                      }}
+                      title="Dismiss"
+                    >
+                      <DismissRegular style={{ fontSize: 14 }} />
+                    </button>
+                  )}
+                </div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.4 }}>
+                  {alert.message}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
