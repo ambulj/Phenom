@@ -4,11 +4,13 @@
 [assistant]
 nickname = "Abhi"
 voice_language = "hi-IN"
-primary_voice = "madhur"                # Primary default voice (Madhur - Indian Hindi & Hinglish)
-voice_model = "hi-IN-MadhurNeural"
+primary_voice = "kabir_v4"                # Primary voice: Sarvam Bulbul v4-flash (Deep Jarvis Indian baritone)
+voice_model = "bulbul:v4-flash"
+sarvam_speaker = "kabir_hi_conversational"
+offline_fallback_voice = "hi-IN-MadhurNeural" # Automatic fallback to Madhur when cloud credits run out or offline
+credit_conservation_mode = true          # Route short pings (<4 words) and raw code to offline voice to save cloud credits
 cloud_hindi_tts = true
-tts_mode = "hybrid"                   # Hybrid: Local offline TTS for quick commands, Sarvam Bulbul v3 for briefings and summaries
-sarvam_speaker = "shubh"
+tts_mode = "hybrid"
 voice_flavor = "modern_urban_indian"   # Metro English accent with punchy natural Hinglish idioms ('sorted', 'scene', 'phod diya')
 banter_level = "high"                  # High banter: Heavily playful, sharp comebacks, treats user like Tony Stark, banter-heavy Hinglish
 proactivity_mode = "active"            # Active proactive partner: Suggests next steps & reference docs, detects new projects/errors

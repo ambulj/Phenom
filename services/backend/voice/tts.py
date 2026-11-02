@@ -102,11 +102,11 @@ class TTSEngine:
 
             try:
                 spoken_audio = False
-                # 1. Sarvam AI (if explicitly configured and valid key present)
+                # 1. Sarvam AI Bulbul v4-flash (Kabir conversational human voice)
                 try:
                     from services.backend.voice.cloud_tts import sarvam_tts
-                    if sarvam_tts.get_api_key() and sarvam_tts.is_hindi_or_hinglish(text):
-                        wav = sarvam_tts.synthesize(text)
+                    if sarvam_tts.can_synthesize(text) and sarvam_tts.is_hindi_or_hinglish(text):
+                        wav = sarvam_tts.synthesize(text, is_shareable=True, speaker="kabir", model="bulbul:v4-flash")
                         if wav:
                             spoken_audio = self._speak_wav_bytes(wav)
                 except Exception:
