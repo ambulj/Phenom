@@ -1,3 +1,4 @@
+import threading
 """
 Phenom Worker Swarm Manager
 Coordinates parallel background autonomous workers (headless browser, CLI subprocesses)
@@ -311,15 +312,19 @@ class WorkerSwarmManager:
         for tid, task in list(self.active_tasks.items()):
             task["status"] = "aborted"
             try:
-                self.store.save_checkpoint(
-                    task_id=tid,
-                    worker_id=task.get("worker_id", "unknown"),
-                    worker_type=task.get("worker_type", "unknown"),
-                    current_step=task.get("current_step", 0),
-                    total_steps=task.get("total_steps", 1),
-                    status="aborted",
-                    history=task.get("history", [])
-                )
+                threading.Thread(
+                    target=self.store.save_checkpoint,
+                    kwargs={
+                        "task_id": tid,
+                        "worker_id": task.get("worker_id", "unknown"),
+                        "worker_type": task.get("worker_type", "unknown"),
+                        "current_step": task.get("current_step", 0),
+                        "total_steps": task.get("total_steps", 1),
+                        "status": "aborted",
+                        "history": task.get("history", []),
+                    },
+                    daemon=True,
+                ).start()
             except Exception:
                 pass
 

@@ -70,22 +70,26 @@ class GuardianKillSwitch:
                     pass
             self._tracked_pids.clear()
 
-        # 3. Log killswitch activation
-        action_log.log_action(
-            tool="guardian_killswitch",
-            tier=3,
-            args={"reason": reason, "processes_killed": killed_processes},
-            decision="auto",
-            result_status="HALTED",
-            source="system"
-        )
-
-        # 4. Notify UI / orchestrator callbacks
+        # 3. Synchronously notify UI / orchestrator callbacks immediately (< 5ms)
         for cb in self._callbacks:
             try:
                 cb("halted")
             except Exception:
                 pass
+
+        # 4. Asynchronously log killswitch activation to avoid disk I/O blocking the < 25ms halt SLA
+        threading.Thread(
+            target=action_log.log_action,
+            kwargs={
+                "tool": "guardian_killswitch",
+                "tier": 3,
+                "args": {"reason": reason, "processes_killed": killed_processes},
+                "decision": "auto",
+                "result_status": "HALTED",
+                "source": "system",
+            },
+            daemon=True,
+        ).start()
 
         return killed_processes
 
@@ -94,20 +98,25 @@ class GuardianKillSwitch:
         with self._lock:
             self._halted = False
 
-        action_log.log_action(
-            tool="guardian_resume",
-            tier=0,
-            args={"action": "user_resume"},
-            decision="approved",
-            result_status="RESUMED",
-            source="desktop"
-        )
-
+        # Notify UI / orchestrator callbacks immediately
         for cb in self._callbacks:
             try:
                 cb("idle")
             except Exception:
                 pass
+
+        threading.Thread(
+            target=action_log.log_action,
+            kwargs={
+                "tool": "guardian_resume",
+                "tier": 0,
+                "args": {"action": "user_resume"},
+                "decision": "approved",
+                "result_status": "RESUMED",
+                "source": "desktop",
+            },
+            daemon=True,
+        ).start()
 
     def setup_global_hotkey(self, hotkey: str = "ctrl+alt+pause"):
         """Configures global system-wide hotkey listener, including triple_escape detection."""
@@ -119,17 +128,15 @@ class GuardianKillSwitch:
                 def on_escape_press():
                     now = time.time()
                     self._escape_timestamps.append(now)
-                    # Keep timestamps within the last 1.0 second
+                    # Keep timestamps within 1.0 second window
                     self._escape_timestamps = [t for t in self._escape_timestamps if now - t <= 1.0]
                     if len(self._escape_timestamps) >= 3:
+                        self.trigger(reason="triple_escape_hotkey")
                         self._escape_timestamps.clear()
-                        self.trigger("global_hotkey_triple_escape")
-                keyboard.on_press_key("esc", lambda _: on_escape_press())
+                self._hotkey_hook = keyboard.on_press_key("esc", lambda e: on_escape_press())
             else:
-                keyboard.add_hotkey(clean_hotkey, lambda: self.trigger(f"global_hotkey_{clean_hotkey}"))
-        except Exception as e:
-            # On non-elevated or background headless runs, graceful notification
+                self._hotkey_hook = keyboard.add_hotkey(clean_hotkey, lambda: self.trigger(reason="global_hotkey"))
+        except Exception:
             pass
 
-# Global Guardian Instance
 guardian = GuardianKillSwitch()

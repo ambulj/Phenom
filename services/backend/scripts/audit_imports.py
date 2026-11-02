@@ -30,6 +30,7 @@ IMPORT_TO_PYPI: Dict[str, str] = {
     "win32process": "pywin32",
     "nest_asyncio": "nest-asyncio",
     "starlette": "fastapi",  # starlette is bundled/required by fastapi
+    "yaml": "pyyaml",
 }
 
 def get_stdlib_modules() -> Set[str]:

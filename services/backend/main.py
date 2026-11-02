@@ -268,6 +268,9 @@ import services.backend.tools.screen_vision_tools
 
 
 import services.backend.tools.desktop_macro_tools
+import services.backend.tools.swarm_tools
+import services.backend.tools.obsidian_graph_tools
+import services.backend.tools.voice_tools
 
 
 
@@ -300,6 +303,10 @@ from services.backend.automation.human_takeover import takeover_manager
 
 
 from services.backend.remote.telegram_bot import telegram_controller
+from services.backend.automation.autonomous_engine import autonomous_engine
+from services.backend.vision.visual_memory_monitor import visual_memory_monitor
+from services.backend.automation.swarm_manager import swarm_manager
+from services.backend.voice.duplex_pipeline import duplex_pipeline
 
 
 
@@ -1360,15 +1367,17 @@ async def broadcast_message(msg_dict: Dict[str, Any]):
 
 
 def on_guardian_state_change(new_state: str):
-    # Broadcast to all connected clients
+    # Broadcast to all connected clients if event loop is running
     try:
-        asyncio.create_task(broadcast_message({
-            "id": f"guardian-{os.urandom(4).hex()}",
-            "type": "state.change",
-            "ts": "",
-            "payload": {"state": new_state, "detail": "Triggered by Guardian override"}
-        }))
-    except Exception:
+        loop = asyncio.get_running_loop()
+        if loop and loop.is_running():
+            loop.create_task(broadcast_message({
+                "id": f"guardian-{os.urandom(4).hex()}",
+                "type": "state.change",
+                "ts": "",
+                "payload": {"state": new_state, "detail": "Triggered by Guardian override"}
+            }))
+    except (RuntimeError, Exception):
         pass
 
     if new_state == "halted":
@@ -1380,34 +1389,39 @@ def on_guardian_state_change(new_state: str):
 
         # Abort any active autonomous execution immediately
         try:
-            from services.backend.automation.autonomous_engine import autonomous_engine
             autonomous_engine.abort("guardian_halt")
         except Exception:
             pass
 
         # Stop continuous visual memory monitoring
         try:
-            from services.backend.vision.visual_memory_monitor import visual_memory_monitor
             visual_memory_monitor.stop()
         except Exception:
             pass
 
         # Abort all active background worker swarms immediately
         try:
-            from services.backend.automation.swarm_manager import swarm_manager
             swarm_manager.abort_all("guardian_halt")
         except Exception:
             pass
 
-        # Clear live HUD annotations
+        # Synchronously halt full-duplex voice pipeline and audio stream
         try:
-            asyncio.create_task(broadcast_message({
-                "id": f"guardian-clear-{os.urandom(4).hex()}",
-                "type": "vision.clear_annotations",
-                "ts": "",
-                "payload": {"reason": "guardian_halt"}
-            }))
+            duplex_pipeline.halt()
         except Exception:
+            pass
+
+        # Clear live HUD annotations if event loop is running
+        try:
+            loop = asyncio.get_running_loop()
+            if loop and loop.is_running():
+                loop.create_task(broadcast_message({
+                    "id": f"guardian-clear-{os.urandom(4).hex()}",
+                    "type": "vision.clear_annotations",
+                    "ts": "",
+                    "payload": {"reason": "guardian_halt"}
+                }))
+        except (RuntimeError, Exception):
             pass
 
         # Cancel pending confirmations

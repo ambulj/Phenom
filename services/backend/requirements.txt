@@ -33,3 +33,5 @@ mss==10.2.0
 pyautogui==0.9.54
 scipy==1.17.1
 edge-tts>=7.0.0
+onnxruntime==1.30.0
+pyyaml==6.0.3
