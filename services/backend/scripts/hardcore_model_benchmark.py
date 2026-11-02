@@ -361,7 +361,7 @@ async def run_benchmark():
 
     # 1. Warm-up and system prompt assembly
     system_prompt = build_system_prompt()
-    model_name = "llama3:latest"
+    model_name = sys.argv[1] if len(sys.argv) > 1 else "llama3:latest"
     print(f"Target Model: {model_name}")
     print(f"Ollama Endpoint: {OLLAMA_GENERATE_URL}")
     print(f"Total Test Cases: {len(BENCHMARK_PROMPTS)}")
