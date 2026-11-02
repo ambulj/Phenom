@@ -42,6 +42,23 @@ V4_FLASH_SPEAKERS = {
     "kavya": "kavya_hi_conversational"
 }
 
+# Aliases mapping legacy or alternative names to standard speakers
+SPEAKER_ALIASES = {
+    "arvind": "shubh",
+    "abhilash": "shubh",
+    "chirag_hi_social": "shubh",
+    "karun": "aditya",
+    "amartya": "aditya",
+    "vipul_hi_social": "aditya",
+    "meera": "priya",
+    "anushka": "priya",
+    "suman_hi_companion": "priya",
+    "pavithra": "pooja",
+    "vidya": "pooja",
+    "aarti_hi_customer": "simran",
+    "vandana_hi_ecomm": "kavya"
+}
+
 # Standard Bulbul v3 Speakers
 VALID_V3_SPEAKERS = [
     "shubh", "aditya", "rahul", "rohan", "amit", "dev", "ratan",
@@ -80,7 +97,7 @@ class SarvamTTSClient:
             return True
         tokens = set(re.findall(r"\b[a-zA-Z]+\b", text.lower()))
         matching = tokens.intersection(HINGLISH_KEYWORDS)
-        return len(matching) >= 1 or len(tokens) <= 8
+        return len(matching) >= 2 or (len(matching) >= 1 and len(tokens) <= 8)
 
     def can_synthesize(self, text: str) -> bool:
         """
@@ -111,8 +128,9 @@ class SarvamTTSClient:
         self,
         text: str,
         is_shareable: bool = False,
-        speaker: str = "kabir",
-        model: str = "bulbul:v4-flash"
+        speaker: str = "shubh",
+        model: str = "bulbul:v3",
+        pace: float = 0.95
     ) -> Optional[bytes]:
         """
         Synthesizes speech using Sarvam Bulbul v4-flash (or v3).
@@ -137,13 +155,14 @@ class SarvamTTSClient:
         if not key:
             return None
 
-        # 3. Resolve Speaker for Model Version
+        # 3. Resolve Speaker for Model Version with Aliases
+        resolved_speaker = SPEAKER_ALIASES.get(speaker.lower(), speaker.lower())
         if model == "bulbul:v4-flash":
-            actual_speaker = V4_FLASH_SPEAKERS.get(speaker.lower(), speaker)
+            actual_speaker = V4_FLASH_SPEAKERS.get(resolved_speaker, resolved_speaker)
             if not actual_speaker.endswith(("_conversational", "_companion", "_assistant", "_customer")):
                 actual_speaker = "kabir_hi_conversational"
         else:
-            actual_speaker = speaker if speaker in VALID_V3_SPEAKERS else "kabir"
+            actual_speaker = resolved_speaker if resolved_speaker in VALID_V3_SPEAKERS else "shubh"
 
         # 4. Invoke Sarvam Bulbul API
         headers = {
@@ -154,7 +173,7 @@ class SarvamTTSClient:
             "inputs": [clean_text],
             "target_language_code": "hi-IN",
             "speaker": actual_speaker,
-            "pace": 1.0,
+            "pace": pace,
             "speech_sample_rate": 16000,
             "enable_preprocessing": True,
             "model": model

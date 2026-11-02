@@ -11,7 +11,7 @@ sarvam_speaker = "kabir_hi_conversational"
 offline_fallback_voice = "hi-IN-MadhurNeural" # Automatic fallback to Madhur when cloud credits run out or offline
 credit_conservation_mode = "balanced"   # Balanced: full sentences use Kabir v4-flash; short pings (<4 words) use local voice
 quota_failover_policy = "silent"        # Silent failover to Madhur offline voice when credits run out
-speech_pace = 1.0                       # 1.0x natural human pace
+speech_pace = 0.95                      # 0.95x deliberate, relaxed pace
 cloud_hindi_tts = true
 tts_mode = "hybrid"
 voice_flavor = "modern_urban_indian"   # Metro English accent with punchy natural Hinglish idioms ('sorted', 'scene', 'phod diya')
@@ -26,7 +26,7 @@ persona_presets = ["tony_stark", "professor", "silent_copilot"]
 persona_switching = "dynamic_voice_trigger" # Dynamically switch via voice ('Phenom study mode', 'Phenom chill mode')
 cloud_escalation = "balanced"          # Balanced: Local RTX 3050 GPU for routine & private; Cloud Nemotron for complex multi-file tasks
 context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
-speech_cadence = "natural_conversational_1.0x" # Natural 1.00x calm, relaxed human conversational cadence
+speech_cadence = "deliberate_0.95x"     # Deliberate 0.95x relaxed conversational cadence
 break_reminders = "spoken_idle_nudge"  # Kabir speaks a 1-sentence reminder during an idle pause after 50 minutes
 
 [modes]
