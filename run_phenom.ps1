@@ -63,6 +63,13 @@ if (-not (Test-Path "$RootDir\.env")) {
 if (-not $env:PHENOM_SESSION_TOKEN) {
     $env:PHENOM_SESSION_TOKEN = & $PythonExe -c "import secrets; print(secrets.token_hex(32))"
 }
+$appdata = $env:APPDATA
+if ($appdata) {
+    foreach ($dir in @("$appdata\phenom-desktop", "$appdata\Phenom")) {
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        [System.IO.File]::WriteAllText("$dir\.session_token", $env:PHENOM_SESSION_TOKEN.Trim())
+    }
+}
 
 # 4. Backend Health Check
 Write-Host " [*] Probing FastAPI backend service (http://127.0.0.1:8000/health)..."

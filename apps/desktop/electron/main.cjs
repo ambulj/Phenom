@@ -11,21 +11,38 @@ app.disableHardwareAcceleration();
 
 // Generate or read persistent session token
 let sessionToken = process.env.PHENOM_SESSION_TOKEN;
+const candidateTokenFiles = [
+  path.join(app.getPath('userData'), '.session_token'),
+  path.join(process.env.APPDATA || '', 'phenom-desktop', '.session_token'),
+  path.join(process.env.APPDATA || '', 'Phenom', '.session_token')
+];
+
 if (!sessionToken) {
-  try {
-    const tokenFile = path.join(app.getPath('userData'), '.session_token');
-    if (fs.existsSync(tokenFile)) {
-      sessionToken = fs.readFileSync(tokenFile, 'utf8').trim();
-    }
-  } catch (e) {}
+  for (const tf of candidateTokenFiles) {
+    try {
+      if (fs.existsSync(tf)) {
+        const val = fs.readFileSync(tf, 'utf8').trim();
+        if (val) {
+          sessionToken = val;
+          break;
+        }
+      }
+    } catch (e) {}
+  }
 }
+
 if (!sessionToken) {
   sessionToken = crypto.randomBytes(32).toString('hex');
 }
-try {
-  const tokenFile = path.join(app.getPath('userData'), '.session_token');
-  fs.writeFileSync(tokenFile, sessionToken, 'utf8');
-} catch (e) {}
+
+for (const tf of candidateTokenFiles) {
+  try {
+    const dir = path.dirname(tf);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(tf, sessionToken, 'utf8');
+  } catch (e) {}
+}
+
 process.env.PHENOM_SESSION_TOKEN = sessionToken;
 
 // IPC handler to expose session token securely via contextBridge preload

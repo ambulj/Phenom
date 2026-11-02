@@ -56,9 +56,11 @@ if not defined PHENOM_SESSION_TOKEN (
         set "PHENOM_SESSION_TOKEN=%%T"
     )
 )
+if not exist "%APPDATA%\phenom-desktop" mkdir "%APPDATA%\phenom-desktop" 2>nul
 if not exist "%APPDATA%\Phenom" mkdir "%APPDATA%\Phenom" 2>nul
 if defined PHENOM_SESSION_TOKEN (
-    echo %PHENOM_SESSION_TOKEN% > "%APPDATA%\Phenom\.session_token"
+    <nul set /p="%PHENOM_SESSION_TOKEN%" > "%APPDATA%\phenom-desktop\.session_token"
+    <nul set /p="%PHENOM_SESSION_TOKEN%" > "%APPDATA%\Phenom\.session_token"
 )
 
 REM ----------------------------------------------------------------------------

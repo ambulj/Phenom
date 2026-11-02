@@ -257,19 +257,20 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 def get_expected_session_token() -> Optional[str]:
     token = os.environ.get("PHENOM_SESSION_TOKEN")
-    if token:
-        return token
+    if token and token.strip():
+        return token.strip()
     appdata = os.environ.get("APPDATA") or os.path.expanduser("~")
-    token_path = os.path.join(appdata, "Phenom", ".session_token")
-    if os.path.exists(token_path):
-        try:
-            with open(token_path, "r", encoding="utf-8") as tf:
-                val = tf.read().strip()
-                if val:
-                    os.environ["PHENOM_SESSION_TOKEN"] = val
-                    return val
-        except Exception:
-            pass
+    for folder in ("phenom-desktop", "Phenom"):
+        token_path = os.path.join(appdata, folder, ".session_token")
+        if os.path.exists(token_path):
+            try:
+                with open(token_path, "r", encoding="utf-8") as tf:
+                    val = tf.read().strip()
+                    if val:
+                        os.environ["PHENOM_SESSION_TOKEN"] = val
+                        return val
+            except Exception:
+                pass
     return None
 
 def verify_session_token(credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme)):
