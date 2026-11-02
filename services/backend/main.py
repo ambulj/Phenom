@@ -273,6 +273,7 @@ import services.backend.tools.obsidian_graph_tools
 import services.backend.tools.voice_tools
 import services.backend.tools.proactive_tools
 import services.backend.tools.triage_tools
+import services.backend.tools.housekeeping_tools
 
 
 
@@ -315,6 +316,9 @@ from services.backend.proactive.dispatcher import proactive_dispatcher
 from services.backend.triage.gmail_triage import gmail_triage
 from services.backend.triage.calendar_scanner import calendar_scanner
 from services.backend.triage.executive_briefing import executive_briefing
+from services.backend.automation.topic_researcher import topic_researcher
+from services.backend.automation.workspace_housekeeper import workspace_housekeeper
+from services.backend.memory.daily_copilot import daily_copilot
 
 
 
@@ -955,6 +959,8 @@ async def lifespan(app: FastAPI):
     # Initialize ambient sensing, proactive dispatcher, and triage
     try:
         proactive_dispatcher.ws_broadcast_fn = broadcast_message
+        idle_detector.on_idle_callback = workspace_housekeeper.on_user_idle
+        idle_detector.on_returned_callback = workspace_housekeeper.on_user_returned
         idle_detector.start()
         context_sensor.start()
         calendar_scanner.start()
@@ -986,6 +992,8 @@ async def lifespan(app: FastAPI):
         context_sensor.stop()
         calendar_scanner.stop()
         gmail_triage.stop()
+        workspace_housekeeper.halt()
+        topic_researcher.halt()
     except Exception:
         pass
 
@@ -1443,6 +1451,8 @@ def on_guardian_state_change(new_state: str):
             proactive_dispatcher.halt()
             calendar_scanner.halt()
             gmail_triage.halt()
+            topic_researcher.halt()
+            workspace_housekeeper.halt()
         except Exception:
             pass
 

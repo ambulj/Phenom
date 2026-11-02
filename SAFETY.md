@@ -511,3 +511,23 @@ otification_policy == 'silent').
    - `triage_unread_emails`: Tier 0 read-only inbox triage inspection.
    - `draft_email_reply`: Tier 1 tool requiring user preview confirmation before saving a draft to `[Gmail]/Drafts`.
    - `schedule_meeting_event`: Tier 1 tool requiring user preview confirmation before adding a new event to Google Calendar.
+
+### Autonomous Background Workers & Housekeeping Safety Protocol (Phase 3)
+1. **Rule 7 Recycle Bin Enforcement for Housekeeping**:
+   - `WorkspaceHousekeeper` sorts unfiled files in the user staging/Downloads folder into categorized subfolders (`Documents/`, `Images/`, `Archives/`, `Code/`).
+   - All temporary clutter files (`.tmp`, `.crdownload`, `.partial`, `~$*`) are recycled via `send2trash.send2trash()`. Permanent deletion via `os.remove()` is strictly prohibited by construction.
+2. **Focus-Free Headless Topic Research**:
+   - `TopicResearchWorker` dispatches headless Playwright browser workers (`headless=True`) via `SwarmManager`. Zero OS cursor movement or window focus disruption is permitted.
+   - Extracted meeting research briefs are committed to `vault/Meetings/YYYY-MM-DD - {Topic}.md` and presented via `ProactiveCard` on the Cyber HUD.
+3. **Non-Destructive Daily Note Merging**:
+   - `ObsidianDailyCoPilot` manages `vault/Daily Notes/YYYY-MM-DD.md`.
+   - Calendar timeblocks, action items, and background triage logs are synchronized into dedicated sections (`## Scheduled Timeblocks`, `## Action Items & Directives`, `## Background Swarm & Triage Log`) via non-destructive regex block replacement.
+   - User handwritten journal entries under `## Notes & Journal` or custom headers are strictly preserved and never overwritten. Reversible undo snapshots are maintained with `rollback_mutation`.
+4. **User Return Interruption & Guardian Halt (< 25ms SLA)**:
+   - If the user returns from idle (`idle_detector.is_idle == False`), `WorkspaceHousekeeper` yields and halts immediately.
+   - `guardian.trigger()` synchronously invokes `topic_researcher.halt()` and `workspace_housekeeper.halt()`, aborting all active workers and file passes within the sub-25ms SLA.
+5. **Safety Registry Classifications**:
+   - `get_housekeeper_status`: Tier 0 read-only status and metrics.
+   - `run_workspace_housekeeping`: Tier 1 tool requiring user preview confirmation before file sorting or recycling.
+   - `dispatch_topic_research`: Tier 1 tool requiring user preview confirmation before autonomous worker dispatch.
+   - `sync_obsidian_daily_note`: Tier 1 tool requiring user preview confirmation before mutating daily notes.

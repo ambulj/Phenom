@@ -868,3 +868,18 @@ pm run build).
   - Target Combined Backend Suite: 33/33 passed in 14.55s across all phases.
   - Dependency Audit: 100% PASS (0 missing dependencies).
   - Desktop Production Build: Clean Vite bundle generated in 5.31s with 0 errors (`npm run build`).
+
+### Phase 3: Proactive Background Workers & Second-Brain Daily Co-Pilot (Completed)
+- **Pre-Meeting Autonomous Topic Research Swarm**: `services/backend/automation/topic_researcher.py` (`TopicResearchWorker`) dispatches headless Playwright web workers via `SwarmManager` (`headless=True`) to scrape topic documentation, extract key concepts, and suggest agenda discussion points without focus theft or cursor disruption. Compiles notes into `vault/Meetings/YYYY-MM-DD - {Topic}.md`, commits to local vault git repo, and emits `ProactiveCard` (`MEETING_PREP`) on the Cyber HUD.
+- **Obsidian Daily Note Auto-Co-Pilot**: `services/backend/memory/daily_copilot.py` (`ObsidianDailyCoPilot`) automatically scaffolds and synchronizes `vault/Daily Notes/YYYY-MM-DD.md`. Ingests calendar schedules into `## Scheduled Timeblocks`, manages `## Action Items & Directives` task checklists, and logs operations into `## Background Swarm & Triage Log`. Features non-destructive regex section merging that strictly preserves user handwritten notes in `## Notes & Journal` and supports reversible undo snapshots with `rollback_mutation`.
+- **Idle Desktop Workspace Housekeeper**: `services/backend/automation/workspace_housekeeper.py` (`WorkspaceHousekeeper`) activates when `idle_detector.is_idle == True`. Organizes unfiled downloads into categorized subfolders (`Documents/`, `Images/`, `Archives/`, `Code/`) and strictly enforces Phenom Rule 7: Discarded temporary clutter (`.tmp`, `.crdownload`, `.partial`, `~$*`) is moved to the Windows Recycle Bin via `send2trash` (permanent delete strictly prohibited). Immediately yields when user activity returns (`USER_RETURNED`).
+- **Safety Registry Tools**: Registered `get_housekeeper_status` (Tier 0), `run_workspace_housekeeping` (Tier 1), `dispatch_topic_research` (Tier 1), and `sync_obsidian_daily_note` (Tier 1) in `services/backend/tools/housekeeping_tools.py`.
+- **Synchronous Guardian Kill Switch Halt (< 25ms SLA)**: Hooked `topic_researcher.halt()` and `workspace_housekeeper.halt()` into `services/backend/main.py`. Verified synchronous halt execution well under 25ms SLA.
+- **Verification Suites**:
+  - Phase 3 Backend Test Suite: 6/6 passed in 11.25s (`services/backend/tests/test_background_workers_and_daily_copilot.py`).
+  - Milestone 7.0 Combined Test Suite: 17/17 passed in 11.77s across Phase 1, 2, and 3.
+  - Extended Backend Regression Suite: 75/75 passed in 22.60s.
+  - Desktop Production Build: Clean Vite bundle generated in 6.31s with 0 errors (`npm run build`).
+
+### Next (Phase 4):
+- Phase 4: Proactive Safety, Guardian Integration & End-to-End Verification (Full ambient proactive ecosystem audit, prompt injection defense in autonomous background inputs, live E2E simulation).
