@@ -9,8 +9,23 @@ const { detectPythonCommand } = require('./pythonVersion.cjs');
 // Disable GPU hardware acceleration to avoid driver crashes (exit_code=-1073741819)
 app.disableHardwareAcceleration();
 
-// Generate fresh 32-byte session token at every launch
-const sessionToken = process.env.PHENOM_SESSION_TOKEN || crypto.randomBytes(32).toString('hex');
+// Generate or read persistent session token
+let sessionToken = process.env.PHENOM_SESSION_TOKEN;
+if (!sessionToken) {
+  try {
+    const tokenFile = path.join(app.getPath('userData'), '.session_token');
+    if (fs.existsSync(tokenFile)) {
+      sessionToken = fs.readFileSync(tokenFile, 'utf8').trim();
+    }
+  } catch (e) {}
+}
+if (!sessionToken) {
+  sessionToken = crypto.randomBytes(32).toString('hex');
+}
+try {
+  const tokenFile = path.join(app.getPath('userData'), '.session_token');
+  fs.writeFileSync(tokenFile, sessionToken, 'utf8');
+} catch (e) {}
 process.env.PHENOM_SESSION_TOKEN = sessionToken;
 
 // IPC handler to expose session token securely via contextBridge preload

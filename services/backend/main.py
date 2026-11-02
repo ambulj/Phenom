@@ -9,6 +9,14 @@ import hmac
 import json
 import os
 import time
+
+try:
+    from dotenv import load_dotenv
+    _env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
+    if os.path.exists(_env_path):
+        load_dotenv(_env_path)
+except ImportError:
+    pass
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from typing import Dict, Any, Optional
@@ -247,8 +255,25 @@ app.add_middleware(
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+def get_expected_session_token() -> Optional[str]:
+    token = os.environ.get("PHENOM_SESSION_TOKEN")
+    if token:
+        return token
+    appdata = os.environ.get("APPDATA") or os.path.expanduser("~")
+    token_path = os.path.join(appdata, "Phenom", ".session_token")
+    if os.path.exists(token_path):
+        try:
+            with open(token_path, "r", encoding="utf-8") as tf:
+                val = tf.read().strip()
+                if val:
+                    os.environ["PHENOM_SESSION_TOKEN"] = val
+                    return val
+        except Exception:
+            pass
+    return None
+
 def verify_session_token(credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme)):
-    expected = os.environ.get("PHENOM_SESSION_TOKEN")
+    expected = get_expected_session_token()
     if not expected:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -376,7 +401,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.close(code=4401)
         return
 
-    expected_token = os.environ.get("PHENOM_SESSION_TOKEN")
+    expected_token = get_expected_session_token()
     if not expected_token:
         # Refuse to start WebSocket (fail closed) if PHENOM_SESSION_TOKEN is not set
         record_handshake_failure(peer_ip)

@@ -12,12 +12,27 @@ function parsePythonVersion(versionStr) {
 }
 
 function detectPythonCommand() {
-  const candidates = [
+  const path = require('path');
+  const fs = require('fs');
+  const venvCandidates = [
+    path.resolve(__dirname, '../../../.venv-clean/Scripts/python.exe'),
+    path.resolve(__dirname, '../../../.venv/Scripts/python.exe'),
+    'C:\\Phenom\\.venv-clean\\Scripts\\python.exe',
+    'C:\\Phenom\\.venv\\Scripts\\python.exe'
+  ];
+
+  const candidates = [];
+  for (const venvPath of venvCandidates) {
+    if (fs.existsSync(venvPath)) {
+      candidates.push({ cmd: venvPath, args: ['--version'], execArgs: [] });
+    }
+  }
+  candidates.push(
     { cmd: 'python', args: ['--version'], execArgs: [] },
     { cmd: 'py', args: ['-3.11', '--version'], execArgs: ['-3.11'] },
     { cmd: 'py', args: ['--version'], execArgs: [] },
     { cmd: 'python3', args: ['--version'], execArgs: [] }
-  ];
+  );
 
   for (const candidate of candidates) {
     try {
