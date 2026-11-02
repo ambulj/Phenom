@@ -22,7 +22,7 @@ sound_effects = "futuristic_chimes"    # Soft Jarvis chime on wake, confirmation
 quiet_hours = "always_responsive"      # Sound and speech active whenever spoken to, 24/7
 active_persona = "tony_stark"          # Presets: 'tony_stark' (default witty banter), 'professor' (academic rigor, zero slang), 'silent_copilot' (strictly visual HUD, zero speech)
 persona_presets = ["tony_stark", "professor", "silent_copilot"]
-cloud_escalation = "dynamic_per_task"  # Escalate dynamically based on task complexity while strictly respecting privacy
+cloud_escalation = "balanced"          # Balanced: Local RTX 3050 GPU for routine & private; Cloud Nemotron for complex multi-file tasks
 context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
 speech_cadence = "adaptive"            # 1.1x brisk pace for banter/status; 0.95x measured pace for technical breakdowns
 break_reminders = "spoken_idle"        # Subtle 1-sentence voice nudge when an idle gap occurs during long focus
@@ -61,7 +61,7 @@ virtual_desktop_switching = true       # Switch Windows 11 Virtual Desktops via 
 [hotkeys]
 push_to_talk = "ctrl+space"
 toggle_phenom = "alt+space"
-kill_switch = "triple_escape"          # Triple-tap Escape for immediate emergency stop
+kill_switch = "dual_triggers"           # Dual triggers: Ctrl+Alt+Pause and Triple-tap Escape
 barge_in_latency_ms = 50               # Ultra-fast TTS cutoff within 50ms upon speech or push-to-talk tap
 conflict_detector_enabled = true       # Detect Win32 hotkey collisions and offer 1-click fallback in HUD
 
