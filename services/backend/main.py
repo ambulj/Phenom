@@ -61,6 +61,7 @@ import services.backend.tools.media_tools
 import services.backend.tools.utility_tools
 import services.backend.tools.git_tools
 import services.backend.tools.coding_tools
+import services.backend.tools.screen_vision_tools
 from services.backend.voice.sound_fx import sound_fx
 from services.backend.modes.mode_manager import mode_manager
 from services.backend.scheduler.cron import background_scheduler

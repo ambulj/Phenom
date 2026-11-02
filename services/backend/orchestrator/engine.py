@@ -371,3 +371,4 @@ import services.backend.tools.media_tools
 import services.backend.tools.utility_tools
 import services.backend.tools.git_tools
 import services.backend.tools.coding_tools
+import services.backend.tools.screen_vision_tools
