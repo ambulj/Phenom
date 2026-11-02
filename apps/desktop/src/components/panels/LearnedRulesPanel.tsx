@@ -39,10 +39,10 @@ export const LearnedRulesPanel: React.FC<LearnedRulesPanelProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingBottom: 16,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
         }}
       >
-        <h2 style={{ fontSize: 16, fontWeight: 600 }}>Learned Rules</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f8fafc', margin: 0 }}>Learned Rules</h2>
         <Button appearance="subtle" icon={<DismissRegular />} onClick={onClose} />
       </div>
 
@@ -56,10 +56,11 @@ export const LearnedRulesPanel: React.FC<LearnedRulesPanelProps> = ({
             <div
               key={r.id}
               style={{
-                background: 'rgba(30, 41, 59, 0.5)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'rgba(13, 17, 26, 0.85)',
+                border: '1px solid rgba(0, 82, 255, 0.22)',
                 borderRadius: 8,
-                padding: '12px 14px'
+                padding: '12px 14px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
               }}
             >
               {editingId === r.id ? (
@@ -73,6 +74,7 @@ export const LearnedRulesPanel: React.FC<LearnedRulesPanelProps> = ({
                     appearance="primary"
                     icon={<CheckmarkRegular />}
                     onClick={() => handleSaveEdit(r.id)}
+                    style={{ background: '#CCFF00', color: '#080B10', fontWeight: 600 }}
                   />
                   <Button
                     appearance="subtle"

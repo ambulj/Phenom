@@ -147,13 +147,13 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
         right: 0,
         width: 520,
         height: 'calc(100vh - 60px)',
-        background: 'rgba(15, 23, 42, 0.96)',
+        background: 'rgba(8, 11, 16, 0.96)',
         backdropFilter: 'blur(20px)',
-        borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+        borderLeft: '1px solid rgba(0, 82, 255, 0.35)',
         zIndex: 50,
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.5)',
+        boxShadow: '-8px 0 32px rgba(0, 82, 255, 0.15), -2px 0 10px rgba(0, 0, 0, 0.8)',
         color: '#f8fafc'
       }}
     >
@@ -164,12 +164,12 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '16px 20px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <ClockRegular style={{ fontSize: 20, color: '#60a5fa' }} />
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Phenom Dashboard</h2>
+          <ClockRegular style={{ fontSize: 20, color: '#CCFF00' }} />
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#f8fafc' }}>Phenom Dashboard</h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Button appearance="subtle" icon={<ArrowClockwiseRegular />} onClick={fetchLogs} size="small" />
@@ -178,7 +178,7 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
       </div>
 
       {/* Tabs */}
-      <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+      <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(0, 82, 255, 0.18)' }}>
         <TabList
           selectedValue={selectedTab}
           onTabSelect={(_, d) => setSelectedTab(d.value as string)}
@@ -197,8 +197,8 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
         {selectedTab === 'scheduler' && (
           <>
             {/* Quick Add Form */}
-            <form onSubmit={handleAddReminder} style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(255, 255, 255, 0.03)', padding: 14, borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#93c5fd' }}>Quick Schedule Reminder</span>
+            <form onSubmit={handleAddReminder} style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(13, 17, 26, 0.85)', padding: 14, borderRadius: 10, border: '1px solid rgba(0, 82, 255, 0.22)' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#CCFF00' }}>Quick Schedule Reminder</span>
               <Input
                 placeholder="Reminder title (e.g. Check PR review)"
                 value={newReminderTitle}
@@ -214,7 +214,13 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                   style={{ flex: 1 }}
                   size="small"
                 />
-                <Button appearance="primary" type="submit" icon={<AddRegular />} size="small">
+                <Button
+                  appearance="primary"
+                  type="submit"
+                  icon={<AddRegular />}
+                  size="small"
+                  style={{ background: 'linear-gradient(135deg, #0052FF, #1a66ff)', color: '#ffffff', fontWeight: 600, border: 'none' }}
+                >
                   Add Reminder
                 </Button>
               </div>
@@ -237,15 +243,22 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '10px 14px',
-                        background: 'rgba(255, 255, 255, 0.04)',
+                        background: 'rgba(13, 17, 26, 0.80)',
                         borderRadius: 8,
-                        border: '1px solid rgba(255, 255, 255, 0.06)'
+                        border: '1px solid rgba(0, 82, 255, 0.20)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
                       }}
                     >
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>{job.title}</span>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <Badge appearance="tint" color="informative" size="small">{job.schedule_type}</Badge>
+                          <Badge
+                            appearance="tint"
+                            size="small"
+                            style={{ background: 'rgba(0, 82, 255, 0.2)', color: '#337aff', border: '1px solid rgba(0, 82, 255, 0.3)' }}
+                          >
+                            {job.schedule_type}
+                          </Badge>
                           <span style={{ fontSize: 11, color: '#94a3b8' }}>
                             Next: {new Date(job.next_run_at).toLocaleTimeString()}
                           </span>
@@ -274,7 +287,8 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                     key={log.id}
                     style={{
                       padding: '8px 12px',
-                      background: 'rgba(255, 255, 255, 0.02)',
+                      background: 'rgba(13, 17, 26, 0.70)',
+                      border: '1px solid rgba(0, 82, 255, 0.15)',
                       borderRadius: 6,
                       fontSize: 12,
                       display: 'flex',
@@ -283,12 +297,12 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                     }}
                   >
                     <div>
-                      <span style={{ fontWeight: 600, color: log.status === 'success' ? '#10b981' : '#ef4444' }}>
+                      <span style={{ fontWeight: 600, color: log.status === 'success' ? '#CCFF00' : '#ef4444' }}>
                         [{log.status.toUpperCase()}]
                       </span>{' '}
                       <span style={{ color: '#e2e8f0' }}>{log.result_summary}</span>
                     </div>
-                    <span style={{ color: '#64748b', fontSize: 11 }}>
+                    <span style={{ color: '#64748b', fontSize: 11, fontFamily: 'Consolas, monospace' }}>
                       {log.duration_ms ? `${log.duration_ms.toFixed(0)}ms` : ''}
                     </span>
                   </div>
@@ -301,13 +315,13 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
         {/* ================= TAB: FINANCE WATCHLIST ================= */}
         {selectedTab === 'finance' && (
           <>
-            <div style={{ padding: '10px 14px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: 8, fontSize: 11, color: '#93c5fd' }}>
-              <strong>Informational Watchlist Only:</strong> Phenom strictly enforces code-level prohibitions against trading, order placement, and buy/sell suggestions. Alerts trigger once when target is reached.
+            <div style={{ padding: '10px 14px', background: 'rgba(0, 82, 255, 0.12)', border: '1px solid rgba(0, 82, 255, 0.3)', borderRadius: 8, fontSize: 11, color: '#93c5fd' }}>
+              <strong style={{ color: '#CCFF00' }}>Informational Watchlist Only:</strong> Phenom strictly enforces code-level prohibitions against trading, order placement, and buy/sell suggestions. Alerts trigger once when target is reached.
             </div>
 
             {/* Add Watchlist Form */}
-            <form onSubmit={handleAddWatchlist} style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(255, 255, 255, 0.03)', padding: 14, borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#93c5fd' }}>Add Symbol Alert</span>
+            <form onSubmit={handleAddWatchlist} style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(13, 17, 26, 0.85)', padding: 14, borderRadius: 10, border: '1px solid rgba(0, 82, 255, 0.22)' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#CCFF00' }}>Add Symbol Alert</span>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Input
                   placeholder="Ticker (e.g. AAPL, BTC)"
@@ -329,7 +343,7 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                 <select
                   value={newWatchCondition}
                   onChange={(e) => setNewWatchCondition(e.target.value)}
-                  style={{ background: '#1e293b', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', fontSize: 12, flex: 1 }}
+                  style={{ background: '#040609', color: '#f8fafc', border: '1px solid rgba(0, 82, 255, 0.3)', borderRadius: 6, padding: '4px 8px', fontSize: 12, flex: 1 }}
                 >
                   <option value="above">Alert when Price &gt;= Target</option>
                   <option value="below">Alert when Price &lt;= Target</option>
@@ -337,12 +351,18 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                 <select
                   value={newWatchType}
                   onChange={(e) => setNewWatchType(e.target.value)}
-                  style={{ background: '#1e293b', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', fontSize: 12, width: 100 }}
+                  style={{ background: '#040609', color: '#f8fafc', border: '1px solid rgba(0, 82, 255, 0.3)', borderRadius: 6, padding: '4px 8px', fontSize: 12, width: 100 }}
                 >
                   <option value="stock">Stock</option>
                   <option value="crypto">Crypto</option>
                 </select>
-                <Button appearance="primary" type="submit" icon={<AddRegular />} size="small">
+                <Button
+                  appearance="primary"
+                  type="submit"
+                  icon={<AddRegular />}
+                  size="small"
+                  style={{ background: 'linear-gradient(135deg, #0052FF, #1a66ff)', color: '#ffffff', fontWeight: 600, border: 'none' }}
+                >
                   Add
                 </Button>
               </div>
@@ -365,15 +385,22 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '10px 14px',
-                        background: 'rgba(255, 255, 255, 0.04)',
+                        background: 'rgba(13, 17, 26, 0.80)',
                         borderRadius: 8,
-                        border: '1px solid rgba(255, 255, 255, 0.06)'
+                        border: '1px solid rgba(0, 82, 255, 0.20)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
                       }}
                     >
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: '#38bdf8' }}>{item.symbol}</span>
-                          <Badge appearance="tint" color="informative" size="small">{item.asset_type}</Badge>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#CCFF00', fontFamily: 'Consolas, monospace' }}>{item.symbol}</span>
+                          <Badge
+                            appearance="tint"
+                            size="small"
+                            style={{ background: 'rgba(0, 82, 255, 0.2)', color: '#337aff', border: '1px solid rgba(0, 82, 255, 0.3)' }}
+                          >
+                            {item.asset_type}
+                          </Badge>
                           {item.triggered && (
                             <Badge appearance="filled" color="warning" size="small">TRIGGERED ONCE</Badge>
                           )}
@@ -407,20 +434,28 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                 key={log.id}
                 style={{
                   padding: '10px 12px',
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: 'rgba(13, 17, 26, 0.85)',
                   borderRadius: 8,
                   fontSize: 12,
-                  border: '1px solid rgba(255, 255, 255, 0.05)'
+                  border: '1px solid rgba(0, 82, 255, 0.22)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontWeight: 600, color: '#60a5fa' }}>{log.tool}</span>
-                  <Badge appearance="tint" color={log.tier === 0 ? 'success' : log.tier === 1 ? 'informative' : log.tier === 2 ? 'warning' : 'danger'} size="small">
+                  <span style={{ fontWeight: 600, color: '#CCFF00', fontFamily: 'Consolas, monospace' }}>{log.tool}</span>
+                  <Badge
+                    appearance="tint"
+                    style={{
+                      background: log.tier === 0 ? 'rgba(0, 82, 255, 0.2)' : log.tier === 1 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      color: log.tier === 0 ? '#337aff' : log.tier === 1 ? '#f59e0b' : '#ef4444'
+                    }}
+                    size="small"
+                  >
                     Tier {log.tier}
                   </Badge>
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: 11 }}>
-                  Decision: <span style={{ color: '#f8fafc', fontWeight: 600 }}>{log.decision}</span> | Status: <span style={{ color: log.result_status === 'SUCCESS' ? '#10b981' : '#ef4444' }}>{log.result_status}</span>
+                  Decision: <span style={{ color: '#f8fafc', fontWeight: 600 }}>{log.decision}</span> | Status: <span style={{ color: log.result_status === 'SUCCESS' ? '#CCFF00' : '#ef4444' }}>{log.result_status}</span>
                 </div>
               </div>
             ))}
@@ -431,7 +466,7 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
         {selectedTab === 'news' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <NewsRegular style={{ color: '#60a5fa' }} />
+              <NewsRegular style={{ color: '#CCFF00' }} />
               <span style={{ fontSize: 13, fontWeight: 600, color: '#cbd5e1' }}>
                 Hacker News, TechCrunch & The Verge
               </span>
@@ -441,19 +476,26 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                 key={idx}
                 style={{
                   padding: 12,
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: 'rgba(13, 17, 26, 0.85)',
                   borderRadius: 8,
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                  border: '1px solid rgba(0, 82, 255, 0.22)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <Badge appearance="tint" color="brand" size="small">{art.source}</Badge>
+                  <Badge
+                    appearance="filled"
+                    size="small"
+                    style={{ background: 'rgba(0, 82, 255, 0.25)', color: '#337aff', border: '1px solid rgba(0, 82, 255, 0.35)' }}
+                  >
+                    {art.source}
+                  </Badge>
                 </div>
                 <a
                   href={art.link}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ fontSize: 13, fontWeight: 600, color: '#38bdf8', textDecoration: 'none', display: 'block', marginBottom: 4 }}
+                  style={{ fontSize: 13, fontWeight: 600, color: '#CCFF00', textDecoration: 'none', display: 'block', marginBottom: 4 }}
                 >
                   {art.title}
                 </a>

@@ -216,7 +216,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingBottom: 16,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
         }}
       >
         <h2 style={{ fontSize: 16, fontWeight: 600 }}>Phenom Settings</h2>
@@ -225,8 +225,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Voice & Wake Word Configuration */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#00e5ff', marginBottom: 8 }}>Voice & Wake Word (Phase 2)</h3>
+        <div style={{ background: 'rgba(13, 17, 26, 0.85)', border: '1px solid rgba(0, 82, 255, 0.22)', padding: 14, borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#CCFF00', marginBottom: 8 }}>Voice & Wake Word (Phase 2)</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
@@ -236,7 +236,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               <Select
                 value={currentWakePhrase}
                 onChange={handleWakePhraseChange}
-                style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', color: '#f8fafc' }}
+                style={{ width: '100%', background: '#040609', border: '1px solid rgba(0, 82, 255, 0.25)', color: '#f8fafc' }}
               >
                 <option value="hey_jarvis">Hey Jarvis (Default)</option>
                 <option value="alexa">Alexa</option>
@@ -265,7 +265,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Global Hotkeys & Conflict Detection */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+        <div style={{ background: 'rgba(13, 17, 26, 0.85)', border: '1px solid rgba(0, 82, 255, 0.22)', padding: 14, borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: '#f59e0b', marginBottom: 8 }}>Global Keyboard Hotkeys</h3>
           
           {hotkeyError && (
@@ -337,7 +337,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Telegram Remote Control (Phase 6) */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+        <div style={{ background: 'rgba(13, 17, 26, 0.85)', border: '1px solid rgba(0, 82, 255, 0.22)', padding: 14, borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <h3 style={{ fontSize: 14, fontWeight: 600, color: '#38bdf8', margin: 0 }}>Telegram Remote Control (Phase 6)</h3>
             <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8' }}>
@@ -411,7 +411,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </div>
 
             {/* Remote PIN Security & Unattended Controls (Task 7g) */}
-            <div style={{ marginTop: 12, padding: 10, background: 'rgba(15, 23, 42, 0.6)', borderRadius: 6, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ marginTop: 12, padding: 10, background: '#040609', border: '1px solid rgba(0, 82, 255, 0.25)', borderRadius: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: '#f8fafc' }}>Remote 6-Digit PIN Security</span>
                 <span style={{
@@ -478,7 +478,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Obsidian Vault & Private Git Backup (Hardening Task 6) */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+        <div style={{ background: 'rgba(13, 17, 26, 0.85)', border: '1px solid rgba(0, 82, 255, 0.22)', padding: 14, borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: '#38bdf8', marginBottom: 8 }}>Obsidian Vault & Private Git Backup</h3>
           <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 10 }}>
             Stored outside the code repository. Versioned with git and backed up nightly to your private repo.
@@ -489,7 +489,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               <label style={{ fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 2 }}>
                 Vault Path (Fixed Location)
               </label>
-              <div style={{ fontSize: 12, color: '#f1f5f9', background: 'rgba(15, 23, 42, 0.5)', padding: '6px 10px', borderRadius: 4, fontFamily: 'monospace' }}>
+              <div style={{ fontSize: 12, color: '#f1f5f9', background: '#040609', border: '1px solid rgba(0, 82, 255, 0.2)', padding: '6px 10px', borderRadius: 4, fontFamily: 'monospace' }}>
                 {vaultStatus ? vaultStatus.vault_path : 'Loading...'}
               </div>
             </div>
@@ -562,7 +562,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Google Workspace (Gmail & Calendar) */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+        <div style={{ background: 'rgba(13, 17, 26, 0.85)', border: '1px solid rgba(0, 82, 255, 0.22)', padding: 14, borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <h3 style={{ fontSize: 14, fontWeight: 600, color: '#38bdf8', margin: 0 }}>
               Google Workspace (Gmail & Calendar)
@@ -657,8 +657,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Model Architecture */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#60a5fa', marginBottom: 6 }}>Model Architecture</h3>
+        <div style={{ background: 'rgba(13, 17, 26, 0.85)', border: '1px solid rgba(0, 82, 255, 0.22)', padding: 14, borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#CCFF00', marginBottom: 6 }}>Model Architecture</h3>
           <div style={{ fontSize: 13, color: '#cbd5e1' }}>Default Model: <strong>Llama 3 8B (4-bit Q4_0 on Ollama)</strong></div>
           <div style={{ fontSize: 13, color: '#cbd5e1', marginTop: 4 }}>Cloud Model: <strong>Nemotron 70B (build.nvidia.com)</strong></div>
           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>
@@ -667,7 +667,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Security Tiers */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
+        <div style={{ background: 'rgba(13, 17, 26, 0.85)', border: '1px solid rgba(0, 82, 255, 0.22)', padding: 14, borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)' }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: '#10b981', marginBottom: 6 }}>Security Tiers (SAFETY.md)</h3>
           <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.6 }}>
             • Tier 0: Read-only (Auto-run)<br />

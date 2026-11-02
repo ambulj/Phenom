@@ -28,7 +28,14 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ request, o
 
   return (
     <Dialog open={true}>
-      <DialogSurface style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+      <DialogSurface
+        style={{
+          backgroundColor: '#080B10',
+          border: '1px solid rgba(0, 82, 255, 0.45)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 82, 255, 0.25)',
+          borderRadius: 14
+        }}
+      >
         <DialogBody>
           <DialogTitle
             action={
@@ -36,32 +43,38 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ request, o
                 appearance="filled"
                 color={isTier3 ? 'danger' : isTier2 ? 'severe' : 'warning'}
                 size="medium"
+                style={{
+                  background: isTier3 || isTier2 ? '#EF4444' : '#0052FF',
+                  color: '#ffffff',
+                  fontWeight: 600
+                }}
               >
                 TIER {request.tier} {isTier2 ? 'DESTRUCTIVE / EXTERNAL' : 'REVERSIBLE CHANGE'}
               </Badge>
             }
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <WarningFilled style={{ color: isTier2 ? '#ef4444' : '#f59e0b' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc' }}>
+              <WarningFilled style={{ color: isTier2 ? '#EF4444' : '#CCFF00', fontSize: 20 }} />
               Security Confirmation Required
             </div>
           </DialogTitle>
 
           <DialogContent style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 12 }}>
             <div style={{ fontSize: 13, color: '#94a3b8' }}>
-              Action requested: <strong style={{ color: '#f1f5f9' }}>{request.tool}</strong>
+              Action requested: <strong style={{ color: '#CCFF00', fontFamily: 'Consolas, monospace' }}>{request.tool}</strong>
             </div>
 
             {/* Human Readable Preview */}
             <div
               style={{
-                background: 'rgba(30, 41, 59, 0.7)',
+                background: 'rgba(13, 17, 26, 0.85)',
                 padding: '12px 16px',
                 borderRadius: 8,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(0, 82, 255, 0.25)',
                 fontSize: 14,
                 color: '#f8fafc',
-                lineHeight: 1.5
+                lineHeight: 1.5,
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)'
               }}
             >
               {request.preview}
@@ -69,15 +82,18 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ request, o
 
             {/* Arguments */}
             <details style={{ fontSize: 12, color: '#64748b', cursor: 'pointer' }}>
-              <summary>View raw parameters</summary>
+              <summary style={{ color: '#0052FF', fontWeight: 600 }}>View raw parameters</summary>
               <pre
                 style={{
-                  background: '#020617',
-                  padding: 8,
+                  background: '#040609',
+                  border: '1px solid rgba(0, 82, 255, 0.18)',
+                  padding: 10,
                   borderRadius: 6,
                   marginTop: 6,
                   color: '#cbd5e1',
-                  overflowX: 'auto'
+                  overflowX: 'auto',
+                  fontFamily: 'Consolas, monospace',
+                  fontSize: 11
                 }}
               >
                 {JSON.stringify(request.args, null, 2)}
@@ -95,14 +111,27 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ request, o
           </DialogContent>
 
           <DialogActions style={{ marginTop: 16 }}>
-            <Button appearance="secondary" onClick={() => onRespond('denied', false)}>
+            <Button
+              appearance="secondary"
+              onClick={() => onRespond('denied', false)}
+              style={{
+                background: 'rgba(13, 17, 26, 0.8)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#f8fafc'
+              }}
+            >
               Deny
             </Button>
             <Button
               appearance="primary"
               style={{
-                backgroundColor: isTier2 ? '#dc2626' : '#2563eb',
-                color: '#fff'
+                background: isTier2
+                  ? '#EF4444'
+                  : 'linear-gradient(135deg, #0052FF, #1a66ff)',
+                borderColor: isTier2 ? '#EF4444' : '#0052FF',
+                color: '#ffffff',
+                fontWeight: 600,
+                boxShadow: isTier2 ? '0 0 12px rgba(239, 68, 68, 0.4)' : '0 0 12px rgba(0, 82, 255, 0.4)'
               }}
               onClick={() => onRespond('approved', remember)}
             >

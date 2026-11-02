@@ -298,7 +298,7 @@ function createTray() {
 
   try {
     tray = new Tray(icon);
-    tray.setToolTip('Phenom - Windows 11 Personal AI Assistant');
+    tray.setToolTip('Phenom 3.0 Cyber Assistant (Windows 11)');
   } catch (err) {
     console.warn('[Phenom] Tray initialization skipped:', err.message);
     return;
@@ -347,7 +347,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     show: true,
-    backgroundColor: '#0b0f19',
+    backgroundColor: '#080B10',
     title: 'Phenom',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     frame: true,

@@ -66,13 +66,13 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
   const getBorderColor = (): string => {
     switch (overlayState.state) {
       case 'active':
-        return '#f59e0b'; // Neon amber
+        return '#0052FF'; // Electric Cobalt
       case 'success':
-        return '#10b981'; // Emerald green
+        return '#CCFF00'; // Acid Lime
       case 'error':
-        return '#ef4444'; // Ruby red
+        return '#EF4444'; // Stark Crimson
       case 'takeover':
-        return '#f97316'; // Vivid amber/orange
+        return '#F97316'; // Warning Orange
       default:
         return 'transparent';
     }
@@ -90,7 +90,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
         pointerEvents: overlayState.state === 'takeover' ? 'auto' : 'none',
         boxSizing: 'border-box',
         border: showBorder ? `4px solid ${borderColor}` : 'none',
-        boxShadow: showBorder ? `inset 0 0 24px ${borderColor}66` : 'none',
+        boxShadow: showBorder ? `inset 0 0 24px ${borderColor}66, 0 0 16px ${borderColor}44` : 'none',
         transition: 'border 0.25s ease, box-shadow 0.25s ease',
         overflow: 'hidden'
       }}
@@ -106,7 +106,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
         }
       `}</style>
 
-      {/* Click Target Concentric Ring Animation */}
+      {/* Click Target Concentric Ring Animation (Cobalt & Acid Lime) */}
       {clickTarget && (
         <div
           style={{
@@ -123,8 +123,8 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
               width: 56,
               height: 56,
               borderRadius: '50%',
-              border: '2px solid #06b6d4',
-              boxShadow: '0 0 12px #06b6d4',
+              border: '2px solid #0052FF',
+              boxShadow: '0 0 12px #0052FF',
               animation: 'pulseClickRing 0.3s ease-out forwards'
             }}
           />
@@ -135,9 +135,9 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
               width: 14,
               height: 14,
               borderRadius: '50%',
-              background: '#06b6d4',
+              background: '#CCFF00',
               transform: 'translate(-50%, -50%)',
-              boxShadow: '0 0 8px #ffffff'
+              boxShadow: '0 0 10px #CCFF00'
             }}
           />
         </div>
@@ -150,25 +150,25 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
             position: 'absolute',
             top: 20,
             right: 20,
-            background: 'rgba(15, 23, 42, 0.90)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
+            background: 'rgba(8, 11, 16, 0.92)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(0, 82, 255, 0.35)',
             borderRadius: 10,
             padding: '8px 14px',
             color: '#f8fafc',
             fontFamily: 'Consolas, monospace',
             fontSize: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 82, 255, 0.25)',
             maxWidth: 420
           }}
         >
-          <div style={{ fontWeight: 600, color: '#38bdf8', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#38bdf8', display: 'inline-block' }} />
+          <div style={{ fontWeight: 600, color: '#CCFF00', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#CCFF00', boxShadow: '0 0 6px #CCFF00', display: 'inline-block' }} />
             Screen Action Ticker
           </div>
           {tickerItems.slice(-3).map((item, idx) => (
             <div key={idx} style={{ opacity: idx === tickerItems.slice(-3).length - 1 ? 1 : 0.65, marginTop: 2 }}>
-              <span style={{ color: '#94a3b8' }}>[{item.timestamp}]</span> {item.text}
+              <span style={{ color: '#0052FF', fontWeight: 600 }}>[{item.timestamp}]</span> {item.text}
             </div>
           ))}
         </div>
@@ -182,23 +182,23 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            background: '#0f172a',
-            border: '2px solid #f97316',
+            background: '#080B10',
+            border: '2px solid #0052FF',
             borderRadius: 16,
             padding: '24px 32px',
             color: '#f8fafc',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 30px rgba(249, 115, 22, 0.35)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 30px rgba(0, 82, 255, 0.35)',
             textAlign: 'center',
             maxWidth: 460,
             width: '90%'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-            <div style={{ background: 'rgba(249, 115, 22, 0.15)', borderRadius: '50%', padding: 12 }}>
-              <WarningRegular style={{ fontSize: 36, color: '#f97316' }} />
+            <div style={{ background: 'rgba(249, 115, 22, 0.15)', borderRadius: '50%', padding: 12, border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+              <WarningRegular style={{ fontSize: 36, color: '#F97316' }} />
             </div>
           </div>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
+          <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600, color: '#f8fafc' }}>
             User Interaction Detected
           </h3>
           <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#94a3b8', lineHeight: 1.5 }}>
@@ -207,7 +207,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#cbd5e1', marginBottom: 6 }}>
               <span>Auto-abort in:</span>
-              <span style={{ fontWeight: 600, color: '#f97316' }}>{countdown}s</span>
+              <span style={{ fontWeight: 600, color: '#F97316' }}>{countdown}s</span>
             </div>
             <ProgressBar value={countdown / 10} color="warning" />
           </div>
@@ -216,7 +216,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
               appearance="primary"
               icon={<PlayRegular />}
               onClick={onResumeAutomation}
-              style={{ background: '#10b981', borderColor: '#10b981', color: '#ffffff' }}
+              style={{ background: 'linear-gradient(135deg, #0052FF, #1a66ff)', borderColor: '#0052FF', color: '#ffffff', fontWeight: 600 }}
             >
               Resume Automation
             </Button>
@@ -224,7 +224,7 @@ export const ScreenBorderOverlay: React.FC<ScreenBorderOverlayProps> = ({
               appearance="secondary"
               icon={<DismissRegular />}
               onClick={onStopAutomation}
-              style={{ background: '#ef4444', borderColor: '#ef4444', color: '#ffffff' }}
+              style={{ background: '#EF4444', borderColor: '#EF4444', color: '#ffffff' }}
             >
               Stop & Abort
             </Button>

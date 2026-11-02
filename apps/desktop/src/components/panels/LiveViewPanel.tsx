@@ -33,12 +33,12 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingBottom: 16,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <EyeRegular style={{ color: '#00e5ff', fontSize: 20 }} />
-          <h2 style={{ fontSize: 16, fontWeight: 600 }}>Automation Live View</h2>
+          <EyeRegular style={{ color: '#0052FF', fontSize: 20 }} />
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f8fafc', margin: 0 }}>Automation Live View</h2>
         </div>
         <Button appearance="subtle" icon={<DismissRegular />} onClick={onClose} />
       </div>
@@ -48,13 +48,14 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
         {takeoverPrompt && (
           <div
             style={{
-              background: 'rgba(239, 68, 68, 0.25)',
-              border: '2px solid #ef4444',
+              background: 'rgba(239, 68, 68, 0.20)',
+              border: '2px solid #EF4444',
               borderRadius: 8,
               padding: 14,
               display: 'flex',
               flexDirection: 'column',
-              gap: 10
+              gap: 10,
+              boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -70,7 +71,7 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
               <Button
                 appearance="primary"
                 icon={<PlayRegular />}
-                style={{ backgroundColor: '#10b981', color: '#fff' }}
+                style={{ background: 'linear-gradient(135deg, #0052FF, #1a66ff)', color: '#fff', fontWeight: 600, border: 'none' }}
                 onClick={() => onTakeoverDecision && onTakeoverDecision('continue')}
               >
                 Continue Automation
@@ -78,7 +79,7 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
               <Button
                 appearance="primary"
                 icon={<StopRegular />}
-                style={{ backgroundColor: '#ef4444', color: '#fff' }}
+                style={{ background: '#EF4444', color: '#fff', fontWeight: 600, border: 'none' }}
                 onClick={() => onTakeoverDecision && onTakeoverDecision('stop')}
               >
                 Stop / Abort
@@ -90,19 +91,20 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
         {/* Live Viewport Screen Stream */}
         <div
           style={{
-            background: 'rgba(0, 0, 0, 0.6)',
+            background: '#040609',
             borderRadius: 8,
             overflow: 'hidden',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(0, 82, 255, 0.35)',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6)'
           }}
         >
           <div
             style={{
               padding: '8px 12px',
-              background: 'rgba(15, 23, 42, 0.8)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(13, 17, 26, 0.90)',
+              borderBottom: '1px solid rgba(0, 82, 255, 0.20)',
               fontSize: 12,
               fontWeight: 500,
               color: '#94a3b8',
@@ -112,7 +114,16 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
             }}
           >
             <span>Active Browser / Screen View</span>
-            <Badge appearance="tint" color={liveFrame ? 'success' : 'subtle'} size="small">
+            <Badge
+              appearance="filled"
+              style={{
+                background: liveFrame ? 'rgba(204, 255, 0, 0.2)' : 'rgba(148, 163, 184, 0.1)',
+                color: liveFrame ? '#CCFF00' : '#94a3b8',
+                border: `1px solid ${liveFrame ? '#CCFF00' : 'rgba(148, 163, 184, 0.2)'}`,
+                fontSize: 10
+              }}
+              size="small"
+            >
               {liveFrame ? 'STREAMING' : 'IDLE'}
             </Badge>
           </div>
@@ -120,7 +131,7 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
             style={{
               width: '100%',
               height: 220,
-              background: '#090d16',
+              background: '#080B10',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -142,8 +153,16 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
         </div>
 
         {/* Step List Overlay */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: 14, borderRadius: 8 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#60a5fa', marginBottom: 10 }}>
+        <div
+          style={{
+            background: 'rgba(13, 17, 26, 0.85)',
+            border: '1px solid rgba(0, 82, 255, 0.22)',
+            padding: 14,
+            borderRadius: 8,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+          }}
+        >
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#CCFF00', marginBottom: 10 }}>
             Execution Step List
           </h3>
           {steps.length === 0 ? (
@@ -163,18 +182,18 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
                     borderRadius: 6,
                     background:
                       st.status === 'current'
-                        ? 'rgba(96, 165, 250, 0.2)'
+                        ? 'rgba(0, 82, 255, 0.25)'
                         : st.status === 'done'
-                        ? 'rgba(16, 185, 129, 0.1)'
-                        : 'rgba(15, 23, 42, 0.3)',
+                        ? 'rgba(204, 255, 0, 0.10)'
+                        : 'rgba(8, 11, 16, 0.5)',
                     border:
                       st.status === 'current'
-                        ? '1px solid #60a5fa'
-                        : '1px solid rgba(255, 255, 255, 0.05)'
+                        ? '1px solid #0052FF'
+                        : '1px solid rgba(0, 82, 255, 0.15)'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0052FF', fontFamily: 'Consolas, monospace' }}>
                       #{st.step_number}
                     </span>
                     <span style={{ fontSize: 13, color: '#f8fafc' }}>
@@ -183,13 +202,10 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
                   </div>
                   <Badge
                     appearance="tint"
-                    color={
-                      st.status === 'done'
-                        ? 'success'
-                        : st.status === 'current'
-                        ? 'informative'
-                        : 'subtle'
-                    }
+                    style={{
+                      background: st.status === 'done' ? 'rgba(204, 255, 0, 0.15)' : st.status === 'current' ? 'rgba(0, 82, 255, 0.25)' : 'rgba(148, 163, 184, 0.1)',
+                      color: st.status === 'done' ? '#CCFF00' : st.status === 'current' ? '#337aff' : '#94a3b8'
+                    }}
                     size="small"
                   >
                     {st.status.toUpperCase()}
@@ -201,9 +217,9 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
         </div>
 
         {/* Safety Guarantees Notice */}
-        <div style={{ background: 'rgba(30, 41, 59, 0.3)', padding: 12, borderRadius: 8 }}>
+        <div style={{ background: 'rgba(8, 11, 16, 0.6)', border: '1px solid rgba(0, 82, 255, 0.15)', padding: 12, borderRadius: 8 }}>
           <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>
-            🔒 <strong>Safety Enforced</strong>: Payments and checkouts are blocked by construction.
+            🔒 <strong style={{ color: '#CCFF00' }}>Safety Enforced</strong>: Payments and checkouts are blocked by construction.
             Human takeover pauses automation in under 1 second upon physical mouse or key movement.
           </div>
         </div>

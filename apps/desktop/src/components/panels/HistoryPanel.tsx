@@ -16,10 +16,10 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({ onClose, messages })
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingBottom: 16,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
         }}
       >
-        <h2 style={{ fontSize: 16, fontWeight: 600 }}>Conversation History</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f8fafc', margin: 0 }}>Conversation History</h2>
         <Button appearance="subtle" icon={<DismissRegular />} onClick={onClose} />
       </div>
 
@@ -31,16 +31,25 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({ onClose, messages })
             <div
               key={m.id}
               style={{
-                background: m.role === 'user' ? 'rgba(37, 99, 235, 0.15)' : 'rgba(30, 41, 59, 0.5)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: m.role === 'user' ? 'rgba(0, 82, 255, 0.20)' : 'rgba(13, 17, 26, 0.85)',
+                border: m.role === 'user' ? '1px solid rgba(0, 82, 255, 0.40)' : '1px solid rgba(0, 82, 255, 0.22)',
                 borderRadius: 8,
-                padding: '10px 14px'
+                padding: '10px 14px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 600, color: m.role === 'user' ? '#60a5fa' : '#a855f7', marginBottom: 4 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: m.role === 'user' ? '#337aff' : '#CCFF00',
+                  marginBottom: 4,
+                  letterSpacing: 0.5
+                }}
+              >
                 {m.role.toUpperCase()}
               </div>
-              <div style={{ fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.content}</div>
+              <div style={{ fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-wrap', color: '#f8fafc' }}>{m.content}</div>
             </div>
           ))
         )}

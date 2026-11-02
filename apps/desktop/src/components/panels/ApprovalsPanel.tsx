@@ -38,11 +38,11 @@ export const ApprovalsPanel: React.FC<ApprovalsPanelProps> = ({ onClose }) => {
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingBottom: 16,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600 }}>Remembered Approvals</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f8fafc', margin: 0 }}>Remembered Approvals</h2>
           <Button appearance="subtle" icon={<ArrowSyncRegular />} onClick={fetchApprovals} size="small" disabled={isLoading} />
         </div>
         <Button appearance="subtle" icon={<DismissRegular />} onClick={onClose} />
@@ -58,17 +58,18 @@ export const ApprovalsPanel: React.FC<ApprovalsPanelProps> = ({ onClose }) => {
             <div
               key={app.id}
               style={{
-                background: 'rgba(30, 41, 59, 0.5)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'rgba(13, 17, 26, 0.85)',
+                border: '1px solid rgba(0, 82, 255, 0.22)',
                 borderRadius: 8,
                 padding: '12px 14px',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
               }}
             >
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#60a5fa' }}>{app.tool}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#CCFF00', fontFamily: 'Consolas, monospace' }}>{app.tool}</div>
                 <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 2 }}>{app.folder_path}</div>
               </div>
             </div>
