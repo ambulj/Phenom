@@ -63,6 +63,9 @@ push_to_talk = "ctrl+space"
 toggle_phenom = "alt+space"
 kill_switch = "dual_triggers"           # Dual triggers: Ctrl+Alt+Pause and Triple-tap Escape
 barge_in_latency_ms = 50               # Ultra-fast TTS cutoff within 50ms upon speech or push-to-talk tap
+barge_in_mode = "dual_voice_and_spacebar" # Say 'Stop / Phenom wait' or press Spacebar to immediately cut speech
+voice_barge_in_phrases = ["stop", "phenom wait", "wait phenom", "chup", "shant"]
+spacebar_barge_in = true
 conflict_detector_enabled = true       # Detect Win32 hotkey collisions and offer 1-click fallback in HUD
 
 [voice]
@@ -209,6 +212,7 @@ container_controls = "tiered_safety"   # Status/logs Tier 0, Start/restart Tier 
 
 [briefing]
 scheduled_time = "08:30"
+trigger_mode = "on_demand_voice_only" # Spoken briefing only when explicitly told 'Hey Phenom, good morning'
 enabled_modules = [
     "weather_aqi",                   # Local Weather & Air Quality Index
     "calendar_schedule",             # Today's Google Calendar appointments
@@ -236,6 +240,8 @@ low_power_profile = true               # Throttle LLM threads and set Orb to Low
 
 [vision]
 analysis_mode = "dual_ocr_vision"      # Fast local Windows OCR for exact code/text, paired with multimodal model for visual layouts
+coding_inspection_scope = "entire_active_display" # Capture entire active display (IDE, terminal, and browser documentation side-by-side)
+include_browser_and_docs = true
 diagram_reconstruction = "mermaid_markdown" # Transcribe visual diagrams/flowcharts to executable mermaid syntax
 code_image_formatting = "clean_syntax_reconstructed" # Extract code from screenshots with black/prettier formatting
 
@@ -359,7 +365,9 @@ max_tokens = 32768
 min_free_vram_gb = 1.5
 
 [telegram]
-remote_control = "full"                # Full remote control: Can run git tasks, run test suites, check system status
+remote_control = "full_remote_with_passphrase_gate" # Full remote control with secondary Telegram passphrase/biometric gate
+passphrase_gate_enabled = true          # Secondary session passphrase required before executing system terminal commands
+biometric_or_passphrase_required = true
 pairing_mode = "desktop_pin_handshake" # Desktop QR / 6-digit PIN handshake to bind owner user_id
 remote_lock_action = "lock_workstation_and_halt" # Lock Windows screen + Guardian kill switch
 inline_approvals = true                # Interactive Telegram inline buttons with [Approve] and [Deny]
