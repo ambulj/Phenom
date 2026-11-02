@@ -24,7 +24,7 @@ active_persona = "tony_stark"          # Presets: 'tony_stark' (default witty ba
 persona_presets = ["tony_stark", "professor", "silent_copilot"]
 cloud_escalation = "balanced"          # Balanced: Local RTX 3050 GPU for routine & private; Cloud Nemotron for complex multi-file tasks
 context_overflow = "compact_and_cloud_escalate" # Auto-compact local turns; escalate to Cloud Nemotron (128k) for massive diffs/logs
-speech_cadence = "adaptive"            # 1.1x brisk pace for banter/status; 0.95x measured pace for technical breakdowns
+speech_cadence = "natural_conversational_1.0x" # Natural 1.00x calm, relaxed human conversational cadence
 break_reminders = "spoken_idle_nudge"  # Kabir speaks a 1-sentence reminder during an idle pause after 50 minutes
 
 [modes]
@@ -281,7 +281,8 @@ smart_companion = true                 # Buffer 15 mins between meetings, flag c
 conflict_buffer_minutes = 15
 
 [email]
-draft_voice = "authentic_concise"      # Concise, direct, minimal corporate jargon; learned from approved drafts
+draft_voice = "professional_polite"    # Professional & polite tone with standard business pleasantries and clear sign-offs
+sign_off_style = "warm_regards"        # Standard polite business closure
 
 [rag]
 embedding_engine = "local_onnx"        # Local ONNX runtime: ultra-fast (<5ms) on CPU, zero VRAM usage
@@ -355,6 +356,8 @@ mode = "spoken_hud_shortcuts"          # Spoken 1-sentence prompt + HUD option b
 [learning]
 mode = "instant_rules_spaced_memory"   # Auto-append user corrections to preferences cache and inject top-3 rules dynamically into prompt
 top_rules_injection_count = 3
+voice_confirmation = true              # Kabir briefly confirms: 'Noted, updated project preference'
+persist_to_project_rules = true        # Persist extracted rules into workspace .phenom/rules.md
 
 [workspace]
 switching_mode = "seamless_reanchor"   # Re-anchor active workspace, load local .phenom/prompt.md, refocus/launch VS Code, re-scope git/vectors
