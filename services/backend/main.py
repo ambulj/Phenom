@@ -1360,88 +1360,41 @@ async def broadcast_message(msg_dict: Dict[str, Any]):
 
 
 def on_guardian_state_change(new_state: str):
-
-
-
     # Broadcast to all connected clients
-
-
-
-    asyncio.create_task(broadcast_message({
-
-
-
-        "id": f"guardian-{os.urandom(4).hex()}",
-
-
-
-        "type": "state.change",
-
-
-
-        "ts": "",
-
-
-
-        "payload": {"state": new_state, "detail": "Triggered by Guardian override"}
-
-
-
-    }))
-
-
+    try:
+        asyncio.create_task(broadcast_message({
+            "id": f"guardian-{os.urandom(4).hex()}",
+            "type": "state.change",
+            "ts": "",
+            "payload": {"state": new_state, "detail": "Triggered by Guardian override"}
+        }))
+    except Exception:
+        pass
 
     if new_state == "halted":
-
-
-
         # Synchronously stop TTS audio playback
-
-
-
         try:
-
-
-
             tts_engine.stop_speech()
-
-
-
         except Exception:
-
-
-
             pass
 
-
+        # Abort any active autonomous execution immediately
+        try:
+            from services.backend.automation.autonomous_engine import autonomous_engine
+            autonomous_engine.abort("guardian_halt")
+        except Exception:
+            pass
 
         # Clear live HUD annotations
-
-
-
-        asyncio.create_task(broadcast_message({
-
-
-
-            "id": f"guardian-clear-{os.urandom(4).hex()}",
-
-
-
-            "type": "vision.clear_annotations",
-
-
-
-            "ts": "",
-
-
-
-            "payload": {"reason": "guardian_halt"}
-
-
-
-        }))
-
-
+        try:
+            asyncio.create_task(broadcast_message({
+                "id": f"guardian-clear-{os.urandom(4).hex()}",
+                "type": "vision.clear_annotations",
+                "ts": "",
+                "payload": {"reason": "guardian_halt"}
+            }))
+        except Exception:
+            pass
 
         # Cancel pending confirmations
 

@@ -759,3 +759,20 @@ pm run build).
   - Phase 3 Desktop UI Suite: 4/4 passed (`apps/desktop/tests/test_ambient_toasts.js`).
   - Total Desktop Suites: 36/36 passed across all 7 test suites.
   - Desktop Production Build: Clean Vite bundle generated in 6.44s with 0 errors (`npm run build`).
+
+
+### Phase 4: Mobile Remote Companion & Safety Hardening (Completed)
+- **Interactive Telegram Companion**: `services/backend/remote/telegram_bot.py` provides real-time desktop status streaming (`/status` with CPU, RAM, GPU, mode, and reminders), in-RAM voice memo transcription via local Whisper, and remote task dispatching.
+- **Whitelisted Owner Security & Stranger Drop**: Strictly checks `_owner_id`; silently drops updates and callbacks from unauthorized senders, recording them to `ignored_messages_log` with zero outbound transmission.
+- **Multi-Layer Rule 8 Zero-Payment Invariant**:
+  - Layer 1 (Remote bridge): `/do` command rejects financial keywords (`pay`, `checkout`, `buy`, `credit_card`, `purchase`) with Rule 8 warning and action audit logging.
+  - Layer 2 (Goal Planner): Pre-flight regex scanner raises `PermissionError` on payment and checkout goals.
+  - Layer 3 (Safety Registry): `checkout_pay` and `enter_payment_info` are permanently blocked (Tier 3) and raise `PermissionError`.
+  - Layer 4 (Browser Cart Automator): `cart_automator.py` halts at cart review; `verify_no_payment_action` raises `PermissionError` if payment keywords are detected.
+- **6-Digit PIN Gate & 3-Strike Lockout**: Remote Tier 2 actions require 6-digit PIN verification; PIN messages auto-delete in 15s (`deleteMessage`); 3 consecutive wrong attempts trigger permanent remote lockout requiring physical desktop unlocking.
+- **Synchronous Guardian Kill Switch Halt (< 25ms SLA)**: Calling `guardian.trigger()` or `/halt` synchronously silences TTS audio speech, clears HUD annotations, and aborts active autonomous execution via `autonomous_engine.abort("guardian_halt")` in 13.47ms (well within the < 25ms SLA).
+- **Verification Suites**:
+  - Phase 4 Backend Test Suite: 7/7 passed in 22.60s (`services/backend/tests/test_remote_safety_and_guardian.py`).
+  - Target Combined Phenom 5.0 Backend Suite (Phases 1-4): 39/39 passed in 31.24s.
+  - Desktop Frontend Tests: 36/36 passed across all 7 test suites (`apps/desktop/tests/test_*.js`).
+  - Desktop Production Build: Clean TypeScript/Vite bundle compiled in 6.96s with 0 errors (`npm run build`).

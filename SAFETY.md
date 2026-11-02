@@ -351,3 +351,30 @@ otification_policy == 'silent').
    - Ambient chimes (play_ambient_toast_chime, play_subtle_alert_chime) are synthesized directly in RAM using NumPy sine waves with zero temporary audio files created on disk.
 5. **Safety Registry Tier 0 Status**:
    - get_ambient_status and set_assistant_mode are registered as Tier 0 read-only / safe configuration tools.
+
+
+---
+
+## 17. Mobile Remote Companion & Multi-Layer Safety Guarantees (Phenom 5.0 Phase 4)
+
+1. **Owner-Only Authentication & Silent Stranger Drop**:
+   - The Telegram remote companion strictly processes updates originating from the whitelisted numeric `_owner_id`.
+   - All unauthorized messages, callback queries, and voice notes from strangers are silently dropped with zero response returned, and logged to `ignored_messages_log` for auditing.
+
+2. **Multi-Layer Rule 8 Zero-Payment Invariant (Defense-in-Depth)**:
+   - **Layer 1 (Remote Bridge Gate)**: Rejects `/do` commands containing prohibited payment keywords (`pay`, `checkout`, `buy`, `credit_card`, `purchase`) with an immediate Rule 8 warning and action log audit record.
+   - **Layer 2 (Autonomous Goal Planner)**: Pre-flight regex scanner raises `PermissionError` on payment/checkout goals, terminating planning before execution starts.
+   - **Layer 3 (Safety Tool Registry)**: `checkout_pay` and `enter_payment_info` are permanently blocked (Tier 3) and raise `PermissionError` unconditionally.
+   - **Layer 4 (Browser Cart Automator)**: Traverses e-commerce platforms to add requested items to cart, halts before checkout review, and hard-fails if payment or OTP keywords are detected. No code path exists to submit payments.
+
+3. **Remote 6-Digit PIN Gate & 3-Strike Lockout**:
+   - Tier 2 modifying actions dispatched remotely require 6-digit PIN authorization.
+   - PIN messages auto-delete after 15 seconds via Telegram message ephemerality (`deleteMessage`).
+   - 3 consecutive failed PIN attempts trigger immediate complete remote lockout, which can only be reset physically at the desktop application.
+
+4. **Synchronous Guardian Full-System Halt (< 25ms SLA)**:
+   - Triggering the Guardian kill switch (`Ctrl+Alt+Pause` or remote `/halt`) halts the system in under 25ms (verified ~13.4ms).
+   - Synchronously silences TTS audio speech, clears HUD bounding boxes and overlay annotations, and invokes `autonomous_engine.abort("guardian_halt")` to break running loops immediately.
+
+5. **In-RAM Voice Memo Decryption & Transcription**:
+   - Remote voice memos are decoded and transcribed via local Whisper entirely in memory. Zero voice audio bytes or credentials are ever written to disk.

@@ -43,6 +43,11 @@ TIER2_KEYWORDS = [
     "modify", "organize", "write", "update", "restart", "shutdown", "reboot"
 ]
 
+PROHIBITED_PAYMENT_KEYWORDS = [
+    "pay", "checkout", "buy_now", "place_order", "complete_purchase",
+    "credit_card", "debit_card", "cvv", "otp", "upi_pin", "netbanking"
+]
+
 class TelegramBotController:
     def __init__(
         self,
@@ -508,6 +513,27 @@ class TelegramBotController:
     async def _handle_do_command(self, chat_id: int, task: str) -> Dict[str, Any]:
         """Handles /do <task> with risk tier classification and 6-digit PIN gate."""
         lower_task = task.lower()
+
+        # Strict Rule 8 Payment Invariant
+        if any(pk in lower_task for pk in PROHIBITED_PAYMENT_KEYWORDS):
+            action_log.log_action(
+                tool="telegram_do",
+                tier=3,
+                args={"task": task},
+                decision="blocked",
+                result_status="BLOCKED",
+                source="telegram",
+                error="Payment and checkout actions are strictly prohibited by SAFETY.md Rule #8."
+            )
+            if self.client:
+                await self.client.send_message(
+                    chat_id,
+                    "🛑 *Action Prohibited by Safety Invariant (Rule 8):*\n"
+                    f"Task `{task}` involves financial transactions or checkout completion. "
+                    "Phenom is prohibited from executing purchases or entering payment details by construction."
+                )
+            return {"status": "payment_prohibited", "task": task}
+
         is_tier2 = any(k in lower_task for k in TIER2_KEYWORDS)
 
         if is_tier2:
@@ -599,6 +625,18 @@ class TelegramBotController:
             if self.client:
                 await self.client.send_message(chat_id, f"⚠️ {err_msg}")
             return {"status": "error", "error": err_msg}
+
+    async def broadcast_remote_alert(self, title: str, message: str, urgency: str = "medium") -> bool:
+        """Pushes ambient notifications and meeting alerts directly to the whitelisted owner."""
+        if not self.client or not self._owner_id or is_remote_locked():
+            return False
+        icon = "🚨" if urgency == "critical" else ("⚠️" if urgency == "high" else "🔔")
+        text = f"{icon} *{title}*\n{message}"
+        try:
+            await self.client.send_message(chat_id=self._owner_id, text=text)
+            return True
+        except Exception:
+            return False
 
     # ----------------- LONG POLLING LOOP -----------------
     async def _poll_loop(self):
