@@ -292,3 +292,23 @@ undll32.exe user32.dll,LockWorkStation) and engages the Guardian kill switch.
      - Synchronously purges TTS speech and releases audio hardware (< 50ms).
      - Dispatches ision.clear_annotations to wipe all active HUD bounding boxes immediately.
      - Aborts pending confirmation dialogs and locks orb state in halted (#EF4444).
+
+
+---
+
+## 14. Autonomous Desktop & Browser Orchestration Guarantees (Phenom 5.0 Phase 1)
+
+1. **Tier 2 Multi-Step Execution Preview (execute_autonomous_task)**:
+   - The autonomous orchestrator decomposes complex natural language goals into sequential primitive actions (GoalPlan).
+   - Before any autonomous action loop starts, the full multi-step plan is registered in the Safety Registry as Tier 2 and rendered to the user for explicit confirmation with a complete step preview.
+2. **Strict Rule 8 Payment & Checkout Prohibition by Construction**:
+   - The AutonomousGoalPlanner scans planned intents and parameter signatures for financial and payment primitives (e.g. pay, checkout, credit_card, purchase, order).
+   - If detected, planning fails immediately with SafetyViolationError prior to execution, preventing the engine from ever executing a payment step.
+3. **Sub-Second Human Takeover (< 1s)**:
+   - Physical mouse movement or hardware keystrokes during an active automation session trigger 	akeover_manager._trigger_pause in < 1 second.
+   - Automation loop immediately suspends between actions and streams an interactive takeover state (	akeover) to the Cyber HUD.
+   - Resumption is impossible without explicit user confirmation (continue); if the user selects stop or the 15-second takeover timeout expires, the automation session safely aborts with checkpoint preserved.
+4. **Resilient Task Checkpointing**:
+   - After each step execution, a TaskCheckpoint is recorded with step index, state, and results, allowing interrupted sessions to safely resume from the exact point of interruption without repeating side-effect actions.
+5. **Real-Time Cyber HUD Telemetry**:
+   - During execution, the engine broadcasts continuous screen.action_ticker events with step progress and descriptions, and screen.click_highlight ripples around active click coordinates.

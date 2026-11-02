@@ -209,3 +209,36 @@ class EnterPaymentInfoArgs(BaseModel):
 )
 def enter_payment_info(card_details: str):
     raise PermissionError("Entering card details or credentials is strictly prohibited by SAFETY.md.")
+
+
+# ==========================================
+# Autonomous Execution Tool (Tier 2)
+# ==========================================
+
+class ExecuteAutonomousTaskArgs(BaseModel):
+    goal: str = Field(description="High-level goal or multi-step workflow intent")
+
+
+def _preview_autonomous_task(args: Dict[str, Any]) -> str:
+    goal = args.get("goal", "Autonomous workflow")
+    try:
+        from services.backend.automation.goal_planner import goal_planner
+        plan = goal_planner.plan_goal(goal)
+        steps_preview = "\n".join([f"  {s.step_number}. {s.description}" for s in plan.steps])
+        return f"Autonomous Task Preview for '{goal}':\n{steps_preview}\n(Supervised execution with sub-second takeover pause)"
+    except Exception as e:
+        return f"Autonomous Task: '{goal}' (Error generating step preview: {e})"
+
+
+@registry.register(
+    name="execute_autonomous_task",
+    tier=2,
+    description="Decomposes a high-level goal into a multi-step GUI and browser workflow, executes steps continuously with live HUD telemetry and sub-second takeover pauses. Requires Tier 2 confirmation.",
+    args_schema=ExecuteAutonomousTaskArgs,
+    preview_fn=_preview_autonomous_task
+)
+async def execute_autonomous_task(goal: str) -> Dict[str, Any]:
+    from services.backend.automation.goal_planner import goal_planner
+    from services.backend.automation.autonomous_engine import autonomous_engine
+    plan = goal_planner.plan_goal(goal)
+    return await autonomous_engine.execute_plan(plan)
