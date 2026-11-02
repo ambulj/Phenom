@@ -24,15 +24,14 @@ from services.backend.memory.db import encrypted_db
 from services.backend.memory.rules import learned_rules
 from services.backend.modes.mode_manager import mode_manager
 
-OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
+OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
 SYSTEM_PROMPT_TEMPLATE = """You are Phenom, a personal Windows 11 desktop assistant.
 Current Date & Time: {current_time}
 {mode_prompt}
-Personality: Witty, playful, Jarvis-style sidekick. Confident and warm, never smug.
-Humor is light and short; at most one brief quip per reply, and none during errors, warnings, or destructive actions.
-Clarity first: deliver the answer or action, then the flourish.
+Personality: Witty, sharp, Jarvis-style sidekick. Confident, direct, helpful, and technically formidable.
+Never use corporate filler like "Certainly! I would be pleased to assist with that!". Deliver the answer or action directly.
 
 Permanent Rules:
 1. You act only through tools. Every tool execution is subject to safety validation.
@@ -48,80 +47,17 @@ Active Learned Rules:
 Available Tools:
 {tool_descriptions}
 
-Interaction Protocol:
-1. Casual Conversation: When the user greets you or chats casually (e.g. "hi", "hello", "good morning"), respond naturally, warmly, and crisply in 1-2 conversational sentences. NEVER mention tools, JSON, arguments, or code blocks to the user.
-2. Action Requests: When the user requests an action, media control, app launch, news briefing, or system task, output ONLY the JSON execution block immediately:
+Core Instructions:
+1. Action Execution: When the user requests ANY action, media control, playback, volume change, app launch, news briefing, weather, calculation, reminder, or system command:
+   Output ONLY the JSON execution block immediately:
 ```json
 {{"tool": "<tool_name>", "args": {{<arguments>}}}}
 ```
-Never announce or explain what tool you are using before calling it. Do not output placeholder templates.
-Otherwise, respond naturally in English. Keep voice/orb replies concise and crisp. Never use corporate filler like "Certainly! I would be pleased to assist with that!".
+   Do NOT provide conversational preamble, greetings, or meta-explanations. Output the tool JSON immediately.
 
-Exemplar Interactions:
-User: hi
-Phenom: Hey Abhi! All systems running cool and clean. What are we tackling today?
+2. General Conversation: When the user greets you or makes casual conversation, respond in 1-2 natural, witty sentences. Never mention JSON, tools, or schemas to the user. Never offer canned system status reports unless explicitly asked.
 
-User: hello
-Phenom: Good to see you, Abhi. Ready for whatever you have in store.
-
-User: Toggle media play/pause on Spotify
-Phenom: ```json
-{{"tool": "control_media", "args": {{"action": "play_pause"}}}}
-```
-User: Pause the music.
-Phenom: ```json
-{{"tool": "control_media", "args": {{"action": "pause"}}}}
-```
-
-User: Play the song.
-Phenom: ```json
-{{"tool": "control_media", "args": {{"action": "play"}}}}
-```
-
-User: Next track.
-Phenom: ```json
-{{"tool": "control_media", "args": {{"action": "next"}}}}
-```
-
-User: Turn the volume up.
-Phenom: ```json
-{{"tool": "control_media", "args": {{"action": "volume_up"}}}}
-```
-
-User: What's the latest news?
-Phenom: ```json
-{{"tool": "get_news", "args": {{"items_per_source": 3}}}}
-```
-
-User: What is the weather in Delhi?
-Phenom: ```json
-{{"tool": "get_weather", "args": {{"city": "Delhi"}}}}
-```
-User: How is the system running?
-Phenom: All systems running cool and nominal, Abhi. CPU at 12%, GPU idling at 40°C, and all background services active. Standing by for instructions.
-
-User: What's on my schedule today?
-Phenom: You have 2 pull requests awaiting review and a standup at 10 AM. I recommend clearing the reviews first before meetings disrupt your flow.
-
-User: Open Chrome and check GitHub.
-Phenom: ```json
-{{"tool": "open_app", "args": {{"name": "chrome"}}}}
-```
-
-User: Remind me in 5 minutes to drink water.
-Phenom: ```json
-{{"tool": "schedule_reminder", "args": {{"title": "Drink water", "delay_seconds": 300}}}}
-```
-
-User: Calculate 15 percent of 120.
-Phenom: ```json
-{{"tool": "safe_calculate", "args": {{"expression": "0.15 * 120"}}}}
-```
-
-User: Search my notes for the auth architecture.
-Phenom: ```json
-{{"tool": "search_vault", "args": {{"query": "auth architecture"}}}}
-```
+3. Questions & Knowledge: When the user asks a question, answer concisely and directly.
 """
 
 _CACHED_TOOLS_STR: Optional[str] = None
@@ -158,8 +94,8 @@ async def warm_up_ollama(model_name: Optional[str] = None):
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             await client.post(
-                OLLAMA_GENERATE_URL,
-                json={"model": target_model, "prompt": "hi", "stream": False, "keep_alive": -1}
+                OLLAMA_CHAT_URL,
+                json={"model": target_model, "messages": [{"role": "user", "content": "hi"}], "stream": False, "keep_alive": -1}
             )
     except Exception:
         pass
@@ -236,17 +172,22 @@ class Orchestrator:
                 pass
 
         system_prompt = build_system_prompt()
+        system_content = f"{system_prompt}\n{memory_context}".strip()
+        chat_messages = [{"role": "system", "content": system_content}]
         history = encrypted_db.get_recent_messages(limit=6)
-        history_lines = []
         for m in history:
-            text = m.get("content", "").strip()
-            if text and "<tool_name>" not in text and "Please respond with a JSON block" not in text:
-                cleaned = re.sub(r"\[(Phenom Safety Gate|Tool).*?\]", "", text).strip()
+            m_text = m.get("content", "").strip()
+            role = m.get("role", "user").lower()
+            if role not in ["user", "assistant"]:
+                role = "user"
+            if role == "assistant":
+                if any(bad in m_text for bad in ["All systems running cool and clean", "Please respond with your request", "Please respond with a JSON block", "<tool_name>"]):
+                    continue
+            if m_text and "<tool_name>" not in m_text and "Please respond with a JSON block" not in m_text:
+                cleaned = re.sub(r"\[(Phenom Safety Gate|Tool|Action Blocked).*?\]", "", m_text).strip()
                 if cleaned:
-                    history_lines.append(f"{m.get('role', '').capitalize()}: {cleaned}")
-        history_context = "\n".join(history_lines)
-
-        full_prompt = f"{system_prompt}\n{memory_context}\nRecent History:\n{history_context}\n\nUser: {prompt}\nAssistant:"
+                    chat_messages.append({"role": role, "content": cleaned})
+        chat_messages.append({"role": "user", "content": prompt})
 
         start_time = time.perf_counter()
         token_index = 0
@@ -255,14 +196,14 @@ class Orchestrator:
 
         try:
             if backend_type == "local":
-                # Stream from Ollama with permanent VRAM keep_alive and optimized predict cap
+                # Stream from Ollama chat endpoint with native ChatML token separation
                 async with httpx.AsyncClient(timeout=60.0) as client:
                     async with client.stream(
                         "POST",
-                        OLLAMA_GENERATE_URL,
+                        OLLAMA_CHAT_URL,
                         json={
                             "model": model_name,
-                            "prompt": full_prompt,
+                            "messages": chat_messages,
                             "stream": True,
                             "keep_alive": -1,
                             "options": {
@@ -280,7 +221,7 @@ class Orchestrator:
                             if not line:
                                 continue
                             chunk = json.loads(line)
-                            token = chunk.get("response", "")
+                            token = chunk.get("message", {}).get("content", "")
                             if token:
                                 if is_first_token:
                                     is_first_token = False
@@ -297,10 +238,7 @@ class Orchestrator:
                 client = OpenAI(base_url=NVIDIA_BASE_URL, api_key=api_key)
                 stream_resp = client.chat.completions.create(
                     model=model_name,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt}
-                    ],
+                    messages=chat_messages,
                     stream=True,
                     temperature=0.2
                 )
@@ -421,3 +359,13 @@ class Orchestrator:
                 break
 
 orchestrator = Orchestrator()
+
+import services.backend.tools.file_tools
+import services.backend.tools.app_tools
+import services.backend.tools.automation_tools
+import services.backend.tools.memory_tools
+import services.backend.tools.integration_tools
+import services.backend.tools.media_tools
+import services.backend.tools.utility_tools
+import services.backend.tools.git_tools
+import services.backend.tools.coding_tools
