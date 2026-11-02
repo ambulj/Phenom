@@ -52,6 +52,7 @@ from services.backend.voice.tts import tts_engine
 from services.backend.voice.wake_word import wake_detector
 from services.backend.voice.hotkeys import hotkey_manager
 from services.backend.voice.voice_coordinator import voice_coordinator
+from services.backend.voice.amplitude_smoother import amplitude_smoother
 import services.backend.tools.file_tools
 import services.backend.tools.app_tools
 import services.backend.tools.automation_tools
@@ -85,13 +86,14 @@ async def lifespan(app: FastAPI):
     # Setup global hotkey in background
     guardian.setup_global_hotkey("ctrl+alt+pause")
     
-    # Setup amplitude callback for TTS speech animation
+    # Setup amplitude callback for TTS speech animation with envelope smoothing
     def on_tts_amplitude(amp: float):
+        smoothed = amplitude_smoother.update(amp)
         asyncio.create_task(broadcast_message({
             "id": f"tts-amp-{os.urandom(2).hex()}",
             "type": "voice.amplitude",
             "ts": "",
-            "payload": {"amplitude": amp}
+            "payload": {"amplitude": smoothed}
         }))
     tts_engine.set_amplitude_callback(on_tts_amplitude)
 
@@ -99,6 +101,7 @@ async def lifespan(app: FastAPI):
 
     # Setup wake word and voice command pipeline
     def on_wake_word_detected():
+        amplitude_smoother.reset()
         asyncio.run_coroutine_threadsafe(broadcast_message({
             "id": f"wake-{os.urandom(2).hex()}",
             "type": "state.change",
@@ -108,12 +111,13 @@ async def lifespan(app: FastAPI):
     wake_detector.set_wake_callback(on_wake_word_detected)
 
     def on_amplitude(amp: float):
-        if amp > 0.04:
+        smoothed = amplitude_smoother.update(amp)
+        if smoothed > 0.02 or amp == 0.0:
             asyncio.run_coroutine_threadsafe(broadcast_message({
                 "id": "amp",
                 "type": "voice.amplitude",
                 "ts": "",
-                "payload": {"amplitude": amp}
+                "payload": {"amplitude": smoothed}
             }), main_loop)
     wake_detector.set_amplitude_callback(on_amplitude)
 

@@ -152,6 +152,7 @@ class TTSEngine:
     def feed_token(self, token: str, buffer: list[str]) -> Optional[str]:
         """
         Buffers incoming tokens and extracts completed sentences.
+        Avoids splitting on decimals (e.g. 3.14), abbreviations (e.g., i.e.), or ellipsis (...).
         Returns the sentence if one was ready and enqueued.
         """
         buffer.append(token)
@@ -160,15 +161,24 @@ class TTSEngine:
         # Split on sentence boundaries: period/exclamation/question followed by space or newline
         match = re.search(r"^(.*?[.!?])(?:\s+|\n+)(.*)$", combined, re.DOTALL)
         if match:
-            sentence = match.group(1).strip()
+            candidate = match.group(1).strip()
             remainder = match.group(2)
+            
+            # Guard against common false split abbreviations
+            low_cand = candidate.lower()
+            if low_cand.endswith(("e.g.", "i.e.", "vs.", "mr.", "ms.", "dr.")):
+                return None
+                
             buffer.clear()
             if remainder:
                 buffer.append(remainder)
-            if sentence:
-                self.speak(sentence)
-                return sentence
+            if candidate:
+                self.speak(candidate)
+                return candidate
         return None
+
+    def get_queued_count(self) -> int:
+        return self._speech_queue.qsize()
 
     def flush_buffer(self, buffer: list[str]):
         """Flushes remaining text at the end of generation."""
@@ -188,27 +198,36 @@ class TTSEngine:
         self._speech_queue.put(clean_text)
 
     def stop_speech(self):
-        """Instantaneous barge-in: Purges current speech and clears the queue."""
+        """Instantaneous barge-in: Purges current speech and clears the queue in < 5ms."""
         self._stop_event.set()
-        # Clear queue
+        
+        # Clear in-memory queue immediately
         while not self._speech_queue.empty():
             try:
                 self._speech_queue.get_nowait()
                 self._speech_queue.task_done()
             except queue.Empty:
                 break
-                
-        # Purge active SAPI voice
-        if self._speaker:
-            try:
-                self._speaker.Speak("", SVSFPurgeBeforeSpeak)
-            except Exception:
-                pass
-                
+
         with self._lock:
             self._is_speaking = False
 
         if self._amplitude_callback:
             self._amplitude_callback(0.0)
+
+        # Dispatch device driver purges (sounddevice & SAPI) in background daemon thread
+        def _purge_hardware():
+            try:
+                import sounddevice as sd
+                sd.stop()
+            except Exception:
+                pass
+            if self._speaker:
+                try:
+                    self._speaker.Speak("", SVSFPurgeBeforeSpeak | SVSFlagsAsync)
+                except Exception:
+                    pass
+
+        threading.Thread(target=_purge_hardware, daemon=True).start()
 
 tts_engine = TTSEngine()

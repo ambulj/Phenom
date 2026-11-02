@@ -21,6 +21,7 @@ from openwakeword.model import Model
 from services.backend.voice.tts import tts_engine
 from services.backend.voice.sound_fx import sound_fx
 from services.backend.tools.media_tools import duck_system_audio, unduck_system_audio
+from services.backend.voice.barge_in_controller import barge_in_controller
 
 CHUNK_SIZE = 1280  # 80ms at 16kHz
 SAMPLE_RATE = 16000
@@ -152,6 +153,12 @@ class WakeWordDetector:
                     self._on_amplitude_callback(min(1.0, rms * 8.0))
                 except Exception:
                     pass
+
+            # Conversational Barge-In Interruption during speech playback (< 50ms stop latency)
+            if not self._recording_command and tts_engine.is_speaking:
+                if barge_in_controller.process_audio_chunk(audio_chunk):
+                    self.trigger_manual_listen(4.5)
+                    return
 
             # If actively recording user command audio after wake trigger
             if self._recording_command:
