@@ -490,3 +490,24 @@ otification_policy == 'silent').
    - `get_proactive_status`: Tier 0 read-only tool for idle duration, active window context, and active card list.
    - `configure_proactive_cooldown`: Tier 1 tool requiring confirmation to modify idle thresholds or event cooldowns.
    - `dismiss_proactive_card`: Tier 0 tool for dismissing active recommendation cards.
+
+## 23. Autonomous Executive Briefing & Calendar/Gmail Triage Guarantees (Phenom 7.0 Phase 2)
+
+1. **Strict Drafts-Only Invariant for Email (Rule 9)**:
+   - All email modifications by `GmailTriageService` use IMAP `APPEND` directly into the `[Gmail]/Drafts` mailbox folder with `\Draft` flag.
+   - It is physically impossible for Phenom to transmit outbound emails: `send_email` raises `EmailSendingProhibitedError` and no SMTP libraries or send endpoints exist.
+2. **Read-Only IMAP Inspection (`EXAMINE INBOX`)**:
+   - Inbox scanning for unread priority threads operates using the IMAP `EXAMINE` command (read-only mode), ensuring message flags, read status, and labels on the server remain completely unmutated.
+3. **Calendar Modification Prohibitions**:
+   - Creating calendar events uses the Google Calendar REST API (`create_event`) and requires Tier 1 confirmation.
+   - Deleting or editing existing calendar events is strictly prohibited: `delete_calendar_event` and `edit_calendar_event` raise `CalendarModificationProhibitedError`.
+4. **Calendar Horizon Deduplication**:
+   - `CalendarLookaheadScanner` scans upcoming events within 15–30 minutes. An in-memory deduplication set ensures each unique `event_id` triggers an urgent notification at most once.
+5. **Synchronous Guardian Kill Switch Halt (< 25ms SLA)**:
+   - `guardian.trigger()` synchronously invokes `calendar_scanner.halt()` and `gmail_triage.halt()`, aborting all active lookahead loops and IMAP queries in < 25ms.
+6. **Safety Registry Classifications**:
+   - `get_executive_briefing`: Tier 0 read-only operational briefing query.
+   - `scan_calendar_upcoming`: Tier 0 read-only calendar lookahead query.
+   - `triage_unread_emails`: Tier 0 read-only inbox triage inspection.
+   - `draft_email_reply`: Tier 1 tool requiring user preview confirmation before saving a draft to `[Gmail]/Drafts`.
+   - `schedule_meeting_event`: Tier 1 tool requiring user preview confirmation before adding a new event to Google Calendar.

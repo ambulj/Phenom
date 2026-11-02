@@ -855,3 +855,16 @@ pm run build).
   - Target Combined Backend Suite: 28/28 passed in 14.13s.
   - Dependency Audit: 100% PASS (0 missing dependencies).
   - Desktop Production Build: Clean Vite bundle generated in 5.67s with 0 errors (`npm run build`).
+
+
+### Phase 2: Autonomous Executive Briefing & Calendar/Gmail Triage (Completed)
+- **Real Gmail Priority Triage & Automated Reply Drafter**: `services/backend/triage/gmail_triage.py` (`GmailTriageService`) reads unread threads over read-only SSL IMAP (`EXAMINE INBOX`), scores urgency (VIP, urgent terms, questions), and auto-composes proposed draft replies into `[Gmail]/Drafts`. Enforces Phenom Rule 9: `send_email` raises `EmailSendingProhibitedError` and no SMTP libraries exist. Emits `ProactiveCard` (`EMAIL_TRIAGE`) with `"Review in Gmail"` action chip.
+- **Google Calendar 15-Minute Lookahead Scanner**: `services/backend/triage/calendar_scanner.py` (`CalendarLookaheadScanner`) polls Google Calendar REST API every 3 minutes looking ahead 15–30 minutes into the future. Triggers URGENT proactive alerts for meetings starting in <= 15 minutes, with attendee list and conference join links, deduplicating so meetings alert only once.
+- **Executive Morning Briefing Synthesizer**: `services/backend/triage/executive_briefing.py` (`ExecutiveBriefingSynthesizer`) compiles today's complete calendar schedule, unread priority email counts, pending drafts, weather forecast, and Obsidian daily note goals into an interactive Cyber HUD briefing card.
+- **Safety Registry Tools**: Registered `get_executive_briefing` (Tier 0), `scan_calendar_upcoming` (Tier 0), `triage_unread_emails` (Tier 0), `draft_email_reply` (Tier 1), and `schedule_meeting_event` (Tier 1) in `services/backend/tools/triage_tools.py`.
+- **Synchronous Guardian Kill Switch Halt (< 25ms SLA)**: Hooked `calendar_scanner.halt()` and `gmail_triage.halt()` into `services/backend/main.py`. Verified synchronous halt latency well under 25ms SLA.
+- **Verification Suites**:
+  - Phase 2 Backend Test Suite: 5/5 passed in 10.51s (`services/backend/tests/test_executive_briefing_and_triage.py`).
+  - Target Combined Backend Suite: 33/33 passed in 14.55s across all phases.
+  - Dependency Audit: 100% PASS (0 missing dependencies).
+  - Desktop Production Build: Clean Vite bundle generated in 5.31s with 0 errors (`npm run build`).

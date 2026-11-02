@@ -432,7 +432,12 @@ class GoogleWorkspaceClient:
         return self._drafts
 
     # ----------------- CALENDAR READING & EVENT CREATION -----------------
-    def list_events(self, max_results: int = 10) -> List[Dict[str, Any]]:
+    def list_events(
+        self,
+        max_results: int = 10,
+        time_min: Optional[str] = None,
+        time_max: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Lists upcoming calendar events from Google Calendar REST API.
         Never returns fabricated events. Returns empty list if unauthenticated or offline.
@@ -444,11 +449,13 @@ class GoogleWorkspaceClient:
         events: List[Dict[str, Any]] = []
         try:
             headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-            now_iso = datetime.now(timezone.utc).isoformat()
+            now_iso = time_min or datetime.now(timezone.utc).isoformat()
             url = (
                 f"https://www.googleapis.com/calendar/v3/calendars/primary/events"
                 f"?maxResults={max_results}&singleEvents=true&orderBy=startTime&timeMin={now_iso}"
             )
+            if time_max:
+                url += f"&timeMax={time_max}"
             with httpx.Client(timeout=5.0) as client:
                 resp = client.get(url, headers=headers)
                 if resp.status_code == 200:
@@ -460,7 +467,9 @@ class GoogleWorkspaceClient:
                             "start": it.get("start", {}).get("dateTime", it.get("start", {}).get("date", "")),
                             "end": it.get("end", {}).get("dateTime", it.get("end", {}).get("date", "")),
                             "description": it.get("description", ""),
-                            "creator": it.get("creator", {}).get("email", "")
+                            "creator": it.get("creator", {}).get("email", ""),
+                            "attendees": it.get("attendees", []),
+                            "hangoutLink": it.get("hangoutLink", ""),
                         })
         except Exception as e:
             logger.warning(f"Google Calendar list error: {e}")
@@ -515,6 +524,11 @@ class GoogleWorkspaceClient:
                 "error": "connection_error",
                 "message": str(e)
             }
+
+    # Aliases for compatibility
+    get_calendar_events = list_events
+    create_calendar_event = create_event
+    save_draft = create_draft
 
 # Global Google Workspace client
 google_workspace = GoogleWorkspaceClient()

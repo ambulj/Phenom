@@ -272,6 +272,7 @@ import services.backend.tools.swarm_tools
 import services.backend.tools.obsidian_graph_tools
 import services.backend.tools.voice_tools
 import services.backend.tools.proactive_tools
+import services.backend.tools.triage_tools
 
 
 
@@ -311,6 +312,9 @@ from services.backend.voice.duplex_pipeline import duplex_pipeline
 from services.backend.sensors.idle_sensor import idle_detector
 from services.backend.sensors.context_sensor import context_sensor
 from services.backend.proactive.dispatcher import proactive_dispatcher
+from services.backend.triage.gmail_triage import gmail_triage
+from services.backend.triage.calendar_scanner import calendar_scanner
+from services.backend.triage.executive_briefing import executive_briefing
 
 
 
@@ -948,13 +952,15 @@ async def lifespan(app: FastAPI):
 
     asyncio.create_task(warm_up_ollama())
 
-    # Initialize ambient sensing and proactive dispatcher
+    # Initialize ambient sensing, proactive dispatcher, and triage
     try:
         proactive_dispatcher.ws_broadcast_fn = broadcast_message
         idle_detector.start()
         context_sensor.start()
+        calendar_scanner.start()
+        gmail_triage.start()
     except Exception as exc:
-        print(f'[Proactive] Could not start sensors: {exc}')
+        print(f'[Proactive/Triage] Could not start sensors/triage: {exc}')
 
 
 
@@ -978,6 +984,8 @@ async def lifespan(app: FastAPI):
     try:
         idle_detector.stop()
         context_sensor.stop()
+        calendar_scanner.stop()
+        gmail_triage.stop()
     except Exception:
         pass
 
@@ -1433,6 +1441,8 @@ def on_guardian_state_change(new_state: str):
             idle_detector.halt()
             context_sensor.halt()
             proactive_dispatcher.halt()
+            calendar_scanner.halt()
+            gmail_triage.halt()
         except Exception:
             pass
 
