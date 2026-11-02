@@ -73,7 +73,7 @@ spacebar_barge_in = true
 conflict_detector_enabled = true       # Detect Win32 hotkey collisions and offer 1-click fallback in HUD
 
 [voice]
-wake_word_threshold = 0.65             # Strict 0.65+ confidence to reject background movie/speech triggers
+wake_word_threshold = 0.50             # High sensitivity (0.50 threshold) to wake up across room or at low whisper
 wake_word_sliding_ms = 500             # 500ms sliding confirmation window
 wake_word_debounce_seconds = 2         # 2-second debounce & 10s cooldown on false triggers
 wake_phrases = ["hey_phenom"]           # Dedicated wake phrase selected by owner
@@ -174,6 +174,9 @@ sources = ["hacker_news", "arxiv_ai", "github_trending", "indian_business"] # Cu
 visual_style = "modern_executive"      # Clean typography, styled tables, visual callout boxes, executive summary cover
 
 [git]
+workflow = "autonomous_feature_branching" # Create branch, run tests, verify coverage, offer 1-click HUD merge
+auto_branch_and_test = true
+hud_merge_button = true
 commit_convention = "conventional_commits" # Strict feat:, fix:, docs:, test: convention
 semver_automation = true               # Parse commits and automate SemVer releases
 changelog_generation = true            # Generate formatted CHANGELOG.md entries
@@ -362,6 +365,7 @@ browser_session_fallback = true        # Media Session API fallback for browser 
 
 [power]
 sleep_governor = "smart_ac_battery"    # On AC power keep lightweight Telegram polling; on Battery/sleep pause all loops
+battery_saver = "smart_battery_saver"  # Pause background RAG indexing & dim Orb LOD on battery; full power on AC
 power_state_monitoring = true          # Instant state restoration upon user unlock
 
 [clarification]
