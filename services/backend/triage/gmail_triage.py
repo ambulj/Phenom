@@ -25,6 +25,7 @@ from services.backend.proactive.dispatcher import (
     ProactivePriority,
     proactive_dispatcher,
 )
+from services.backend.safety.guardian import guardian
 
 logger = logging.getLogger(__name__)
 
@@ -78,10 +79,20 @@ class GmailTriageService:
         self.workspace_client = workspace_client or google_workspace
         self.dispatcher = dispatcher or proactive_dispatcher
         self.poll_interval = poll_interval
+        self._halted: bool = False
 
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._processed_msg_ids: Set[str] = set()
+
+    @property
+    def is_halted(self) -> bool:
+        """Returns True if halted by Guardian or manually."""
+        return self._halted or guardian.is_halted
+
+    def reset(self) -> None:
+        """Reset halted state."""
+        self._halted = False
 
     def score_urgency(self, subject: str, snippet: str, sender: str) -> int:
         """Score message priority (1 = Low/Normal, 2 = Priority, 3 = Urgent)."""
@@ -111,6 +122,9 @@ class GmailTriageService:
 
     async def triage_unread_emails(self, max_results: int = 10, auto_draft: bool = True) -> List[EmailTriageItem]:
         """Triage unread messages, score priority, and optionally create draft replies."""
+        if self.is_halted:
+            raise PermissionError("Gmail triage blocked: Guardian kill switch is active.")
+
         # Query unread emails via read-only IMAP (EXAMINE INBOX)
         raw_emails = await asyncio.to_thread(
             self.workspace_client.search_emails,
@@ -206,10 +220,14 @@ class GmailTriageService:
 
     def halt(self) -> None:
         """Synchronous Guardian halt callback (< 5ms SLA)."""
+        self._halted = True
         self._running = False
         if self._task and not self._task.done():
             self._task.cancel()
             self._task = None
+
+    # Alias for inbox triage
+    triage_inbox = triage_unread_emails
 
 
 gmail_triage = GmailTriageService()

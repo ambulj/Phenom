@@ -34,12 +34,14 @@ import services.backend.tools.housekeeping_tools  # Ensure tools are registered
 def reset_system_state():
     """Ensure Guardian, dispatcher cooldowns, and workers are in active/normal state before and after each test."""
     guardian.resume()
+    proactive_dispatcher.reset()
     proactive_dispatcher._last_emitted_by_type.clear()
     proactive_dispatcher.set_mode("CHILL")
     topic_researcher.reset()
     workspace_housekeeper.reset()
     yield
     guardian.resume()
+    proactive_dispatcher.reset()
     proactive_dispatcher._last_emitted_by_type.clear()
     topic_researcher.reset()
     workspace_housekeeper.reset()

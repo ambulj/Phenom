@@ -21,6 +21,7 @@ from services.backend.proactive.dispatcher import (
     ProactivePriority,
     proactive_dispatcher,
 )
+from services.backend.safety.guardian import guardian
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,20 @@ class CalendarLookaheadScanner:
         self.poll_interval = poll_interval
         self.lookahead_minutes = lookahead_minutes
         self.alert_horizon_minutes = alert_horizon_minutes
+        self._halted: bool = False
 
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._notified_event_ids: Set[str] = set()
+
+    @property
+    def is_halted(self) -> bool:
+        """Returns True if halted by Guardian or manually."""
+        return self._halted or guardian.is_halted
+
+    def reset(self) -> None:
+        """Reset halted state."""
+        self._halted = False
 
     def parse_start_time(self, event: Dict[str, Any]) -> Optional[datetime]:
         """Extract and parse start datetime in UTC."""
@@ -66,6 +77,9 @@ class CalendarLookaheadScanner:
 
     async def scan_upcoming(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
         """Query calendar events starting within lookahead window and alert on imminent ones."""
+        if self.is_halted:
+            raise PermissionError("Calendar scanning blocked: Guardian kill switch is active.")
+
         now_utc = datetime.now(timezone.utc)
         max_utc = now_utc + timedelta(minutes=self.lookahead_minutes)
 
@@ -161,10 +175,14 @@ class CalendarLookaheadScanner:
 
     def halt(self) -> None:
         """Synchronous Guardian halt callback (< 5ms SLA)."""
+        self._halted = True
         self._running = False
         if self._task and not self._task.done():
             self._task.cancel()
             self._task = None
+
+    # Alias for lookahead scan
+    scan_lookahead = scan_upcoming
 
 
 calendar_scanner = CalendarLookaheadScanner()

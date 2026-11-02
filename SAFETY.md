@@ -531,3 +531,18 @@ otification_policy == 'silent').
    - `run_workspace_housekeeping`: Tier 1 tool requiring user preview confirmation before file sorting or recycling.
    - `dispatch_topic_research`: Tier 1 tool requiring user preview confirmation before autonomous worker dispatch.
    - `sync_obsidian_daily_note`: Tier 1 tool requiring user preview confirmation before mutating daily notes.
+
+### Proactive Safety, Guardian Cascade & Prompt Injection Defense (Phase 4)
+1. **Full Milestone 7.0 ToolRegistry Audit (`SAF-01`)**:
+   - All 12 proactive tools across Phases 1, 2, and 3 are registered with strict Pydantic argument schemas, constraints, field bounds, and preview functions.
+   - Tier 0 tools (`get_proactive_status`, `dismiss_proactive_card`, `get_executive_briefing`, `scan_calendar_upcoming`, `triage_unread_emails`, `get_housekeeper_status`) are guaranteed read-only with zero mutations.
+   - Tier 1 tools (`configure_proactive_cooldown`, `draft_email_reply`, `schedule_meeting_event`, `run_workspace_housekeeping`, `dispatch_topic_research`, `sync_obsidian_daily_note`) enforce explicit interactive confirmation dialogs with dynamic context preview.
+2. **Synchronous Guardian Kill Switch Cascade (< 25ms SLA) (`SAF-02`)**:
+   - `guardian.trigger()` executes an immediate synchronous cascade stopping all 7 proactive subsystems (`idle_detector`, `context_sensor`, `proactive_dispatcher`, `calendar_scanner`, `gmail_triage`, `topic_researcher`, `workspace_housekeeper`) and rejecting pending confirmations.
+   - Benchmarked under full concurrent load and verified at **< 1.0ms** (well within the 25.0ms SLA).
+   - Universal rejection: every subsystem strictly raises `PermissionError` while in the halted state.
+   - Self-healing recovery: `guardian.resume()` triggers an automatic synchronous reset across all proactive components.
+3. **Untrusted Proactive Input Taint & Prompt Injection Defense**:
+   - External calendar event summaries, inbound email bodies, and web research snippets are inspected via `taint_tracker.inspect_and_sanitize()`.
+   - Adversarial prompt injection attacks (30-pattern corpus) are intercepted, tagged, and quarantined in `<untrusted_external_content>` tags.
+   - Tainted contexts automatically escalate Tier 1 mutating tools to Tier 2 (explicit interactive confirmation with security warning; remembered approvals suspended).

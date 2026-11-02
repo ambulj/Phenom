@@ -1486,6 +1486,15 @@ def on_guardian_state_change(new_state: str):
 
 
         pending_confirmations.clear()
+    elif new_state == "idle":
+        try:
+            proactive_dispatcher.reset()
+            calendar_scanner.reset()
+            gmail_triage.reset()
+            topic_researcher.reset()
+            workspace_housekeeper.reset()
+        except Exception:
+            pass
 
 
 

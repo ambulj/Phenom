@@ -15,6 +15,8 @@ import uuid
 
 from pydantic import BaseModel, Field
 
+from services.backend.safety.guardian import guardian
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +55,7 @@ class ProactiveEventDispatcher:
     ) -> None:
         self.ws_broadcast_fn = ws_broadcast_fn
         self.default_cooldown_seconds = default_cooldown_seconds
+        self._halted: bool = False
 
         self._current_mode: str = "CHILL"
         self._last_emitted_by_type: Dict[str, float] = {}
@@ -63,6 +66,15 @@ class ProactiveEventDispatcher:
             "IDLE_CLEANUP": 3600.0 * 2,        # Max once every 2 hours
             "AMBIENT_SUGGESTION": 600.0,       # 10 minutes
         }
+
+    @property
+    def is_halted(self) -> bool:
+        """Returns True if halted by Guardian or manually."""
+        return self._halted or guardian.is_halted
+
+    def reset(self) -> None:
+        """Reset halted state."""
+        self._halted = False
 
     @property
     def current_mode(self) -> str:
@@ -88,6 +100,10 @@ class ProactiveEventDispatcher:
 
         Returns True if delivered/broadcast, False if suppressed by mode or cooldown.
         """
+        if self.is_halted:
+            logger.info("Proactive card '%s' suppressed: Guardian kill switch is active.", card.title)
+            return False
+
         now = time.time()
         self._cards[card.id] = card
 
@@ -158,8 +174,7 @@ class ProactiveEventDispatcher:
     def halt(self) -> None:
         """Synchronous Guardian kill switch halt (< 5ms SLA)."""
         logger.info("Guardian triggered: ProactiveEventDispatcher halting")
-        # Clears transient un-emitted buffers
-        pass
+        self._halted = True
 
 
 proactive_dispatcher = ProactiveEventDispatcher()
