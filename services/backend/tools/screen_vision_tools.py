@@ -13,6 +13,7 @@ from services.backend.safety.registry import registry
 from services.backend.automation.desktop_controller import DesktopController
 from services.backend.vision.moondream_client import moondream_client
 from services.backend.vision.ocr_engine import ocr_engine
+from services.backend.vision.multimodal_coordinator import multimodal_coordinator
 
 _desktop_controller = DesktopController()
 
@@ -113,11 +114,14 @@ async def find_on_screen(element_name: str) -> Dict[str, Any]:
 )
 async def ask_screen_vision_cloud(question: str) -> Dict[str, Any]:
     """Cloud vision escalation gated strictly behind Tier 2 preview and approval."""
-    # Screen is captured in RAM
-    img = _desktop_controller.capture_screen_ram()
+    res = await multimodal_coordinator.execute_screen_query(prompt=question, prefer_cloud=True)
     return {
-        "status": "success",
+        "status": res.get("status", "success"),
         "question": question,
-        "source": "cloud_vlm",
-        "message": f"Cloud VLM analyzed screen for: '{question}'."
+        "source": res.get("source", "cloud_nemotron"),
+        "model": res.get("model", "nemotron"),
+        "description": res.get("description", ""),
+        "fallback_engaged": res.get("fallback_engaged", False),
+        "privacy_masked_windows": res.get("privacy_masked_windows", 0),
+        "message": res.get("message", "Cloud vision analysis complete.")
     }
