@@ -93,6 +93,7 @@ uac_elevation = "strict_uac_prompt"    # Always require explicit Windows UAC con
 confirmation_phrase = "Phenom execute" # Fixed spoken/typed confirmation phrase for risky commands
 speaker_verification_for_phrase = true # Spoken confirmation requires biometric speaker verification
 coding_agent_boundary = "prompt_on_out_of_bounds" # Out-of-project edits trigger explicit Tier 2 confirmation dialog
+pii_redaction_mode = "auto_scrub_and_warn"      # Automatically scrub PAN, Aadhaar, UPI, API keys before cloud transmission
 
 [vault]
 vault_path = "%USERPROFILE%\\Documents\\Phenom\\vault"
@@ -306,6 +307,9 @@ safety_wrapped = true                  # All custom tools automatically wrapped 
 
 [gaming_mode]
 gpu_resource_governor = true           # Auto-offload GPU VRAM when 3D game launches, pause background indexing on low battery
+auto_unload_vram = true               # Unload Ollama 8B from RTX 3050 VRAM upon full-screen 3D game launch
+mute_voice_alerts = true              # Mute voice and sound effects while gaming
+buffer_notifications = true           # Buffer all incoming notifications for post-game digest
 busy_gpu_fallback = "dynamic_cloud_or_cpu_q4" # Cloud Nemotron if online, lightweight CPU Q4 GGUF if offline
 
 [benchmarks]
