@@ -3,6 +3,7 @@
 
 [assistant]
 nickname = "Abhi"
+address_form = "Bro"                     # Kabir addresses user as "Bro" ('Scene sorted, Bro!')
 voice_language = "hi-IN"
 primary_voice = "kabir_v4"                # Primary voice: Sarvam Bulbul v4-flash (Deep Jarvis Indian baritone)
 voice_model = "bulbul:v4-flash"
@@ -398,6 +399,7 @@ command_mode = "conversational_with_slash_shortcuts" # Natural conversation by d
 [models]
 local_model = "llama3.1:8b"
 local_runtime = "ollama"               # 4-bit quantized, ~5.5 GB VRAM, balanced speed & quality
+local_profile = "fast_responsive_35tps"   # Fast 35+ tps generation optimized for RTX 3050
 cloud_model = "meta/llama-3.1-405b-instruct"
 quantization_format = "gguf_q4_k_m"    # Standard GGUF Q4_K_M quantization
 sampling_code_temp = 0.1               # 0.1 for code/tests
