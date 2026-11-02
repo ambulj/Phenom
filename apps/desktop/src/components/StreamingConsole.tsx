@@ -44,10 +44,10 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
           bottom: '16px',
           left: '20px',
           zIndex: 9998,
-          backgroundColor: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(0, 229, 255, 0.3)',
-          color: '#00E5FF',
+          backgroundColor: 'rgba(8, 11, 16, 0.90)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(0, 82, 255, 0.4)',
+          color: '#66a3ff',
           padding: '6px 14px',
           borderRadius: '8px',
           fontSize: '12px',
@@ -56,10 +56,10 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)'
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 82, 255, 0.25)'
         }}
       >
-        <span>▲</span>
+        <span style={{ color: '#ccff00' }}>▲</span>
         <span>{title} ({lines.length})</span>
       </button>
     );
@@ -74,10 +74,10 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
         width: '560px',
         height: '240px',
         zIndex: 9998,
-        backgroundColor: 'rgba(11, 19, 38, 0.94)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(0, 229, 255, 0.35)',
-        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(0, 229, 255, 0.1)',
+        backgroundColor: 'rgba(8, 11, 16, 0.95)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(0, 82, 255, 0.45)',
+        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 82, 255, 0.2)',
         borderRadius: '10px',
         display: 'flex',
         flexDirection: 'column',
@@ -92,15 +92,15 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '8px 12px',
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          backgroundColor: 'rgba(13, 17, 26, 0.85)',
+          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '11px', color: '#00E5FF', fontWeight: 700, letterSpacing: '0.5px' }}>
+          <span style={{ fontSize: '11px', color: '#ccff00', fontWeight: 700, letterSpacing: '0.5px' }}>
             ● {title}
           </span>
-          <span style={{ fontSize: '10px', color: '#64748B' }}>
+          <span style={{ fontSize: '10px', color: '#94a3b8' }}>
             {lines.length} lines
           </span>
         </div>
@@ -108,9 +108,9 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
           <button
             onClick={() => setAutoScroll(!autoScroll)}
             style={{
-              background: 'transparent',
-              border: `1px solid ${autoScroll ? '#00E5FF' : '#475569'}`,
-              color: autoScroll ? '#00E5FF' : '#94A3B8',
+              background: autoScroll ? 'rgba(204, 255, 0, 0.12)' : 'transparent',
+              border: `1px solid ${autoScroll ? '#ccff00' : 'rgba(255, 255, 255, 0.15)'}`,
+              color: autoScroll ? '#ccff00' : '#94A3B8',
               fontSize: '10px',
               padding: '2px 8px',
               borderRadius: '4px',
@@ -123,8 +123,8 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
             onClick={copyToClipboard}
             style={{
               background: 'transparent',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#CBD5E1',
+              border: '1px solid rgba(0, 82, 255, 0.3)',
+              color: '#80b8ff',
               fontSize: '10px',
               padding: '2px 8px',
               borderRadius: '4px',
@@ -138,8 +138,8 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
               onClick={onClear}
               style={{
                 background: 'transparent',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#CBD5E1',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#f87171',
                 fontSize: '10px',
                 padding: '2px 8px',
                 borderRadius: '4px',
@@ -160,39 +160,55 @@ export const StreamingConsole: React.FC<StreamingConsoleProps> = ({
               cursor: 'pointer'
             }}
           >
-            ▼
+            ✕
           </button>
         </div>
       </div>
 
-      {/* Stream Lines Body */}
+      {/* Terminal Stream Body */}
       <div
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '8px 12px',
-          fontSize: '12px',
-          lineHeight: '1.45',
-          color: '#E2E8F0',
+          padding: '10px 14px',
+          fontSize: '11px',
+          lineHeight: '1.6',
+          color: '#F8FAFC',
           display: 'flex',
           flexDirection: 'column',
           gap: '2px'
         }}
       >
         {lines.length === 0 ? (
-          <div style={{ color: '#475569', fontStyle: 'italic', padding: '12px 0' }}>
-            Ready for execution commands...
+          <div style={{ color: '#64748B', fontStyle: 'italic' }}>
+            No output generated yet. Stream is idle.
           </div>
         ) : (
-          lines.map((l, i) => {
-            const isError = l.type === 'stderr';
-            const isCmd = l.type === 'command';
-            const isSys = l.type === 'system';
-            const color = isError ? '#F87171' : isCmd ? '#38BDF8' : isSys ? '#A78BFA' : '#CBD5E1';
+          lines.map((line, idx) => {
+            const getColor = () => {
+              switch (line.type) {
+                case 'stderr':
+                  return '#F87171'; // Red
+                case 'command':
+                  return '#ccff00'; // Acid Lime
+                case 'system':
+                  return '#66a3ff'; // Electric Cobalt
+                default:
+                  return '#E2E8F0'; // Default stdout
+              }
+            };
+
             return (
-              <div key={i} style={{ color, wordBreak: 'break-all' }}>
-                {isCmd && <span style={{ color: '#00E5FF', marginRight: '6px' }}>❯</span>}
-                {l.text}
+              <div key={idx} style={{ display: 'flex', gap: '8px', wordBreak: 'break-all' }}>
+                {line.timestamp && (
+                  <span style={{ color: '#475569', userSelect: 'none', minWidth: '55px' }}>
+                    {line.timestamp}
+                  </span>
+                )}
+                <span style={{ color: getColor() }}>
+                  {line.type === 'command' && <span style={{ color: '#ccff00', marginRight: '4px' }}>❯</span>}
+                  {line.text}
+                </span>
               </div>
             );
           })

@@ -89,9 +89,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '12px 24px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        background: 'rgba(11, 15, 25, 0.75)',
-        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(0, 82, 255, 0.22)',
+        background: 'rgba(13, 17, 26, 0.82)',
+        backdropFilter: 'blur(16px)',
         zIndex: 20
       }}
     >
@@ -101,7 +101,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             fontSize: 19,
             fontWeight: 800,
             letterSpacing: '1.2px',
-            background: 'linear-gradient(135deg, #38bdf8, #818cf8)',
+            background: 'linear-gradient(135deg, #0052FF 0%, #337AFF 50%, #CCFF00 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             margin: 0
@@ -111,19 +111,25 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         </h1>
         <Badge
           appearance="tint"
-          color={isConnected ? 'success' : 'danger'}
           size="small"
+          style={{
+            background: isConnected ? 'rgba(204, 255, 0, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            color: isConnected ? '#CCFF00' : '#ef4444',
+            border: isConnected ? '1px solid rgba(204, 255, 0, 0.45)' : '1px solid rgba(239, 68, 68, 0.45)',
+            fontWeight: 700,
+            letterSpacing: '0.5px'
+          }}
         >
           {isConnected ? 'ONLINE' : 'OFFLINE'}
         </Badge>
         <span
           style={{
             fontSize: 11,
-            color: '#64748b',
-            background: 'rgba(255, 255, 255, 0.04)',
+            color: '#80b8ff',
+            background: 'rgba(0, 82, 255, 0.08)',
             padding: '3px 8px',
             borderRadius: 6,
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(0, 82, 255, 0.3)',
             fontFamily: 'monospace'
           }}
           title="Local Llama 3 8B model pinned in NVIDIA GPU VRAM"
@@ -136,7 +142,15 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           </Badge>
         )}
         {!isMuted && orbState === 'listening' && (
-          <Badge appearance="filled" color="informative" size="small">
+          <Badge
+            appearance="filled"
+            size="small"
+            style={{
+              backgroundColor: '#0052FF',
+              color: '#ffffff',
+              boxShadow: '0 0 10px rgba(0, 82, 255, 0.6)'
+            }}
+          >
             LISTENING
           </Badge>
         )}
@@ -218,7 +232,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             appearance="subtle"
             icon={<SearchRegular />}
             onClick={onOpenPalette}
-            style={{ color: '#00E5FF' }}
+            style={{ color: '#66a3ff' }}
             title="Command Palette (Alt+Space)"
           >
             Palette
@@ -229,7 +243,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             appearance="subtle"
             icon={<CodeRegular />}
             onClick={onToggleConsole}
-            style={{ color: '#FFB300' }}
+            style={{ color: '#ccff00' }}
             title="Streaming Terminal Console (Ctrl+`)"
           >
             Console
@@ -239,7 +253,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           appearance="subtle"
           icon={isMuted ? <MicOffRegular /> : <MicRegular />}
           onClick={onToggleMute}
-          style={{ color: isMuted ? '#f87171' : '#34d399', fontWeight: 500 }}
+          style={{ color: isMuted ? '#ef4444' : '#ccff00', fontWeight: 600 }}
           title={isMuted ? 'Unmute microphone' : 'Mute microphone'}
         >
           {isMuted ? 'Muted' : 'Mic Active'}
@@ -250,7 +264,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         {isHalted ? (
           <Button
             appearance="primary"
-            style={{ backgroundColor: '#10b981', color: '#fff', fontWeight: 600 }}
+            style={{ backgroundColor: '#ccff00', color: '#080B10', fontWeight: 700 }}
             icon={<PlayFilled />}
             onClick={onResume}
           >
@@ -259,7 +273,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         ) : (
           <Button
             appearance="primary"
-            style={{ backgroundColor: '#ef4444', color: '#fff', fontWeight: 600 }}
+            style={{ backgroundColor: '#ef4444', color: '#fff', fontWeight: 700 }}
             icon={<DismissCircleFilled />}
             onClick={onTriggerKillswitch}
           >

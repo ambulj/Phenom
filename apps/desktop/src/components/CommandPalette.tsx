@@ -75,8 +75,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.55)',
-        backdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.70)',
+        backdropFilter: 'blur(12px)',
         zIndex: 10000,
         display: 'flex',
         justifyContent: 'center',
@@ -88,11 +88,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         style={{
           width: '600px',
           maxHeight: '440px',
-          backgroundColor: 'rgba(11, 19, 38, 0.95)',
+          backgroundColor: 'rgba(8, 11, 16, 0.95)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(0, 229, 255, 0.35)',
+          border: '1px solid rgba(0, 82, 255, 0.4)',
           borderRadius: '14px',
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 229, 255, 0.15)',
+          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8), 0 0 24px rgba(0, 82, 255, 0.2)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -106,11 +106,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             display: 'flex',
             alignItems: 'center',
             padding: '14px 18px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            borderBottom: '1px solid rgba(0, 82, 255, 0.2)',
             gap: '12px'
           }}
         >
-          <span style={{ color: '#00E5FF', fontSize: '18px' }}>⌕</span>
+          <span style={{ color: '#0052FF', fontSize: '18px', fontWeight: 'bold' }}>⌕</span>
           <input
             ref={inputRef}
             type="text"
@@ -130,8 +130,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           <span
             style={{
               fontSize: '11px',
-              color: '#64748B',
-              border: '1px solid #334155',
+              color: '#94A3B8',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
               padding: '2px 6px',
               borderRadius: '4px'
             }}
@@ -144,7 +144,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
           {filtered.length === 0 ? (
             <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>
-              Press <b style={{ color: '#00E5FF' }}>Enter</b> to submit: "{search}"
+              Press <b style={{ color: '#ccff00' }}>Enter</b> to submit: "{search}"
             </div>
           ) : (
             filtered.map((item, idx) => {
@@ -163,24 +163,26 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     justifyContent: 'space-between',
                     padding: '10px 14px',
                     borderRadius: '8px',
-                    backgroundColor: isSelected ? 'rgba(0, 229, 255, 0.12)' : 'transparent',
-                    border: isSelected ? '1px solid rgba(0, 229, 255, 0.25)' : '1px solid transparent',
+                    backgroundColor: isSelected ? 'rgba(0, 82, 255, 0.16)' : 'transparent',
+                    border: isSelected ? '1px solid rgba(0, 82, 255, 0.4)' : '1px solid transparent',
+                    borderLeft: isSelected ? '3px solid #ccff00' : '3px solid transparent',
                     cursor: 'pointer',
                     transition: 'all 0.1s ease'
                   }}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 600, color: isSelected ? '#00E5FF' : '#F1F5F9' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: isSelected ? '#ccff00' : '#F1F5F9' }}>
                         {item.title}
                       </span>
                       <span
                         style={{
                           fontSize: '10px',
-                          color: '#94A3B8',
+                          color: '#80b8ff',
                           padding: '1px 6px',
                           borderRadius: '4px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                          backgroundColor: 'rgba(0, 82, 255, 0.12)',
+                          border: '1px solid rgba(0, 82, 255, 0.25)'
                         }}
                       >
                         {item.category}
@@ -190,14 +192,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                       <span style={{ fontSize: '11px', color: '#64748B' }}>{item.subtitle}</span>
                     )}
                   </div>
+
                   {item.shortcut && (
                     <span
                       style={{
                         fontSize: '11px',
-                        color: isSelected ? '#00E5FF' : '#64748B',
-                        padding: '2px 6px',
+                        color: '#ccff00',
+                        backgroundColor: 'rgba(204, 255, 0, 0.08)',
+                        border: '1px solid rgba(204, 255, 0, 0.3)',
                         borderRadius: '4px',
-                        backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                        padding: '2px 6px',
+                        fontFamily: 'monospace'
                       }}
                     >
                       {item.shortcut}

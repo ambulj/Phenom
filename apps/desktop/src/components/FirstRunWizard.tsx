@@ -137,7 +137,7 @@ export const FirstRunWizard: React.FC<FirstRunWizardProps> = ({ onComplete }) =>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 20 }}>✨</span>
             <div>
-              <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#60a5fa' }}>
+              <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#0052FF' }}>
                 Welcome to Phenom
               </h1>
               <span style={{ fontSize: 12, color: '#94a3b8' }}>

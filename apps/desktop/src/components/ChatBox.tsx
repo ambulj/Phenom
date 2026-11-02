@@ -91,9 +91,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             key={idx}
             style={{
               display: 'inline-block',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.4)',
-              color: '#6ee7b7',
+              background: 'rgba(204, 255, 0, 0.15)',
+              border: '1px solid rgba(204, 255, 0, 0.4)',
+              color: '#ccff00',
               padding: '2px 8px',
               borderRadius: 6,
               fontSize: 12,
@@ -134,12 +134,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             maxHeight: '45vh',
             minHeight: 120,
             overflowY: 'auto',
-            background: 'rgba(9, 14, 26, 0.85)',
-            border: '1px solid rgba(56, 189, 248, 0.2)',
+            background: 'rgba(8, 11, 16, 0.88)',
+            border: '1px solid rgba(0, 82, 255, 0.28)',
             backdropFilter: 'blur(20px)',
             borderRadius: 20,
             padding: '20px 24px',
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.08)',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 82, 255, 0.14)',
             display: 'flex',
             flexDirection: 'column',
             gap: 14
@@ -163,7 +163,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     textTransform: 'uppercase',
                     letterSpacing: '0.6px',
                     fontWeight: 600,
-                    color: isUser ? '#60a5fa' : '#38bdf8',
+                    color: isUser ? '#66a3ff' : '#ccff00',
                     paddingLeft: isUser ? 0 : 4,
                     paddingRight: isUser ? 4 : 0
                   }}
@@ -174,11 +174,11 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                   style={{
                     maxWidth: '85%',
                     background: isUser
-                      ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(30, 64, 175, 0.45))'
-                      : 'rgba(15, 23, 42, 0.75)',
+                      ? 'linear-gradient(135deg, rgba(0, 82, 255, 0.35), rgba(0, 50, 160, 0.50))'
+                      : 'rgba(13, 17, 26, 0.85)',
                     border: isUser
-                      ? '1px solid rgba(96, 165, 250, 0.4)'
-                      : '1px solid rgba(56, 189, 248, 0.25)',
+                      ? '1px solid rgba(0, 82, 255, 0.55)'
+                      : '1px solid rgba(0, 82, 255, 0.25)',
                     borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     padding: '12px 18px',
                     fontSize: 14,
@@ -211,7 +211,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                   textTransform: 'uppercase',
                   letterSpacing: '0.6px',
                   fontWeight: 600,
-                  color: '#38bdf8',
+                  color: '#ccff00',
                   paddingLeft: 4,
                   display: 'flex',
                   alignItems: 'center',
@@ -224,8 +224,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    background: '#38bdf8',
-                    boxShadow: '0 0 8px #38bdf8'
+                    background: '#ccff00',
+                    boxShadow: '0 0 10px #ccff00'
                   }}
                 />
                 ⚡ Phenom Replying...
@@ -470,7 +470,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           transition: 'border 0.2s ease, box-shadow 0.2s ease'
         }}
       >
-        <span style={{ color: '#38bdf8', fontSize: 16 }}>⚡</span>
+        <span style={{ color: '#ccff00', fontSize: 16 }}>⚡</span>
         <input
           type="text"
           value={inputText}
@@ -528,7 +528,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             onClick={() => handleSubmit()}
             disabled={!inputText.trim() || orbState === 'halted'}
             style={{
-              background: 'linear-gradient(135deg, #0284c7, #2563eb)',
+              background: 'linear-gradient(135deg, #0052FF, #1a66ff)',
               border: 'none',
               borderRadius: 9999,
               padding: '6px 16px'

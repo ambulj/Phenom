@@ -28,13 +28,13 @@ export const HUDCard: React.FC<HUDCardProps> = ({
   const getBadgeColor = () => {
     switch (type) {
       case 'approval':
-        return '#FFB300'; // Amber Gold
+        return '#CCFF00'; // Acid Lime
       case 'danger' as any:
-        return '#D32F2F'; // Crimson
+        return '#EF4444'; // Red
       case 'health_reminder':
-        return '#10B981'; // Emerald
+        return '#38BDF8'; // Sky Cobalt
       default:
-        return '#00E5FF'; // Electric Cyan
+        return '#CCFF00'; // Default Acid Lime
     }
   };
 
@@ -46,11 +46,11 @@ export const HUDCard: React.FC<HUDCardProps> = ({
         right: '24px',
         width: '380px',
         maxHeight: '80vh',
-        backgroundColor: 'rgba(11, 19, 38, 0.88)',
+        backgroundColor: 'rgba(8, 11, 16, 0.92)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(0, 229, 255, 0.25)',
-        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 16px 0 rgba(0, 229, 255, 0.15)',
+        border: '1px solid rgba(0, 82, 255, 0.35)',
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 16px 0 rgba(0, 82, 255, 0.2)',
         borderRadius: '12px',
         padding: '16px',
         color: '#E2E8F0',
@@ -72,9 +72,9 @@ export const HUDCard: React.FC<HUDCardProps> = ({
               letterSpacing: '1px',
               padding: '2px 8px',
               borderRadius: '999px',
-              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
               color: getBadgeColor(),
-              border: `1px solid ${getBadgeColor()}44`
+              border: `1px solid ${getBadgeColor()}55`
             }}
           >
             {badge}
@@ -110,14 +110,14 @@ export const HUDCard: React.FC<HUDCardProps> = ({
           style={{
             margin: '4px 0',
             padding: '8px',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            border: '1px solid rgba(0, 82, 255, 0.25)',
             borderRadius: '6px',
             fontSize: '11px',
             fontFamily: "'Cascadia Code', Consolas, monospace",
             overflowX: 'auto',
             maxHeight: '160px',
-            color: '#A7F3D0'
+            color: '#CCFF00'
           }}
         >
           {diffContent}
@@ -141,16 +141,17 @@ export const HUDCard: React.FC<HUDCardProps> = ({
                   fontWeight: 600,
                   cursor: 'pointer',
                   border: isPrimary
-                    ? '1px solid #00E5FF'
+                    ? '1px solid #0052FF'
                     : isDanger
                     ? '1px solid #EF4444'
-                    : '1px solid rgba(255, 255, 255, 0.2)',
+                    : '1px solid rgba(0, 82, 255, 0.3)',
                   backgroundColor: isPrimary
-                    ? '#00E5FF22'
+                    ? '#0052FF'
                     : isDanger
                     ? '#EF444422'
                     : 'transparent',
-                  color: isPrimary ? '#00E5FF' : isDanger ? '#EF4444' : '#E2E8F0',
+                  color: isPrimary ? '#FFFFFF' : isDanger ? '#EF4444' : '#80B8FF',
+                  boxShadow: isPrimary ? '0 0 12px rgba(0, 82, 255, 0.4)' : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
