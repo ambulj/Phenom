@@ -29,6 +29,14 @@
     },
     "extraResources": [
       {
+        "from": "../../services",
+        "to": "services",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**"
+        ]
+      },
+      {
         "from": "../../services/backend",
         "to": "backend",
         "filter": [

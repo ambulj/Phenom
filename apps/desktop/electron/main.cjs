@@ -100,20 +100,36 @@ const MAX_BACKEND_RESTARTS = 5;
 function spawnBackendWithWatchdog(pythonTarget) {
   if (isQuitting) return;
 
-  console.log(`[Phenom Watchdog] Starting backend service using ${pythonTarget.cmd} (${pythonTarget.version.raw})...`);
-  const spawnArgs = [...pythonTarget.execArgs, '-m', 'uvicorn', 'services.backend.main:app', '--host', '127.0.0.1', '--port', '8000'];
-  const backendCwd = app.isPackaged
-    ? path.join(process.resourcesPath, 'backend')
-    : path.join(__dirname, '../../..');
+  const repoRoot = path.resolve(__dirname, '../../..');
+  const backendCwd = (fs.existsSync(path.join(repoRoot, 'services', 'backend', 'main.py')))
+    ? repoRoot
+    : (fs.existsSync(path.join(process.resourcesPath, 'services', 'backend', 'main.py'))
+        ? process.resourcesPath
+        : path.join(process.resourcesPath, 'backend'));
 
-  console.log('[Phenom Watchdog] Spawning backend from working directory:', backendCwd);
+  const spawnTarget = (fs.existsSync(path.join(backendCwd, 'services', 'backend', 'main.py')))
+    ? 'services.backend.main:app'
+    : 'main:app';
+
+  console.log(`[Phenom Watchdog] Starting backend service using ${pythonTarget.cmd} (${pythonTarget.version.raw})...`);
+  console.log('[Phenom Watchdog] Target:', spawnTarget, 'in CWD:', backendCwd);
+
+  const spawnArgs = [...pythonTarget.execArgs, '-m', 'uvicorn', spawnTarget, '--host', '127.0.0.1', '--port', '8000'];
+
+  const pyPathList = [
+    backendCwd,
+    repoRoot,
+    process.resourcesPath,
+    path.join(process.resourcesPath, 'backend'),
+    process.env.PYTHONPATH || ''
+  ].filter(Boolean).join(path.delimiter);
 
   backendProcess = spawn(
     pythonTarget.cmd,
     spawnArgs,
     {
       cwd: backendCwd,
-      env: { ...process.env, PYTHONUNBUFFERED: '1', PHENOM_SESSION_TOKEN: sessionToken },
+      env: { ...process.env, PYTHONUNBUFFERED: '1', PHENOM_SESSION_TOKEN: sessionToken, PYTHONPATH: pyPathList },
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: process.platform === 'win32'
     }
@@ -160,11 +176,23 @@ function startBackend() {
   }
 
   // If backend is already running (e.g. during dev), do not spawn duplicate
+  let probed = false;
   const probe = http.get('http://127.0.0.1:8000/health', (res) => {
+    probed = true;
     console.log('[Phenom] Backend already active (Status: ' + res.statusCode + ')');
   });
   probe.on('error', () => {
-    spawnBackendWithWatchdog(pythonTarget);
+    if (!probed) {
+      probed = true;
+      spawnBackendWithWatchdog(pythonTarget);
+    }
+  });
+  probe.setTimeout(1500, () => {
+    if (!probed) {
+      probed = true;
+      try { probe.destroy(); } catch (e) {}
+      spawnBackendWithWatchdog(pythonTarget);
+    }
   });
 }
 
