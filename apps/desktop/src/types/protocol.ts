@@ -250,6 +250,9 @@ export interface BrowserFrameMsg extends BaseMessage {
 
 export interface AutomationTakeoverPromptPayload {
   reason: string;
+  session_id?: string | null;
+  app_name?: string | null;
+  timestamp?: string | null;
 }
 
 export interface AutomationTakeoverPromptMsg extends BaseMessage {
@@ -259,6 +262,7 @@ export interface AutomationTakeoverPromptMsg extends BaseMessage {
 
 export interface AutomationTakeoverReplyPayload {
   decision: 'continue' | 'stop';
+  session_id?: string | null;
 }
 
 export interface AutomationTakeoverReplyMsg extends BaseMessage {

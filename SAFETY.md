@@ -12,9 +12,9 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 
 | --- | --- | --- | --- |
 
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance, graph_rag_query, graph_rag_get_stats, mission_get_status, mission_get_morning_debrief |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance, graph_rag_query, graph_rag_get_stats, mission_get_status, mission_get_morning_debrief, gui_capture_virtual_screen |
 
-| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine, graph_rag_reindex_domain, mission_start_unattended, mission_abort |
+| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine, graph_rag_reindex_domain, mission_start_unattended, mission_abort, gui_launch_app_isolated, gui_execute_action, gui_close_isolated_desktop |
 
 | 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
 
@@ -780,6 +780,38 @@ otification_policy == 'silent').
 - Execution SLA: All active debate loops and async agent tasks are canceled synchronously in `< 25ms` (< 1ms typical).
 - While halted, `specialist_swarm_orchestrator.is_halted` is `True`, all pending escalations are rejected with `PermissionError`, and subsequent tool calls or debate dispatches immediately raise `PermissionError`.
 - Clean state reset and resumption via `specialist_swarm_orchestrator.reset()` when Guardian transitions to `idle`.
+
+---
+
+## 31. Self-Driving Visual Desktop Automation on Isolated Virtual Displays (Milestone 10.0 Phase 2)
+
+### 1. Win32 Isolated Virtual Desktop Sandboxing (GUI-01)
+- **Process Isolation**: Target applications are launched inside a dedicated hidden desktop surface created via Win32 `CreateDesktopW` with `STARTUPINFO.lpDesktop`.
+- **Dual Backend**: `Win32VirtualDesktopBackend` for native execution (with dedicated clean worker threads preserving desktop thread affinity to prevent `ERROR_BUSY` 170) and `MockVirtualDesktopBackend` for headless and cross-platform test environments.
+- **Zero Foreground Stealing**: Target apps run in the isolated desktop surface without stealing keyboard focus or disrupting the user's primary desktop session.
+
+### 2. Zero Cursor Movement & RAM-Only Frame Capture (GUI-01)
+- **Zero Physical Cursor Movement**: Mouse clicks, double clicks, drags, text typing, and keyboard shortcuts are injected via Win32 `PostMessageW` targeting the window's `HWND` using client-relative coordinates ($lParam = (y \ll 16) | (x \ \& \ 0xFFFF)$). The physical hardware mouse cursor is never moved.
+- **RAM-Only Frame Capture**: Windows are captured into memory using Win32 `PrintWindow` with `PW_RENDERFULLCONTENT` into an in-memory DIB section and converted to a PIL Image. Zero screen frames are ever written to disk (pure RAM buffers).
+
+### 3. Closed-Loop Visual Feedback & Sub-500ms Human Takeover Interrupt (GUI-01)
+- **Closed-Loop Controller**: Pre-action capture -> client coordinate injection -> settle delay -> post-action capture -> perceptual visual delta computation using `DeltaDetector`.
+- **Sub-500ms Human Takeover Interrupt**: Global OS hooks detect any physical mouse movement or keyboard press during automation. Execution aborts immediately (< 500ms SLA), plays `sound_fx.play_automation_halt()`, and dispatches `automation.takeover_prompt` to the desktop UI.
+- **Cyber HUD Takeover Banner**: High-contrast neon orange / cyan banner with instant "Resume Automation" and "Abort Automation" decision controls.
+
+### 4. ToolRegistry Risk Tiering & Previews (SAF-01)
+- `gui_capture_virtual_screen`: Tier 0 (Read-Only query). Arguments: `GuiCaptureVirtualScreenArgs(session_id: str, hwnd: Optional[int] = None)`. Preview: `"Capture in-memory frame of virtual desktop '{session_id}' (RAM only, read-only)"`.
+- `gui_launch_app_isolated`: Tier 1 (Reversible change). Arguments: `GuiLaunchAppIsolatedArgs(app_path: str, args: Optional[List[str]] = None, desktop_name: Optional[str] = None)`. Preview: `"Launch '{app_path}' inside isolated hidden virtual desktop '{desktop_name or 'auto'}'"`.
+- `gui_execute_action`: Tier 1 (Reversible change). Arguments: `GuiExecuteActionArgs(session_id: str, hwnd: int, action_type: str, x: Optional[int] = None, y: Optional[int] = None, text: Optional[str] = None, key: Optional[str] = None)`. Preview: `"Execute '{action_type}' on window {hwnd} at ({x}, {y}) inside virtual desktop"`.
+- `gui_close_isolated_desktop`: Tier 1 (Reversible change). Arguments: `GuiCloseIsolatedDesktopArgs(session_id: str)`. Preview: `"Terminate isolated virtual desktop session '{session_id}' and clean up all child processes"`.
+
+### 5. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `virtual_desktop_manager.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: All active virtual desktop sessions, child processes, and desktop handles are terminated synchronously in `< 25ms` (< 1ms typical) via direct process kill and `psutil` process tree teardown.
+- All spawned PIDs are automatically registered with `guardian.track_pid(pid)`.
+- While halted, all virtual desktop actions and launch attempts immediately raise `PermissionError`.
+- Clean state reset and resumption via `virtual_desktop_manager.reset()` when Guardian transitions to `idle`.
+
 
 
 

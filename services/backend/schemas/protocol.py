@@ -227,6 +227,9 @@ class BrowserFrameMsg(BaseMessage):
 
 class AutomationTakeoverPromptPayload(BaseModel):
     reason: str
+    session_id: Optional[str] = None
+    app_name: Optional[str] = None
+    timestamp: Optional[str] = None
 
 class AutomationTakeoverPromptMsg(BaseMessage):
     type: Literal["automation.takeover_prompt"] = "automation.takeover_prompt"
@@ -234,6 +237,7 @@ class AutomationTakeoverPromptMsg(BaseMessage):
 
 class AutomationTakeoverReplyPayload(BaseModel):
     decision: Literal["continue", "stop"]
+    session_id: Optional[str] = None
 
 class AutomationTakeoverReplyMsg(BaseMessage):
     type: Literal["automation.takeover_reply"] = "automation.takeover_reply"

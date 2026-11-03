@@ -278,6 +278,9 @@ import services.backend.tools.telegram_tools
 import services.backend.tools.vision_tools
 import services.backend.tools.graph_rag_tools
 import services.backend.tools.mission_tools
+import services.backend.tools.virtual_gui_tools
+from services.backend.automation.virtual_desktop_manager import virtual_desktop_manager
+from services.backend.automation.visual_gui_controller import visual_gui_controller
 from services.backend.missions import unattended_mission_runner, morning_debrief_synthesizer
 from services.backend.swarm import specialist_swarm_orchestrator
 from services.backend.memory.multi_source_graph import multi_source_graph
@@ -1517,6 +1520,7 @@ def on_guardian_state_change(new_state: str):
             graph_rag_engine.halt()
             unattended_mission_runner.halt()
             specialist_swarm_orchestrator.halt()
+            virtual_desktop_manager.halt()
         except Exception:
             pass
 
@@ -1567,6 +1571,7 @@ def on_guardian_state_change(new_state: str):
             graph_rag_engine.reset()
             unattended_mission_runner.reset()
             specialist_swarm_orchestrator.reset()
+            virtual_desktop_manager.reset()
         except Exception:
             pass
 
@@ -1584,6 +1589,7 @@ annotation_streamer.register_broadcaster(broadcast_message)
 ambient_copilot.register_broadcaster(broadcast_message)
 morning_debrief_synthesizer.register_broadcaster(broadcast_message)
 specialist_swarm_orchestrator.register_broadcaster(broadcast_message)
+visual_gui_controller.register_broadcaster(broadcast_message)
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 

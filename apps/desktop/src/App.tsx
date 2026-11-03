@@ -37,6 +37,10 @@ import { HUDCard, HUDCardProps } from './components/HUDCard';
 
 import { StreamingConsole, ConsoleLine } from './components/StreamingConsole';
 
+import { HumanTakeoverBanner } from './components/CyberHUD/HumanTakeoverBanner';
+
+import { AutomationTakeoverPromptPayload } from './types/protocol';
+
 
 
 export const App: React.FC = () => {
@@ -118,6 +122,8 @@ export const App: React.FC = () => {
   const [liveFrame, setLiveFrame] = useState<string | null>(null);
 
   const [takeoverPrompt, setTakeoverPrompt] = useState<string | null>(null);
+
+  const [takeoverPayload, setTakeoverPayload] = useState<AutomationTakeoverPromptPayload | null>(null);
 
   const [screenOverlayState, setScreenOverlayState] = useState<ScreenOverlayState>({ state: 'idle' });
 
@@ -298,6 +304,8 @@ export const App: React.FC = () => {
             setTickerItems((prev) => [...prev.slice(-5), payload]);
 
           } else if (mtype === 'automation.takeover_prompt') {
+
+            setTakeoverPayload(payload as AutomationTakeoverPromptPayload);
 
             setTakeoverPrompt(payload.reason || 'User interaction detected during automation.');
 
@@ -731,11 +739,12 @@ export const App: React.FC = () => {
 
   // Automation Handlers (Phase 3)
 
-  const handleTakeoverDecision = (decision: 'continue' | 'stop') => {
+  const handleTakeoverDecision = (decision: 'continue' | 'stop', sessionId?: string | null) => {
 
     if (!wsRef.current) return;
 
     setTakeoverPrompt(null);
+    setTakeoverPayload(null);
 
     wsRef.current.send(
 
@@ -747,7 +756,7 @@ export const App: React.FC = () => {
 
         ts: new Date().toISOString(),
 
-        payload: { decision }
+        payload: { decision, session_id: sessionId }
 
       })
 
@@ -1294,6 +1303,17 @@ export const App: React.FC = () => {
 
         />
 
+      )}
+
+      {/* Cyber HUD Floating Human Takeover Alert Banner */}
+      {takeoverPayload && (
+        <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', zIndex: 10000, width: '92%', maxWidth: 640 }}>
+          <HumanTakeoverBanner
+            prompt={takeoverPayload}
+            onDecision={handleTakeoverDecision}
+            onDismiss={() => setTakeoverPayload(null)}
+          />
+        </div>
       )}
 
     </div>

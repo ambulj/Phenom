@@ -1,719 +1,719 @@
-# HANDOFF.md
-
-
-
-**Hardening Pass 1 Status Report**  
-
-- **Branch**: `hardening/pass-1`  
-
-- **Date**: October 29, 2026  
-
-- **Audit Findings Addressed**:
-
-  - F1: WebSocket & REST Authentication (token in subprotocol, Origin validation, rate limiting)
-
-  - F2: Complete Requirements Manifest & lockfile (`requirements.lock.txt`, audit script)
-
-  - F3: Pytest & CI (`pytest.ini`, `conftest.py`, GitHub Actions workflow)
-
-  - F4: Honest Documentation (`HANDOFF.md` rewrite)
-
-  - F5: Python Version Guard (`>= 3.11` check in Electron `main.cjs`)
-
-  - F6: Obsidian Vault isolation outside code repo & pre-commit scan guard
-
-  - F7 & F8: Elimination of fabricated data across all integrations (`finance`, `live_data`, `news_briefing`, `research`), real Gmail IMAP over SSL (read-only `EXAMINE`, draft `IMAP APPEND`, strictly NO SMTP), and real Google Calendar API (reading/creating events, strictly NO edit/delete). Credentials secured in Windows Credential Manager under `Phenom/gmail-app-password` and `Phenom/google-calendar-token`.
-
-
-
----
-
-
-
-## 1. Verified Test Results
-
-
-
-### Local Windows Test Run
-
-- **Test Command**: `python -m pytest -q`
-
-- **Result**: **250 passed, 48 warnings** (0 failed, 0 errors in 108s).
-
-- **Test Command**: python -m pytest services/backend/tests/
-
-
-
-### End-to-End Smoke Verification
-
-- **Command**: python scripts/smoke_test_suite.py
-
-- **Result**: **11/11 Subsystems Verified (PASS)** in 40.06s.
-
-- **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
-
-
-
-### Secret Scanner Run
-
-- **Command**: `python scripts/scan_secrets.py --all`
-
-- **Result**: **222 tracked files scanned. 0 secrets or blocked files found.**
-
-
-
-### Import Coverage Audit
-
-- **Audit Command**: `python services/backend/scripts/audit_imports.py`
-
-- **Result**: **34 third-party imports audited; 0 missing dependencies**. All imports declared in `requirements.txt`, `requirements-windows.txt`, and `requirements-dev.txt`.
-
-
-
-### Desktop UI Build
-
-- **Build Command**: `cd apps/desktop; npm run build`
-
-- **Result**: **Clean TypeScript compilation (`tsc`) and Vite production bundle generated in 24.19s with 0 errors**.
-
-
-
----
-
-
-
-## 2. Phase-by-Phase Verification Matrix
-
-
-
-| Phase | Scope | What Was Actually Verified | What Was NOT Verified & Reason | Verification Command |
-
-| :--- | :--- | :--- | :--- | :--- |
-
-| **Phase 0: Spikes** | Core Link & Encryption | WebSocket typed framing, state transitions (`idle` → `thinking` → `speaking`), token stream cancellation, and SQLCipher encryption. | Live Nemotron API cloud streaming (Nemotron API key not configured in environment). | `pytest services/backend/tests/test_memory.py -q` |
-
-| **Phase 1: Core & Safety** | Safety Engine & Guardian | 4-tier risk classification, tool registration, preview generation, UI confirmation handlers, action logging, and Guardian kill switch trigger/resume. | Physical keyboard interrupt while Python GIL is locked by C extensions (tested via asyncio cancellation and keyboard hook handlers). | `pytest services/backend/tests/test_safety.py services/backend/tests/test_final_safety_audit.py -q` |
-
-| **Phase 2: Voice & Persona** | Voice Pipeline | Sentence-by-sentence TTS streaming, barge-in stop latency (< 50ms), hotkey conflict validation, and hard safety refusal of spoken approvals. | Physical microphone wake-word detection in an ambient noisy room (verified using synthetic in-memory audio buffers). | `pytest services/backend/tests/test_voice.py -q` |
-
-| **Phase 3: Tools & Automation** | OS & Browser Automation | File sandboxing (create, read, copy, list, recycle), app listing, Playwright scripted navigation, dry-run cart filling, blocked checkout/pay actions, and in-RAM screen capture. | Live monetary purchases on real e-commerce sites (permanently blocked by construction under Rule 8). | `pytest services/backend/tests/test_tools.py services/backend/tests/test_automation.py -q` |
-
-| **Phase 4: Memory & RAG** | Encrypted Memory & Vault | SQLCipher schema roundtrips, vector store dense similarity search, Obsidian vault notes sync, photo EXIF read-only indexing, and reversible downloads cleanup. | Full filesystem scan across massive production drives (> 100k files; tested against isolated directory trees). | `pytest services/backend/tests/test_memory_phase4.py -q` |
-
-| **Phase 5: Modes & Integrations** | Assistant Personas & Feeds | Work/Study/Chill mode profiles, scheduler cron persistence in SQLCipher, watchlist stock/crypto quotes, tech news RSS parsing, and multi-format document generation (.docx, .xlsx, .pptx, .pdf). | Live financial trades (permanently prohibited under Rule 5) and live Google Workspace OAuth token exchange. | `pytest services/backend/tests/test_phase5.py -q` |
-
-| **Phase 6: Remote Bridge** | Telegram Remote Access | Telegram client message formatting, strict owner whitelist enforcement, non-owner rejection and security logging, remote inline button approvals, and remote locking. | Live network connection to official Telegram Bot API servers (tested via MockTelegramClient because no real bot token is stored in Credential Manager). | `pytest services/backend/tests/test_phase6.py -q` |
-
-| **Hardening Pass 1** | Security & Reproducibility | WebSocket token authentication via `Sec-WebSocket-Protocol`, Origin validation, rate limiting (5 failures / 60s), REST token protection, clean venv installation from `requirements.lock.txt`, and Python >= 3.11 startup guard. | Electron installer runtime bundle on non-Windows developer machines. | `pytest services/backend/tests/test_ws_auth.py services/backend/tests/test_requirements_cover_imports.py -q` |
-
-
-
----
-
-
-
-## 3. Honest List of Known Issues and Limitations
-
-
-
-1. **WebSocket Session Token Lifetime**:
-
-   The WebSocket endpoint requires a cryptographic 32-byte session token generated at Electron startup (`PHENOM_SESSION_TOKEN`). If the desktop app crashes or restarts, a new token is generated. Any detached background task running across restarts cannot broadcast back to the frontend until a new authenticated WebSocket handshake is established.
-
-2. **Heavy Dependencies & CUDA Download Size**:
-
-   PyTorch with CUDA 12.4 acceleration (`torch==2.6.0+cu124`) is ~2.5 GB. Fresh installation on low-bandwidth networks requires significant time. For CI and non-GPU environments, lightweight CPU PyTorch wheels are documented and utilized.
-
-3. **OS-Specific Features on Linux/macOS**:
-
-   Windows-specific tests (`windows_only`) rely on `pywin32`, Windows Credential Manager (`win32cred`), `win32com`, `keyboard`, `mouse`, and `uiautomation`. These tests automatically skip when run on Linux or macOS. Cross-platform CI tests only the cross-platform core.
-
-4. **Standalone Python Interpreter Bundling**:
-
-   `electron-builder` packages the desktop UI and backend Python scripts into `extraResources/backend`, but does not bundle a standalone Python executable. The target Windows host must have Python >= 3.11 installed. The startup check in `main.cjs` detects Python and alerts the user if missing.
-
-5. **Local LLM Model Availability**:
-
-   Private on-device text generation relies on Ollama running on `http://127.0.0.1:11434` with `llama3.1:8b` installed. If Ollama is not running, Phenom alerts the user via the First-Run Wizard and chat interface.
-
-6. **Physical Audio Hardware in Headless CI**:
-
-   Tests tagged `needs_audio` require an initialized PortAudio device. Headless CI runners without virtual audio loopbacks automatically skip these tests.
-
-
-
----
-
-
-
-## 4. Exact Steps to Reproduce from a Fresh Clone
-
-
-
-```powershell
-
-# 1. Clone repository and check out hardening branch
-
-git clone https://github.com/ambulj/Phenom.git
-
-cd Phenom
-
-git checkout hardening/pass-1
-
-
-
-# 2. Create clean Python 3.11 virtual environment
-
-py -3.11 -m venv .venv
-
-.venv\Scripts\activate
-
-
-
-# 3. Install locked dependencies
-
-pip install -r services/backend/requirements.lock.txt
-
-
-
-# 4. Verify dependency coverage (must output 0 missing)
-
-python services/backend/scripts/audit_imports.py
-
-
-
-# 5. Run backend test suite (must pass 73 tests)
-
-python -m pytest -q
-
-
-
-# 6. Verify Python version guard logic
-
-node apps/desktop/test_python_version.js
-
-
-
-# 7. Install and build desktop application
-
-npm install
-
-npm --prefix apps/desktop install
-
-npm --prefix apps/desktop run build
-
-
-
-# 8. Start development stack
-
-npm run dev
-
-```
-
-
-
-
-
----
-
-
-
-## 5. Owner Operational Decisions (Rounds 8-19 Locked In)
-
-
-
-### Core Assistant & Daily Routines (Rounds 8-13)
-
-- **Morning Briefing**: On-demand triggered via 'Good morning Phenom' or Telegram greeting.
-
-- **Desktop UI**: Subtle floating particle orb with auto-dock to screen edge; full window & media controls.
-
-- **Coding Sandbox**: Local workspace subprocess with strict path boundary & execution timeouts.
-
-- **Browser Automation**: Open web browsing via Playwright with Tier 2 confirmations for interactive actions.
-
-- **Telegram Remote**: Full remote control (git tasks, test suites, health checks) with urgent system alerts only.
-
-- **Microphone & Wake Word**: Dual-mode (Local wake word 'Hey Phenom' + Push-to-Talk Ctrl+Space).
-
-- **Obsidian Vault**: Structured folders (Daily Notes, Projects, Study/Research, People/Entities); local-only.
-
-- **Local GPU Runtime**: Ollama with Llama-3.1-8B-Instruct (4-bit quantized, ~5.5 GB VRAM).
-
-- **Vision & Screen**: Automatic background screen context during active coding/debugging sessions.
-
-- **Storage & Reports**: Generated documents stored in ~/Documents/Phenom/ with ISO timestamps; transient caches purged after 7 days; action logs retained indefinitely.
-
-- **Personality & Tone**: High banter! Sharp comebacks, treats Abhi like Tony Stark, banter-heavy Romanized Hinglish.
-
-- **Study Mode**: Deep technical dive with exhaustive architectural breakdowns, formal equations, and complete code.
-
-- **Emergency Halt**: Triple-tap Escape for immediate Guardian Kill Switch halt.
-
-- **Offline Mode**: Seamless local offline mode (automatic fallback to local Ollama & offline TTS).
-
-
-
-### Advanced Toolchains & Multimodal UX (Rounds 14-19)
-
-- **Email Drafting**: Authentic concise voice matching Abhi's direct writing style (minimal corporate fluff).
-
-- **Calendar Management**: Smart calendar companion with 15-minute buffers between meetings and conflict detection.
-
-- **Screen Sampling**: Event-triggered OCR captures on terminal failure or IDE syntax error highlights.
-
-- **Window Snapping**: Workflow layout presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%).
-
-- **Git & GitHub**: Autonomous pre-push quality gate running tests, linter, and secret scanner before PR drafting.
-
-- **Audio Ducking**: Auto-lower media volume by 70% during TTS synthesis or speech input; focus playlist launching.
-
-- **Hardware Governor**: Auto-offload GPU VRAM when 3D game launches; pause background indexing on low battery.
-
-- **Barge-in Interruption**: Ultra-fast speech cutoff within 50ms upon speech recognition or push-to-talk tap.
-
-- **Telegram Media**: Full multi-modal processing (Whisper voice transcription, voice replies, photo/document OCR).
-
-- **Shell Runner**: PowerShell 7 (pwsh.exe) primary subprocess runner with PowerShell 5.1 fallback.
-
-- **Local RAG Embedding**: Local ONNX runtime using ll-MiniLM-L6-v2 (< 5ms on CPU, zero GPU VRAM consumption).
-
-- **Orb & HUD Styling**: Electric Cyan (#00E5FF) and Amber Gold (#FFB300) palette with anchored transparent HUD cards and selectable particle modes (reactive dynamics, minimal halo, wireframe core).
-
-- **Clipboard Intelligence**: Smart developer clipboard auto-detecting stack traces, regex, JSON, and git URLs.
-
-- **GPU Gaming Fallback**: Dynamic fallback to Cloud Nemotron if online, or lightweight CPU Q4 GGUF if offline.
-
-- **Health Reminders**: Subtle 1-sentence spoken voice nudges during focus gaps ('Hydrate, Abhi; coffee is not water').
-
-- **Disaster Recovery**: Automated daily encrypted snapshot archives of SQLite memory, vault, and config with 30-day retention.
-
-
-
-- **Morning Briefing**: On-demand triggered via 'Good morning Phenom' or Telegram greeting.
-
-- **Desktop UI**: Subtle floating particle orb with auto-dock to screen edge; full window & media controls.
-
-- **Coding Sandbox**: Local workspace subprocess with strict path boundary & execution timeouts.
-
-- **Browser Automation**: Open web browsing via Playwright with Tier 2 confirmations for interactive actions.
-
-- **Telegram Remote**: Full remote control (git tasks, test suites, health checks) with urgent system alerts only.
-
-- **Microphone & Wake Word**: Dual-mode (Local wake word 'Hey Phenom' + Push-to-Talk Ctrl+Space).
-
-- **Obsidian Vault**: Structured folders (Daily Notes, Projects, Study/Research, People/Entities); local-only.
-
-- **Local GPU Runtime**: Ollama with Llama-3.1-8B-Instruct (4-bit quantized, ~5.5 GB VRAM).
-
-- **Vision & Screen**: Automatic background screen context during active coding/debugging sessions.
-
-- **Storage & Reports**: Generated documents stored in ~/Documents/Phenom/ with ISO timestamps; transient caches purged after 7 days; action logs retained indefinitely.
-
-- **Personality & Tone**: High banter! Sharp comebacks, treats Abhi like Tony Stark, banter-heavy Romanized Hinglish.
-
-- **Study Mode**: Deep technical dive with exhaustive architectural breakdowns, formal equations, and complete code.
-
-- **Emergency Halt**: Triple-tap Escape for immediate Guardian Kill Switch halt.
-
-- **Offline Mode**: Seamless local offline mode (automatic fallback to local Ollama & offline TTS).
-
-
-
-### Multi-Agent Coordination, UX & Context (Rounds 20-22)
-
-- **Multi-Agent Coordination**: Specialist subagents (Test Architect, Code Reviewer, Security Auditor, Docs Writer) synthesized by Phenom.
-
-- **Obsidian Graph & Wikilinks**: Deep bidirectional [[Topic]] and [[Project]] wikilinks for interactive Obsidian Graph View.
-
-- **Telegram Commands**: Natural conversation by default, with optional power shortcuts (/status, /test, /git, /halt).
-
-- **Package Manager**: Adaptive auto-detection (uv/pip for Python, pnpm/npm for Node, cargo for Rust).
-
-- **Context Compaction & Escalation**: Dual approach (auto-compact local turns; escalate to Cloud Nemotron 128k context for massive diffs/logs).
-
-- **Terminal Execution UI**: Collapsible live streaming console drawer with syntax highlighting.
-
-- **Voice Linguistic Accent**: Modern Urban Indian / Tech-Savvy developer with natural metro Hinglish idioms ('sorted', 'scene', 'phod diya').
-
-- **Incremental Indexing**: File-watcher incremental vector embedding within 2 seconds of file save.
-
-- **Global Summon UI**: Raycast / Spotlight style centered glassmorphic command palette on Alt+Space.
-
-- **Audit Log Drawer**: Integrated 1-click HUD drawer to inspect chronological action logs, tool tiers, and rollbacks.
-
-- **Test Generation Policy**: Test-driven pairing (automatically authoring matching test suites for every new module).
-
-- **Screen Border Overlay**: Dynamic pulsing Electric Cyan while active, Amber on Tier 2 confirmation, Crimson on Guardian halt.
-
-
-
-### Core Safety, Wake Word & Vision Reasoning (Round 23)
-
-- **Wake Word Sensitivity**: Strict 0.65+ confidence threshold with 500ms sliding confirmation window to eliminate false triggers from media/conversations.
-
-- **Memory Decay Policy**: Spaced relevance weighting (frequently referenced profile/rules stay permanent; transient notes decay after 14 days).
-
-- **Screen & Vision Reasoning**: Dual OCR + Vision approach (fast local Windows OCR for exact code/text, paired with multimodal vision model for layout/diagram interpretation).
-
-- **Administrative Privileges**: Strict Windows UAC elevation required for any elevated commands; zero bypass of Windows security gates.
-
-
-
-### Phase 4 & Phase 5 Architecture Decisions (Rounds 24-25)
-
-- **Daily Engineering Notes**: Structured template (## 🎯 Focus & Goals, ## 🔨 Code & Commits, ## 🧠 Technical Learnings, ## 📌 Follow-ups).
-
-- **RAG Source Citations**: Exact clickable wikilinks to note headers or lines (e.g. [[Architecture#L42]]).
-
-- **Financial Watchlist Tracking**: ±3% intraday swing threshold alerts + daily 04:00 PM IST market closing summary (Rule 5: informational only, never trade/recommend).
-
-- **Document Generation Styling**: Modern Executive visual branding (clean typography, styled tables, callout blocks, executive summary covers).
-
-- **Photo Indexing**: Read-only EXIF + local AI visual tagging (receipt, diagram, screenshot) stored encrypted in SQLCipher (Rule 6: never edit/move).
-
-- **Reversible Cleanup**: Windows Recycle Bin only (Rule 7) with an automated rollback manifest note created in Obsidian.
-
-- **News Aggregation**: Curated feeds across Hacker News, ArXiv AI, GitHub Trending, and Indian business headlines.
-
-- **Adaptive Modes**: Work (code & high banter), Study (deep technical rigor & ambient focus audio), Chill (relaxed banter & music control).
-
-
-
-### Phase 6 & Phase 7 Remote, Packaging & Resilience (Rounds 26-31)
-
-- **Telegram Pairing Handshake**: Desktop QR code / 6-digit PIN handshake (/pair <PIN>).
-
-- **Remote Lock & Emergency Halt**: Windows workstation lock (
-
-undll32.exe user32.dll,LockWorkStation) + Guardian kill switch.
-
-- **Remote Inline Approvals**: Interactive [✅ Approve] / [❌ Deny] buttons with 60s timeout.
-
-- **Remote File Retrieval**: Unrestricted filesystem delivery up to 50MB (excluding system files & secrets).
-
-- **Remote Screen Inspection**: Redacted screenshot with passwords, OTPs, and credit cards auto-blacked out.
-
-- **Telegram Voice Duplex**: Voice note transcription (Whisper) + spoken audio reply (Sarvam/voice engine).
-
-- **Non-Owner Security**: Silent drop stranger message + push alert to Abhi's desktop & Telegram.
-
-- **Packaging Format**: Dual distribution (NSIS installer with startup registration + portable unpacked directory).
-
-- **Auto-Update**: Silent automatic update applied on idle restart with 7-day rollback safeguard.
-
-- **Smart Watchdog**: Auto-restart backend within 3s, sanitize crash dump (zero PII), notify in HUD.
-
-- **Guarded Reset**: Encrypted backup ZIP created before any reset, preserving Obsidian vault notes.
-
-- **System Startup**: Auto-launch on Windows login minimized to tray with floating docked Orb.
-
-- **Telemetry Policy**: Zero external telemetry; crash logs stored strictly local in ~/Documents/Phenom/logs/.
-
-- **Multi-Monitor Display**: Summon Command Palette and HUD on whichever monitor holds the active mouse cursor.
-
-- **Local Plugins**: Support custom Python tools in ~/Documents/Phenom/plugins/ wrapped by Safety layer.
-
-- **Cloud Stall Fallback**: Graceful local downgrade to 8B model if cloud connection stalls > 10s.
-
-- **Refactoring Waves**: Staged dependency wave execution with git checkpoints for large refactors.
-
-- **Prompt Injection Defense**: Sanitize & proceed (strip adversarial instruction patterns and continue).
-
-- **Speaker Verification**: Voiceprint enrollment to filter out ambient background conversations/media.
-
-- **IDE File Conflict**: 3-way diff comparison in HUD when local file changes concurrently.
-
-- **Low Power Profile**: Throttle LLM threads and set Orb to Low LOD when battery < 20%.
-
-- **Wake Word Debounce**: 2-second debounce & 10s cooldown on rapid fluttering triggers.
-
-- **Large Remote Delivery**: Chunked 45MB ZIP delivery for files exceeding 50MB.
-
-
-
-### Advanced Engineering Workflows & Daily Routines (Rounds 32-35)
-
-- **5-Pillar Code Reviews**: Security, performance, null safety, test coverage, and typing rigor.
-
-- **Compound Chained Macros**: 'Phenom, wrap up today' (tests -> commit -> Obsidian log -> lock screen).
-
-- **Workspace Prompt Overrides**: Auto-load .phenom/prompt.md from active workspace if present.
-
-- **Docstring Standard**: Google / Sphinx formatted docstrings with typing and examples.
-
-- **Scientific Debugging Loop**: Hypothesis -> minimal repro test -> git bisect -> patch -> regression test.
-
-- **Database Query Safety**: Read-only queries Tier 0; DDL/DML mutations Tier 2 with preview.
-
-- **Proactive Secret Migration**: Block commits on exposed secrets; offer 1-click migration to Credential Manager.
-
-- **Audio Completion Ping**: Soft Jarvis chime + 1-sentence voice recap on long background tasks (>30s).
-
-- **Tiered Docker Controls**: Status/logs Tier 0, Start/restart Tier 1, Volume wipe/prune Tier 2.
-
-- **Interactive 3-Point Standup**: Top 3 daily objectives + calendar focus blocks + pending PRs.
-
-- **Dependency CVE Auditing**: Proactive vulnerability scans drafting non-breaking bump PRs with test suites.
-
-- **50/10 Focus Sprints**: 50m deep work + 10m break with notification queuing and distraction nudges.
-
-- **In-Situ API Testing**: Integrated REST endpoint tester, header inspector, and mock fixture scaffolding.
-
-- **Obsidian Reading Queue**: 'Save this paper/link' extracts abstract/metadata to ault/Study/Reading List.md.
-
-- **Console Secret Masking**: Intercept stdout/stderr and auto-mask .env values with [REDACTED_SECRET].
-
-
-
-### Performance, Search & Voice Interactivity (Rounds 36-38)
-
-- **Quantized LoRA Adapters**: Dynamic adapter loading on Llama-3.1-8B for personalized styles.
-
-- **Historical Benchmark Tracking**: Log latency and VRAM metrics; alert if regression exceeds 15%.
-
-- **Native Ripgrep Backend**: Bundled 
-
-g.exe for sub-10ms regex/symbol search honoring .gitignore.
-
-- **Cloudflare / CAPTCHA Human Solve**: Pop up visible browser window for 1-click human verification.
-
-- **Virtual Desktop Navigation**: Switch Windows 11 virtual desktops on voice/chat command.
-
-- **Dual Wake-Word Support**: Recognize both 'Hey Phenom' and 'Jarvis' as valid wake words.
-
-- **Conventional SemVer Automation**: Automated version calculation and CHANGELOG.md generation.
-
-- **Local Whisper STT**: Local quantized Whisper on CUDA/CPU for offline speech-to-text.
-
-- **Interactive PTY in HUD**: Full pseudo-terminal stdin forwarding in the terminal drawer.
-
-- **Partitioned Vector Namespaces**: Scoped vector spaces (ault_notes, code_symbols, chat_facts, 
-
-esearch_papers).
-
-- **Dynamic Emotional Modulation**: Emotional voice modulation (energetic, crisp, measured).
-
-- **Safe Branch Pruning**: 1-click cleanup for feature branches merged into main.
-
-
-
-### Hardware Telemetry, Vision & Ergonomics (Rounds 39-40)
-
-- **Passive LAN Discovery**: mDNS/SSDP passive device detection under Tier 0.
-
-- **Hardware Telemetry Alerts**: Alerts for GPU > 85°C, NVMe < 10GB, Battery < 15%.
-
-- **Mermaid Diagram Reconstruction**: Transcribing image/PDF flowcharts into executable mermaid markdown.
-
-- **Bluetooth Audio Routing**: Seamless auto-routing on connect/disconnect + voice switching.
-
-- **Code Screenshot Extraction**: Clean syntax extraction with black/prettier formatting and 1-click insert.
-
-- **Port Conflict Helper**: Detect PID holding port on EADDRINUSE, offer 1-click kill or next port.
-
-- **Obsidian Fuzzy Autocomplete**: Command Palette #tag and [[note]] fuzzy completion with preview.
-
-- **Real-Time Voice Dictation**: Streaming offline dictation with auto-punctuation into active cursor.
-
-
-
-### Search, Ergonomics & Toolchain Hardening (Rounds 41-45)
-
-- **Hybrid FTS5 + Vector Search (RRF)**: Reciprocal Rank Fusion combining exact keyword matching and semantic dense embeddings.
-
-- **Task-Adaptive Sampling**: Model temperature 0.1 for coding/tests, 0.3 for research/study, 0.7 for conversational banter.
-
-- **Sub-50ms Stream Cancellation**: Immediate cancellation of streaming generation and audio playback on Escape/PTT.
-
-- **Date-Partitioned Attachments**: Obsidian attachments routed to vault/Attachments/YYYY-MM/ to keep vault root uncluttered.
-
-- **Multi-Instance Desktop Support**: Independent Phenom windows allowed across multi-monitor setups without mutex lockouts.
-
-- **Dynamic Prompt Biasing for Whisper**: Injecting active codebase symbols and branch terminology into Whisper initial prompt.
-
-- **Windows 11 Mica / Acrylic Styling**: Native translucent glass aesthetics for HUD and Command Palette with glowing accents.
-
-- **Automated Git Pre-Commit Hook**: Local pre-commit hook automatically validating secret leakage and note privacy.
-
-- **Compact Environment System Header**: 2-line minimal OS/workspace context header injected into system prompt.
-
-- **1-Click Export to Obsidian**: Integrated quick export action turning assistant chat/analyses into organized vault markdown.
-
-- **Win32 Hotkey Collision Detection**: Validating hotkey availability and surfacing 1-click rebinding in HUD on conflict.
-
-- **Offline DevDocs Cache**: Local SQLite-backed cache for standard documentation (Python, React, TypeScript, FastAPI).
-
-- **Windows 11 Action Center Toasts**: Rich background notifications with inline action buttons in Windows Action Center.
-
-- **Monorepo-Aware Context Targeting**: Scoping tests, linter, and context analysis to nearest sub-package workspace roots.
-
-- **Exponential Audio Ducking Curves**: 150ms fade-down and 300ms fade-up volume curves for seamless background music ducking.
-
-- **Safe Auto-Stash on Branch Switches**: Timestamped git stash and re-apply on voice/palette branch changes.
-
-- **150-Line Edit Locality Cap**: Hard limit of 150 modified lines per file on automated refactorings.
-
-- **Automated 'phenom doctor' Health Check**: Built-in CLI health diagnostic inspecting CUDA, toolchains, and Credential Manager.
-
-- **Formula Audio Pacing**: Measured 0.85x voice speed for mathematical formulas with parallel KaTeX rendering in HUD.
-
-
-
-### Ambient Controls, Power & Continuous Learning (Round 46)
-
-- **Interactive Disambiguation via HUD**: 1-sentence spoken prompt with interactive HUD buttons & 1/2/3 keyboard shortcuts.
-
-- **Universal Media Controls (Win32 SMTC)**: Native Windows System Media Transport Controls (Play/Pause/Next/Volume) for Spotify/YouTube/Media Players.
-
-- **Smart AC/Battery Power Governor**: Lightweight Telegram polling on AC power; pause all background loops and save power on battery/sleep.
-
-- **Instant Rules & Spaced Memory**: Auto-commit user corrections to preferences cache and inject top-3 relevant rules into prompt context.
-
-
-
-### Workspaces, Shell & Memory Scaling (Round 47)
-
-- **Seamless Project Workspace Transition**: Dynamic re-anchoring of workspace root, local `.phenom/prompt.md` loading, VS Code focus, and scoped Git/vector index switching.
-
-- **Isolated Clean UTF-8 PowerShell 7**: Execution in clean `pwsh` environment without personal profile side-effects and strict UTF-8 encoding.
-
-- **Dual Automation Scheduling**: Native Windows Task Scheduler for morning briefings/wakes + APScheduler for runtime in-process jobs.
-
-- **Dynamic Context Budgeting & Hybrid Offload**: 8k baseline scaling to 16k/32k via RoPE with >=1.5GB VRAM safety buffer, with CPU offload support for massive files.
-
-
-
-### AST Refactoring, Calibration & Ephemeral Privacy (Round 48)
-
-- **AST-Aware Semantic Refactoring**: Tree-sitter / ast-grep symbol replacement across files with aggregated visual diff in HUD.
-
-- **Adaptive Acoustic Calibration**: Saying 'false trigger' or hitting Escape saves 2s encrypted snippet to tune future rejection.
-
-- **Ephemeral In-Memory Clipboard Buffer**: Last 20 items in volatile RAM scrubbed of secrets, auto-wiped on Windows lock.
-
-- **Permanent Obsidian Web Archive**: Scraped web research filed in `vault/Study/Web Research/YYYY-MM/` with metadata and summaries.
-
-
-
-### Multi-Agent Arbitration, Database Hygiene & Night Mode (Round 49)
-
-- **Chief Architect Synthesis**: Phenom balances subagent recommendations, prioritizing security and testability with unified HUD cards.
-
-- **Automated Weekly Vector Maintenance**: Sunday 3:00 AM vacuuming, tombstone pruning, and embedding integrity validation.
-
-- **Time-Aware Night Audio Mode**: 40% volume reduction, calmer vocal pacing, and muted chimes after 11:00 PM.
-
-- **Fast-Forward Wave Merging**: Preserved atomic task commits on topic branches with 1-click merge button in HUD.
-
-
-
-### Persona Presets, Context Notifications & Churn Throttling (Round 50)
-
-- **Dynamic Persona Modes**: Support switching between 'tony_stark' (default witty banter), 'professor' (deep technical rigor, zero slang), and 'silent_copilot' (visual HUD diffs only).
-
-- **Context-Adaptive Notifications**: Soft chime + badge if IDE focused; Action Center toast + voice summary if working in another application.
-
-- **Smart Ignore & 500ms Churn Debounce**: Auto-ignore build directories (`node_modules`, `.venv`, `dist`, `target`) + `.gitignore` with 500ms debounce during heavy file churn.
-
-- **Milestone Transition**: Completed 50 architectural rounds; initiated Phase Feature Wiring and end-to-end verification.
-
-
-
-### Feature Wiring & Verification (Round 50 Post-Milestone)
-
-- **`phenom_doctor` Tool**: Implemented in [`services/backend/tools/doctor.py`](file:///c:/Phenom/services/backend/tools/doctor.py) (Tier 0). Diagnostics for Python 3.10+, PyTorch CUDA & GPU VRAM, Node/npm, Git, Ripgrep, Disk (C:), RAM, Windows Credential Manager, and Ollama inference endpoint. Verified with 3 tests in [`services/backend/tests/test_doctor.py`](file:///c:/Phenom/services/backend/tests/test_doctor.py).
-
-- **`ripgrep_search` Engine**: Implemented in [`services/backend/tools/search_tools.py`](file:///c:/Phenom/services/backend/tools/search_tools.py) (Tier 0). Sub-10ms regex search honoring `.gitignore` with Windows drive-path normalization and seamless Python regex fallback. Verified with 4 tests in [`services/backend/tests/test_search_tools.py`](file:///c:/Phenom/services/backend/tests/test_search_tools.py).
-
-- **Port Conflict Helper**: Implemented `coding_inspect_port` (Tier 0) and `coding_resolve_port_conflict` (Dynamic Tier 0/2) in [`services/backend/tools/coding_tools.py`](file:///c:/Phenom/services/backend/tools/coding_tools.py). Inspects PIDs holding ports on `EADDRINUSE` and terminates process trees on confirmed resolution. Verified with 4 tests in [`services/backend/tests/test_port_conflict.py`](file:///c:/Phenom/services/backend/tests/test_port_conflict.py).
-
-- **Verification Suites**:
-
-  - Full backend test suite: **261 passed, 48 warnings in 85.31s** (`python -m pytest services/backend/tests/ -q`).
-
-  - Desktop frontend build: **Vite & TypeScript clean production build in 21.90s** (`npm --prefix apps/desktop run build`).
-
-  - Smoke test verification: **11/11 Subsystems PASS in 35.77s** (`python scripts/smoke_test_suite.py`).
-
-  - Secret scanner: **235 tracked files clean, 0 secrets** (`python scripts/scan_secrets.py --all`).
-
-- **Desktop UI Integration**: Mounted `CommandPalette` (`Alt+Space` / `Ctrl+K`), `StreamingConsole` (`Ctrl+\``), and `HUDCard` directly in [`apps/desktop/src/App.tsx`](file:///c:/Phenom/apps/desktop/src/App.tsx) and added shortcut triggers to [`HeaderBar.tsx`](file:///c:/Phenom/apps/desktop/src/components/HeaderBar.tsx).
-
-- **Desktop Packaging & Portable Binary**: Built and verified standalone portable distribution via `electron-builder --dir` at `apps/desktop/dist/win-unpacked/Phenom.exe` (188 MB) bundling `app.asar` (220 MB) and `resources/backend/`.
-
-- **Git Security Hooks**: Pre-commit secret scanning hook active and enforced at `.git/hooks/pre-commit`.
-
-
-
-
-
----
-
-
-
-## Phenom 4.0 Milestone Progress Report
-
-
-
-### Phase 1: In-RAM Vision Capture & Delta Pipeline (Completed)
-
-- **High-Frequency Frame Grabber**: services/backend/vision/frame_grabber.py utilizing mss for < 30ms capture in RAM with zero disk writes.
-
-- **Perceptual Delta Detector**: services/backend/vision/delta_detector.py 64x36 difference hashing to filter redundant stationary frames.
-
-- **In-RAM Privacy Masking**: services/backend/vision/privacy_masker.py Win32 window scanner blacking out sensitive windows (password managers, banking, incognito) directly in RAM.
-
-- **Verification**: 6 tests in services/backend/tests/test_vision_capture_and_privacy.py (PASS).
-
-
-
-### Phase 2: Full-Duplex Bidirectional Voice & Barge-In (Completed)
-
-- **Instant Barge-In Controller**: services/backend/voice/barge_in_controller.py with sub-50ms stop latency (measured at ~0.78ms via asynchronous SAPI purge and background hardware device release).
-
-- **Sentence-Pipelined TTS**: services/backend/voice/tts.py streaming sentence audio while model generates next tokens.
-
-- **Particle Orb Amplitude Smoother**: services/backend/voice/amplitude_smoother.py asymmetric attack/decay filter driving Three.js particle orb filament bloom.
-
-- **Verification**: 5 tests in services/backend/tests/test_voice_bargein_and_duplex.py (PASS).
-
-
-
-### Phase 3: Hybrid Router & Cloud Multimodal Integration (Completed)
-
-- **Query Intent Router**: services/backend/orchestrator/hybrid_router.py classifying queries in < 5ms into ACTION_LOCAL (< 200ms target), VISION_LOCAL (coordinate finding/OCR), and VISION_CLOUD (deep visual reasoning).
-
-- **Rule 4 Privacy Guard**: Enforces strict local retention whenever queries or contexts contain sensitive PII, passwords, or credentials.
-
-- **NVIDIA Nemotron Vision API Client**: services/backend/vision/nemotron_client.py OpenAI-compatible multimodal client resolving API keys securely from Windows Credential Manager (Phenom/nemotron-api-key) with env var fallback.
-
-- **Resilient Offline Fallback Coordinator**: services/backend/vision/multimodal_coordinator.py automatically degrading to on-device OCR (ScreenOCREngine) and local Moondream2 VLM on network drop, timeout, or missing key.
-
-- **Screen Vision Tool Integration**: services/backend/tools/screen_vision_tools.py wired to multimodal_coordinator with Tier 2 preview approval and in-RAM privacy masking.
-
-- **Verification**: 15 tests in services/backend/tests/test_hybrid_router_and_nemotron.py (PASS).
-
-- **Full Backend Regression Suite**: 317 passed in 193.25s (pytest services/backend/tests/).
-
-- **Desktop UI Tests**: 12/12 passed (	est_overlays_and_panels.js, 	est_particle_orb.js).
-
-- **Desktop Build**: Clean TypeScript/Vite bundle compiled in 8.21s with 0 errors.
-
-
-### Phase 4: Live HUD Annotations & Safety Hardening (Completed)
-- **Real-Time HUD Annotation Streamer**: services/backend/vision/annotation_streamer.py broadcasting detected UI elements (box: [x, y, w, h], control_type, 
-ame, color) over authenticated WebSocket connections.
-- **Cyber HUD Annotation Overlay**: pps/desktop/src/components/ScreenBorderOverlay.tsx and pps/desktop/src/App.tsx rendering interactive bounding boxes in Electric Cobalt (#0052FF) with Acid Lime (#CCFF00) corner bracket accents, floating type/name pills on Midnight Black glass, and auto-fadeout.
-- **Guardian Kill Switch Synchronization**: services/backend/safety/guardian.py and services/backend/main.py synchronously halting TTS speech, releasing audio devices, wiping live HUD annotations, cancelling pending confirmations, and locking orb state in halted (#EF4444).
-- **Safety 4-Tier Audit**: Verified 100% compliance across inspect_screen (Tier 0), ind_on_screen (Tier 0), sk_screen_vision_cloud (Tier 2 with preview), desktop automation actions (Tier 2), and hard prohibition of payment tools (Rule 8).
-- **Verification Suites**:
-  - Phase 4 Backend tests: 6 passed (services/backend/tests/test_hud_annotations_and_safety.py).
-  - Phase 4 Desktop tests: 5 passed (pps/desktop/tests/test_hud_annotations.js).
-  - Full Phenom 4.0 Multimodal Suite: 32 passed in 11.34s (	est_vision_capture_and_privacy.py, 	est_voice_bargein_and_duplex.py, 	est_hybrid_router_and_nemotron.py, 	est_hud_annotations_and_safety.py).
-  - Desktop Frontend Tests: 32 passed across all 6 test suites.
-  - Desktop Production Build: Clean Vite bundle compiled in 6.44s with 0 errors (
-pm run build).
+# HANDOFF.md
+
+
+
+**Hardening Pass 1 Status Report**  
+
+- **Branch**: `hardening/pass-1`  
+
+- **Date**: October 29, 2026  
+
+- **Audit Findings Addressed**:
+
+  - F1: WebSocket & REST Authentication (token in subprotocol, Origin validation, rate limiting)
+
+  - F2: Complete Requirements Manifest & lockfile (`requirements.lock.txt`, audit script)
+
+  - F3: Pytest & CI (`pytest.ini`, `conftest.py`, GitHub Actions workflow)
+
+  - F4: Honest Documentation (`HANDOFF.md` rewrite)
+
+  - F5: Python Version Guard (`>= 3.11` check in Electron `main.cjs`)
+
+  - F6: Obsidian Vault isolation outside code repo & pre-commit scan guard
+
+  - F7 & F8: Elimination of fabricated data across all integrations (`finance`, `live_data`, `news_briefing`, `research`), real Gmail IMAP over SSL (read-only `EXAMINE`, draft `IMAP APPEND`, strictly NO SMTP), and real Google Calendar API (reading/creating events, strictly NO edit/delete). Credentials secured in Windows Credential Manager under `Phenom/gmail-app-password` and `Phenom/google-calendar-token`.
+
+
+
+---
+
+
+
+## 1. Verified Test Results
+
+
+
+### Local Windows Test Run
+
+- **Test Command**: `python -m pytest -q`
+
+- **Result**: **250 passed, 48 warnings** (0 failed, 0 errors in 108s).
+
+- **Test Command**: python -m pytest services/backend/tests/
+
+
+
+### End-to-End Smoke Verification
+
+- **Command**: python scripts/smoke_test_suite.py
+
+- **Result**: **11/11 Subsystems Verified (PASS)** in 40.06s.
+
+- **Environment**: Python 3.11.9 (64-bit AMD64) on Windows 11.
+
+
+
+### Secret Scanner Run
+
+- **Command**: `python scripts/scan_secrets.py --all`
+
+- **Result**: **222 tracked files scanned. 0 secrets or blocked files found.**
+
+
+
+### Import Coverage Audit
+
+- **Audit Command**: `python services/backend/scripts/audit_imports.py`
+
+- **Result**: **34 third-party imports audited; 0 missing dependencies**. All imports declared in `requirements.txt`, `requirements-windows.txt`, and `requirements-dev.txt`.
+
+
+
+### Desktop UI Build
+
+- **Build Command**: `cd apps/desktop; npm run build`
+
+- **Result**: **Clean TypeScript compilation (`tsc`) and Vite production bundle generated in 24.19s with 0 errors**.
+
+
+
+---
+
+
+
+## 2. Phase-by-Phase Verification Matrix
+
+
+
+| Phase | Scope | What Was Actually Verified | What Was NOT Verified & Reason | Verification Command |
+
+| :--- | :--- | :--- | :--- | :--- |
+
+| **Phase 0: Spikes** | Core Link & Encryption | WebSocket typed framing, state transitions (`idle` → `thinking` → `speaking`), token stream cancellation, and SQLCipher encryption. | Live Nemotron API cloud streaming (Nemotron API key not configured in environment). | `pytest services/backend/tests/test_memory.py -q` |
+
+| **Phase 1: Core & Safety** | Safety Engine & Guardian | 4-tier risk classification, tool registration, preview generation, UI confirmation handlers, action logging, and Guardian kill switch trigger/resume. | Physical keyboard interrupt while Python GIL is locked by C extensions (tested via asyncio cancellation and keyboard hook handlers). | `pytest services/backend/tests/test_safety.py services/backend/tests/test_final_safety_audit.py -q` |
+
+| **Phase 2: Voice & Persona** | Voice Pipeline | Sentence-by-sentence TTS streaming, barge-in stop latency (< 50ms), hotkey conflict validation, and hard safety refusal of spoken approvals. | Physical microphone wake-word detection in an ambient noisy room (verified using synthetic in-memory audio buffers). | `pytest services/backend/tests/test_voice.py -q` |
+
+| **Phase 3: Tools & Automation** | OS & Browser Automation | File sandboxing (create, read, copy, list, recycle), app listing, Playwright scripted navigation, dry-run cart filling, blocked checkout/pay actions, and in-RAM screen capture. | Live monetary purchases on real e-commerce sites (permanently blocked by construction under Rule 8). | `pytest services/backend/tests/test_tools.py services/backend/tests/test_automation.py -q` |
+
+| **Phase 4: Memory & RAG** | Encrypted Memory & Vault | SQLCipher schema roundtrips, vector store dense similarity search, Obsidian vault notes sync, photo EXIF read-only indexing, and reversible downloads cleanup. | Full filesystem scan across massive production drives (> 100k files; tested against isolated directory trees). | `pytest services/backend/tests/test_memory_phase4.py -q` |
+
+| **Phase 5: Modes & Integrations** | Assistant Personas & Feeds | Work/Study/Chill mode profiles, scheduler cron persistence in SQLCipher, watchlist stock/crypto quotes, tech news RSS parsing, and multi-format document generation (.docx, .xlsx, .pptx, .pdf). | Live financial trades (permanently prohibited under Rule 5) and live Google Workspace OAuth token exchange. | `pytest services/backend/tests/test_phase5.py -q` |
+
+| **Phase 6: Remote Bridge** | Telegram Remote Access | Telegram client message formatting, strict owner whitelist enforcement, non-owner rejection and security logging, remote inline button approvals, and remote locking. | Live network connection to official Telegram Bot API servers (tested via MockTelegramClient because no real bot token is stored in Credential Manager). | `pytest services/backend/tests/test_phase6.py -q` |
+
+| **Hardening Pass 1** | Security & Reproducibility | WebSocket token authentication via `Sec-WebSocket-Protocol`, Origin validation, rate limiting (5 failures / 60s), REST token protection, clean venv installation from `requirements.lock.txt`, and Python >= 3.11 startup guard. | Electron installer runtime bundle on non-Windows developer machines. | `pytest services/backend/tests/test_ws_auth.py services/backend/tests/test_requirements_cover_imports.py -q` |
+
+
+
+---
+
+
+
+## 3. Honest List of Known Issues and Limitations
+
+
+
+1. **WebSocket Session Token Lifetime**:
+
+   The WebSocket endpoint requires a cryptographic 32-byte session token generated at Electron startup (`PHENOM_SESSION_TOKEN`). If the desktop app crashes or restarts, a new token is generated. Any detached background task running across restarts cannot broadcast back to the frontend until a new authenticated WebSocket handshake is established.
+
+2. **Heavy Dependencies & CUDA Download Size**:
+
+   PyTorch with CUDA 12.4 acceleration (`torch==2.6.0+cu124`) is ~2.5 GB. Fresh installation on low-bandwidth networks requires significant time. For CI and non-GPU environments, lightweight CPU PyTorch wheels are documented and utilized.
+
+3. **OS-Specific Features on Linux/macOS**:
+
+   Windows-specific tests (`windows_only`) rely on `pywin32`, Windows Credential Manager (`win32cred`), `win32com`, `keyboard`, `mouse`, and `uiautomation`. These tests automatically skip when run on Linux or macOS. Cross-platform CI tests only the cross-platform core.
+
+4. **Standalone Python Interpreter Bundling**:
+
+   `electron-builder` packages the desktop UI and backend Python scripts into `extraResources/backend`, but does not bundle a standalone Python executable. The target Windows host must have Python >= 3.11 installed. The startup check in `main.cjs` detects Python and alerts the user if missing.
+
+5. **Local LLM Model Availability**:
+
+   Private on-device text generation relies on Ollama running on `http://127.0.0.1:11434` with `llama3.1:8b` installed. If Ollama is not running, Phenom alerts the user via the First-Run Wizard and chat interface.
+
+6. **Physical Audio Hardware in Headless CI**:
+
+   Tests tagged `needs_audio` require an initialized PortAudio device. Headless CI runners without virtual audio loopbacks automatically skip these tests.
+
+
+
+---
+
+
+
+## 4. Exact Steps to Reproduce from a Fresh Clone
+
+
+
+```powershell
+
+# 1. Clone repository and check out hardening branch
+
+git clone https://github.com/ambulj/Phenom.git
+
+cd Phenom
+
+git checkout hardening/pass-1
+
+
+
+# 2. Create clean Python 3.11 virtual environment
+
+py -3.11 -m venv .venv
+
+.venv\Scripts\activate
+
+
+
+# 3. Install locked dependencies
+
+pip install -r services/backend/requirements.lock.txt
+
+
+
+# 4. Verify dependency coverage (must output 0 missing)
+
+python services/backend/scripts/audit_imports.py
+
+
+
+# 5. Run backend test suite (must pass 73 tests)
+
+python -m pytest -q
+
+
+
+# 6. Verify Python version guard logic
+
+node apps/desktop/test_python_version.js
+
+
+
+# 7. Install and build desktop application
+
+npm install
+
+npm --prefix apps/desktop install
+
+npm --prefix apps/desktop run build
+
+
+
+# 8. Start development stack
+
+npm run dev
+
+```
+
+
+
+
+
+---
+
+
+
+## 5. Owner Operational Decisions (Rounds 8-19 Locked In)
+
+
+
+### Core Assistant & Daily Routines (Rounds 8-13)
+
+- **Morning Briefing**: On-demand triggered via 'Good morning Phenom' or Telegram greeting.
+
+- **Desktop UI**: Subtle floating particle orb with auto-dock to screen edge; full window & media controls.
+
+- **Coding Sandbox**: Local workspace subprocess with strict path boundary & execution timeouts.
+
+- **Browser Automation**: Open web browsing via Playwright with Tier 2 confirmations for interactive actions.
+
+- **Telegram Remote**: Full remote control (git tasks, test suites, health checks) with urgent system alerts only.
+
+- **Microphone & Wake Word**: Dual-mode (Local wake word 'Hey Phenom' + Push-to-Talk Ctrl+Space).
+
+- **Obsidian Vault**: Structured folders (Daily Notes, Projects, Study/Research, People/Entities); local-only.
+
+- **Local GPU Runtime**: Ollama with Llama-3.1-8B-Instruct (4-bit quantized, ~5.5 GB VRAM).
+
+- **Vision & Screen**: Automatic background screen context during active coding/debugging sessions.
+
+- **Storage & Reports**: Generated documents stored in ~/Documents/Phenom/ with ISO timestamps; transient caches purged after 7 days; action logs retained indefinitely.
+
+- **Personality & Tone**: High banter! Sharp comebacks, treats Abhi like Tony Stark, banter-heavy Romanized Hinglish.
+
+- **Study Mode**: Deep technical dive with exhaustive architectural breakdowns, formal equations, and complete code.
+
+- **Emergency Halt**: Triple-tap Escape for immediate Guardian Kill Switch halt.
+
+- **Offline Mode**: Seamless local offline mode (automatic fallback to local Ollama & offline TTS).
+
+
+
+### Advanced Toolchains & Multimodal UX (Rounds 14-19)
+
+- **Email Drafting**: Authentic concise voice matching Abhi's direct writing style (minimal corporate fluff).
+
+- **Calendar Management**: Smart calendar companion with 15-minute buffers between meetings and conflict detection.
+
+- **Screen Sampling**: Event-triggered OCR captures on terminal failure or IDE syntax error highlights.
+
+- **Window Snapping**: Workflow layout presets (e.g. 'Setup coding mode' snaps IDE to 60%, terminal to 40%).
+
+- **Git & GitHub**: Autonomous pre-push quality gate running tests, linter, and secret scanner before PR drafting.
+
+- **Audio Ducking**: Auto-lower media volume by 70% during TTS synthesis or speech input; focus playlist launching.
+
+- **Hardware Governor**: Auto-offload GPU VRAM when 3D game launches; pause background indexing on low battery.
+
+- **Barge-in Interruption**: Ultra-fast speech cutoff within 50ms upon speech recognition or push-to-talk tap.
+
+- **Telegram Media**: Full multi-modal processing (Whisper voice transcription, voice replies, photo/document OCR).
+
+- **Shell Runner**: PowerShell 7 (pwsh.exe) primary subprocess runner with PowerShell 5.1 fallback.
+
+- **Local RAG Embedding**: Local ONNX runtime using ll-MiniLM-L6-v2 (< 5ms on CPU, zero GPU VRAM consumption).
+
+- **Orb & HUD Styling**: Electric Cyan (#00E5FF) and Amber Gold (#FFB300) palette with anchored transparent HUD cards and selectable particle modes (reactive dynamics, minimal halo, wireframe core).
+
+- **Clipboard Intelligence**: Smart developer clipboard auto-detecting stack traces, regex, JSON, and git URLs.
+
+- **GPU Gaming Fallback**: Dynamic fallback to Cloud Nemotron if online, or lightweight CPU Q4 GGUF if offline.
+
+- **Health Reminders**: Subtle 1-sentence spoken voice nudges during focus gaps ('Hydrate, Abhi; coffee is not water').
+
+- **Disaster Recovery**: Automated daily encrypted snapshot archives of SQLite memory, vault, and config with 30-day retention.
+
+
+
+- **Morning Briefing**: On-demand triggered via 'Good morning Phenom' or Telegram greeting.
+
+- **Desktop UI**: Subtle floating particle orb with auto-dock to screen edge; full window & media controls.
+
+- **Coding Sandbox**: Local workspace subprocess with strict path boundary & execution timeouts.
+
+- **Browser Automation**: Open web browsing via Playwright with Tier 2 confirmations for interactive actions.
+
+- **Telegram Remote**: Full remote control (git tasks, test suites, health checks) with urgent system alerts only.
+
+- **Microphone & Wake Word**: Dual-mode (Local wake word 'Hey Phenom' + Push-to-Talk Ctrl+Space).
+
+- **Obsidian Vault**: Structured folders (Daily Notes, Projects, Study/Research, People/Entities); local-only.
+
+- **Local GPU Runtime**: Ollama with Llama-3.1-8B-Instruct (4-bit quantized, ~5.5 GB VRAM).
+
+- **Vision & Screen**: Automatic background screen context during active coding/debugging sessions.
+
+- **Storage & Reports**: Generated documents stored in ~/Documents/Phenom/ with ISO timestamps; transient caches purged after 7 days; action logs retained indefinitely.
+
+- **Personality & Tone**: High banter! Sharp comebacks, treats Abhi like Tony Stark, banter-heavy Romanized Hinglish.
+
+- **Study Mode**: Deep technical dive with exhaustive architectural breakdowns, formal equations, and complete code.
+
+- **Emergency Halt**: Triple-tap Escape for immediate Guardian Kill Switch halt.
+
+- **Offline Mode**: Seamless local offline mode (automatic fallback to local Ollama & offline TTS).
+
+
+
+### Multi-Agent Coordination, UX & Context (Rounds 20-22)
+
+- **Multi-Agent Coordination**: Specialist subagents (Test Architect, Code Reviewer, Security Auditor, Docs Writer) synthesized by Phenom.
+
+- **Obsidian Graph & Wikilinks**: Deep bidirectional [[Topic]] and [[Project]] wikilinks for interactive Obsidian Graph View.
+
+- **Telegram Commands**: Natural conversation by default, with optional power shortcuts (/status, /test, /git, /halt).
+
+- **Package Manager**: Adaptive auto-detection (uv/pip for Python, pnpm/npm for Node, cargo for Rust).
+
+- **Context Compaction & Escalation**: Dual approach (auto-compact local turns; escalate to Cloud Nemotron 128k context for massive diffs/logs).
+
+- **Terminal Execution UI**: Collapsible live streaming console drawer with syntax highlighting.
+
+- **Voice Linguistic Accent**: Modern Urban Indian / Tech-Savvy developer with natural metro Hinglish idioms ('sorted', 'scene', 'phod diya').
+
+- **Incremental Indexing**: File-watcher incremental vector embedding within 2 seconds of file save.
+
+- **Global Summon UI**: Raycast / Spotlight style centered glassmorphic command palette on Alt+Space.
+
+- **Audit Log Drawer**: Integrated 1-click HUD drawer to inspect chronological action logs, tool tiers, and rollbacks.
+
+- **Test Generation Policy**: Test-driven pairing (automatically authoring matching test suites for every new module).
+
+- **Screen Border Overlay**: Dynamic pulsing Electric Cyan while active, Amber on Tier 2 confirmation, Crimson on Guardian halt.
+
+
+
+### Core Safety, Wake Word & Vision Reasoning (Round 23)
+
+- **Wake Word Sensitivity**: Strict 0.65+ confidence threshold with 500ms sliding confirmation window to eliminate false triggers from media/conversations.
+
+- **Memory Decay Policy**: Spaced relevance weighting (frequently referenced profile/rules stay permanent; transient notes decay after 14 days).
+
+- **Screen & Vision Reasoning**: Dual OCR + Vision approach (fast local Windows OCR for exact code/text, paired with multimodal vision model for layout/diagram interpretation).
+
+- **Administrative Privileges**: Strict Windows UAC elevation required for any elevated commands; zero bypass of Windows security gates.
+
+
+
+### Phase 4 & Phase 5 Architecture Decisions (Rounds 24-25)
+
+- **Daily Engineering Notes**: Structured template (## 🎯 Focus & Goals, ## 🔨 Code & Commits, ## 🧠 Technical Learnings, ## 📌 Follow-ups).
+
+- **RAG Source Citations**: Exact clickable wikilinks to note headers or lines (e.g. [[Architecture#L42]]).
+
+- **Financial Watchlist Tracking**: ±3% intraday swing threshold alerts + daily 04:00 PM IST market closing summary (Rule 5: informational only, never trade/recommend).
+
+- **Document Generation Styling**: Modern Executive visual branding (clean typography, styled tables, callout blocks, executive summary covers).
+
+- **Photo Indexing**: Read-only EXIF + local AI visual tagging (receipt, diagram, screenshot) stored encrypted in SQLCipher (Rule 6: never edit/move).
+
+- **Reversible Cleanup**: Windows Recycle Bin only (Rule 7) with an automated rollback manifest note created in Obsidian.
+
+- **News Aggregation**: Curated feeds across Hacker News, ArXiv AI, GitHub Trending, and Indian business headlines.
+
+- **Adaptive Modes**: Work (code & high banter), Study (deep technical rigor & ambient focus audio), Chill (relaxed banter & music control).
+
+
+
+### Phase 6 & Phase 7 Remote, Packaging & Resilience (Rounds 26-31)
+
+- **Telegram Pairing Handshake**: Desktop QR code / 6-digit PIN handshake (/pair <PIN>).
+
+- **Remote Lock & Emergency Halt**: Windows workstation lock (
+
+undll32.exe user32.dll,LockWorkStation) + Guardian kill switch.
+
+- **Remote Inline Approvals**: Interactive [✅ Approve] / [❌ Deny] buttons with 60s timeout.
+
+- **Remote File Retrieval**: Unrestricted filesystem delivery up to 50MB (excluding system files & secrets).
+
+- **Remote Screen Inspection**: Redacted screenshot with passwords, OTPs, and credit cards auto-blacked out.
+
+- **Telegram Voice Duplex**: Voice note transcription (Whisper) + spoken audio reply (Sarvam/voice engine).
+
+- **Non-Owner Security**: Silent drop stranger message + push alert to Abhi's desktop & Telegram.
+
+- **Packaging Format**: Dual distribution (NSIS installer with startup registration + portable unpacked directory).
+
+- **Auto-Update**: Silent automatic update applied on idle restart with 7-day rollback safeguard.
+
+- **Smart Watchdog**: Auto-restart backend within 3s, sanitize crash dump (zero PII), notify in HUD.
+
+- **Guarded Reset**: Encrypted backup ZIP created before any reset, preserving Obsidian vault notes.
+
+- **System Startup**: Auto-launch on Windows login minimized to tray with floating docked Orb.
+
+- **Telemetry Policy**: Zero external telemetry; crash logs stored strictly local in ~/Documents/Phenom/logs/.
+
+- **Multi-Monitor Display**: Summon Command Palette and HUD on whichever monitor holds the active mouse cursor.
+
+- **Local Plugins**: Support custom Python tools in ~/Documents/Phenom/plugins/ wrapped by Safety layer.
+
+- **Cloud Stall Fallback**: Graceful local downgrade to 8B model if cloud connection stalls > 10s.
+
+- **Refactoring Waves**: Staged dependency wave execution with git checkpoints for large refactors.
+
+- **Prompt Injection Defense**: Sanitize & proceed (strip adversarial instruction patterns and continue).
+
+- **Speaker Verification**: Voiceprint enrollment to filter out ambient background conversations/media.
+
+- **IDE File Conflict**: 3-way diff comparison in HUD when local file changes concurrently.
+
+- **Low Power Profile**: Throttle LLM threads and set Orb to Low LOD when battery < 20%.
+
+- **Wake Word Debounce**: 2-second debounce & 10s cooldown on rapid fluttering triggers.
+
+- **Large Remote Delivery**: Chunked 45MB ZIP delivery for files exceeding 50MB.
+
+
+
+### Advanced Engineering Workflows & Daily Routines (Rounds 32-35)
+
+- **5-Pillar Code Reviews**: Security, performance, null safety, test coverage, and typing rigor.
+
+- **Compound Chained Macros**: 'Phenom, wrap up today' (tests -> commit -> Obsidian log -> lock screen).
+
+- **Workspace Prompt Overrides**: Auto-load .phenom/prompt.md from active workspace if present.
+
+- **Docstring Standard**: Google / Sphinx formatted docstrings with typing and examples.
+
+- **Scientific Debugging Loop**: Hypothesis -> minimal repro test -> git bisect -> patch -> regression test.
+
+- **Database Query Safety**: Read-only queries Tier 0; DDL/DML mutations Tier 2 with preview.
+
+- **Proactive Secret Migration**: Block commits on exposed secrets; offer 1-click migration to Credential Manager.
+
+- **Audio Completion Ping**: Soft Jarvis chime + 1-sentence voice recap on long background tasks (>30s).
+
+- **Tiered Docker Controls**: Status/logs Tier 0, Start/restart Tier 1, Volume wipe/prune Tier 2.
+
+- **Interactive 3-Point Standup**: Top 3 daily objectives + calendar focus blocks + pending PRs.
+
+- **Dependency CVE Auditing**: Proactive vulnerability scans drafting non-breaking bump PRs with test suites.
+
+- **50/10 Focus Sprints**: 50m deep work + 10m break with notification queuing and distraction nudges.
+
+- **In-Situ API Testing**: Integrated REST endpoint tester, header inspector, and mock fixture scaffolding.
+
+- **Obsidian Reading Queue**: 'Save this paper/link' extracts abstract/metadata to ault/Study/Reading List.md.
+
+- **Console Secret Masking**: Intercept stdout/stderr and auto-mask .env values with [REDACTED_SECRET].
+
+
+
+### Performance, Search & Voice Interactivity (Rounds 36-38)
+
+- **Quantized LoRA Adapters**: Dynamic adapter loading on Llama-3.1-8B for personalized styles.
+
+- **Historical Benchmark Tracking**: Log latency and VRAM metrics; alert if regression exceeds 15%.
+
+- **Native Ripgrep Backend**: Bundled 
+
+g.exe for sub-10ms regex/symbol search honoring .gitignore.
+
+- **Cloudflare / CAPTCHA Human Solve**: Pop up visible browser window for 1-click human verification.
+
+- **Virtual Desktop Navigation**: Switch Windows 11 virtual desktops on voice/chat command.
+
+- **Dual Wake-Word Support**: Recognize both 'Hey Phenom' and 'Jarvis' as valid wake words.
+
+- **Conventional SemVer Automation**: Automated version calculation and CHANGELOG.md generation.
+
+- **Local Whisper STT**: Local quantized Whisper on CUDA/CPU for offline speech-to-text.
+
+- **Interactive PTY in HUD**: Full pseudo-terminal stdin forwarding in the terminal drawer.
+
+- **Partitioned Vector Namespaces**: Scoped vector spaces (ault_notes, code_symbols, chat_facts, 
+
+esearch_papers).
+
+- **Dynamic Emotional Modulation**: Emotional voice modulation (energetic, crisp, measured).
+
+- **Safe Branch Pruning**: 1-click cleanup for feature branches merged into main.
+
+
+
+### Hardware Telemetry, Vision & Ergonomics (Rounds 39-40)
+
+- **Passive LAN Discovery**: mDNS/SSDP passive device detection under Tier 0.
+
+- **Hardware Telemetry Alerts**: Alerts for GPU > 85°C, NVMe < 10GB, Battery < 15%.
+
+- **Mermaid Diagram Reconstruction**: Transcribing image/PDF flowcharts into executable mermaid markdown.
+
+- **Bluetooth Audio Routing**: Seamless auto-routing on connect/disconnect + voice switching.
+
+- **Code Screenshot Extraction**: Clean syntax extraction with black/prettier formatting and 1-click insert.
+
+- **Port Conflict Helper**: Detect PID holding port on EADDRINUSE, offer 1-click kill or next port.
+
+- **Obsidian Fuzzy Autocomplete**: Command Palette #tag and [[note]] fuzzy completion with preview.
+
+- **Real-Time Voice Dictation**: Streaming offline dictation with auto-punctuation into active cursor.
+
+
+
+### Search, Ergonomics & Toolchain Hardening (Rounds 41-45)
+
+- **Hybrid FTS5 + Vector Search (RRF)**: Reciprocal Rank Fusion combining exact keyword matching and semantic dense embeddings.
+
+- **Task-Adaptive Sampling**: Model temperature 0.1 for coding/tests, 0.3 for research/study, 0.7 for conversational banter.
+
+- **Sub-50ms Stream Cancellation**: Immediate cancellation of streaming generation and audio playback on Escape/PTT.
+
+- **Date-Partitioned Attachments**: Obsidian attachments routed to vault/Attachments/YYYY-MM/ to keep vault root uncluttered.
+
+- **Multi-Instance Desktop Support**: Independent Phenom windows allowed across multi-monitor setups without mutex lockouts.
+
+- **Dynamic Prompt Biasing for Whisper**: Injecting active codebase symbols and branch terminology into Whisper initial prompt.
+
+- **Windows 11 Mica / Acrylic Styling**: Native translucent glass aesthetics for HUD and Command Palette with glowing accents.
+
+- **Automated Git Pre-Commit Hook**: Local pre-commit hook automatically validating secret leakage and note privacy.
+
+- **Compact Environment System Header**: 2-line minimal OS/workspace context header injected into system prompt.
+
+- **1-Click Export to Obsidian**: Integrated quick export action turning assistant chat/analyses into organized vault markdown.
+
+- **Win32 Hotkey Collision Detection**: Validating hotkey availability and surfacing 1-click rebinding in HUD on conflict.
+
+- **Offline DevDocs Cache**: Local SQLite-backed cache for standard documentation (Python, React, TypeScript, FastAPI).
+
+- **Windows 11 Action Center Toasts**: Rich background notifications with inline action buttons in Windows Action Center.
+
+- **Monorepo-Aware Context Targeting**: Scoping tests, linter, and context analysis to nearest sub-package workspace roots.
+
+- **Exponential Audio Ducking Curves**: 150ms fade-down and 300ms fade-up volume curves for seamless background music ducking.
+
+- **Safe Auto-Stash on Branch Switches**: Timestamped git stash and re-apply on voice/palette branch changes.
+
+- **150-Line Edit Locality Cap**: Hard limit of 150 modified lines per file on automated refactorings.
+
+- **Automated 'phenom doctor' Health Check**: Built-in CLI health diagnostic inspecting CUDA, toolchains, and Credential Manager.
+
+- **Formula Audio Pacing**: Measured 0.85x voice speed for mathematical formulas with parallel KaTeX rendering in HUD.
+
+
+
+### Ambient Controls, Power & Continuous Learning (Round 46)
+
+- **Interactive Disambiguation via HUD**: 1-sentence spoken prompt with interactive HUD buttons & 1/2/3 keyboard shortcuts.
+
+- **Universal Media Controls (Win32 SMTC)**: Native Windows System Media Transport Controls (Play/Pause/Next/Volume) for Spotify/YouTube/Media Players.
+
+- **Smart AC/Battery Power Governor**: Lightweight Telegram polling on AC power; pause all background loops and save power on battery/sleep.
+
+- **Instant Rules & Spaced Memory**: Auto-commit user corrections to preferences cache and inject top-3 relevant rules into prompt context.
+
+
+
+### Workspaces, Shell & Memory Scaling (Round 47)
+
+- **Seamless Project Workspace Transition**: Dynamic re-anchoring of workspace root, local `.phenom/prompt.md` loading, VS Code focus, and scoped Git/vector index switching.
+
+- **Isolated Clean UTF-8 PowerShell 7**: Execution in clean `pwsh` environment without personal profile side-effects and strict UTF-8 encoding.
+
+- **Dual Automation Scheduling**: Native Windows Task Scheduler for morning briefings/wakes + APScheduler for runtime in-process jobs.
+
+- **Dynamic Context Budgeting & Hybrid Offload**: 8k baseline scaling to 16k/32k via RoPE with >=1.5GB VRAM safety buffer, with CPU offload support for massive files.
+
+
+
+### AST Refactoring, Calibration & Ephemeral Privacy (Round 48)
+
+- **AST-Aware Semantic Refactoring**: Tree-sitter / ast-grep symbol replacement across files with aggregated visual diff in HUD.
+
+- **Adaptive Acoustic Calibration**: Saying 'false trigger' or hitting Escape saves 2s encrypted snippet to tune future rejection.
+
+- **Ephemeral In-Memory Clipboard Buffer**: Last 20 items in volatile RAM scrubbed of secrets, auto-wiped on Windows lock.
+
+- **Permanent Obsidian Web Archive**: Scraped web research filed in `vault/Study/Web Research/YYYY-MM/` with metadata and summaries.
+
+
+
+### Multi-Agent Arbitration, Database Hygiene & Night Mode (Round 49)
+
+- **Chief Architect Synthesis**: Phenom balances subagent recommendations, prioritizing security and testability with unified HUD cards.
+
+- **Automated Weekly Vector Maintenance**: Sunday 3:00 AM vacuuming, tombstone pruning, and embedding integrity validation.
+
+- **Time-Aware Night Audio Mode**: 40% volume reduction, calmer vocal pacing, and muted chimes after 11:00 PM.
+
+- **Fast-Forward Wave Merging**: Preserved atomic task commits on topic branches with 1-click merge button in HUD.
+
+
+
+### Persona Presets, Context Notifications & Churn Throttling (Round 50)
+
+- **Dynamic Persona Modes**: Support switching between 'tony_stark' (default witty banter), 'professor' (deep technical rigor, zero slang), and 'silent_copilot' (visual HUD diffs only).
+
+- **Context-Adaptive Notifications**: Soft chime + badge if IDE focused; Action Center toast + voice summary if working in another application.
+
+- **Smart Ignore & 500ms Churn Debounce**: Auto-ignore build directories (`node_modules`, `.venv`, `dist`, `target`) + `.gitignore` with 500ms debounce during heavy file churn.
+
+- **Milestone Transition**: Completed 50 architectural rounds; initiated Phase Feature Wiring and end-to-end verification.
+
+
+
+### Feature Wiring & Verification (Round 50 Post-Milestone)
+
+- **`phenom_doctor` Tool**: Implemented in [`services/backend/tools/doctor.py`](file:///c:/Phenom/services/backend/tools/doctor.py) (Tier 0). Diagnostics for Python 3.10+, PyTorch CUDA & GPU VRAM, Node/npm, Git, Ripgrep, Disk (C:), RAM, Windows Credential Manager, and Ollama inference endpoint. Verified with 3 tests in [`services/backend/tests/test_doctor.py`](file:///c:/Phenom/services/backend/tests/test_doctor.py).
+
+- **`ripgrep_search` Engine**: Implemented in [`services/backend/tools/search_tools.py`](file:///c:/Phenom/services/backend/tools/search_tools.py) (Tier 0). Sub-10ms regex search honoring `.gitignore` with Windows drive-path normalization and seamless Python regex fallback. Verified with 4 tests in [`services/backend/tests/test_search_tools.py`](file:///c:/Phenom/services/backend/tests/test_search_tools.py).
+
+- **Port Conflict Helper**: Implemented `coding_inspect_port` (Tier 0) and `coding_resolve_port_conflict` (Dynamic Tier 0/2) in [`services/backend/tools/coding_tools.py`](file:///c:/Phenom/services/backend/tools/coding_tools.py). Inspects PIDs holding ports on `EADDRINUSE` and terminates process trees on confirmed resolution. Verified with 4 tests in [`services/backend/tests/test_port_conflict.py`](file:///c:/Phenom/services/backend/tests/test_port_conflict.py).
+
+- **Verification Suites**:
+
+  - Full backend test suite: **261 passed, 48 warnings in 85.31s** (`python -m pytest services/backend/tests/ -q`).
+
+  - Desktop frontend build: **Vite & TypeScript clean production build in 21.90s** (`npm --prefix apps/desktop run build`).
+
+  - Smoke test verification: **11/11 Subsystems PASS in 35.77s** (`python scripts/smoke_test_suite.py`).
+
+  - Secret scanner: **235 tracked files clean, 0 secrets** (`python scripts/scan_secrets.py --all`).
+
+- **Desktop UI Integration**: Mounted `CommandPalette` (`Alt+Space` / `Ctrl+K`), `StreamingConsole` (`Ctrl+\``), and `HUDCard` directly in [`apps/desktop/src/App.tsx`](file:///c:/Phenom/apps/desktop/src/App.tsx) and added shortcut triggers to [`HeaderBar.tsx`](file:///c:/Phenom/apps/desktop/src/components/HeaderBar.tsx).
+
+- **Desktop Packaging & Portable Binary**: Built and verified standalone portable distribution via `electron-builder --dir` at `apps/desktop/dist/win-unpacked/Phenom.exe` (188 MB) bundling `app.asar` (220 MB) and `resources/backend/`.
+
+- **Git Security Hooks**: Pre-commit secret scanning hook active and enforced at `.git/hooks/pre-commit`.
+
+
+
+
+
+---
+
+
+
+## Phenom 4.0 Milestone Progress Report
+
+
+
+### Phase 1: In-RAM Vision Capture & Delta Pipeline (Completed)
+
+- **High-Frequency Frame Grabber**: services/backend/vision/frame_grabber.py utilizing mss for < 30ms capture in RAM with zero disk writes.
+
+- **Perceptual Delta Detector**: services/backend/vision/delta_detector.py 64x36 difference hashing to filter redundant stationary frames.
+
+- **In-RAM Privacy Masking**: services/backend/vision/privacy_masker.py Win32 window scanner blacking out sensitive windows (password managers, banking, incognito) directly in RAM.
+
+- **Verification**: 6 tests in services/backend/tests/test_vision_capture_and_privacy.py (PASS).
+
+
+
+### Phase 2: Full-Duplex Bidirectional Voice & Barge-In (Completed)
+
+- **Instant Barge-In Controller**: services/backend/voice/barge_in_controller.py with sub-50ms stop latency (measured at ~0.78ms via asynchronous SAPI purge and background hardware device release).
+
+- **Sentence-Pipelined TTS**: services/backend/voice/tts.py streaming sentence audio while model generates next tokens.
+
+- **Particle Orb Amplitude Smoother**: services/backend/voice/amplitude_smoother.py asymmetric attack/decay filter driving Three.js particle orb filament bloom.
+
+- **Verification**: 5 tests in services/backend/tests/test_voice_bargein_and_duplex.py (PASS).
+
+
+
+### Phase 3: Hybrid Router & Cloud Multimodal Integration (Completed)
+
+- **Query Intent Router**: services/backend/orchestrator/hybrid_router.py classifying queries in < 5ms into ACTION_LOCAL (< 200ms target), VISION_LOCAL (coordinate finding/OCR), and VISION_CLOUD (deep visual reasoning).
+
+- **Rule 4 Privacy Guard**: Enforces strict local retention whenever queries or contexts contain sensitive PII, passwords, or credentials.
+
+- **NVIDIA Nemotron Vision API Client**: services/backend/vision/nemotron_client.py OpenAI-compatible multimodal client resolving API keys securely from Windows Credential Manager (Phenom/nemotron-api-key) with env var fallback.
+
+- **Resilient Offline Fallback Coordinator**: services/backend/vision/multimodal_coordinator.py automatically degrading to on-device OCR (ScreenOCREngine) and local Moondream2 VLM on network drop, timeout, or missing key.
+
+- **Screen Vision Tool Integration**: services/backend/tools/screen_vision_tools.py wired to multimodal_coordinator with Tier 2 preview approval and in-RAM privacy masking.
+
+- **Verification**: 15 tests in services/backend/tests/test_hybrid_router_and_nemotron.py (PASS).
+
+- **Full Backend Regression Suite**: 317 passed in 193.25s (pytest services/backend/tests/).
+
+- **Desktop UI Tests**: 12/12 passed (	est_overlays_and_panels.js, 	est_particle_orb.js).
+
+- **Desktop Build**: Clean TypeScript/Vite bundle compiled in 8.21s with 0 errors.
+
+
+### Phase 4: Live HUD Annotations & Safety Hardening (Completed)
+- **Real-Time HUD Annotation Streamer**: services/backend/vision/annotation_streamer.py broadcasting detected UI elements (box: [x, y, w, h], control_type, 
+ame, color) over authenticated WebSocket connections.
+- **Cyber HUD Annotation Overlay**: pps/desktop/src/components/ScreenBorderOverlay.tsx and pps/desktop/src/App.tsx rendering interactive bounding boxes in Electric Cobalt (#0052FF) with Acid Lime (#CCFF00) corner bracket accents, floating type/name pills on Midnight Black glass, and auto-fadeout.
+- **Guardian Kill Switch Synchronization**: services/backend/safety/guardian.py and services/backend/main.py synchronously halting TTS speech, releasing audio devices, wiping live HUD annotations, cancelling pending confirmations, and locking orb state in halted (#EF4444).
+- **Safety 4-Tier Audit**: Verified 100% compliance across inspect_screen (Tier 0), ind_on_screen (Tier 0), sk_screen_vision_cloud (Tier 2 with preview), desktop automation actions (Tier 2), and hard prohibition of payment tools (Rule 8).
+- **Verification Suites**:
+  - Phase 4 Backend tests: 6 passed (services/backend/tests/test_hud_annotations_and_safety.py).
+  - Phase 4 Desktop tests: 5 passed (pps/desktop/tests/test_hud_annotations.js).
+  - Full Phenom 4.0 Multimodal Suite: 32 passed in 11.34s (	est_vision_capture_and_privacy.py, 	est_voice_bargein_and_duplex.py, 	est_hybrid_router_and_nemotron.py, 	est_hud_annotations_and_safety.py).
+  - Desktop Frontend Tests: 32 passed across all 6 test suites.
+  - Desktop Production Build: Clean Vite bundle compiled in 6.44s with 0 errors (
+pm run build).
 
 
 ---
@@ -1207,3 +1207,47 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - `services/backend/tests/test_milestone_10_phase_1_guardian_sla.py`: **5/5 PASSED**
 - Total Phase 1 Suite: **32/32 PASSED in 11.24s**
 - Desktop Build: `npm --prefix apps/desktop run build` **PASS (0 errors)**
+
+---
+
+# Milestone 10.0 Phase 2: Self-Driving Visual Desktop Automation on Isolated Virtual Displays
+**Status:** Complete & Verified  
+**Requirements:** `GUI-01`, `SAF-01`, `SAF-02`
+
+### Key Implementations
+1. **Isolated Virtual Desktop Foundation (`services/backend/automation/virtual_desktop_backend.py`, `services/backend/automation/virtual_desktop_manager.py`)**:
+   - `IVirtualDesktopBackend` dual abstraction:
+     - `Win32VirtualDesktopBackend`: Native Win32 desktop lifecycle using `CreateDesktopW`, `OpenDesktopW`, `SetThreadDesktop`, and `CloseDesktop`. Dedicated clean worker threads are spawned for desktop thread affinity, eliminating `ERROR_BUSY` (170). Applications are launched targeted directly to the hidden desktop surface via `STARTUPINFO.lpDesktop`.
+     - `MockVirtualDesktopBackend`: High-fidelity in-memory simulated desktop environment for deterministic testing and headless CI.
+   - `VirtualDesktopManager`: Thread-safe session management, PID tracking with Guardian kill switch (`guardian.track_pid`), window polling loop (up to 2.0s, 50ms intervals) for HWND discovery, and sub-1ms synchronous `halt()`.
+2. **RAM-Only Window Capture & Zero Peripheral Disruption (`services/backend/automation/virtual_desktop_driver.py`)**:
+   - `VirtualDesktopDriver`: Captures window surfaces into memory using Win32 `PrintWindow(hwnd, mem_dc, PW_RENDERFULLCONTENT)` and DIB section conversion to PIL Image with strict **zero disk writes** (in-memory RAM buffers).
+   - Event Injection: Dispatches mouse clicks, double clicks, drags, text typing (via `WM_CHAR` unicode units), and keyboard combos directly to window message queues via Win32 `PostMessageW` with packed client coordinates ($lParam = (y \ll 16) | (x \ \& \ 0xFFFF)$). The physical hardware mouse cursor does not move, and foreground active window focus is never stolen.
+3. **Closed-Loop Visual Feedback & Sub-500ms Human Takeover Interrupt (`services/backend/automation/visual_gui_controller.py`, `services/backend/components/CyberHUD/HumanTakeoverBanner.tsx`)**:
+   - `VisualGuiController`: Closed-loop interaction pipeline (pre-action frame capture -> coordinate bounds validation -> non-disruptive message injection -> settle delay -> post-action frame capture -> perceptual visual delta computation using `DeltaDetector`).
+   - Human Takeover Interrupt: Integrates `takeover_manager` to monitor physical hardware peripherals. Physical user input triggers an instant abort sequence in $< 500\text{ms}$, plays `sound_fx.play_automation_halt()`, and dispatches `automation.takeover_prompt` over WebSockets.
+   - Cyber HUD Takeover Banner: High-contrast neon orange / cyan banner with instant "Resume Automation" and "Abort Automation" decision controls, mounted globally in `App.tsx`.
+4. **ToolRegistry Registration & Sub-25ms Guardian Kill Switch SLA (`SAF-01`, `SAF-02`)**:
+   - Registered 4 tools in `ToolRegistry` (`services/backend/tools/virtual_gui_tools.py`):
+     - `gui_capture_virtual_screen`: **Tier 0** (Read-Only query).
+     - `gui_launch_app_isolated`: **Tier 1** (Reversible change).
+     - `gui_execute_action`: **Tier 1** (Reversible change).
+     - `gui_close_isolated_desktop`: **Tier 1** (Reversible change).
+   - Hooked `virtual_desktop_manager.halt()` and `reset()` into `on_guardian_state_change()` in `services/backend/main.py`.
+   - Measured synchronous halt latency: **0.0813 ms** (asserted $< 25.0\text{ms}$ SLA, $< 1.0\text{ms}$ typical).
+   - All child processes killed via process tree termination, desktop handles closed, and subsequent operations rejected with `PermissionError`.
+   - Documented in `SAFETY.md` Section 31.
+
+### Test Results
+- `services/backend/tests/test_virtual_desktop_schemas.py`: **7/7 PASSED**
+- `services/backend/tests/test_virtual_desktop_manager.py`: **6/6 PASSED**
+- `services/backend/tests/test_virtual_desktop_driver.py`: **7/7 PASSED**
+- `services/backend/tests/test_visual_gui_controller.py`: **5/5 PASSED**
+- `services/backend/tests/test_virtual_desktop_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_10_phase_2_guardian_sla.py`: **4/4 PASSED**
+- Total Phase 2 Suite: **33/33 PASSED in 0.95s**
+- Desktop Build: `npm --prefix apps/desktop run build` **PASS (0 errors)**
+
+### Next
+- Proceed to Milestone 10.0 Phase 3: Autonomous Workspace Evolution & Self-Refining Memory Graph (Phase 3 Plan).
+
