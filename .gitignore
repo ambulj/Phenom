@@ -25,3 +25,5 @@ services/backend/data/version.json
 venv/
 *.egg-info/
 services/backend/data/*.db*
+.phenom_sandbox/
+

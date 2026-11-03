@@ -266,6 +266,42 @@ export interface AutomationTakeoverReplyMsg extends BaseMessage {
   payload: AutomationTakeoverReplyPayload;
 }
 
+export interface MissionMorningDebriefPayload {
+  summary: {
+    date: string;
+    total_missions: number;
+    successful_missions: number;
+    failed_missions: number;
+    tests_fixed: number;
+    lines_added: number;
+    lines_deleted: number;
+    touched_files: string[];
+    missions: Array<{
+      mission_id: string;
+      title: string;
+      status: 'pending' | 'running' | 'healing' | 'completed' | 'failed' | 'aborted' | 'halted';
+      tests_passed: number;
+      tests_fixed: number;
+      lines_added: number;
+      lines_deleted: number;
+      files_changed: string[];
+      branch_name: string;
+      worktree_path: string;
+      started_at: string;
+      completed_at?: string;
+      diagnostic_log: string;
+    }>;
+    executive_summary: string;
+  };
+  celebrate: boolean;
+  timestamp: string;
+}
+
+export interface MissionMorningDebriefMsg extends BaseMessage {
+  type: 'mission.morning_debrief';
+  payload: MissionMorningDebriefPayload;
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -279,6 +315,7 @@ export type InboundServerMessage =
   | HotkeysResultMsg
   | BrowserFrameMsg
   | AutomationTakeoverPromptMsg
+  | MissionMorningDebriefMsg
   | ErrorMsg;
 export type OutboundClientMessage =
   | ChatSendMsg

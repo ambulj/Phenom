@@ -239,4 +239,18 @@ class AutomationTakeoverReplyMsg(BaseMessage):
     type: Literal["automation.takeover_reply"] = "automation.takeover_reply"
     payload: AutomationTakeoverReplyPayload
 
+# ==========================================
+# Overnight Missions & Debrief Protocol Payloads (Milestone 9.0 Phase 4)
+# ==========================================
+
+class MissionMorningDebriefPayload(BaseModel):
+    summary: Dict[str, Any]
+    celebrate: bool = True
+    timestamp: str = Field(default_factory=current_iso_time)
+
+class MissionMorningDebriefMsg(BaseMessage):
+    type: Literal["mission.morning_debrief"] = "mission.morning_debrief"
+    payload: MissionMorningDebriefPayload
+
+
 
