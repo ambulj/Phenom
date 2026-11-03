@@ -314,6 +314,7 @@ from services.backend.automation.autonomous_engine import autonomous_engine
 from services.backend.vision.visual_memory_monitor import visual_memory_monitor
 from services.backend.automation.swarm_manager import swarm_manager
 from services.backend.voice.duplex_pipeline import duplex_pipeline
+from services.backend.voice.streaming_engine import streaming_voice_engine
 from services.backend.sensors.idle_sensor import idle_detector
 from services.backend.sensors.context_sensor import context_sensor
 from services.backend.proactive.dispatcher import proactive_dispatcher
@@ -590,6 +591,39 @@ async def lifespan(app: FastAPI):
 
 
     voice_coordinator.set_stream_callbacks(on_voice_token, on_voice_done)
+
+    # Milestone 9.0 Phase 2: Setup StreamingVoiceEngine callbacks
+    def on_streaming_voice_packet(chunk_bytes: bytes, is_first: bool, is_last: bool):
+        import base64
+        b64_data = base64.b64encode(chunk_bytes).decode("ascii")
+        asyncio.run_coroutine_threadsafe(broadcast_message({
+            "id": f"voice-chunk-{os.urandom(2).hex()}",
+            "type": "voice:audio_stream",
+            "ts": "",
+            "payload": {"chunk": b64_data, "is_first": is_first, "is_last": is_last}
+        }), main_loop)
+
+    def on_streaming_voice_interrupted(ev):
+        asyncio.run_coroutine_threadsafe(broadcast_message({
+            "id": f"voice-interrupted-{os.urandom(2).hex()}",
+            "type": "voice:interrupted",
+            "ts": "",
+            "payload": {"latency_ms": ev.latency_ms, "trigger": ev.trigger}
+        }), main_loop)
+
+    def on_streaming_voice_state(new_st):
+        asyncio.run_coroutine_threadsafe(broadcast_message({
+            "id": f"voice-st-{os.urandom(2).hex()}",
+            "type": "voice:state_change",
+            "ts": "",
+            "payload": {"state": new_st.value if hasattr(new_st, "value") else str(new_st)}
+        }), main_loop)
+
+    streaming_voice_engine.set_callbacks(
+        on_audio_packet=on_streaming_voice_packet,
+        on_interrupted=on_streaming_voice_interrupted,
+        on_state_change=on_streaming_voice_state,
+    )
 
 
 
@@ -1455,6 +1489,7 @@ def on_guardian_state_change(new_state: str):
         # Synchronously halt full-duplex voice pipeline and audio stream
         try:
             duplex_pipeline.halt()
+            streaming_voice_engine.halt()
         except Exception:
             pass
 
@@ -1517,6 +1552,7 @@ def on_guardian_state_change(new_state: str):
             project_crystallizer.reset()
             ambient_copilot.reset()
             resource_governor.reset()
+            streaming_voice_engine.reset()
         except Exception:
             pass
 
@@ -2530,6 +2566,23 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 
+
+            elif mtype in ("voice.audio_chunk", "voice:audio_chunk"):
+                data_val = payload.get("data") or payload.get("chunk")
+                if data_val:
+                    if isinstance(data_val, str):
+                        import base64
+                        try:
+                            chunk_bytes = base64.b64decode(data_val)
+                            chunk_arr = np.frombuffer(chunk_bytes, dtype=np.int16)
+                        except Exception:
+                            chunk_arr = None
+                    elif isinstance(data_val, list):
+                        chunk_arr = np.array(data_val, dtype=np.float32)
+                    else:
+                        chunk_arr = None
+                    if chunk_arr is not None:
+                        streaming_voice_engine.ingest_audio_chunk(chunk_arr)
 
             elif mtype == "hotkeys.update":
 

@@ -15,6 +15,12 @@ from services.backend.safety.registry import registry
 from services.backend.voice.duplex_pipeline import duplex_pipeline
 from services.backend.voice.voice_modulator import voice_modulator, AssistantMode
 from services.backend.voice.barge_in_controller import barge_in_controller
+from services.backend.voice.streaming_engine import streaming_voice_engine
+from services.backend.schemas.streaming_voice import (
+    VoiceConfigureArgs,
+    VoiceSpeakArgs,
+    VoiceStatusArgs,
+)
 
 
 class GetVoiceDuplexStatusArgs(BaseModel):
@@ -119,3 +125,69 @@ def trigger_voice_barge_in(**kwargs) -> Dict[str, Any]:
         "status": "interrupted",
         "stop_latency_ms": round(stop_latency, 2),
     }
+
+
+# ============================================================================
+# Phenom Milestone 9.0 Phase 2: Streaming Zero-Latency Voice Engine Tools
+# ============================================================================
+
+@registry.register(
+    name="voice_get_engine_status",
+    tier=0,
+    description="Returns real-time metrics of the streaming zero-latency voice engine, Silero VAD availability, and Jarvis persona settings. Read-only.",
+    args_schema=VoiceStatusArgs,
+    preview_fn=lambda a: "Inspect streaming voice engine status and latency metrics (Read-only)",
+)
+def voice_get_engine_status(**kwargs) -> Dict[str, Any]:
+    status = streaming_voice_engine.get_status()
+    return {
+        "status": "ok",
+        "engine": status.model_dump(),
+    }
+
+
+@registry.register(
+    name="voice_configure_engine",
+    tier=1,
+    description="Configures streaming voice engine parameters: persona mode, speech speed, and barge-in sensitivity. Requires preview confirmation.",
+    args_schema=VoiceConfigureArgs,
+    preview_fn=lambda a: f"Configure streaming voice engine settings: persona_mode='{a.get('persona_mode')}', speed={a.get('speech_speed')}, barge_in_sensitivity={a.get('barge_in_sensitivity')}",
+)
+def voice_configure_engine(
+    persona_mode: Optional[str] = None,
+    speech_speed: Optional[float] = None,
+    barge_in_sensitivity: Optional[float] = None,
+    silence_turn_end_chunks: Optional[int] = None,
+    **kwargs
+) -> Dict[str, Any]:
+    streaming_voice_engine.configure(
+        persona_mode=persona_mode,
+        speech_speed=speech_speed,
+        barge_in_sensitivity=barge_in_sensitivity,
+        silence_turn_end_chunks=silence_turn_end_chunks,
+    )
+    status = streaming_voice_engine.get_status()
+    return {
+        "status": "configured",
+        "engine": status.model_dump(),
+    }
+
+
+@registry.register(
+    name="voice_speak_utterance",
+    tier=0,
+    description="Synthesizes and speaks an utterance with Jarvis British cadence without disk writes. Audio playback.",
+    args_schema=VoiceSpeakArgs,
+    preview_fn=lambda a: f"Synthesize and play spoken utterance: '{a.get('text', '')[:40]}' (Audio playback)",
+)
+def voice_speak_utterance(
+    text: str,
+    urgency: str = "normal",
+    **kwargs
+) -> Dict[str, Any]:
+    result = streaming_voice_engine.speak_utterance(text=text, urgency=urgency)
+    return {
+        "status": "spoken",
+        "result": result,
+    }
+
