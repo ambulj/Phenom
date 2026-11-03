@@ -950,3 +950,30 @@ otification_policy == 'silent').
 - **Execution SLA**: Cancels all active step `asyncio.Task` handles, halts execution loops, and clears queues in `< 25ms` (< 1ms typical).
 - While halted, all calls to `tot_create_goal_dag`, `tot_execute_step`, `tot_prune_branch`, `tot_abort_goal`, `get_ready_nodes`, `plan_objective`, and `create_checkpoint` immediately raise `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+## 36. Multi-Device Sensory Fabric: Companion Camera Vision & AirDrop-Style Encrypted P2P Drop (Milestone 11.0 Phase 3)
+
+### 1. In-RAM Companion Camera Vision Invariants (SEN-01)
+- **Zero Disk Writes (Permanent Rule 4)**: Live camera snapshots and compressed JPEG frames from paired mobile companion devices are decoded and held strictly in RAM (`io.BytesIO`, PIL `Image`). Frames are never persisted to disk or written to temporary cache files.
+- **Bounded In-Memory Ring Buffer**: `InRamFrameBuffer` maintains a strict maximum capacity of 5 frames. Older frames are automatically evicted from memory.
+- **Zero Cloud Exfiltration**: Camera frame inspection, whiteboard text capture, document OCR, and physical object queries are executed locally using `ScreenOCREngine` (EasyOCR) and `MoondreamVisionClient` (local Ollama Moondream2 model). Camera frames are never transmitted to cloud LLMs (Nemotron or OpenAI) without explicit user approval.
+
+### 2. AirDrop-Style Encrypted P2P Media Drop Governance (MSH-02)
+- **ChaCha20-Poly1305 Mesh Security**: Manifests and media chunks are transmitted across authenticated P2P mesh sessions.
+- **Chunked Streaming & SHA-256 Integrity**: Transfers operate in 64 KB blocks with individual chunk SHA-256 validation and a whole-file SHA-256 accumulator. Files are committed to destination only after bit-for-bit digest verification. Corrupted chunks or checksum mismatches result in immediate staging file deletion.
+- **Safe Intake Destinations**: Transfers are strictly routed to `vault/` (Markdown notes) or `services/backend/data/downloads/` (general media).
+- **Strict Anti-Path Traversal**: Filenames are sanitized with `os.path.basename` and validated against canonical destination directories via `os.path.commonpath`. Traversal attempts (e.g. `../../Windows`) are rejected with `ValueError`.
+- **Executable Extension Blocking**: Executable and script extensions (`.exe`, `.bat`, `.cmd`, `.ps1`, `.msi`, `.vbs`, `.sh`, `.bin`, `.jar`, `.scr`, `.reg`, etc.) are permanently blocked and rejected prior to intake.
+- **Non-Destructive Collision Handling**: Intake files conflicting with existing names are renamed using non-destructive numbering (e.g. `document (1).md`) to prevent silent overwrite of user notes.
+
+### 3. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `camera_get_companion_frame`: Tier 0 (Read-Only). Arguments: `CameraGetFrameArgs(node_id: Optional[str])`. Preview: `"Inspect latest in-RAM companion camera frame (Read-Only)"`.
+- `camera_analyze_object_or_ocr`: Tier 0 (Read-Only). Arguments: `CameraAnalyzeArgs(task_type: Literal['ocr', 'whiteboard', 'object'], prompt: Optional[str])`. Preview: `"Analyze companion camera frame via local {task_type} engine (Read-Only)"`.
+- `media_drop_send_file`: Tier 1 (Reversible change with preview). Arguments: `MediaDropSendFileArgs(file_path: str, target_node_id: str, destination: Literal['vault', 'downloads'])`. Preview: `"Send file '{file_path}' to companion '{target_node_id}' (destination: {destination})"`.
+- `media_drop_get_history`: Tier 0 (Read-Only). Arguments: `MediaDropGetHistoryArgs(limit: int)`. Preview: `"Query P2P media drop transfer history (Read-Only)"`.
+
+### 4. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `companion_camera_streamer.halt()` and `media_drop_manager.halt()` are synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Wipes in-RAM camera ring buffers, aborts active streaming tasks, marks in-flight media drops as `ABORTED`, closes open file handles, and deletes partial `.part` staging files in `< 25ms` (< 1.0ms typical).
+- While halted, all calls to `ingest_frame`, `get_latest_frame`, `analyze_frame`, `create_send_manifest`, `read_file_chunk`, `receive_manifest`, and `receive_chunk` immediately raise `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.

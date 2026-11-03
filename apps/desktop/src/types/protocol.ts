@@ -416,6 +416,78 @@ export interface GoalAbortMsg extends BaseMessage {
   };
 }
 
+export interface CameraStatusPayload {
+  is_streaming: boolean;
+  node_id?: string;
+  device_name?: string;
+  last_frame_ts?: number;
+  resolution?: string;
+  battery_level?: number;
+  is_charging?: boolean;
+  wifi_rssi?: number;
+  frames_received: number;
+  is_halted: boolean;
+  thumbnail_base64?: string;
+}
+
+export interface CameraStatusMsg extends BaseMessage {
+  type: 'sensory.camera_status';
+  payload: CameraStatusPayload;
+}
+
+export interface CameraFramePreviewMsg extends BaseMessage {
+  type: 'sensory.camera_preview';
+  payload: {
+    frame_id: string;
+    node_id: string;
+    timestamp: number;
+    image_base64: string;
+    width: number;
+    height: number;
+    battery_level?: number;
+    wifi_rssi?: number;
+  };
+}
+
+export interface MediaDropTransferPayload {
+  transfer_id: string;
+  filename: string;
+  file_size: number;
+  direction: 'incoming' | 'outgoing';
+  source_node_id: string;
+  target_node_id: string;
+  destination: string;
+  state: 'pending' | 'transferring' | 'completed' | 'failed' | 'aborted';
+  progress: number;
+  bytes_transferred: number;
+  sha256_checksum: string;
+  error_message?: string;
+  started_at: number;
+  completed_at?: number;
+  saved_path?: string;
+}
+
+export interface MediaDropUpdateMsg extends BaseMessage {
+  type: 'sensory.media_drop_update';
+  payload: MediaDropTransferPayload;
+}
+
+export interface CameraStreamToggleMsg extends BaseMessage {
+  type: 'sensory.camera_toggle';
+  payload: {
+    node_id?: string;
+    enable: boolean;
+  };
+}
+
+export interface MediaDropAbortMsg extends BaseMessage {
+  type: 'sensory.media_drop_abort';
+  payload: {
+    transfer_id: string;
+    reason?: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -432,7 +504,11 @@ export type InboundServerMessage =
   | MissionMorningDebriefMsg
   | SwarmDebateEscalationMsg
   | GoalDAGUpdateMsg
+  | CameraStatusMsg
+  | CameraFramePreviewMsg
+  | MediaDropUpdateMsg
   | ErrorMsg;
+
 export type OutboundClientMessage =
   | ChatSendMsg
   | ChatCancelMsg
@@ -447,4 +523,6 @@ export type OutboundClientMessage =
   | AutomationTakeoverReplyMsg
   | SwarmDebateDecisionMsg
   | GoalPruneBranchMsg
-  | GoalAbortMsg;
+  | GoalAbortMsg
+  | CameraStreamToggleMsg
+  | MediaDropAbortMsg;

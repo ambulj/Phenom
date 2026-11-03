@@ -1447,3 +1447,44 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Cumulative Milestone 11 Suite (Phase 1 + Phase 2): **56/56 PASSED in 2.87s**
 - Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (455 files, 0 secrets)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.77s)**
+---
+
+# Milestone 11.0 Phase 3: Multi-Device Sensory Fabric: Companion Camera Vision & AirDrop-Style Encrypted P2P Drop
+**Status:** Complete & Verified
+**Requirements:** `SEN-01`, `MSH-02`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Pydantic v2 Schemas & TypeScript Data Contracts (`SEN-01`, `MSH-02`, `SAF-01`)**:
+   - `services/backend/schemas/sensory.py`: Defined models for `CameraFramePayload`, `CameraAnalysisTask`, `CameraAnalysisResult`, `CameraStatus`, `MediaDropManifest`, `MediaDropChunk`, `MediaDropAck`, `MediaDropTransfer`, and tool arguments (`CameraGetFrameArgs`, `CameraAnalyzeArgs`, `MediaDropSendFileArgs`, `MediaDropGetHistoryArgs`).
+   - `apps/desktop/src/types/protocol.ts`: Added matching TypeScript interfaces (`CameraStatusPayload`, `MediaDropTransferPayload`) and updated `InboundServerMessage` and `OutboundClientMessage` unions.
+2. **In-RAM Companion Camera Vision Streamer (`SEN-01`, `SAF-01`, `SAF-02`)**:
+   - `services/backend/sensors/companion_camera.py`: Implemented `InRamFrameBuffer` and `CompanionCameraStreamer`.
+   - Adheres strictly to Permanent Rule 4: Decodes JPEG frames into RAM buffers (`io.BytesIO`, PIL `Image`) with zero disk writes.
+   - Bounded ring buffer retaining up to 5 frames in memory.
+   - Local VLM (Moondream2) and OCR (`ScreenOCREngine`) analysis without cloud exfiltration.
+   - Sub-millisecond Guardian kill switch halt wiping RAM frame buffers.
+3. **AirDrop-Style Encrypted P2P Media Drop Manager (`MSH-02`, `SAF-01`, `SAF-02`)**:
+   - `services/backend/mesh/media_drop.py`: Implemented `P2PMediaDropManager`.
+   - 64 KB chunked streaming with incremental SHA-256 verification and atomic commit.
+   - Safe intake destinations (`vault/` and `services/backend/data/downloads/`).
+   - Strict anti-path traversal validation via `os.path.commonpath`.
+   - Executable extension blocking (`.exe`, `.bat`, `.cmd`, `.ps1`, `.msi`, `.sh`, `.bin`, etc.).
+   - Non-destructive collision handling (e.g. `filename (1).ext`) to preserve existing user notes.
+   - Guardian halt purging partial `.part` staging files in `< 1.0ms`.
+4. **Safety Governance & Guardian Kill Switch SLA (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/sensory_tools.py`: Registered `camera_get_companion_frame` (Tier 0), `camera_analyze_object_or_ocr` (Tier 0), `media_drop_send_file` (Tier 1), and `media_drop_get_history` (Tier 0) in `ToolRegistry`.
+   - Hooked singletons into `on_guardian_state_change` in `services/backend/main.py`.
+   - Documented Section 36 in `SAFETY.md`.
+   - Benchmarked 50 halt invocations: average latency `0.0048ms`, max `0.0103ms`, well within `< 25ms` SLA.
+5. **Cyber HUD React Dashboard (`SEN-01`, `MSH-02`)**:
+   - `apps/desktop/src/components/CyberHUD/SensoryPeripheralDashboard.tsx`: Cyber-themed HUD component with live camera preview thumbnail, companion battery meter, Wi-Fi RSSI gauge, interactive VLM/OCR triggers, active P2P progress bars, recent drop history, and Guardian kill switch lockdown banner.
+
+### Test Results
+- `services/backend/tests/test_companion_camera.py`: **4/4 PASSED**
+- `services/backend/tests/test_p2p_media_drop.py`: **6/6 PASSED**
+- `services/backend/tests/test_sensory_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_11_phase_3_guardian_sla.py`: **2/2 PASSED (50 Halts Avg: 0.0048ms, Max: 0.0103ms)**
+- `services/backend/tests/test_companion_camera_and_drop.py`: **1/1 PASSED**
+- Total Phase 3 Suite: **17/17 PASSED in 4.55s**
+- Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (466 files, 0 secrets)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.91s)**

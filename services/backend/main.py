@@ -283,6 +283,9 @@ import services.backend.tools.mirror_tools
 import services.backend.tools.mesh_tools
 import services.backend.tools.synthesis_tools
 import services.backend.tools.tot_tools
+import services.backend.tools.sensory_tools
+from services.backend.sensors.companion_camera import companion_camera_streamer
+from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
 from services.backend.orchestrator.dag_state import dag_state_manager
 from services.backend.orchestrator.metacognition import metacognitive_reflector
@@ -1539,6 +1542,8 @@ def on_guardian_state_change(new_state: str):
             tot_planner.halt()
             dag_state_manager.halt()
             metacognitive_reflector.halt()
+            companion_camera_streamer.halt()
+            media_drop_manager.halt()
         except Exception:
             pass
 
@@ -1597,6 +1602,8 @@ def on_guardian_state_change(new_state: str):
             tot_planner.reset()
             dag_state_manager.reset()
             metacognitive_reflector.reset()
+            companion_camera_streamer.reset()
+            media_drop_manager.reset()
         except Exception:
             pass
 
@@ -1615,6 +1622,7 @@ ambient_copilot.register_broadcaster(broadcast_message)
 morning_debrief_synthesizer.register_broadcaster(broadcast_message)
 specialist_swarm_orchestrator.register_broadcaster(broadcast_message)
 visual_gui_controller.register_broadcaster(broadcast_message)
+companion_camera_streamer.register_broadcaster(broadcast_message)
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 
