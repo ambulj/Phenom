@@ -274,6 +274,7 @@ import services.backend.tools.voice_tools
 import services.backend.tools.proactive_tools
 import services.backend.tools.triage_tools
 import services.backend.tools.housekeeping_tools
+import services.backend.tools.telegram_tools
 
 
 
@@ -1662,6 +1663,18 @@ async def websocket_confirmation_handler(
 
 
     await broadcast_message(req_msg)
+
+    # Dual-Presence Mobile Approval Gateway (Phase 3 MOB-02)
+    if telegram_controller.is_configured and not is_remote_locked():
+        diff_text = args.get('patch') or args.get('diff') or args.get('content') or ''
+        asyncio.create_task(telegram_controller.notify_desktop_approval_request(
+            request_id=request_id,
+            tool=tool,
+            tier=tier.value if hasattr(tier, 'value') else int(tier),
+            preview=preview,
+            args=args,
+            diff=diff_text if len(diff_text) > 0 else None
+        ))
 
 
 

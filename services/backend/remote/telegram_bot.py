@@ -1,17 +1,18 @@
 """
-Phenom Telegram Remote Controller (Phase 6 & Hardening Task 7g)
+Phenom Telegram Remote Controller (Phase 6, Hardening Task 7g, and Phase 3 MOB-01/MOB-02)
 Enforces:
 1. Strict sender whitelisting: Owner user ID only. Non-whitelisted senders silently ignored & logged.
-2. Remote commands run through orchestrator and Safety layer with source='telegram'.
-3. Remote approvals for Tier 1 and Tier 2 actions with exact previews. Tier 3 cannot be approved remotely.
-4. Remote kill switch (/halt, /kill) halts all running tasks immediately and confirms.
-5. Status, tasks, and action log summaries with private content redacted.
-6. /lock command locks Windows workstation physically and disables remote control until desktop unlock.
-7. /screenshot captures desktop, inspects for sensitive windows, applies 35px Gaussian blur, and warns.
-8. /do <task> enforces 6-digit numeric PIN verification for Tier 2 actions.
-9. 3-strike PIN lockout locking remote control completely.
-10. Message ephemerality: automatically deletes sensitive PIN messages after 15 seconds.
-11. Local voice notes / audio messages transcription and response.
+2. Inbound prompt injection defense: Taint tracking and sanitization on all messages.
+3. Remote commands run through orchestrator and Safety layer with source='telegram'.
+4. Dual-Presence 1-Click Action Approval Gateway: Desktop & Telegram approvals synchronized in real time.
+5. Remote kill switch (/halt, /kill) halts all running tasks immediately (< 25ms SLA).
+6. Operational queries: /status, /git, /agenda, /emails, /briefing, /diff, /tasks, /logs.
+7. /lock command locks Windows workstation physically and disables remote control until desktop unlock.
+8. /screenshot captures desktop, inspects for sensitive windows, applies 35px Gaussian blur, and warns.
+9. /do <task> enforces 6-digit numeric PIN verification for Tier 2 actions.
+10. 3-strike PIN lockout locking remote control completely.
+11. Message ephemerality: automatically deletes sensitive PIN messages after 15 seconds.
+12. Local voice notes / audio messages transcription and response.
 """
 
 import asyncio
@@ -34,8 +35,10 @@ from services.backend.remote.telegram_client import TelegramClient
 from services.backend.remote.screenshot_obfuscator import capture_and_obfuscate_screen
 from services.backend.safety.guardian import guardian
 from services.backend.safety.action_log import action_log
+from services.backend.safety.taint import taint_tracker
 from services.backend.modes.mode_manager import mode_manager
 from services.backend.scheduler.cron import background_scheduler
+from services.backend.coding.workspace_sentinel import workspace_sentinel
 
 TIER2_KEYWORDS = [
     "delete", "remove", "wipe", "format", "kill", "terminate",
@@ -62,6 +65,7 @@ class TelegramBotController:
         self._poll_task: Optional[asyncio.Task] = None
         self._last_update_id = 0
         self._pending_approvals: Dict[str, asyncio.Future] = {}
+        self._pending_diffs: Dict[str, str] = {}
         self._pending_pin_tasks: Dict[int, Dict[str, Any]] = {}
         self.ignored_messages_log: List[Dict[str, Any]] = []
         self._active_timers: List[asyncio.Task] = []
@@ -97,7 +101,7 @@ class TelegramBotController:
         except RuntimeError:
             pass
 
-    # ----------------- STATUS HELPERS -----------------
+    # ----------------- STATUS & OPERATIONAL HELPERS -----------------
     def _build_status_text(self) -> str:
         current_mode = mode_manager.get_current_mode().value
         next_item = background_scheduler.get_next_scheduled_item()
@@ -109,28 +113,218 @@ class TelegramBotController:
         if torch and torch.cuda.is_available():
             gpu_info = f"{torch.cuda.get_device_name(0)}"
 
-        return (
-            f"🤖 *Phenom Status Summary*\n"
-            f"• *CPU Utilization:* `{cpu_usage}`\n"
-            f"• *RAM Utilization:* `{ram_usage}`\n"
-            f"• *GPU Device:* `{gpu_info}`\n"
-            f"• *Guardian State:* `{'HALTED' if guardian.is_halted else 'IDLE / READY'}`\n"
-            f"• *Active Mode:* `{current_mode.upper()}`\n"
-            f"• *Remote Lock:* `{'LOCKED' if is_remote_locked() else 'ACTIVE'}`\n"
-            f"• *Next Scheduled Reminder:* {next_text}"
-        )
+        # Query developer workspace state
+        ws_state = workspace_sentinel.get_current_state()
+        if not ws_state:
+            try:
+                ws_state = workspace_sentinel.inspect_workspace(r"C:\Phenom")
+            except Exception:
+                ws_state = None
+
+        lines = [
+            "🤖 *Phenom Operational Status*",
+            f"• *CPU:* `{cpu_usage}` | *RAM:* `{ram_usage}`",
+            f"• *GPU:* `{gpu_info}`",
+            f"• *Guardian:* `{'HALTED' if guardian.is_halted else 'READY / ACTIVE'}`",
+            f"• *Mode:* `{current_mode.upper()}`",
+            f"• *Remote:* `{'LOCKED' if is_remote_locked() else 'ACTIVE'}`",
+        ]
+
+        if ws_state and ws_state.is_git:
+            lines.extend([
+                "",
+                "💻 *Developer Workspace:*",
+                f"• *IDE:* `{(ws_state.ide_name or 'VSCode').upper()}` | *Project:* `{ws_state.name}`",
+                f"• *Branch:* `{ws_state.branch or 'HEAD'}` (`+{ws_state.lines_added}/-{ws_state.lines_deleted}`)",
+                f"• *Uncommitted Files:* `{len(ws_state.modified_files)}`",
+            ])
+        else:
+            lines.extend([
+                "",
+                "💻 *Developer Workspace:* `No active IDE session`"
+            ])
+
+        lines.extend([
+            "",
+            f"• *Next Reminder:* {next_text}"
+        ])
+        return "\n".join(lines)
 
     def _get_status_markup(self) -> Dict[str, Any]:
         return {
             "inline_keyboard": [
                 [
                     {"text": "🔄 Refresh", "callback_data": "status:refresh"},
+                    {"text": "🌿 Git", "callback_data": "cmd:git"},
                     {"text": "🔒 Lock Remote", "callback_data": "lock:remote"}
                 ]
             ]
         }
 
-    # ----------------- APPROVAL HOOK -----------------
+    def _build_git_text(self) -> str:
+        """Returns dedicated developer git repository tracker report."""
+        ws_state = workspace_sentinel.get_current_state()
+        if not ws_state:
+            try:
+                ws_state = workspace_sentinel.inspect_workspace(r"C:\Phenom")
+            except Exception:
+                ws_state = None
+
+        if not ws_state or not ws_state.is_git:
+            return "📁 *Git Workspace Status:*\nNo active git repository detected in current workspace."
+
+        lines = [
+            f"🌿 *Git Workspace Tracker: {ws_state.name}*",
+            f"• *Root:* `{ws_state.root_path}`",
+            f"• *Branch:* `{ws_state.branch or 'detached'}`",
+            f"• *Diff Lines:* `+{ws_state.lines_added} / -{ws_state.lines_deleted}`",
+            f"• *Dirty:* `{'YES (uncommitted changes)' if ws_state.is_dirty else 'Clean working tree'}`",
+            f"• *Untracked Files:* `{ws_state.untracked_count}`",
+        ]
+
+        if ws_state.modified_files:
+            lines.append("\n*Modified Files:*")
+            for f in ws_state.modified_files[:10]:
+                status_icon = "📝" if f.status == "M" else ("✨" if f.status == "A" else "🗑️")
+                lines.append(f"  {status_icon} `{f.path}` (+{f.lines_added}/-{f.lines_deleted})")
+            if len(ws_state.modified_files) > 10:
+                lines.append(f"  _...and {len(ws_state.modified_files) - 10} more files_")
+        else:
+            lines.append("\n✅ *Working tree clean, no uncommitted changes.*")
+
+        return "\n".join(lines)
+
+    async def _build_agenda_text(self) -> str:
+        """Returns upcoming Google Calendar meetings for the next 24 hours."""
+        from datetime import datetime, timedelta, timezone
+        from services.backend.integrations.google_workspace import google_workspace
+
+        if not google_workspace.is_calendar_configured():
+            return "📅 *Upcoming Agenda:*\nGoogle Calendar is not configured or authenticated."
+
+        now_utc = datetime.now(timezone.utc)
+        max_utc = now_utc + timedelta(hours=24)
+        try:
+            events = await asyncio.to_thread(
+                google_workspace.get_calendar_events,
+                time_min=now_utc.isoformat(),
+                time_max=max_utc.isoformat()
+            )
+        except Exception as e:
+            return f"📅 *Upcoming Agenda:*\nError fetching calendar events: {e}"
+
+        if not events:
+            return "📅 *Upcoming Agenda:*\nNo meetings or events scheduled in the next 24 hours. Clear schedule!"
+
+        lines = [f"📅 *Upcoming Agenda ({len(events)} events in next 24h):*"]
+        for ev in events[:8]:
+            summary = ev.get("summary") or "Untitled Meeting"
+            start = ev.get("start", {}).get("dateTime") or ev.get("start", {}).get("date") or ""
+            link = ev.get("hangoutLink") or ""
+            attendees = ev.get("attendees", [])
+            att_count = len(attendees)
+            time_part = start[11:16] if "T" in start else start
+            entry = f"• *{time_part}* — *{summary}*"
+            if att_count > 0:
+                entry += f" ({att_count} attendees)"
+            if link:
+                entry += f" [Join]({link})"
+            lines.append(entry)
+
+        return "\n".join(lines)
+
+    async def _build_emails_text(self) -> str:
+        """Returns unread priority emails from Gmail triage."""
+        from services.backend.triage.gmail_triage import gmail_triage
+        from services.backend.integrations.google_workspace import google_workspace
+
+        if not google_workspace.is_gmail_configured():
+            return "📬 *Email Triage:*\nGmail credentials not configured."
+
+        try:
+            items = await gmail_triage.triage_unread_emails(max_emails=5)
+        except Exception as e:
+            return f"📬 *Email Triage:*\nError triaging inbox: {e}"
+
+        if not items:
+            return "📬 *Email Triage:*\nInbox zero! No unread high-priority emails."
+
+        lines = [f"📬 *Priority Email Triage ({len(items)} unread):*"]
+        for it in items:
+            prio_badge = "🚨 URGENT" if it.priority_score >= 3 else ("⚠️ PRIORITY" if it.priority_score == 2 else "ℹ️ NORMAL")
+            lines.append(
+                f"• [{prio_badge}] *From:* `{it.sender[:25]}`\n"
+                f"  *Subject:* {it.subject[:45]}\n"
+                f"  *Snippet:* _{it.snippet[:80]}..._\n"
+                f"  *Draft:* `{'Saved in [Gmail]/Drafts' if it.draft_saved else 'None'}`"
+            )
+        return "\n".join(lines)
+
+    async def _build_briefing_text(self) -> str:
+        """Generates executive briefing on-demand."""
+        from services.backend.triage.executive_briefing import ExecutiveBriefingSynthesizer
+        synth = ExecutiveBriefingSynthesizer()
+        try:
+            briefing = await synth.generate_briefing(force_refresh=True)
+            if briefing and briefing.markdown_content:
+                content = briefing.markdown_content
+                if len(content) > 3800:
+                    content = content[:3800] + "\n\n... [Briefing truncated]"
+                return f"📋 *Executive Briefing:*\n\n{content}"
+            return "📋 *Executive Briefing:*\nCould not compile daily briefing."
+        except Exception as e:
+            return f"📋 *Executive Briefing:*\nError generating briefing: {e}"
+
+    def _get_pending_diff_text(self, target_id: Optional[str] = None) -> str:
+        """Returns unified diff for target or most recent pending request."""
+        if target_id and target_id in self._pending_diffs:
+            diff = self._pending_diffs[target_id]
+            req_label = target_id[:8]
+        elif self._pending_diffs:
+            target_id, diff = list(self._pending_diffs.items())[-1]
+            req_label = target_id[:8]
+        else:
+            return "🔍 *Diff Viewer:*\nNo pending diffs available."
+
+        if len(diff) > 3500:
+            diff = diff[:3500] + "\n\n... [diff truncated]"
+        return f"🔍 *Unified Diff Preview (`{req_label}`):*\n```diff\n{diff}\n```"
+
+    # ----------------- DUAL-PRESENCE APPROVAL GATEWAY -----------------
+    async def notify_desktop_approval_request(
+        self,
+        request_id: str,
+        tool: str,
+        tier: int,
+        preview: str,
+        args: Dict[str, Any],
+        diff: Optional[str] = None
+    ) -> bool:
+        """
+        Pushes a pending desktop approval request to the Telegram owner with inline buttons.
+        Enables 1-click approval from mobile (MOB-02).
+        """
+        if not self.client or not self._owner_id or is_remote_locked():
+            return False
+
+        if diff:
+            self._pending_diffs[request_id] = diff
+
+        try:
+            await self.client.send_approval_request(
+                chat_id=self._owner_id,
+                request_id=request_id,
+                tool=tool,
+                tier=tier,
+                preview=preview,
+                args=args,
+                has_diff=bool(diff)
+            )
+            return True
+        except Exception as e:
+            print(f"[TelegramBot] Failed to send desktop approval to Telegram: {e}")
+            return False
+
     async def handle_remote_approval_request(
         self,
         request_id: str,
@@ -141,7 +335,7 @@ class TelegramBotController:
         timeout_seconds: int = 120
     ) -> tuple[str, bool]:
         """
-        Invoked by SafetyExecutionEngine when a tool requires approval over Telegram.
+        Invoked by SafetyExecutionEngine when a tool requires approval initiated over Telegram.
         Tier 3 is categorically refused remotely.
         """
         if tier == 3:
@@ -174,6 +368,10 @@ class TelegramBotController:
         future = asyncio.get_event_loop().create_future()
         self._pending_approvals[request_id] = future
 
+        diff_text = args.get("patch") or args.get("diff") or args.get("content") or ""
+        if diff_text:
+            self._pending_diffs[request_id] = diff_text
+
         try:
             await self.client.send_approval_request(
                 chat_id=self._owner_id,
@@ -181,7 +379,8 @@ class TelegramBotController:
                 tool=tool,
                 tier=tier,
                 preview=preview,
-                args=args
+                args=args,
+                has_diff=bool(diff_text)
             )
             decision, remember = await asyncio.wait_for(future, timeout=timeout_seconds)
             return decision, remember
@@ -192,12 +391,13 @@ class TelegramBotController:
             return "denied", False
         finally:
             self._pending_approvals.pop(request_id, None)
+            self._pending_diffs.pop(request_id, None)
 
     # ----------------- UPDATE DISPATCHER -----------------
     async def process_update(self, update: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Processes a single incoming Telegram update.
-        Enforces owner whitelisting, command dispatch, inline callbacks, and PIN security.
+        Enforces owner whitelisting, taint inspection, command dispatch, inline callbacks, and PIN security.
         """
         # 1. Handle Callback Queries (Inline buttons)
         if "callback_query" in update:
@@ -225,11 +425,32 @@ class TelegramBotController:
                     await self.client.answer_callback_query(cb_id, text="Remote control is locked at the desktop.", show_alert=True)
                 return {"status": "locked"}
 
-            # Approvals
+            # Approvals (Dual-Presence: syncs with both bot approvals and desktop pending_confirmations)
             if data.startswith("approve:"):
                 req_id = data.split(":", 1)[1]
+                
+                # Resolve bot internal pending approvals
                 if req_id in self._pending_approvals and not self._pending_approvals[req_id].done():
                     self._pending_approvals[req_id].set_result(("approved", False))
+
+                # Resolve desktop pending confirmations in main
+                try:
+                    from services.backend.main import pending_confirmations, broadcast_message
+                    if req_id in pending_confirmations and not pending_confirmations[req_id].done():
+                        pending_confirmations[req_id].set_result(("approved", False))
+                        asyncio.create_task(broadcast_message({
+                            "type": "confirm.resolved",
+                            "payload": {
+                                "request_id": req_id,
+                                "decision": "approved",
+                                "source": "telegram"
+                            }
+                        }))
+                except Exception as e:
+                    print(f"[TelegramBot] Error resolving desktop confirmation: {e}")
+
+                self._pending_diffs.pop(req_id, None)
+
                 if self.client:
                     await self.client.answer_callback_query(cb_id, text="Approved!")
                     await self.client.edit_message_text(chat_id, msg_id, "✅ *Action Approved by Owner via Telegram.*")
@@ -237,12 +458,42 @@ class TelegramBotController:
 
             elif data.startswith("deny:"):
                 req_id = data.split(":", 1)[1]
+
                 if req_id in self._pending_approvals and not self._pending_approvals[req_id].done():
                     self._pending_approvals[req_id].set_result(("denied", False))
+
+                try:
+                    from services.backend.main import pending_confirmations, broadcast_message
+                    if req_id in pending_confirmations and not pending_confirmations[req_id].done():
+                        pending_confirmations[req_id].set_result(("denied", False))
+                        asyncio.create_task(broadcast_message({
+                            "type": "confirm.resolved",
+                            "payload": {
+                                "request_id": req_id,
+                                "decision": "denied",
+                                "source": "telegram"
+                            }
+                        }))
+                except Exception as e:
+                    print(f"[TelegramBot] Error resolving desktop confirmation: {e}")
+
+                self._pending_diffs.pop(req_id, None)
+
                 if self.client:
                     await self.client.answer_callback_query(cb_id, text="Denied.")
                     await self.client.edit_message_text(chat_id, msg_id, "❌ *Action Denied by Owner via Telegram.*")
                 return {"status": "denied", "request_id": req_id}
+
+            elif data.startswith("diff:"):
+                req_id = data.split(":", 1)[1]
+                diff = self._pending_diffs.get(req_id, "No unified diff preview available for this request.")
+                if len(diff) > 3500:
+                    diff = diff[:3500] + "\n\n... [diff truncated]"
+                diff_msg = f"🔍 *Unified Diff Preview (`{req_id[:8]}`):*\n```diff\n{diff}\n```"
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text="Diff retrieved.")
+                    await self.client.send_message(chat_id, diff_msg)
+                return {"status": "diff_viewed", "request_id": req_id}
 
             # Status Refresh
             elif data == "status:refresh":
@@ -255,6 +506,13 @@ class TelegramBotController:
                         reply_markup=self._get_status_markup()
                     )
                 return {"status": "status_refreshed"}
+
+            # Git Callback
+            elif data == "cmd:git":
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text="Fetching Git status...")
+                    await self.client.send_message(chat_id, self._build_git_text())
+                return {"status": "git_sent_by_callback"}
 
             # Lock Remote Callback
             elif data == "lock:remote":
@@ -317,12 +575,32 @@ class TelegramBotController:
         if not text:
             return None
 
+        # INBOUND TAINT & PROMPT INJECTION DEFENSE (Rule 1, Rule 4)
+        sanitized_text, has_injection, matches = taint_tracker.inspect_and_sanitize(text, source="telegram")
+        if has_injection:
+            action_log.log_action(
+                tool="telegram_message",
+                tier=3,
+                args={"raw_text": text[:200]},
+                decision="blocked",
+                result_status="BLOCKED",
+                source="telegram",
+                error=f"Prompt injection detected: {matches}"
+            )
+            if self.client:
+                await self.client.send_message(
+                    chat_id,
+                    "🛡️ *Security Alert: Untrusted Input Quarantined*\n"
+                    f"Inbound message contained prompt injection signatures: `{', '.join(matches[:3])}`.\n"
+                    "The payload was safely quarantined and blocked from execution."
+                )
+            return {"status": "quarantined_injection", "matches": matches}
+
         # 3. Message Ephemerality Check for PIN Submissions
         is_pin_like = bool(re.match(r"^\s*\d{6}\s*$", text) or text.startswith("/pin "))
         if is_pin_like:
             self.schedule_message_deletion(chat_id, msg_id, delay_seconds=15.0)
 
-            # Check if this PIN corresponds to a pending Tier 2 task
             clean_pin = text.replace("/pin ", "").strip()
             verified = verify_remote_pin(clean_pin)
             if verified:
@@ -388,7 +666,7 @@ class TelegramBotController:
                     )
             return {"status": "locked"}
 
-        # 6. Command: /halt or /kill or /stop (Remote Kill Switch)
+        # 6. Command: /halt or /kill or /stop (Remote Kill Switch - SLA < 25ms)
         if text.startswith("/halt") or text.startswith("/kill") or text == "/stop":
             guardian.trigger("Telegram remote kill switch")
             reply_markup = {
@@ -427,16 +705,53 @@ class TelegramBotController:
                 )
             return {"status": "status_sent"}
 
-        # 9. Command: /screenshot (Captures screen, blurs sensitive apps, generates preview)
+        # 9. Command: /git (Developer Workspace Git Tracker)
+        if text.startswith("/git"):
+            git_text = self._build_git_text()
+            if self.client:
+                await self.client.send_message(chat_id=chat_id, text=git_text)
+            return {"status": "git_status_sent"}
+
+        # 10. Command: /agenda (Upcoming Calendar Meetings)
+        if text.startswith("/agenda"):
+            agenda_text = await self._build_agenda_text()
+            if self.client:
+                await self.client.send_message(chat_id=chat_id, text=agenda_text)
+            return {"status": "agenda_sent"}
+
+        # 11. Command: /emails (Gmail Triage)
+        if text.startswith("/emails"):
+            emails_text = await self._build_emails_text()
+            if self.client:
+                await self.client.send_message(chat_id=chat_id, text=emails_text)
+            return {"status": "emails_sent"}
+
+        # 12. Command: /briefing (Executive Morning/Evening Briefing)
+        if text.startswith("/briefing"):
+            briefing_text = await self._build_briefing_text()
+            if self.client:
+                await self.client.send_message(chat_id=chat_id, text=briefing_text)
+            return {"status": "briefing_sent"}
+
+        # 13. Command: /diff (View pending unified diff)
+        if text.startswith("/diff"):
+            parts = text.split(maxsplit=1)
+            target_id = parts[1].strip() if len(parts) > 1 else None
+            diff_text = self._get_pending_diff_text(target_id)
+            if self.client:
+                await self.client.send_message(chat_id=chat_id, text=diff_text)
+            return {"status": "diff_sent"}
+
+        # 14. Command: /screenshot (Captures screen, blurs sensitive apps, generates preview)
         if text.startswith("/screenshot"):
             return await self._handle_screenshot_command(chat_id)
 
-        # 10. Command: /do <task> (Executes remote task with Tier 2 PIN protection)
+        # 15. Command: /do <task> (Executes remote task with Tier 2 PIN protection)
         if text.startswith("/do "):
             task_cmd = text[4:].strip()
             return await self._handle_do_command(chat_id, task_cmd)
 
-        # 11. Command: /tasks
+        # 16. Command: /tasks
         if text.startswith("/tasks"):
             jobs = background_scheduler.list_jobs(include_disabled=False)
             if not jobs:
@@ -450,7 +765,7 @@ class TelegramBotController:
                 await self.client.send_message(chat_id, tasks_text)
             return {"status": "tasks_sent"}
 
-        # 12. Command: /logs
+        # 17. Command: /logs
         if text.startswith("/logs"):
             logs = action_log.list_entries(limit=5)
             lines = ["🛡️ *Recent Security Action Logs (Redacted):*"]
@@ -464,11 +779,10 @@ class TelegramBotController:
                 await self.client.send_message(chat_id, log_text)
             return {"status": "logs_sent"}
 
-        # 13. Regular Prompt: Execute through orchestrator
+        # 18. Regular Prompt: Execute through orchestrator turn
         return await self._handle_remote_chat(chat_id, text)
 
     # ----------------- COMMAND HANDLERS -----------------
-
     async def _handle_screenshot_command(self, chat_id: int) -> Dict[str, Any]:
         """Captures primary screen, applies 35px blur over sensitive apps, sends photo."""
         from services.backend.automation.desktop_controller import desktop_controller
@@ -551,7 +865,6 @@ class TelegramBotController:
                 )
             return {"status": "pin_required", "task": task}
         else:
-            # Tier 1 / Tier 0 task: run directly
             return await self._handle_remote_chat(chat_id, task)
 
     async def _handle_voice_update(self, chat_id: int, msg_id: int, voice: Dict[str, Any]) -> Dict[str, Any]:
@@ -565,7 +878,6 @@ class TelegramBotController:
             file_path = file_info.get("file_path", "")
             audio_bytes = await self.client.download_file(file_path)
 
-            # In-memory audio decoding
             import soundfile as sf
             import numpy as np
             audio_buf = io.BytesIO(audio_bytes)
@@ -586,7 +898,6 @@ class TelegramBotController:
                 f"🎙️ *Voice Note Transcribed Locally:*\n_{transcribed_text}_\n\nExecuting..."
             )
 
-            # Dispatch as regular prompt
             return await self._handle_remote_chat(chat_id, transcribed_text)
 
         except Exception as e:

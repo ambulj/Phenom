@@ -179,7 +179,8 @@ class TelegramClient:
         tool: str,
         tier: int,
         preview: str,
-        args: Dict[str, Any]
+        args: Dict[str, Any],
+        has_diff: bool = False
     ) -> Dict[str, Any]:
         """
         Sends an approval request message with inline buttons.
@@ -206,12 +207,15 @@ class TelegramClient:
 
         text = "\n".join(msg_lines)
 
+        buttons = [
+            {"text": "✅ Approve", "callback_data": f"approve:{request_id}"},
+            {"text": "❌ Deny", "callback_data": f"deny:{request_id}"}
+        ]
+        inline_keyboard = [buttons]
+        if has_diff:
+            inline_keyboard.append([{"text": "🔍 View Diff", "callback_data": f"diff:{request_id}"}])
+
         reply_markup = {
-            "inline_keyboard": [
-                [
-                    {"text": "✅ Approve", "callback_data": f"approve:{request_id}"},
-                    {"text": "❌ Deny", "callback_data": f"deny:{request_id}"}
-                ]
-            ]
+            "inline_keyboard": inline_keyboard
         }
         return await self.send_message(chat_id, text, reply_markup=reply_markup)

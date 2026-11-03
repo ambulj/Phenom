@@ -901,3 +901,39 @@ Milestone 7.0 (**Phenom 7.0: Proactive Autonomous Executive & Ambient Anticipati
 - Zero permanent file deletion (Rule 7 enforced via `send2trash` recycle bin).
 - Headless Playwright topic research without OS focus theft or cursor disruption.
 - Sub-25ms synchronous Guardian kill switch SLA strictly upheld across the entire stack.
+
+
+---
+
+# Milestone 8.0: Dual-Presence Autonomous Developer & Mobile Executive Partner
+
+### Phase 1: Developer Workspace Sentinel & Git State Tracker (Completed)
+- **Win32 Active IDE Tracker**: workspace_sentinel.py detects active IDE windows (VS Code, Cursor, Windsurf, Visual Studio, PyCharm), resolves project root path, and tracks git branch and line diffs.
+- **Two-Stage Git State Caching**: Filesystem stat checks achieve < 0.1ms cache evaluation without invoking redundant subprocess git diff commands.
+- **Secret Masking Invariant**: .env, credentials, *secret*, *.pem, id_rsa, 	oken, password strictly masked as [PROTECTED_SECRET_FILE].
+- **Cyber HUD Status Pill**: Fluent/Cyber HUD header badge displays active branch, diff lines, and click-to-expand popover.
+- **Safety Registry**: coding_get_workspace_state registered at Tier 0 (Read-Only).
+- **Verification**: services/backend/tests/test_workspace_sentinel.py (5/5 PASSED).
+
+### Phase 2: Proactive Dev Build Sentinel & Patch Fix Drafter (Completed)
+- **Deterministic Multi-Runner Traceback Parser**: 	raceback_parser.py parses pytest, vitest, jest, tsc, and cargo failures into structured diagnostics.
+- **Unified Diff Synthesizer & Atomic Rollback**: Non-destructive git stash create 'Phenom pre-patch snapshot' creates a dangling commit token representing uncommitted changes. Rollback via git reset --hard HEAD && git stash apply <token> restores worktree with 100% fidelity.
+- **Proactive Card Dispatch & Obsidian Logging**: Failures broadcast proactive cards to the Cyber HUD and log debug entries to ault/Projects/{ProjectName}.md.
+- **Safety Registry**: coding_diagnose_build_failure (Tier 0), coding_draft_patch (Tier 0), coding_apply_patch (Tier 1), coding_revert_patch (Tier 1).
+- **Verification**: services/backend/tests/test_build_sentinel.py (5/5 PASSED).
+
+### Phase 3: Telegram Mobile Executive Companion & Remote 1-Click Approval Gateway (Completed)
+- **Enriched Developer & Operational Queries (MOB-01)**:
+  - /status: System health, VRAM, Guardian state, active IDE process, and active git branch + uncommitted file changes.
+  - /git: Dedicated workspace tracker report (active repo, branch, ahead/behind, modified/untracked files, line delta).
+  - /agenda: Today's upcoming Google Calendar meetings with attendee summary and conference links.
+  - /emails: High-priority triaged Gmail threads with suggested drafts.
+  - /briefing: On-demand Executive Morning/Evening Briefing markdown summary.
+  - /diff [req_id]: Unified diff viewer for pending code/patch/file modifications.
+- **Dual-Presence 1-Click Action Approval Gateway (MOB-02)**:
+  - When Tier 1 desktop confirmations are queued, push notifications are sent to Telegram with inline buttons ([Approve], [Deny], [View Diff]).
+  - Remote click asynchronously resolves desktop pending_confirmations[req_id], broadcasting confirm.resolved to the desktop WebSocket in real time.
+- **Inbound Taint Inspection & Quarantine (SAF-01)**:
+  - All incoming Telegram messages pass through 	aint_tracker.inspect_and_sanitize(text, source='telegram') to prevent prompt injection hijacking.
+- **Safety Registry Tools**: Registered 	elegram_send_mobile_alert (Tier 0) and 	elegram_get_remote_status (Tier 0).
+- **Verification**: services/backend/tests/test_telegram_mobile_companion.py (7/7 PASSED). Combined Milestone 8.0 regression suite: 17/17 PASSED.

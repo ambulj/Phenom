@@ -546,3 +546,39 @@ otification_policy == 'silent').
    - External calendar event summaries, inbound email bodies, and web research snippets are inspected via `taint_tracker.inspect_and_sanitize()`.
    - Adversarial prompt injection attacks (30-pattern corpus) are intercepted, tagged, and quarantined in `<untrusted_external_content>` tags.
    - Tainted contexts automatically escalate Tier 1 mutating tools to Tier 2 (explicit interactive confirmation with security warning; remembered approvals suspended).
+
+
+## 24. Autonomous Developer & Mobile Executive Partner Safety Guarantees (Phenom 8.0)
+
+### Phase 1: Developer Workspace Sentinel & Git State Tracker (DEV-01)
+1. **Zero Secret Leaking in Git Tracking**:
+   - DeveloperWorkspaceState inspects tracked repository state and strictly masks secret files matching sensitive patterns (.env, credentials, *secret*, *.pem, id_rsa, 	oken, password) to [PROTECTED_SECRET_FILE].
+2. **Safety Registry Classification**:
+   - coding_get_workspace_state: Tier 0 read-only tool for inspecting active IDE process, git branch, line delta math, and changed files.
+3. **Synchronous Guardian Halt (< 1ms)**:
+   - workspace_sentinel.halt() halts background polling loops immediately upon Guardian trigger.
+
+### Phase 2: Proactive Dev Build Sentinel & Patch Fix Drafter (DEV-02)
+1. **Deterministic Multi-Runner Traceback Ingestion**:
+   - Traceback patterns for pytest, vitest/jest, tsc, and cargo are parsed deterministically into structured diagnostics with secret masking.
+2. **Atomic Rollback Guarantee via Non-Destructive Git Stash Pre-Patch Snapshots**:
+   - Before applying any unified patch, git stash create 'Phenom pre-patch snapshot' captures a dangling commit representing the developer's exact uncommitted tree without touching disk.
+   - Any patch failure or user rollback triggers git reset --hard HEAD and git stash apply <token>, guaranteeing 100% worktree restoration.
+3. **Safety Registry Classification**:
+   - coding_diagnose_build_failure: Tier 0 read-only diagnostic parsing.
+   - coding_draft_patch: Tier 0 read-only unified diff generation.
+   - coding_apply_patch: Tier 1 action requiring explicit interactive preview confirmation before applying git patch.
+   - coding_revert_patch: Tier 1 action requiring preview confirmation before restoring worktree from pre-patch snapshot.
+
+### Phase 3: Telegram Mobile Executive Companion & Remote 1-Click Approval Gateway (MOB-01, MOB-02)
+1. **Inbound Prompt Injection Defense & Taint Quarantine (SAF-01)**:
+   - Every inbound Telegram update passes through 	aint_tracker.inspect_and_sanitize(text, source='telegram').
+   - Injections (IGNORE ALL PREVIOUS INSTRUCTIONS, etc.) are quarantined, logged as Tier 3 security events, and stripped from execution.
+2. **Dual-Presence 1-Click Action Approval Gateway (MOB-02)**:
+   - When Tier 1 desktop confirmations are queued, an interactive push notification is delivered to the owner's Telegram with inline keyboard buttons: [Approve], [Deny], [View Diff].
+   - Approvals over Telegram asynchronously fulfill desktop pending_confirmations[req_id], broadcasting confirm.resolved to the desktop WebSocket in real time.
+3. **Safety Registry Classification**:
+   - 	elegram_send_mobile_alert: Tier 0 read-only ambient notification tool.
+   - 	elegram_get_remote_status: Tier 0 read-only connection status query.
+4. **Guardian Remote Kill Switch SLA (< 25ms)**:
+   - /halt and /kill commands trigger synchronous Guardian halt in < 1ms (verified 0.413ms benchmark).
