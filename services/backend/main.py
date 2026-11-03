@@ -319,6 +319,7 @@ from services.backend.triage.executive_briefing import executive_briefing
 from services.backend.automation.topic_researcher import topic_researcher
 from services.backend.automation.workspace_housekeeper import workspace_housekeeper
 from services.backend.memory.daily_copilot import daily_copilot
+from services.backend.coding.workspace_sentinel import workspace_sentinel
 
 
 
@@ -965,6 +966,8 @@ async def lifespan(app: FastAPI):
         context_sensor.start()
         calendar_scanner.start()
         gmail_triage.start()
+        workspace_sentinel.on_update_callback = lambda s: asyncio.create_task(broadcast_message({"id": f"ws-{os.urandom(4).hex()}", "type": "DEV_WORKSPACE_UPDATE", "ts": str(time.time()), "payload": s.model_dump()})) if asyncio.get_event_loop().is_running() else None
+        asyncio.create_task(workspace_sentinel.run_sentinel_loop())
     except Exception as exc:
         print(f'[Proactive/Triage] Could not start sensors/triage: {exc}')
 
@@ -993,6 +996,7 @@ async def lifespan(app: FastAPI):
         calendar_scanner.stop()
         gmail_triage.stop()
         workspace_housekeeper.halt()
+        workspace_sentinel.halt()
         topic_researcher.halt()
     except Exception:
         pass
@@ -1453,6 +1457,7 @@ def on_guardian_state_change(new_state: str):
             gmail_triage.halt()
             topic_researcher.halt()
             workspace_housekeeper.halt()
+            workspace_sentinel.halt()
         except Exception:
             pass
 
@@ -1493,6 +1498,7 @@ def on_guardian_state_change(new_state: str):
             gmail_triage.reset()
             topic_researcher.reset()
             workspace_housekeeper.reset()
+            workspace_sentinel.reset()
         except Exception:
             pass
 

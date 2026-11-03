@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 import { HeaderBar } from './components/HeaderBar';
+import { DeveloperWorkspaceState } from './types/workspace';
 
 import { Orb, OrbQualityLevel } from './components/Orb';
 
@@ -86,6 +87,7 @@ export const App: React.FC = () => {
 
   const [activeHudCard, setActiveHudCard] = useState<HUDCardProps | null>(null);
   const [ambientAlerts, setAmbientAlerts] = useState<AmbientAlertItem[]>([]);
+  const [workspaceState, setWorkspaceState] = useState<DeveloperWorkspaceState | null>(null);
 
 
 
@@ -372,6 +374,9 @@ export const App: React.FC = () => {
                 }
               ]
             });
+          } else if (mtype === 'DEV_WORKSPACE_UPDATE' || mtype === 'dev.workspace_update') {
+            const wsState = payload as DeveloperWorkspaceState;
+            setWorkspaceState(wsState);
           } else if (mtype === 'PROACTIVE_ORB_PULSE' || mtype === 'proactive.orb_pulse') {
             setOrbState((prev) => (prev === 'idle' ? 'listening' : prev));
             setTimeout(() => {
@@ -997,6 +1002,7 @@ export const App: React.FC = () => {
         onOpenPalette={() => setIsCommandPaletteOpen(true)}
 
         onToggleConsole={() => setIsConsoleOpen((prev) => !prev)}
+        workspaceState={workspaceState}
 
       />
 

@@ -236,3 +236,30 @@ def handle_resolve_port_conflict(port: int, terminate: bool = False) -> Dict[str
                 "previous_process": info.get("process_name")
             }
     return info
+
+
+# ==========================================
+# Developer Workspace State (Tier 0 - Read Only)
+# ==========================================
+
+from services.backend.coding.workspace_sentinel import workspace_sentinel
+
+class GetWorkspaceStateArgs(BaseModel):
+    workspace_path: Optional[str] = Field(default=None, description="Optional path of workspace to inspect. If omitted, uses active foreground IDE workspace.")
+
+@registry.register(
+    name="coding_get_workspace_state",
+    tier=0,
+    description="Inspects active developer workspace, git branch, dirty status, and lines added/deleted with microsecond stat caching.",
+    args_schema=GetWorkspaceStateArgs,
+    preview_fn=lambda a: f"Inspect developer workspace state{' for ' + a.get('workspace_path') if a.get('workspace_path') else ''}"
+)
+def handle_get_workspace_state(workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    if workspace_path:
+        state = workspace_sentinel.inspect_workspace(workspace_path)
+    else:
+        state = workspace_sentinel.poll_once() or workspace_sentinel.get_current_state()
+        if not state:
+            state = workspace_sentinel.inspect_workspace("C:\\Phenom")
+    return state.model_dump()
+
