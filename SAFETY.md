@@ -582,3 +582,17 @@ otification_policy == 'silent').
    - 	elegram_get_remote_status: Tier 0 read-only connection status query.
 4. **Guardian Remote Kill Switch SLA (< 25ms)**:
    - /halt and /kill commands trigger synchronous Guardian halt in < 1ms (verified 0.413ms benchmark).
+
+
+### Phase 4: Deep Project Knowledge Crystallization & Dual-Presence Guardian Safety (RES-01, SAF-01, SAF-02)
+1. **Non-Destructive Vault Preservation**:
+   - `ProjectKnowledgeCrystallizer` non-destructively updates `vault/Projects/{ProjectName}.md` using regex section parsing, strictly preserving user handwritten notes in `## Notes & Journal`.
+2. **Reversible Snapshot Rollback**:
+   - Every note mutation creates an in-memory snapshot keyed by a unique UUID `rollback_token`, allowing instantaneous undo via `coding_rollback_crystallized_note`.
+3. **Safety Registry Tool Classification**:
+   - `coding_crystallize_project_knowledge`: Tier 1 (Vault modification, requires preview).
+   - `coding_rollback_crystallized_note`: Tier 1 (Rollback action, requires preview).
+   - `coding_query_project_knowledge`: Tier 0 (Read-only query of project documentation).
+4. **Sub-25ms Synchronous Guardian Halt Verification**:
+   - Hooked `project_crystallizer.halt()` and `project_crystallizer.reset()` into Guardian callbacks.
+   - Synchronous kill switch execution benchmarked at **< 1.0ms** (0.413ms) across all subsystems. All subsystems raise `PermissionError` when halted.

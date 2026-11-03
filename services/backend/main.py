@@ -322,6 +322,7 @@ from services.backend.automation.workspace_housekeeper import workspace_housekee
 from services.backend.memory.daily_copilot import daily_copilot
 from services.backend.coding.workspace_sentinel import workspace_sentinel
 from services.backend.coding.build_sentinel import build_sentinel
+from services.backend.coding.project_crystallizer import project_crystallizer
 
 
 
@@ -1461,6 +1462,7 @@ def on_guardian_state_change(new_state: str):
             workspace_housekeeper.halt()
             workspace_sentinel.halt()
             build_sentinel.halt()
+            project_crystallizer.halt()
         except Exception:
             pass
 
@@ -1503,6 +1505,7 @@ def on_guardian_state_change(new_state: str):
             workspace_housekeeper.reset()
             workspace_sentinel.reset()
             build_sentinel.reset()
+            project_crystallizer.reset()
         except Exception:
             pass
 

@@ -348,3 +348,79 @@ def handle_revert_patch(rollback_token: str, workspace_path: Optional[str] = Non
     return {"status": "reverted", "rollback_token": rollback_token}
 
 
+
+
+# ==========================================
+# Project Knowledge Crystallization (Phase 4 RES-01 / SAF-01)
+# ==========================================
+
+from services.backend.coding.project_crystallizer import project_crystallizer
+
+class CrystallizeKnowledgeArgs(BaseModel):
+    project_name: str = Field(..., description="Name of the project to document.")
+    root_path: str = Field(..., description="Repository root path.")
+    title: str = Field(..., description="Title of architectural decision or finding.")
+    decision: str = Field(..., description="Content of decision or finding.")
+    rationale: Optional[str] = Field(default=None, description="Optional architectural rationale or trade-offs.")
+    stack_summary: Optional[str] = Field(default=None, description="Optional tech stack summary.")
+
+@registry.register(
+    name="coding_crystallize_project_knowledge",
+    tier=1,
+    description="Crystallizes architectural decisions and findings into vault/Projects/{ProjectName}.md with bidirectional wikilinks.",
+    args_schema=CrystallizeKnowledgeArgs,
+    preview_fn=lambda a: f"Crystallize architectural decision '{a.get('title')}' into Obsidian vault/Projects/{a.get('project_name')}.md"
+)
+def handle_crystallize_knowledge(
+    project_name: str,
+    root_path: str,
+    title: str,
+    decision: str,
+    rationale: Optional[str] = None,
+    stack_summary: Optional[str] = None
+) -> Dict[str, Any]:
+    return project_crystallizer.crystallize_decision(
+        project_name=project_name,
+        root_path=root_path,
+        title=title,
+        decision=decision,
+        rationale=rationale,
+        stack_summary=stack_summary
+    )
+
+
+class RollbackKnowledgeArgs(BaseModel):
+    project_name: str = Field(..., description="Target project name.")
+    rollback_token: str = Field(..., description="Rollback token returned during crystallization.")
+
+@registry.register(
+    name="coding_rollback_crystallized_note",
+    tier=1,
+    description="Reverts vault/Projects/{ProjectName}.md to prior snapshot state using a rollback token.",
+    args_schema=RollbackKnowledgeArgs,
+    preview_fn=lambda a: f"Revert Obsidian project note {a.get('project_name')}.md using rollback token {a.get('rollback_token')}"
+)
+def handle_rollback_knowledge(project_name: str, rollback_token: str) -> Dict[str, Any]:
+    restored = project_crystallizer.rollback_note(project_name, rollback_token)
+    return {
+        "status": "reverted" if restored else "failed",
+        "project_name": project_name,
+        "rollback_token": rollback_token
+    }
+
+
+class QueryKnowledgeArgs(BaseModel):
+    project_name: str = Field(..., description="Target project name to query.")
+
+@registry.register(
+    name="coding_query_project_knowledge",
+    tier=0,
+    description="Reads crystallized architectural knowledge and decision history for a project from Obsidian.",
+    args_schema=QueryKnowledgeArgs,
+    preview_fn=lambda a: f"Query Obsidian project documentation for {a.get('project_name')}"
+)
+def handle_query_knowledge(project_name: str) -> Dict[str, Any]:
+    content = project_crystallizer.read_project_knowledge(project_name)
+    if content is None:
+        return {"status": "not_found", "message": f"No project note found for {project_name}."}
+    return {"status": "found", "project_name": project_name, "content": content}
