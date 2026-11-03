@@ -1364,3 +1364,42 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 
 
 
+---
+
+# Milestone 11.0 Phase 1: Dynamic Runtime Tool Synthesis & AST-Inspected Sandboxed Micro-Plugins
+**Status:** Complete & Verified
+**Requirements:** `SYN-01`, `SAF-01`, `SAF-02`
+
+### Key Implementations
+1. **Pydantic Schemas (`services/backend/schemas/synthesis.py`)**:
+   - `ASTViolation`, `ASTInspectionReport`, `ToolSynthesisRequest`, `SynthesizedToolProposal`, `SandboxExecutionResult`, `SynthesizedToolMetadata`.
+   - Tool arguments: `SynthesizeCustomToolArgs`, `RunSynthesizedToolArgs`, `ListSynthesizedToolsArgs`, `RevokeSynthesizedToolArgs`.
+2. **AST Safety Inspector (`services/backend/safety/ast_inspector.py`)**:
+   - Static AST inspection visitor enforcing deterministic rejection of dangerous builtins (`eval`, `exec`, `globals`, `locals`, `__import__`, `breakpoint`, `getattr`, `setattr`), dunder reflection (`__subclasses__`, `__bases__`, `__mro__`, `__globals__`), unauthorized modules (`socket`, `subprocess`, `ctypes`, `winreg`, `requests`, `urllib`), permanent file unlinking (`os.remove`, `os.unlink`, `shutil.rmtree`, `Path.unlink` per Permanent Rule 7), network exfiltration (Permanent Rule 4), and payment primitives (Permanent Rule 8).
+3. **Restricted Subprocess Sandbox (`services/backend/coding/restricted_sandbox.py`)**:
+   - Isolated Python subprocess execution using JSON `stdin`/`stdout` streams with zero temporary scratch files on disk.
+   - 256 MB RSS memory ceiling with active `psutil` background monitoring thread.
+   - 5.0s default execution timeout (10.0s hard cap) using non-blocking pipe reads.
+   - Offline proxy traps (`HTTP_PROXY=http://127.0.0.1:0`, `PIP_NO_INDEX=1`, `PHENOM_OFFLINE_MODE=1`).
+   - Windows recursive process tree termination and child PID tracking with `guardian.track_pid`.
+4. **Dynamic Tool Synthesizer & ToolRegistry Hot-Loading (`services/backend/coding/dynamic_synthesizer.py`, `services/backend/safety/registry.py`, `services/backend/tools/synthesis_tools.py`)**:
+   - Extended `ToolRegistry` with `register_tool_def` and `unregister`.
+   - Registered 4 synthesis management tools:
+     - `synthesize_custom_tool`: Tier 1 (Reversible change with preview).
+     - `run_synthesized_tool`: Tier 1 (Reversible change with preview).
+     - `list_synthesized_tools`: Tier 0 (Read-Only query).
+     - `revoke_synthesized_tool`: Tier 1 (Reversible change with preview).
+5. **Guardian Kill Switch Sub-25ms Synchronous SLA (`SAF-02`)**:
+   - Hooked `dynamic_synthesizer_manager.halt()` and `restricted_sandbox.halt()` into `on_guardian_state_change("halted")`.
+   - Benchmark verified synchronous halt latency: `< 1.0 ms` (< 25ms SLA).
+   - Documented Section 34 in `SAFETY.md`.
+
+### Test Results
+- `services/backend/tests/test_ast_inspector.py`: **9/9 PASSED**
+- `services/backend/tests/test_restricted_sandbox.py`: **6/6 PASSED**
+- `services/backend/tests/test_dynamic_tool_synthesis.py`: **6/6 PASSED**
+- `services/backend/tests/test_synthesis_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_11_phase_1_guardian_sla.py`: **3/3 PASSED**
+- Total Phase 1 Suite: **28/28 PASSED in 2.62s**
+- Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (445 files, 0 secrets)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.91s)**

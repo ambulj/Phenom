@@ -281,6 +281,9 @@ import services.backend.tools.mission_tools
 import services.backend.tools.virtual_gui_tools
 import services.backend.tools.mirror_tools
 import services.backend.tools.mesh_tools
+import services.backend.tools.synthesis_tools
+from services.backend.coding.dynamic_synthesizer import dynamic_synthesizer_manager
+from services.backend.coding.restricted_sandbox import restricted_sandbox
 from services.backend.mesh.p2p_mesh_engine import p2p_mesh_engine
 from services.backend.personality.cognitive_mirror import cognitive_mirror
 from services.backend.automation.virtual_desktop_manager import virtual_desktop_manager
@@ -1527,6 +1530,8 @@ def on_guardian_state_change(new_state: str):
             virtual_desktop_manager.halt()
             cognitive_mirror.halt()
             p2p_mesh_engine.halt()
+            dynamic_synthesizer_manager.halt()
+            restricted_sandbox.halt()
         except Exception:
             pass
 
@@ -1580,6 +1585,8 @@ def on_guardian_state_change(new_state: str):
             virtual_desktop_manager.reset()
             cognitive_mirror.reset()
             p2p_mesh_engine.reset()
+            dynamic_synthesizer_manager.reset()
+            restricted_sandbox.reset()
         except Exception:
             pass
 

@@ -876,6 +876,42 @@ otification_policy == 'silent').
 - While halted, all pairing operations, sync pushes, and message framing immediately raise `PermissionError("Operation blocked: P2P Mesh is halted by Guardian Kill Switch.")`.
 - Clean state reset and resumption via `p2p_mesh_engine.reset()` when Guardian transitions to `idle`.
 
+---
+
+## 34. Dynamic Runtime Micro-Tool Synthesis & Execution Sandbox Guarantees (Milestone 11.0 Phase 1)
+
+### 1. Deterministic AST Static Security Inspection (SYN-01, Rule 4, Rule 7, Rule 8)
+- **Pre-Execution Static Validation**: Every candidate micro-tool function and test suite undergoes deterministic AST parsing via `ASTSafetyInspector` prior to disk persistence or subprocess execution. Syntax errors and empty code immediately evaluate to `is_safe=False` (Tier 3).
+- **Prohibited Built-in Functions & Reflection**: Strict prohibition of dynamic evaluation and reflection escapes: `eval`, `exec`, `compile`, `globals`, `locals`, `__import__`, `breakpoint`, `input`, `getattr`, `setattr`, `delattr`. Banned dunder attributes (`__subclasses__`, `__bases__`, `__mro__`, `__globals__`, `__code__`, `__closure__`, `__builtins__`, `__dict__`, `__class__`) are rejected at AST parse time.
+- **Prohibited Modules & Zero Network Exfiltration (Permanent Rule 4)**: Unauthorized system and networking libraries are blocked: `socket`, `subprocess`, `ctypes`, `winreg`, `urllib`, `requests`, `http`, `ftplib`, `telnetlib`, `aiohttp`, `httpx`, `multiprocessing`, `pty`, `importlib`, `shutil`, `pickle`, `asyncio.subprocess`.
+- **Permanent File Deletion Prohibition (Permanent Rule 7)**: Delete means recycle bin. Destructive unlinking or directory pruning (`os.remove`, `os.unlink`, `os.rmdir`, `shutil.rmtree`, `Path.unlink`, `Path.rmdir`) is blocked at the AST level.
+- **Zero Payment Primitives by Construction (Permanent Rule 8)**: Functions, arguments, classes, and identifiers referencing payment primitives (`pay`, `payment`, `checkout`, `credit_card`, `purchase`, `stripe`, `paypal`, `razorpay`, `bank_transfer`, `cvv`, `otp`) are rejected.
+
+### 2. Restricted Subprocess Execution Sandbox (SYN-01)
+- **In-Memory Stdio Protocol**: Micro-tools execute exclusively in-memory inside dedicated Python subprocesses via `sys.stdin` and `sys.stdout` JSON streams. Zero scratch files or temporary scripts are created in the repository worktree.
+- **256 MB RSS Memory Ceiling**: A dedicated monitor thread polls process and child tree RSS memory every 20ms via `psutil`. If memory exceeds 256 MB, the entire process tree is terminated immediately with `killed_by_oom=True`.
+- **Execution Timeout Hard Cap**: Subprocesses are bounded by a strict 5.0s default timeout (10.0s hard maximum). Any infinite loop is terminated via `proc.communicate(timeout=...)` and process tree termination (`timed_out=True`).
+- **Offline Proxy Isolation**: Subprocesses inherit a sanitized environment stripped of all secret credentials (API keys, tokens, passwords) and injected with offline proxy traps (`HTTP_PROXY=http://127.0.0.1:0`, `HTTPS_PROXY=http://127.0.0.1:0`, `ALL_PROXY=http://127.0.0.1:0`, `PIP_NO_INDEX=1`, `PHENOM_OFFLINE_MODE=1`).
+
+### 3. ToolRegistry Dynamic Hot-Loading & Governance (SAF-01)
+- **Dynamic Pydantic v2 Schemas**: Synthesized micro-tools are registered in `ToolRegistry` with dynamically generated, sanitized Pydantic schemas (`re.sub(r'[^a-zA-Z0-9_]', '_', tool_name).capitalize() + 'Args'`).
+- **Automated In-Sandbox Testing**: Candidate micro-tools must pass automated unit test suites inside `RestrictedToolSandbox` before hot-registration is permitted.
+- **Dynamic Risk Tiering**:
+  - `CAP_MATH` & `CAP_DATA_TRANSFORM`: Tier 0 eligible (pure calculation, regex, parsing, format transformation).
+  - `CAP_FILE_READ` & `CAP_FILE_WRITE`: Tier 1 required with preview confirmation.
+- **Synthesis Management Tools in ToolRegistry**:
+  - `synthesize_custom_tool`: Tier 1 (Reversible change with preview). Synthesizes, AST-inspects, tests, and hot-registers a micro-tool.
+  - `run_synthesized_tool`: Tier 1 (Reversible change with preview). Executes an active synthesized micro-tool in the restricted sandbox.
+  - `list_synthesized_tools`: Tier 0 (Read-Only). Lists active synthesized micro-tools, execution counts, average durations, and capabilities.
+  - `revoke_synthesized_tool`: Tier 1 (Reversible change with preview). Revokes and unregisters a synthesized tool from `ToolRegistry` and `SynthesizedToolManager`. Unregistered tools immediately fail with Tier 3 rejection.
+
+### 4. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `restricted_sandbox.halt()` and `dynamic_synthesizer_manager.halt()` are synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Gathers and kills all active child subprocess trees and parent PIDs in `< 25ms` (< 1ms typical). Child PIDs are tracked with `guardian.track_pid` and untracked in a `finally` block.
+- While halted, any call to `synthesize_custom_tool`, `run_synthesized_tool`, `execute_function`, or `execute_unit_test` immediately raises `PermissionError("Subprocess sandbox execution halted by Guardian kill switch.")`.
+- Clean state reset and resumption via `restricted_sandbox.reset()` and `dynamic_synthesizer_manager.reset()` when Guardian transitions to `idle`.
+
+
 
 
 
