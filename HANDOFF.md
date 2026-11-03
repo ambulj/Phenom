@@ -1403,3 +1403,47 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Total Phase 1 Suite: **28/28 PASSED in 2.62s**
 - Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (445 files, 0 secrets)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.91s)**
+---
+
+# Milestone 11.0 Phase 2: Hierarchical Tree-of-Thought (ToT) Metacognitive Goal Engine & Self-Healing DAGs
+**Status:** Complete & Verified
+**Requirements:** `PLN-01`, `SAF-01`, `SAF-02`
+
+### Key Implementations
+1. **Schemas & Data Contracts (`services/backend/schemas/tot.py`, `apps/desktop/src/types/protocol.ts`)**:
+   - `NodeStatus` (7 states: `PENDING`, `RUNNING`, `COMPLETED`, `FAILED`, `PRUNED`, `ROLLED_BACK`, `SKIPPED`), `BranchType` (`PRIMARY`, `CONTINGENCY`, `EXPLORATORY`), `DAGNode`, `DAGBranch`, `DAGCheckpoint`, `MetacognitiveReflection`, `GoalDAG`.
+   - Tool arguments: `TotCreateGoalDagArgs`, `TotExecuteStepArgs`, `TotGetDagStatusArgs`, `TotPruneBranchArgs`, `TotAbortGoalArgs`.
+   - TypeScript protocol interfaces for WebSocket desktop synchronization.
+2. **Tree-of-Thought (ToT) Goal Planner (`services/backend/orchestrator/tot_planner.py`)**:
+   - Decomposes natural language objectives into hierarchical DAGs with primary and contingency branches.
+   - Cycle detection using 3-color DFS graph traversal (`detect_cycles`) preventing circular dependency deadlocks.
+   - Kahn's algorithm for topological ordering and ready frontier calculation (`get_ready_nodes`), cleanly supporting parallel roots with empty `depends_on`.
+   - Multi-attribute utility branch evaluation: $\text{utility} = 0.50 \cdot F - 0.25 \cdot (L / 300) - 0.25 \cdot (R / 3)$.
+   - Pre-flight safety checks enforcing Permanent Rule 8 (prohibiting payment/checkout) and Permanent Rule 7 (prohibiting permanent deletion).
+3. **Metacognitive Reflector & Loop Detection (`services/backend/orchestrator/metacognition.py`)**:
+   - Sliding-window execution trace history ($K=10$).
+   - Deterministic outcome signature hashing: `SHA256(node_id || action_type || status || error)`.
+   - Stagnation heuristic ($\ge 3$ repeated identical failures) and oscillation heuristic (2-cycle $[X, Y, X, Y]$ or 3-cycle $[X, Y, Z, X, Y, Z]$ ping-pong).
+   - Dynamic branch pruning: marks branch `pruned = True`, pending branch nodes to `PRUNED`, and automatically hands off execution to the highest-utility contingency branch.
+4. **Self-Healing State Rollback Engine (`services/backend/orchestrator/dag_state.py`)**:
+   - Deep-copy checkpoint immutability: captures isolated snapshots with `copy.deepcopy()` preventing subsequent in-place context mutations from corrupting historical checkpoints.
+   - Deterministic rollback restoring context snapshots and marking failed/tainted nodes as `ROLLED_BACK`.
+   - Node execution runner with retry budget and automated rollback/prune escalation.
+5. **ToolRegistry Governance & Guardian Sub-25ms SLA (`SAF-01`, `SAF-02`)**:
+   - Registered 5 governance tools in `ToolRegistry`: `tot_create_goal_dag` (Tier 1), `tot_execute_step` (Tier 1), `tot_get_dag_status` (Tier 0), `tot_prune_branch` (Tier 1), `tot_abort_goal` (Tier 1).
+   - Registered `tot_planner`, `dag_state_manager`, `metacognitive_reflector` in `on_guardian_state_change` in `services/backend/main.py`.
+   - Synchronous halt latency benchmarked at `< 1.0 ms` (< 25ms SLA) with immediate active `asyncio.Task` cancellation.
+   - Added Section 35 to `SAFETY.md`.
+6. **Cyber HUD React Visualizer (`apps/desktop/src/components/CyberHUD/GoalDAGVisualizer.tsx`)**:
+   - Cyber-themed dark HUD component with particle/glow styling rendering topological depth layers, status badges, progress bar, branch tabs, and interactive user controls ("Prune Branch", "Resume DAG", "Abort Goal").
+
+### Test Results
+- `services/backend/tests/test_tot_planner.py`: **9/9 PASSED**
+- `services/backend/tests/test_metacognitive_reflector.py`: **4/4 PASSED**
+- `services/backend/tests/test_dag_state_rollback.py`: **5/5 PASSED**
+- `services/backend/tests/test_tot_tools_safety.py`: **6/6 PASSED**
+- `services/backend/tests/test_milestone_11_phase_2_guardian_sla.py`: **4/4 PASSED**
+- Total Phase 2 Suite: **28/28 PASSED in 0.33s**
+- Cumulative Milestone 11 Suite (Phase 1 + Phase 2): **56/56 PASSED in 2.87s**
+- Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (455 files, 0 secrets)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.77s)**

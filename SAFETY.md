@@ -918,3 +918,35 @@ otification_policy == 'silent').
 
 
 
+
+
+---
+
+## 35. Hierarchical Tree-of-Thought (ToT) Metacognitive Goal Engine & Self-Healing DAGs (Milestone 11.0 Phase 2)
+
+### 1. Pre-Flight Safety Policy Enforcement (PLN-01, Rule 7, Rule 8)
+- **Zero Payment Primitives by Construction (Permanent Rule 8)**: Pre-flight inspection prohibits goals or steps referencing payments, checkout, credit cards, bank transfers, CVV, or financial transactions. Unsafe goals immediately raise `PermissionError`.
+- **Permanent File Deletion Prohibition (Permanent Rule 7)**: Delete means recycle bin. Commands invoking permanent unlinking, `rm -rf`, `shutil.rmtree`, or disk formatting are rejected with `ValueError`.
+- **Graph Acyclicity & Parallel Roots**: Cycle detection via 3-color DFS traversal guarantees acyclicity before execution begins. Multiple parallel roots with empty `depends_on` are cleanly supported in the ready frontier.
+
+### 2. Metacognitive Reflection & Dynamic Pruning (PLN-01)
+- **Sliding-Window Outcome Signatures**: Step outcomes are deterministically hashed via `SHA256(node_id || action_type || status || error)` across a sliding history window ($K=10$).
+- **Stagnation & Oscillation Heuristics**: $\ge 3$ repeated identical failures or cyclic ping-pong ($[X, Y, X, Y]$ or $[X, Y, Z, X, Y, Z]$) trigger automated branch pruning (`PRUNE_BRANCH`).
+- **Dynamic Branch Pruning & Contingency Handoff**: Unviable branches are marked `pruned=True`, pending branch nodes are set to `PRUNED`, and execution seamlessly transitions to the highest-utility alternative contingency branch.
+
+### 3. Self-Healing State Rollback Engine (PLN-01)
+- **Deep-Copy Checkpoint Immutability**: Context snapshots are captured using `copy.deepcopy()`. Subsequent in-place modifications to shared context dictionaries cannot mutate historical snapshots.
+- **Deterministic State Restoration**: When node retries are exhausted or loops are confirmed, `DAGStateManager.rollback_to_checkpoint()` restores shared context to the baseline snapshot, transitions affected nodes to `ROLLED_BACK`, and hands execution to contingency branches without global state corruption.
+
+### 4. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `tot_create_goal_dag`: Tier 1 (Reversible change with preview). Arguments: `TotCreateGoalDagArgs(goal_description: str, max_contingency_branches: int, exploration_depth: int)`. Preview: `"Decompose objective into Hierarchical Tree-of-Thought Goal DAG..."`.
+- `tot_execute_step`: Tier 1 (Reversible change with preview). Arguments: `TotExecuteStepArgs(dag_id: str, node_id: Optional[str])`. Preview: `"Execute step for Goal DAG '{dag_id}' (Node: {node_id or 'next ready'})"`.
+- `tot_get_dag_status`: Tier 0 (Read-Only). Arguments: `TotGetDagStatusArgs(dag_id: str)`. Preview: `"Inspect Goal DAG topology and execution status for '{dag_id}' (Read-Only)"`.
+- `tot_prune_branch`: Tier 1 (Reversible change with preview). Arguments: `TotPruneBranchArgs(dag_id: str, branch_id: str, reason: Optional[str])`. Preview: `"Prune branch '{branch_id}' in Goal DAG '{dag_id}'..."`.
+- `tot_abort_goal`: Tier 1 (Reversible change with preview). Arguments: `TotAbortGoalArgs(dag_id: str, reason: Optional[str])`. Preview: `"Abort execution and roll back Goal DAG '{dag_id}'..."`.
+
+### 5. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `tot_planner.halt()`, `dag_state_manager.halt()`, and `metacognitive_reflector.halt()` are synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Cancels all active step `asyncio.Task` handles, halts execution loops, and clears queues in `< 25ms` (< 1ms typical).
+- While halted, all calls to `tot_create_goal_dag`, `tot_execute_step`, `tot_prune_branch`, `tot_abort_goal`, `get_ready_nodes`, `plan_objective`, and `create_checkpoint` immediately raise `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.

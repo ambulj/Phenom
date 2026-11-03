@@ -282,6 +282,10 @@ import services.backend.tools.virtual_gui_tools
 import services.backend.tools.mirror_tools
 import services.backend.tools.mesh_tools
 import services.backend.tools.synthesis_tools
+import services.backend.tools.tot_tools
+from services.backend.orchestrator.tot_planner import tot_planner
+from services.backend.orchestrator.dag_state import dag_state_manager
+from services.backend.orchestrator.metacognition import metacognitive_reflector
 from services.backend.coding.dynamic_synthesizer import dynamic_synthesizer_manager
 from services.backend.coding.restricted_sandbox import restricted_sandbox
 from services.backend.mesh.p2p_mesh_engine import p2p_mesh_engine
@@ -1532,6 +1536,9 @@ def on_guardian_state_change(new_state: str):
             p2p_mesh_engine.halt()
             dynamic_synthesizer_manager.halt()
             restricted_sandbox.halt()
+            tot_planner.halt()
+            dag_state_manager.halt()
+            metacognitive_reflector.halt()
         except Exception:
             pass
 
@@ -1587,6 +1594,9 @@ def on_guardian_state_change(new_state: str):
             p2p_mesh_engine.reset()
             dynamic_synthesizer_manager.reset()
             restricted_sandbox.reset()
+            tot_planner.reset()
+            dag_state_manager.reset()
+            metacognitive_reflector.reset()
         except Exception:
             pass
 

@@ -338,6 +338,84 @@ export interface SwarmDebateDecisionMsg extends BaseMessage {
   payload: SwarmDebateDecisionPayload;
 }
 
+// Hierarchical Tree-of-Thought (ToT) Goal DAG Types (PLN-01)
+export type DAGNodeStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'PRUNED'
+  | 'ROLLED_BACK'
+  | 'SKIPPED';
+
+export type DAGBranchType = 'PRIMARY' | 'CONTINGENCY' | 'EXPLORATORY';
+
+export interface DAGNodePayload {
+  node_id: string;
+  title: string;
+  description: string;
+  action_type: string;
+  tool_name?: string;
+  tool_args?: Record<string, any>;
+  depends_on: string[];
+  branch_id: string;
+  tier: number;
+  status: DAGNodeStatus;
+  feasibility_score: number;
+  estimated_duration_sec: number;
+  is_checkpoint: boolean;
+  retry_count: number;
+  max_retries: number;
+  error?: string;
+}
+
+export interface DAGBranchPayload {
+  branch_id: string;
+  name: string;
+  branch_type: DAGBranchType;
+  node_ids: string[];
+  feasibility_score: number;
+  estimated_duration_sec: number;
+  risk_tier: number;
+  is_active: boolean;
+  pruned: boolean;
+  prune_reason?: string;
+}
+
+export interface GoalDAGPayload {
+  dag_id: string;
+  goal_description: string;
+  nodes: Record<string, DAGNodePayload>;
+  branches: Record<string, DAGBranchPayload>;
+  active_branch_id: string;
+  status: string;
+  overall_progress_pct: number;
+  checkpoint_count?: number;
+  reflection_count?: number;
+}
+
+export interface GoalDAGUpdateMsg extends BaseMessage {
+  type: 'goal.dag_update';
+  payload: GoalDAGPayload;
+}
+
+export interface GoalPruneBranchMsg extends BaseMessage {
+  type: 'goal.prune_branch';
+  payload: {
+    dag_id: string;
+    branch_id: string;
+    reason?: string;
+  };
+}
+
+export interface GoalAbortMsg extends BaseMessage {
+  type: 'goal.abort';
+  payload: {
+    dag_id: string;
+    reason?: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -353,6 +431,7 @@ export type InboundServerMessage =
   | AutomationTakeoverPromptMsg
   | MissionMorningDebriefMsg
   | SwarmDebateEscalationMsg
+  | GoalDAGUpdateMsg
   | ErrorMsg;
 export type OutboundClientMessage =
   | ChatSendMsg
@@ -366,4 +445,6 @@ export type OutboundClientMessage =
   | VoiceMuteMsg
   | HotkeysUpdateMsg
   | AutomationTakeoverReplyMsg
-  | SwarmDebateDecisionMsg;
+  | SwarmDebateDecisionMsg
+  | GoalPruneBranchMsg
+  | GoalAbortMsg;
