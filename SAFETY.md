@@ -596,3 +596,24 @@ otification_policy == 'silent').
 4. **Sub-25ms Synchronous Guardian Halt Verification**:
    - Hooked `project_crystallizer.halt()` and `project_crystallizer.reset()` into Guardian callbacks.
    - Synchronous kill switch execution benchmarked at **< 1.0ms** (0.413ms) across all subsystems. All subsystems raise `PermissionError` when halted.
+
+## 25. Polish and Packaging Safety Guarantees (Phenom 8.0 / Phase 7)
+
+### 1. Local-Only Crash Logs and Sanitization Guarantees (Rule 4 & Rule 11)
+- Crash logs are stored strictly on the local machine (`services/backend/data/crash_logs/*.json`).
+- Zero telemetry, network transmission, or automated crash reporting to external services.
+- One-click sanitized diagnostic export deeply redacts:
+  - Windows user directories: `C:\Users\<username>\...` -> `C:\Users\[USER]\...`
+  - IP addresses: `\b(?:\d{1,3}\.){3}\d{1,3}\b` -> `[REDACTED_IP]`
+  - API keys and tokens: NVIDIA NIM keys -> `[REDACTED_NVIDIA_KEY]`, Telegram tokens -> `[REDACTED_TELEGRAM_TOKEN]`.
+
+### 2. Auto-Update Safety & Rollback Guarantee
+- Updates are staged in isolated cache directories and verified before application.
+- If a newly launched version fails to start or pass prerequisite checks, `AutoUpdateManager` automatically rolls back to the prior stable release artifact, preventing deadlocks or application bricking.
+
+### 3. First-Run Wizard & Permission Boundaries
+- `FirstRunWizard` strictly enforces user permission boundaries before initializing background indexing:
+  - Explicit folder selection (Documents, Downloads, Photos).
+  - Explicit API key input stored securely in Windows Credential Manager / environment variables.
+  - Safe default hotkeys (`Alt+Space` summon, `Ctrl+Alt+P` or `Ctrl+Alt+Escape` Guardian kill switch) communicated clearly to the user.
+

@@ -960,3 +960,43 @@ Milestone 8.0 (**Phenom 8.0: Dual-Presence Autonomous Developer & Mobile Executi
 - Inbound prompt injection defense across Telegram inputs via `taint_tracker`.
 - Deep project knowledge crystallization in Obsidian with bidirectional wikilinks.
 - Sub-25ms synchronous Guardian kill switch SLA strictly upheld across the entire stack.
+
+---
+
+# Milestone 9.0: Polish and Packaging (Phase 7 Final Release)
+
+### 1. Windows Installer & Unpacked Distribution
+- **NSIS Installer**: `apps/desktop/release/Phenom-Setup-8.0.0.exe` (134.7 MB) generated via `electron-builder`. Supports custom install directory, desktop & Start Menu shortcuts, uninstaller generation, and ASAR integrity validation.
+- **Unpacked Distribution**: `apps/desktop/release/win-unpacked/Phenom.exe` (188 MB) verified runnable on Windows 11 with bundled UI assets and Python backend dependencies.
+
+### 2. First-Run Wizard & Prerequisites Verification
+- **First-Run Wizard**: `apps/desktop/src/components/FirstRunWizard.tsx` guides the user through:
+  - Python 3.11+ backend & Ollama daemon connectivity checks.
+  - API key configuration (NVIDIA NIM, Telegram bot token & owner ID, Gmail app credentials, Google Calendar token).
+  - Safe folder indexing permissions (Documents, Downloads, Photos).
+  - Global hotkeys (`Alt+Space` summon, `Ctrl+Alt+P` or `Ctrl+Alt+Escape` Guardian kill switch).
+  - English Jarvis-style voice & audio settings.
+
+### 3. Background Services, Tray Icon & Auto-Start
+- **Windows Auto-Start**: Configured via `app.setLoginItemSettings({ openAtLogin: true, openAsHidden: true, name: 'Phenom Assistant' })`.
+- **System Tray**: System tray icon with context menu (`Show Phenom`, `Hide to Tray`, `Mute/Unmute Voice`, `Guardian Kill Switch (HALT)`, `Quit Phenom`).
+- **Quiet Background Launch**: Supports `--hidden` and `--quiet` launch arguments.
+- **Backend Watchdog**: Monitored backend lifecycle in `electron/main.cjs` with automatic restart under 2,000ms upon unexpected exit.
+
+### 4. Local-Only Crash Reporter & Redaction Engine
+- **Local Storage**: Unhandled exceptions recorded strictly to `services/backend/data/crash_logs/*.json` with zero network telemetry.
+- **One-Click Diagnostic Export**: Strips Windows user directories (`C:\Users\[USER]`), IP addresses (`[REDACTED_IP]`), and API tokens (`[REDACTED_NVIDIA_KEY]`, `[REDACTED_TELEGRAM_TOKEN]`).
+- **Updater & Safe Rollback**: `services/backend/packaging/updater.py` stages updates and triggers automatic rollback if a new version fails to boot.
+
+### 5. Final Safety Audit & Packaging Verification
+- **Test Suite**: `services/backend/tests/test_final_safety_audit.py` **5/5 PASSED in 14.91s**:
+  - `test_walk_every_tool_through_safety_tiers`: PASS (Walks every registered tool across Tiers 0, 1, 2, 3 with schema validation).
+  - `test_kill_switch_comprehensive_matrix`: PASS (Guardian halts from UI, Voice, Hotkey, and Telegram).
+  - `test_cloud_privacy_escalation_guarantee`: PASS (Private content never reaches cloud model without previewed user approval).
+  - `test_auto_update_and_rollback_safely`: PASS (Update staging with automated rollback on startup failure).
+  - `test_crash_reporter_local_only_and_sanitization`: PASS (Zero cloud telemetry, strict local JSON logs, deep regex redaction).
+
+### 6. Live Session Verification
+- Backend daemon running on `127.0.0.1:8000` (`{"status": "ok"}`).
+- Electron desktop process (`Phenom.exe`) launched and verified in Windows process table (PID 27636, 198 MB RAM, responsive tray and window integration).
+
