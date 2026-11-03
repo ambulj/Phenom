@@ -844,6 +844,39 @@ otification_policy == 'silent').
 - While halted, all profile queries, learning operations, and synthesis requests immediately raise `PermissionError("Guardian kill switch is active. Cognitive mirror operations prohibited.")`.
 - Clean state reset and resumption via `cognitive_mirror.reset()` when Guardian transitions to `idle`.
 
+---
+
+## 33. Encrypted Cross-Device Local P2P Mesh Governance (Milestone 10.0 Phase 4)
+
+### 1. Sovereign Zero-Cloud Transport Security & Ephemeral QR Pairing (MSH-01, Rule 4, Rule 11)
+- **Zero Cloud Exfiltration**: All peer discovery, pairing, telemetry streaming, approval card pushes, and GraphRAG synchronization execute exclusively over the local Wi-Fi subnet without any cloud relays, external proxies, or tracking endpoints.
+- **ChaCha20-Poly1305 AEAD Transport**: Messages are encrypted using ChaCha20-Poly1305 authenticated symmetric encryption. Session keys are derived via HKDF-SHA256 (`info=b"phenom-p2p-session-v1"`). Nonce generation uses a 96-bit composite (4-byte random session prefix + 8-byte big-endian sequence counter). Replay attacks are rejected via a 64-bit sliding window bitmask.
+- **Ephemeral 120s Single-Use QR Pairing**: Pairing generates a 256-bit cryptographically secure token valid for 120 seconds. The pairing payload is rendered into SVG and base64 PNG QR formats for Cyber HUD presentation. Verification uses timing-safe comparison (`hmac.compare_digest`), enforces TTL, and purges the token immediately on use (single-use invariant). Paired companion profiles are atomically persisted to `services/backend/data/paired_devices.json`.
+
+### 2. Companion Approval Cards & Tier 3 Prohibition (MSH-01, Rule 1, Rule 3)
+- **Interactive Companion Approvals**: Tier 1 and Tier 2 action requests can be dispatched to paired companion nodes as approval cards containing one-line summaries, item counts, target paths, and diff previews.
+- **Cryptographic Decision Signatures**: Companion approval and rejection decisions require HMAC-SHA256 signatures validated against the companion device's shared secret.
+- **Strict Rule 3 Invariant**: Tier 3 actions are categorically prohibited from companion push or remote approval. Explicit typed desktop input is strictly enforced.
+- **Preconditions Re-Validation**: Delayed or late companion approvals undergo precondition re-validation (mtime, SHA-256 integrity, mode drift, and Guardian status) before execution.
+
+### 3. Real-Time Telemetry Streaming, GraphRAG Delta Sync & Remote Voice Summon (MSH-01)
+- **Non-Blocking Telemetry Streaming**: Swarm debate rounds, specialist critiques, consensus scores, and unattended mission milestones are streamed to companions through a bounded queue with background workers. Slow or dropped companion links can never block desktop swarm execution.
+- **Bi-Directional GraphRAG Delta Synchronization**: Notes, nodes, and edges sync bi-directionally using Last-Write-Wins (LWW) conflict resolution backed by SHA-256 content checksums.
+- **Full-Duplex Remote Voice Summon**: Full-duplex 16kHz 16-bit mono PCM audio streaming over local Wi-Fi enables remote voice summon. Companion speech detection triggers instant barge-in cancellation (< 5ms) to immediately abort active desktop TTS playback.
+
+### 4. ToolRegistry Risk Tiering & Previews (SAF-01)
+- `mesh_get_paired_devices`: Tier 0 (Read-Only query). Arguments: `MeshGetPairedDevicesArgs(include_offline: bool = True)`. Preview: `"List paired companion devices (include_offline=...) (Read-Only)"`.
+- `mesh_generate_pairing_qr`: Tier 1 (Reversible change). Arguments: `MeshGeneratePairingQrArgs(ttl_seconds: int = 120)`. Preview: `"Generate single-use ephemeral QR pairing payload (valid for {ttl_seconds} seconds)"`.
+- `mesh_sync_push`: Tier 1 (Reversible change). Arguments: `MeshSyncPushArgs(target_node_id: Optional[str] = None, sync_type: str = 'graphrag')`. Preview: `"Push local mesh synchronization update (sync_type='...', target='...')"`
+- `mesh_unpair_device`: Tier 1 (Reversible change). Arguments: `MeshUnpairDeviceArgs(node_id: str)`. Preview: `"Revoke companion device pairing and authorization for node '{node_id}'"`.
+
+### 5. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `p2p_mesh_engine.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Closes all active companion sockets, stops the UDP discovery broadcaster, and invalidates all pending ephemeral pairing tokens in `< 25ms` (< 1ms typical).
+- While halted, all pairing operations, sync pushes, and message framing immediately raise `PermissionError("Operation blocked: P2P Mesh is halted by Guardian Kill Switch.")`.
+- Clean state reset and resumption via `p2p_mesh_engine.reset()` when Guardian transitions to `idle`.
+
+
 
 
 

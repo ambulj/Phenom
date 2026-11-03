@@ -280,6 +280,8 @@ import services.backend.tools.graph_rag_tools
 import services.backend.tools.mission_tools
 import services.backend.tools.virtual_gui_tools
 import services.backend.tools.mirror_tools
+import services.backend.tools.mesh_tools
+from services.backend.mesh.p2p_mesh_engine import p2p_mesh_engine
 from services.backend.personality.cognitive_mirror import cognitive_mirror
 from services.backend.automation.virtual_desktop_manager import virtual_desktop_manager
 from services.backend.automation.visual_gui_controller import visual_gui_controller
@@ -1524,6 +1526,7 @@ def on_guardian_state_change(new_state: str):
             specialist_swarm_orchestrator.halt()
             virtual_desktop_manager.halt()
             cognitive_mirror.halt()
+            p2p_mesh_engine.halt()
         except Exception:
             pass
 
@@ -1576,6 +1579,7 @@ def on_guardian_state_change(new_state: str):
             specialist_swarm_orchestrator.reset()
             virtual_desktop_manager.reset()
             cognitive_mirror.reset()
+            p2p_mesh_engine.reset()
         except Exception:
             pass
 

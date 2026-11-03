@@ -35,3 +35,7 @@ scipy==1.17.1
 edge-tts>=7.0.0
 onnxruntime==1.30.0
 pyyaml==6.0.3
+cryptography==43.0.3
+qrcode==8.0
+
+
