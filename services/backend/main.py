@@ -276,6 +276,9 @@ import services.backend.tools.triage_tools
 import services.backend.tools.housekeeping_tools
 import services.backend.tools.telegram_tools
 import services.backend.tools.vision_tools
+import services.backend.tools.graph_rag_tools
+from services.backend.memory.multi_source_graph import multi_source_graph
+from services.backend.memory.graph_rag import graph_rag_engine
 from services.backend.vision.ambient_copilot import ambient_copilot
 from services.backend.system.resource_governor import resource_governor
 
@@ -1507,6 +1510,8 @@ def on_guardian_state_change(new_state: str):
             project_crystallizer.halt()
             ambient_copilot.halt()
             resource_governor.halt()
+            multi_source_graph.halt()
+            graph_rag_engine.halt()
         except Exception:
             pass
 
@@ -1553,6 +1558,8 @@ def on_guardian_state_change(new_state: str):
             ambient_copilot.reset()
             resource_governor.reset()
             streaming_voice_engine.reset()
+            multi_source_graph.reset()
+            graph_rag_engine.reset()
         except Exception:
             pass
 

@@ -12,9 +12,9 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 
 | --- | --- | --- | --- |
 
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance, graph_rag_query, graph_rag_get_stats |
 
-| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine |
+| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine, graph_rag_reindex_domain |
 
 | 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
 
@@ -682,4 +682,40 @@ otification_policy == 'silent').
 - Execution SLA: All active audio synthesis, playback queues, and streaming audio buffers halt synchronously in `< 25ms` (< 1ms typical).
 - While halted, `streaming_voice_engine.is_halted` is `True`, audio chunk ingestion is ignored, and all speech requests raise `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+---
+
+## 28. Autonomous Multi-Source Personal Knowledge Graph & GraphRAG Guarantees (Milestone 9.0 Phase 3)
+
+### 1. Unified 4-Domain Deterministic Addressing & Parsers (GRA-01)
+- Universal deterministic URI addressing: `vault://<rel_path>`, `code://<repo>/<path>:<symbol>`, `git://<repo>:<commit_hash>`, `doc://<rel_path>#chunk=<idx>`, `meeting://cal:<event_id>`, `email://gmail:<thread_id>`.
+- Ingests knowledge across 4 core personal domains:
+  1. **Obsidian Vault**: markdown notes, `[[wikilinks]]`, `#tags`, YAML frontmatter metadata, and daily notes.
+  2. **Code Repositories**: Python AST static analysis (classes, functions, methods, args, docstrings), TypeScript/JavaScript symbol regex, and git commit history linking commits to touched code symbols.
+  3. **Local Documents**: PDF, DOCX, XLSX, PPTX multi-format ingestion via `doc_reader.py` with semantic chunking.
+  4. **Workspace Context**: priority Gmail threads and Google Calendar meetings with heuristic cross-domain topic correlation.
+- **Strict Secret Exclusion & In-Memory Scrubbing**:
+  - Automatically blacklists and ignores `.env*`, `*.pem`, `*.key`, `*.cert`, `*.pfx`, `id_rsa`, `token.pickle`, `credentials.json`, `client_secret*.json`.
+  - In-memory regex scrubber sanitizes node titles and summaries against API keys (`nvapi-`, `sk-`, `AKIA`), private keys, passwords, and tokens before storage in the graph.
+
+### 2. Hybrid GraphRAG Retrieval & Zero-Cloud Leakage Invariant (GRA-01)
+- Three-tier hybrid search:
+  1. *Lexical Keyword Matching*: In-memory token inverted index with BM25 / token intersection scoring.
+  2. *Dense Vector Semantic Search*: `LocalEmbeddingPipeline` (384-dimensional dense vectors) with sub-millisecond cosine similarity scoring.
+  3. *Graph Relational Expansion*: 1-hop and 2-hop neighbor traversal with edge-weight distance attenuation (`decay = 0.7 ** hop_distance`).
+- Cross-domain context synthesis generates structured prompt contexts with explicit deterministic URI citations.
+- Natural language query router dynamically classifies intent to weight relevant domains.
+- **Zero-Cloud Leakage Invariant**: All embeddings, graph indices, and search routines execute 100% locally on-device in RAM / local storage. No graph nodes, code symbols, or notes are transmitted to cloud endpoints.
+
+### 3. ToolRegistry Risk Tiering & Previews (SAF-01)
+- `graph_rag_query`: Tier 0 (Read-Only). Arguments: `GraphQueryArgs(query: str, hops: int = 1, domain_filter: Optional[str] = None, top_k: int = 5)`. Preview: `"Query multi-source knowledge graph for '{query}' (Read-only)"`.
+- `graph_rag_get_stats`: Tier 0 (Read-Only). Arguments: `GraphStatsArgs()`. Returns node/edge counts, domain distribution, orphan counts, hub counts. Preview: `"Inspect multi-source knowledge graph topology and domain metrics (Read-only)"`.
+- `graph_rag_reindex_domain`: Tier 1 (Reversible change). Arguments: `GraphReindexArgs(domain: Optional[str] = None, force_rebuild: bool = False)`. Preview: `"Reindex knowledge graph domain '{domain or 'all'}' (Reversible change)"`.
+
+### 4. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `multi_source_graph.halt()` and `graph_rag_engine.halt()` are synchronously invoked from `on_guardian_state_change("halted")`.
+- Execution SLA: All active indexing loops, worker tasks, and graph traversals halt synchronously in `< 25ms` (< 1ms typical).
+- While halted, `multi_source_graph.is_halted` is `True`, and subsequent tool calls or graph operations immediately raise `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
 
