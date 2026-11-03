@@ -12,9 +12,9 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 
 | --- | --- | --- | --- |
 
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance, graph_rag_query, graph_rag_get_stats, mission_get_status, mission_get_morning_debrief, gui_capture_virtual_screen |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance, graph_rag_query, graph_rag_get_stats, mission_get_status, mission_get_morning_debrief, gui_capture_virtual_screen, mirror_get_profile_stats, mirror_synthesize_text |
 
-| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine, graph_rag_reindex_domain, mission_start_unattended, mission_abort, gui_launch_app_isolated, gui_execute_action, gui_close_isolated_desktop |
+| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine, graph_rag_reindex_domain, mission_start_unattended, mission_abort, gui_launch_app_isolated, gui_execute_action, gui_close_isolated_desktop, mirror_learn_from_sources, mirror_reset_profile |
 
 | 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
 
@@ -811,6 +811,39 @@ otification_policy == 'silent').
 - All spawned PIDs are automatically registered with `guardian.track_pid(pid)`.
 - While halted, all virtual desktop actions and launch attempts immediately raise `PermissionError`.
 - Clean state reset and resumption via `virtual_desktop_manager.reset()` when Guardian transitions to `idle`.
+
+---
+
+## 32. Cognitive Mirror & Personalized Synthetic Twin Governance (Milestone 10.0 Phase 3)
+
+### 1. In-Memory Credential Redaction & Zero Cloud Exfiltration (MIR-01, Rule 4, Rule 11)
+- **Zero Cloud Exfiltration**: All cognitive profiling, feature modeling, and synthetic text generation execute strictly on-device in local Python memory and encrypted local SQLCipher storage. Zero profiles, samples, or derived traits are ever sent to cloud models or external endpoints.
+- **In-Memory Credential Scrubbing**: Prior to feature extraction or persistent storage, all raw inputs (commits, markdown notes, emails, and logs) pass through `scrub_personal_secrets` which redacts API keys (`sk-*`, `nvapi-*`, `ghp_*`, `ya29.*`, `AKIA*`), private keys, passwords, bearer tokens, Windows user paths (`C:\Users\<user>\...`), and IP addresses with `[REDACTED_CREDENTIAL]`, `[REDACTED_PATH]`, or `[REDACTED_IP]`.
+
+### 2. Encrypted SQLCipher Storage & Credential Key Retrieval (MIR-01)
+- **AES-256 Storage**: All learned profiles, feature samples, and synthesis logs are stored exclusively in `services/backend/data/cognitive_profile.db` encrypted with SQLCipher v4 (AES-256).
+- **Windows Credential Manager Key Management**: The database encryption key is securely stored and retrieved from Windows Credential Manager under the target name `Phenom/cognitive-mirror-key` (with fallback to `PHENOM_COGNITIVE_MIRROR_KEY`).
+
+### 3. Multi-Dimensional Feature Modeling & Personalized Twin Generation (MIR-01)
+- **Four Distinct Dimensions**:
+  1. `git_style`: Conventional commits ratio, primary prefixes, average subject length, imperative mood ratio, subject casing, review tone (`direct`, `inquisitive`, `encouraging`), and architectural keywords.
+  2. `obsidian_cadence`: Heading depth distribution, bullet marker preference (`-` vs `*`), wikilink density, tag density, callout frequency (`NOTE`, `TIP`, `WARNING`), and daily note section hierarchy.
+  3. `communication_persona`: Preferred salutations, preferred signoffs, formality score ($0.0 - 1.0$), brevity score ($0.0 - 1.0$), bullet point preference, and characteristic phrases.
+  4. `work_habits`: Diurnal 24-hour activity distribution, peak focus hours, break cadence, and quiet-time windows.
+- **Synthetic Twin Synthesizer**: Generates contextual text adhering to the user's exact personal voice for commit messages, PR review comments, email draft replies, and Obsidian notes.
+
+### 4. ToolRegistry Risk Tiering & Previews (SAF-01)
+- `mirror_get_profile_stats`: Tier 0 (Read-Only query). Arguments: `MirrorGetProfileStatsArgs(dimension: Optional[MirrorDimension] = None)`. Preview: `"Retrieve cognitive mirror profile statistics [for dimension] (Read-Only)"`.
+- `mirror_synthesize_text`: Tier 0 (Read-Only text generation). Arguments: `MirrorSynthesizeTextArgs(task: SynthesisTaskType, context_prompt: str, metadata: Optional[Dict[str, Any]] = None)`. Preview: `"Synthesize {task} in user's authentic style (Read-Only)"`.
+- `mirror_learn_from_sources`: Tier 1 (Reversible change). Arguments: `MirrorLearnFromSourcesArgs(sources: List[str], max_items: Optional[int] = 100, repo_path: Optional[str] = None, vault_path: Optional[str] = None)`. Preview: `"Learn personal style from sources: {sources} (max {max_items} items)"`.
+- `mirror_reset_profile`: Tier 1 (Reversible change). Arguments: `MirrorResetProfileArgs(dimensions: Optional[List[MirrorDimension]] = None)`. Preview: `"Reset cognitive mirror dimensions: {dimensions or 'all'}"`.
+
+### 5. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `cognitive_mirror.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Operation cancellation occurs synchronously in `< 25ms` (< 1ms typical).
+- While halted, all profile queries, learning operations, and synthesis requests immediately raise `PermissionError("Guardian kill switch is active. Cognitive mirror operations prohibited.")`.
+- Clean state reset and resumption via `cognitive_mirror.reset()` when Guardian transitions to `idle`.
+
 
 
 

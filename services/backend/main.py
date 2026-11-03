@@ -279,6 +279,8 @@ import services.backend.tools.vision_tools
 import services.backend.tools.graph_rag_tools
 import services.backend.tools.mission_tools
 import services.backend.tools.virtual_gui_tools
+import services.backend.tools.mirror_tools
+from services.backend.personality.cognitive_mirror import cognitive_mirror
 from services.backend.automation.virtual_desktop_manager import virtual_desktop_manager
 from services.backend.automation.visual_gui_controller import visual_gui_controller
 from services.backend.missions import unattended_mission_runner, morning_debrief_synthesizer
@@ -1521,6 +1523,7 @@ def on_guardian_state_change(new_state: str):
             unattended_mission_runner.halt()
             specialist_swarm_orchestrator.halt()
             virtual_desktop_manager.halt()
+            cognitive_mirror.halt()
         except Exception:
             pass
 
@@ -1572,6 +1575,7 @@ def on_guardian_state_change(new_state: str):
             unattended_mission_runner.reset()
             specialist_swarm_orchestrator.reset()
             virtual_desktop_manager.reset()
+            cognitive_mirror.reset()
         except Exception:
             pass
 
