@@ -1113,4 +1113,59 @@ Implemented Phase 3 of Phenom Milestone 9.0 establishing Phenom's unified multi-
 - `services/backend/tests/test_milestone_9_phase_3_guardian_sla.py`: **4/4 PASSED**
 - Total Phase 3 Suite: **22/22 PASSED in 12.83s**
 
+---
+
+# Milestone 9.0 Phase 4: Sovereign Unattended Overnight Missions & Morning Cyber HUD Debrief
+
+### Summary
+Implemented Phase 4 of Phenom Milestone 9.0 delivering sovereign unattended overnight coding/refactoring missions (`MIS-01`) executing inside isolated git worktree sandboxes, automated multi-iteration self-healing test loops, an interactive morning Cyber HUD debrief card with Three.js particle orb celebration pulse, strict ToolRegistry safety tiering (`SAF-01`), sub-25ms synchronous Guardian kill switch SLA integration (`SAF-02`), and a comprehensive end-to-end multi-component simulation and safety audit across all Milestone 9.0 capabilities.
+
+### Deliverables & Verifications
+1. **Isolated Git Worktree Sandboxes (`MIS-01`)**:
+   - `UnattendedMissionRunner` manages isolated worktrees at `.phenom_sandbox/missions/{mission_id}` on ephemeral branch `mission/{mission_id}` branched from `HEAD`.
+   - Primary working tree invariant preserved: uncommitted files and open editor buffers remain 100% untouched.
+   - Ambient stealth invariant: subprocesses run with `CREATE_NO_WINDOW`, zero cursor movements, zero window focus theft.
+   - Robust Windows cleanup: automated `git worktree remove --force` with readonly attribute stripping (`stat.S_IWRITE`).
+2. **Multi-Iteration Self-Healing Test Loops (`MIS-01`)**:
+   - Bounded iteration loop (`max_iterations = 5`).
+   - On test failure: parses diagnostics via `TracebackParser`, drafts minimal unified patches with `PatchDrafter`, validates patches with `git apply --check`, applies them in sandbox, and re-executes tests until passing.
+   - Subprocess timeout guard: 120s timeout with process tree termination (`taskkill /F /T /PID`).
+3. **Morning Cyber HUD Debrief Card & Obsidian Sync (`MIS-01`)**:
+   - `MorningDebriefSynthesizer` aggregates nocturnal accomplishments, tests healed, lines added/deleted, touched files, and witty British Jarvis summary.
+   - Non-destructive daily notes merging: appends/updates `vault/Daily Notes/YYYY-MM-DD.md` strictly under `## 🌙 Overnight Autonomous Missions` preserving user notes.
+   - `MorningDebriefCard.tsx`: Glassmorphic cyberpunk card with neon accents, KPI badges (`+X tests healed`, `+A / -B`), collapsible mission details, and action buttons ("Review Branch", "Merge Changes", "Dismiss"). Emits `phenom:orb:celebrate` custom event triggering particle pulse on Three.js orb.
+4. **ToolRegistry Registration & Sub-25ms Guardian Kill Switch SLA (`SAF-01`, `SAF-02`)**:
+   - `mission_start_unattended`: Tier 1 (Reversible change)
+   - `mission_get_status`: Tier 0 (Read-Only)
+   - `mission_abort`: Tier 1 (Reversible change)
+   - `mission_get_morning_debrief`: Tier 0 (Read-Only)
+   - Hooked `unattended_mission_runner.halt()` and `reset()` into `on_guardian_state_change()`. Synchronous halt latency benchmarked at `< 1.0ms` (< 25ms SLA). Rejects subsequent operations with `PermissionError` while halted.
+5. **Updated `SAFETY.md` Section 1 & Section 29**:
+   - Added mission tools to Tier 0 & Tier 1 tables in Section 1.
+   - Documented Section 29: Sovereign Unattended Overnight Missions & Morning Cyber HUD Debrief Guarantees.
+6. **Milestone 9.0 Full E2E Simulation & Comprehensive Safety Audit**:
+   - `services/backend/tests/test_milestone_9_e2e_simulation.py`: Chains Screen Vision (`VIS-01`) -> Adaptive Governor (`GOV-01`) -> Conversational Voice (`VOX-01`) -> GraphRAG (`GRA-01`) -> Sovereign Overnight Missions (`MIS-01`) -> Morning Debrief (`MIS-01`) -> Guardian Kill Switch SLA (`SAF-02`).
+   - `services/backend/tests/test_milestone_9_safety_audit.py`: Audits all 13 Milestone 9.0 tools across ToolRegistry against Phenom Permanent Rules (1, 4, 7, 8, 9, 11).
+
+### Test Results
+- `services/backend/tests/test_unattended_missions.py`: **5/5 PASSED**
+- `services/backend/tests/test_morning_debrief.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_9_phase_4_guardian_sla.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_9_e2e_simulation.py`: **1/1 PASSED**
+- `services/backend/tests/test_milestone_9_safety_audit.py`: **7/7 PASSED**
+- Total Phase 4 Suite: **21/21 PASSED in 32.60s**
+
+---
+
+## Milestone 9.0 Completion Summary
+Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous Swarm**) is **100% Complete & Verified**.
+- All 7 requirements (`VIS-01`, `GOV-01`, `VOX-01`, `GRA-01`, `MIS-01`, `SAF-01`, `SAF-02`) are verified with 100% pass rates across **82 automated tests**.
+- Zero disk writes for frames and streaming audio (pure RAM buffers).
+- Continuous local vision with strict privacy exclusion blacklists and adaptive GPU throttling.
+- Sub-200ms turnaround conversational voice engine with sub-5ms Silero VAD barge-in interruption.
+- Autonomous multi-source GraphRAG with 4-domain parsers and local-only embedding/graph indices.
+- Sovereign unattended overnight missions in isolated git worktree sandboxes with automated test self-healing loops and Cyber HUD morning debrief cards.
+- Sub-25ms synchronous Guardian kill switch SLA strictly upheld across the entire stack (< 1.0ms typical).
+
+
 
