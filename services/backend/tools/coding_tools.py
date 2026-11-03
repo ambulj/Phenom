@@ -263,3 +263,88 @@ def handle_get_workspace_state(workspace_path: Optional[str] = None) -> Dict[str
             state = workspace_sentinel.inspect_workspace("C:\\Phenom")
     return state.model_dump()
 
+
+# ==========================================
+# Proactive Dev Build Sentinel Tools (DEV-02)
+# ==========================================
+
+from services.backend.coding.build_sentinel import build_sentinel
+
+class DiagnoseBuildFailureArgs(BaseModel):
+    log_output: str = Field(..., description="Raw build, test, or compiler log output.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+
+@registry.register(
+    name="coding_diagnose_build_failure",
+    tier=0,
+    description="Parses build or test failure output and extracts structured diagnostics (pytest, vitest, tsc, cargo, python).",
+    args_schema=DiagnoseBuildFailureArgs,
+    preview_fn=lambda a: "Diagnose build or test failure from log output"
+)
+def handle_diagnose_build_failure(log_output: str, workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    diag = build_sentinel.diagnose_output(log_output, workspace_path=workspace_path)
+    if not diag:
+        return {"status": "unrecognized", "message": "No recognized build failure detected in log output."}
+    return {"status": "diagnosed", "diagnostic": diag.model_dump()}
+
+
+class DraftPatchArgs(BaseModel):
+    failing_file: str = Field(..., description="Path of file to fix.")
+    replacement_code: str = Field(..., description="Full corrected content of the file.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+
+@registry.register(
+    name="coding_draft_patch",
+    tier=0,
+    description="Synthesizes a minimal unified git diff patch for a target file.",
+    args_schema=DraftPatchArgs,
+    preview_fn=lambda a: f"Draft minimal unified diff patch for {a.get('failing_file')}"
+)
+def handle_draft_patch(failing_file: str, replacement_code: str, workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    diff = build_sentinel.draft_patch(failing_file, replacement_code, workspace_path=workspace_path)
+    if not diff:
+        return {"status": "error", "message": f"Could not generate diff for {failing_file}."}
+    return {"status": "drafted", "patch_diff": diff}
+
+
+class ApplyPatchArgs(BaseModel):
+    patch_diff: str = Field(..., description="Unified git diff to apply.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+    resolution_notes: Optional[str] = Field(default=None, description="Optional resolution note for Obsidian debug log.")
+
+@registry.register(
+    name="coding_apply_patch",
+    tier=1,
+    description="Applies a unified git diff patch to the workspace after creating a non-destructive rollback snapshot.",
+    args_schema=ApplyPatchArgs,
+    preview_fn=lambda a: "Apply unified git diff patch with pre-patch working tree snapshot"
+)
+def handle_apply_patch(patch_diff: str, workspace_path: Optional[str] = None, resolution_notes: Optional[str] = None) -> Dict[str, Any]:
+    success, token, err = build_sentinel.apply_patch_fix(
+        patch_diff,
+        workspace_path=workspace_path,
+        resolution_notes=resolution_notes,
+    )
+    if not success:
+        return {"status": "failed", "error": err}
+    return {"status": "applied", "rollback_token": token}
+
+
+class RevertPatchArgs(BaseModel):
+    rollback_token: str = Field(..., description="Rollback token SHA returned during patch application.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+
+@registry.register(
+    name="coding_revert_patch",
+    tier=1,
+    description="Reverts the workspace to the exact working tree state prior to patch application.",
+    args_schema=RevertPatchArgs,
+    preview_fn=lambda a: f"Revert workspace to pre-patch snapshot {a.get('rollback_token')}"
+)
+def handle_revert_patch(rollback_token: str, workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    success = build_sentinel.revert_patch_fix(rollback_token, workspace_path=workspace_path)
+    if not success:
+        return {"status": "failed", "message": f"Failed to revert using rollback token {rollback_token}."}
+    return {"status": "reverted", "rollback_token": rollback_token}
+
+

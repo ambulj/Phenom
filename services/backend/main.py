@@ -320,6 +320,7 @@ from services.backend.automation.topic_researcher import topic_researcher
 from services.backend.automation.workspace_housekeeper import workspace_housekeeper
 from services.backend.memory.daily_copilot import daily_copilot
 from services.backend.coding.workspace_sentinel import workspace_sentinel
+from services.backend.coding.build_sentinel import build_sentinel
 
 
 
@@ -1458,6 +1459,7 @@ def on_guardian_state_change(new_state: str):
             topic_researcher.halt()
             workspace_housekeeper.halt()
             workspace_sentinel.halt()
+            build_sentinel.halt()
         except Exception:
             pass
 
@@ -1499,6 +1501,7 @@ def on_guardian_state_change(new_state: str):
             topic_researcher.reset()
             workspace_housekeeper.reset()
             workspace_sentinel.reset()
+            build_sentinel.reset()
         except Exception:
             pass
 
