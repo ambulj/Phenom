@@ -275,6 +275,9 @@ import services.backend.tools.proactive_tools
 import services.backend.tools.triage_tools
 import services.backend.tools.housekeeping_tools
 import services.backend.tools.telegram_tools
+import services.backend.tools.vision_tools
+from services.backend.vision.ambient_copilot import ambient_copilot
+from services.backend.system.resource_governor import resource_governor
 
 
 
@@ -971,6 +974,8 @@ async def lifespan(app: FastAPI):
         gmail_triage.start()
         workspace_sentinel.on_update_callback = lambda s: asyncio.create_task(broadcast_message({"id": f"ws-{os.urandom(4).hex()}", "type": "DEV_WORKSPACE_UPDATE", "ts": str(time.time()), "payload": s.model_dump()})) if asyncio.get_event_loop().is_running() else None
         asyncio.create_task(workspace_sentinel.run_sentinel_loop())
+        await resource_governor.start()
+        await ambient_copilot.start()
     except Exception as exc:
         print(f'[Proactive/Triage] Could not start sensors/triage: {exc}')
 
@@ -1006,6 +1011,8 @@ async def lifespan(app: FastAPI):
 
 
 
+    await ambient_copilot.stop()
+    await resource_governor.stop()
     await browser_controller.close()
 
 
@@ -1463,6 +1470,8 @@ def on_guardian_state_change(new_state: str):
             workspace_sentinel.halt()
             build_sentinel.halt()
             project_crystallizer.halt()
+            ambient_copilot.halt()
+            resource_governor.halt()
         except Exception:
             pass
 
@@ -1506,6 +1515,8 @@ def on_guardian_state_change(new_state: str):
             workspace_sentinel.reset()
             build_sentinel.reset()
             project_crystallizer.reset()
+            ambient_copilot.reset()
+            resource_governor.reset()
         except Exception:
             pass
 
@@ -1520,6 +1531,9 @@ guardian.add_state_callback(on_guardian_state_change)
 
 
 annotation_streamer.register_broadcaster(broadcast_message)
+ambient_copilot.register_broadcaster(broadcast_message)
+resource_governor.register_pause_callback(ambient_copilot.pause)
+resource_governor.register_resume_callback(ambient_copilot.resume)
 
 
 

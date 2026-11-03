@@ -999,4 +999,38 @@ Milestone 8.0 (**Phenom 8.0: Dual-Presence Autonomous Developer & Mobile Executi
 ### 6. Live Session Verification
 - Backend daemon running on `127.0.0.1:8000` (`{"status": "ok"}`).
 - Electron desktop process (`Phenom.exe`) launched and verified in Windows process table (PID 27636, 198 MB RAM, responsive tray and window integration).
+---
 
+# Milestone 9.0 Phase 1: Continuous Local Multimodal Screen Vision & Adaptive Resource Governor
+
+### Summary
+Implemented Phase 1 of Phenom Milestone 9.0 establishing continuous, non-invasive ambient screen vision comprehension (`VIS-01`), coupled with an adaptive hardware performance & resource governor (`GOV-01`), strict ToolRegistry safety tiering (`SAF-01`), and sub-25ms synchronous Guardian kill switch SLA integration (`SAF-02`).
+
+### Deliverables & Verifications
+1. **In-Memory Frame Grabber & Privacy Blacklist Gate (`VIS-01`)**:
+   - `FrameGrabber` operates strictly in RAM (`PIL.Image` / `io.BytesIO`) with zero disk footprint.
+   - `PrivacyMasker` intercepts credential managers (1Password, Bitwarden, KeePassXC, LastPass, Dashlane, Enpass, NordPass), private browsing (Incognito, InPrivate, Private Browsing), banking/crypto portals (Chase, Bank of America, Wells Fargo, PayPal, MetaMask, Coinbase, Binance), and private chats (WhatsApp, Signal, Telegram).
+   - Active blacklisted window suppression returns `[BLACKLOCKED_WINDOW_SKIPPED]` with redacted context.
+   - In-memory privacy sub-window masking blacks out sensitive screen regions and stamps `[PHENOM PRIVACY MASK]`.
+   - `DeltaDetector` perceptual change comparison (< 2% threshold) skips redundant local VLM calls on stationary screens.
+2. **Adaptive Performance & Resource Governor (`GOV-01`)**:
+   - `AdaptiveResourceGovernor` detects full-screen 3D games (DirectX/Vulkan) and heavy compute spikes (GPU load > 85%, sustained CPU > 90%).
+   - Auto-suspends continuous vision loops and worker swarms immediately during 3D gaming or GPU spikes.
+   - Auto-resumes background tasks once system returns to desktop idle across consecutive cycles.
+   - Safe exclusions: Chrome, Edge, VS Code, and media players are strictly excluded from gaming classification.
+3. **ToolRegistry Registration & Safety Tiering (`SAF-01`)**:
+   - `vision_get_ambient_screen_context`: Tier 0 (Read-Only)
+   - `vision_configure_ambient_copilot`: Tier 1 (Reversible configuration)
+   - `governor_get_resource_status`: Tier 0 (Read-Only)
+   - Registered in `ToolRegistry` with Pydantic schemas and preview generators. Updated `SAFETY.md` Section 1 and Section 26.
+4. **Sub-25ms Synchronous Guardian Kill Switch SLA (`SAF-02`)**:
+   - `ambient_copilot.halt()` and `resource_governor.halt()` wired to `on_guardian_state_change("halted")`.
+   - Measured halt execution latency < 1.0ms (well under 25.0ms SLA).
+   - Universal rejection of subsequent vision/governor calls with `PermissionError` while halted.
+   - Clean state resumption via `on_guardian_state_change("idle")`.
+
+### Test Results
+- `services/backend/tests/test_ambient_vision_copilot.py`: **10/10 PASSED**
+- `services/backend/tests/test_resource_governor.py`: **8/8 PASSED**
+- `services/backend/tests/test_milestone_9_phase_1_guardian_sla.py`: **4/4 PASSED**
+- Total Phase 1 Suite: **22/22 PASSED in 10.98s**

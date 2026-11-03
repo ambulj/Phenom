@@ -1,6 +1,6 @@
 """
 Phenom Privacy Masker
-Automatically detects sensitive desktop windows (password managers, banking, incognito tabs)
+Automatically detects sensitive desktop windows (password managers, banking, incognito tabs, private chats)
 and blacks them out in RAM prior to any model ingestion or live streaming.
 Strictly zero disk writes - all redactions happen directly on in-memory buffers.
 """
@@ -16,10 +16,11 @@ except ImportError:
 
 
 DEFAULT_SENSITIVE_PATTERNS = [
-    # Password Managers
+    # Password & Credential Managers
     r"1password",
     r"bitwarden",
     r"keepass",
+    r"keepassxc",
     r"lastpass",
     r"dashlane",
     r"enpass",
@@ -29,24 +30,50 @@ DEFAULT_SENSITIVE_PATTERNS = [
     r"incognito",
     r"inprivate",
     r"private browsing",
-    # Financial & Crypto
+    r"private window",
+    # Financial & Banking & Crypto
     r"wallet",
     r"paypal",
     r"metamask",
     r"coinbase",
     r"binance",
     r"online banking",
+    r"chase",
+    r"bank of america",
+    r"wells fargo",
+    r"fidelity",
+    r"schwab",
+    # Private Messaging & Chat
+    r"whatsapp",
+    r"signal",
+    r"telegram",
     # System Credentials & Security
     r"credential manager",
     r"windows security",
     r"user account control",
 ]
 
+# Process executables that are blacklisted outright
+DEFAULT_BLACKLIST_PROCESSES = {
+    "1password.exe",
+    "bitwarden.exe",
+    "keepass.exe",
+    "keepassxc.exe",
+    "lastpass.exe",
+    "dashlane.exe",
+    "enpass.exe",
+    "nordpass.exe",
+    "whatsapp.exe",
+    "signal.exe",
+    "telegram.exe",
+}
+
 
 class PrivacyMasker:
     def __init__(self, patterns: Optional[List[str]] = None):
         raw_patterns = patterns or DEFAULT_SENSITIVE_PATTERNS
         self.compiled_patterns = [re.compile(p, re.IGNORECASE) for p in raw_patterns]
+        self.blacklist_processes = set(p.lower() for p in DEFAULT_BLACKLIST_PROCESSES)
         self.last_masked_count: int = 0
 
     def add_pattern(self, pattern: str):
@@ -56,6 +83,26 @@ class PrivacyMasker:
         if not title:
             return False
         return any(p.search(title) for p in self.compiled_patterns)
+
+    def is_window_blacklisted(self, title: str = "", process_name: str = "") -> bool:
+        """
+        Evaluates both foreground process name and window title against
+        the strict privacy blacklist (credentials, banking, incognito, private chats).
+        Returns True if the window must be completely skipped and redacted.
+        """
+        clean_proc = (process_name or "").strip().lower()
+        if clean_proc in self.blacklist_processes:
+            return True
+
+        # Check process name against regex patterns (e.g. signal-desktop or 1password)
+        if clean_proc and any(p.search(clean_proc) for p in self.compiled_patterns):
+            return True
+
+        # Check window title
+        if title and self.is_sensitive_title(title):
+            return True
+
+        return False
 
     def scan_visible_sensitive_windows(self) -> List[Dict[str, Any]]:
         """
@@ -98,6 +145,7 @@ class PrivacyMasker:
         """
         Blacks out sensitive regions on the given PIL Image.
         Returns (masked_img, masked_list).
+        Guarantees zero disk writes - all operations occur on in-memory PIL / raw buffer.
         """
         windows_to_mask = custom_windows if custom_windows is not None else self.scan_visible_sensitive_windows()
         self.last_masked_count = len(windows_to_mask)

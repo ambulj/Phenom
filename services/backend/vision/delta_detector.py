@@ -10,9 +10,9 @@ from PIL import Image
 
 
 class DeltaDetector:
-    def __init__(self, threshold: float = 0.015, thumbnail_size: Tuple[int, int] = (64, 36)):
+    def __init__(self, threshold: float = 0.02, thumbnail_size: Tuple[int, int] = (64, 36)):
         """
-        :param threshold: Normalized difference threshold (0.015 = 1.5% mean change)
+        :param threshold: Normalized difference threshold (0.02 = 2.0% mean change)
         :param thumbnail_size: Resolution for downsampled delta comparison
         """
         self.threshold = threshold

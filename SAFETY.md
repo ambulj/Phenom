@@ -12,9 +12,9 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 
 | --- | --- | --- | --- |
 
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status |
 
-| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf) |
+| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot |
 
 | 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
 
@@ -616,4 +616,32 @@ otification_policy == 'silent').
   - Explicit folder selection (Documents, Downloads, Photos).
   - Explicit API key input stored securely in Windows Credential Manager / environment variables.
   - Safe default hotkeys (`Alt+Space` summon, `Ctrl+Alt+P` or `Ctrl+Alt+Escape` Guardian kill switch) communicated clearly to the user.
+## 26. Continuous Local Multimodal Screen Vision & Adaptive Resource Governor (Milestone 9.0 Phase 1)
 
+### 1. Zero-Disk In-Memory Frame Safety & Strict Privacy Blacklist Gate (VIS-01)
+- Continuous screen frames captured by `FrameGrabber` and processed by `AmbientVisionCopilot` remain strictly in RAM (`io.BytesIO` / PIL in-memory image buffer). Zero unencrypted or temporary frame files are written to disk.
+- Foreground window titles and process executables are checked against a strict privacy blacklist:
+  - Credential managers (`1password`, `bitwarden`, `keepass`, `keepassxc`, `lastpass`, `dashlane`, `enpass`, `nordpass`).
+  - Private browsing (`incognito`, `inprivate`, `private browsing`, `private window`).
+  - Financial, banking, and crypto portals (`chase`, `bank of america`, `wells fargo`, `fidelity`, `schwab`, `paypal`, `metamask`, `coinbase`, `binance`).
+  - Private chat and messaging (`whatsapp`, `signal`, `telegram`).
+  - System security prompts (`credential manager`, `windows security`, `user account control`).
+- When a blacklisted application or window is active, frame capture and VLM inference are completely suppressed; the copilot returns `[BLACKLOCKED_WINDOW_SKIPPED]` with redacted context.
+- Sensitive visible windows on screen are automatically redacted with solid black privacy masks directly in the in-memory buffer before any local VLM inspection.
+- Stationary screens (< 2% perceptual pixel change) skip local VLM inference, saving GPU compute and power.
+
+### 2. Adaptive Performance & Hardware Resource Governor (GOV-01)
+- `AdaptiveResourceGovernor` continuously inspects GPU 3D utilization, VRAM usage, and full-screen DirectX/Vulkan game processes.
+- Automatic suspension: When full-screen 3D gaming or high GPU load (> 85%) / CPU load (> 90%) is detected, the governor immediately pauses continuous vision loops and worker swarms, preventing frame drops and VRAM contention.
+- Automatic resumption: Once gaming processes terminate and GPU load drops below 60% across consecutive idle cycles, background tasks resume seamlessly.
+
+### 3. ToolRegistry Risk Tiering & Previews (SAF-01)
+- `vision_get_ambient_screen_context`: Tier 0 (Read-only, retrieves sanitized in-memory ambient context).
+- `governor_get_resource_status`: Tier 0 (Read-only, retrieves GPU/CPU metrics and gaming status).
+- `vision_configure_ambient_copilot`: Tier 1 (Reversible change, modifies copilot parameters with user approval).
+
+### 4. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `ambient_copilot.halt()` and `resource_governor.halt()` are synchronously invoked from `on_guardian_state_change("halted")`.
+- Execution SLA: All active vision loops, tasks, and resource monitoring halt synchronously in `< 25ms` (< 1ms typical).
+- While halted, any subsequent vision or governor tool calls or step requests immediately raise `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
