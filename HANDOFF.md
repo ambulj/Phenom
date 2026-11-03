@@ -1034,3 +1034,43 @@ Implemented Phase 1 of Phenom Milestone 9.0 establishing continuous, non-invasiv
 - `services/backend/tests/test_resource_governor.py`: **8/8 PASSED**
 - `services/backend/tests/test_milestone_9_phase_1_guardian_sla.py`: **4/4 PASSED**
 - Total Phase 1 Suite: **22/22 PASSED in 10.98s**
+
+---
+
+# Milestone 9.0 Phase 2: Streaming Zero-Latency Conversational Voice Engine
+
+### Summary
+Implemented Phase 2 of Phenom Milestone 9.0 establishing Phenom's sub-200ms turnaround streaming conversational voice engine (`VOX-01`), instantaneous conversational speech barge-in interruption (< 5ms cessation via Silero VAD ONNX with 2-chunk hysteresis), a smart minimalist witty Jarvis persona policy, strict ToolRegistry safety tiering (`SAF-01`), and sub-25ms synchronous Guardian kill switch SLA integration (`SAF-02`).
+
+### Deliverables & Verifications
+1. **In-RAM Zero-Disk Streaming Audio Pipeline (`VOX-01`)**:
+   - `StreamingVoiceEngine` orchestrates 16kHz mono audio chunk ring buffers (512 samples / 32ms per chunk) stored purely in RAM (`collections.deque(maxlen=N)`). Zero audio files written to disk.
+   - Fast speech boundary detection via Silero VAD ONNX (`< 0.5ms` inference per chunk).
+   - End-of-speech silence detection calibrated at 6 consecutive chunks (~192ms silence).
+   - Turnaround latency benchmark < 200ms from silence detection to first audio packet emission passing with evidence.
+2. **Instantaneous Conversational Barge-In Interruption (< 5ms SLA) (`VOX-01`)**:
+   - Two-chunk hysteresis requirement filtering transient keyboard clicks and noise spikes.
+   - Immediate audio playback and stream cutoff executing in < 5ms SLA (< 1ms typical in RAM).
+   - Instant state transition to `LISTENING` to capture the user's incoming utterance into RAM.
+3. **Smart Minimalist Jarvis Persona Policy (`VOX-01`)**:
+   - `MinimalistVoicePolicy` gates spontaneous speech strictly to 4 triggers: `critical_error`, `calendar_urgent` (< 10 min), `guardian_security`, and `direct_summon`.
+   - Complete spontaneous speech suppression during user typing or deep focus modes.
+   - Utterances formatted into witty, concise British Jarvis cadence stripping conversational fillers and pleasantries.
+4. **ToolRegistry Registration & Safety Tiering (`SAF-01`)**:
+   - `voice_get_engine_status`: Tier 0 (Read-Only)
+   - `voice_speak_utterance`: Tier 0 (Read-Only audio playback)
+   - `voice_configure_engine`: Tier 1 (Reversible change)
+   - Updated `SAFETY.md` Section 1 and Section 27.
+5. **Sub-25ms Synchronous Guardian Kill Switch SLA (`SAF-02`)**:
+   - Synchronously integrated with `on_guardian_state_change("halted")` and `on_guardian_state_change("idle")` in `services/backend/main.py`.
+   - Benchmark passing in < 25ms SLA (< 1ms typical).
+   - Immediate audio termination, buffer purge, and permission error enforcement under halt.
+   - Clean state restoration on resume.
+
+### Test Results
+- `services/backend/tests/test_silero_barge_in.py`: **5/5 PASSED**
+- `services/backend/tests/test_minimalist_persona.py`: **4/4 PASSED**
+- `services/backend/tests/test_streaming_voice_engine.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_9_phase_2_guardian_sla.py`: **4/4 PASSED**
+- Total Phase 2 Suite: **17/17 PASSED in 11.86s**
+
