@@ -302,6 +302,38 @@ export interface MissionMorningDebriefMsg extends BaseMessage {
   payload: MissionMorningDebriefPayload;
 }
 
+// Swarm Debate Protocol Payloads (Milestone 10.0 Phase 1)
+export interface SwarmDebateEscalationPayload {
+  debate_id: string;
+  proposal_title: string;
+  proposal_description: string;
+  proposal_diff?: string | null;
+  risk_tier: RiskTier;
+  final_score: number;
+  verdict: string;
+  gating_reasons: string[];
+  specialist_breakdown: Record<string, number>;
+  turns_count: number;
+  last_turn_critiques: Record<string, any>;
+  timestamp: string;
+}
+
+export interface SwarmDebateEscalationMsg extends BaseMessage {
+  type: 'swarm.debate.escalation';
+  payload: SwarmDebateEscalationPayload;
+}
+
+export interface SwarmDebateDecisionPayload {
+  debate_id: string;
+  decision: 'approve' | 'reject';
+  reason?: string;
+}
+
+export interface SwarmDebateDecisionMsg extends BaseMessage {
+  type: 'swarm.debate.decision';
+  payload: SwarmDebateDecisionPayload;
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -316,6 +348,7 @@ export type InboundServerMessage =
   | BrowserFrameMsg
   | AutomationTakeoverPromptMsg
   | MissionMorningDebriefMsg
+  | SwarmDebateEscalationMsg
   | ErrorMsg;
 export type OutboundClientMessage =
   | ChatSendMsg
@@ -328,4 +361,5 @@ export type OutboundClientMessage =
   | VoiceToggleMsg
   | VoiceMuteMsg
   | HotkeysUpdateMsg
-  | AutomationTakeoverReplyMsg;
+  | AutomationTakeoverReplyMsg
+  | SwarmDebateDecisionMsg;

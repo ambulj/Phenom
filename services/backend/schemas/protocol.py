@@ -252,5 +252,36 @@ class MissionMorningDebriefMsg(BaseMessage):
     type: Literal["mission.morning_debrief"] = "mission.morning_debrief"
     payload: MissionMorningDebriefPayload
 
+# ==========================================
+# Swarm Debate Protocol Payloads (Milestone 10.0 Phase 1)
+# ==========================================
+
+class SwarmDebateEscalationPayload(BaseModel):
+    debate_id: str
+    proposal_title: str
+    proposal_description: str
+    proposal_diff: Optional[str] = None
+    risk_tier: RiskTier = 1
+    final_score: float
+    verdict: str
+    gating_reasons: List[str] = Field(default_factory=list)
+    specialist_breakdown: Dict[str, float] = Field(default_factory=dict)
+    turns_count: int = 1
+    last_turn_critiques: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: str = Field(default_factory=current_iso_time)
+
+class SwarmDebateEscalationMsg(BaseMessage):
+    type: Literal["swarm.debate.escalation"] = "swarm.debate.escalation"
+    payload: SwarmDebateEscalationPayload
+
+class SwarmDebateDecisionPayload(BaseModel):
+    debate_id: str
+    decision: Literal["approve", "reject"]
+    reason: Optional[str] = None
+
+class SwarmDebateDecisionMsg(BaseMessage):
+    type: Literal["swarm.debate.decision"] = "swarm.debate.decision"
+    payload: SwarmDebateDecisionPayload
+
 
 

@@ -750,5 +750,37 @@ otification_policy == 'silent').
 - While halted, `unattended_mission_runner.is_halted` is `True`, and subsequent tool calls or sandbox creation attempts immediately raise `PermissionError`.
 - Clean state reset and resumption via `unattended_mission_runner.reset()` when Guardian transitions to `idle`.
 
+---
+
+## 30. Autonomous Multi-Agent Collaborative Swarm & Synthetic Debate Guarantees (Milestone 10.0 Phase 1)
+
+### 1. Specialist Sub-Agent Personas & Domain Focus (SWM-01)
+- **Lead Architect**: Evaluates architectural coherence, modularity, boundary integrity, and synthesizes convergence.
+- **Code Reviewer**: Enforces strict typing (mypy/pyright/TypeScript strict), PEP 8 formatting, docstrings, and diff minimality.
+- **Security Auditor**: Holds unilateral veto power. Enforces Phenom permanent safety rules (Rules 1, 4, 7, 8, 9, 11), credential hygiene, zero unauthorized cloud transmission, and prompt injection defense.
+- **QA Test Engineer**: Assesses test coverage, boundary cases, regression hazards, and verifiable execution proof.
+
+### 2. Multi-Turn Synthetic Debate Protocol & Consensus Governance (SWM-01)
+- **Turn Bounds**: Debates are strictly capped at 3 turns to prevent endless argument loops.
+- **Weighted Consensus Formula**:
+  $$\text{score} = 0.35 \times \text{security} + 0.30 \times \text{architect} + 0.20 \times \text{qa} + 0.15 \times \text{code}$$
+  where `APPROVE = 1.0`, `REQUEST_CHANGES = 0.5`, `BLOCK = 0.0`.
+- **Strict Tier 2+ Unanimous Gate**: Any proposal with risk tier >= 2 strictly requires unanimous `APPROVE` from Lead Architect, Security Auditor, and QA Engineer. If any of these 3 specialists does not approve, the proposal is gated with `GATED_PENDING_UNANIMOUS`.
+- **Security Auditor Veto**: A single `BLOCK` from Security Auditor immediately halts autonomous approval regardless of overall score.
+- **User Escalation Threshold (< 85%)**: If aggregate consensus is < 0.85 or gated pending unanimous sign-off, autonomous execution is suspended and an interactive Escalation Card is dispatched to the Cyber HUD.
+- **Early Exit on Unanimous Consensus**: If all 4 specialists approve with consensus score >= 0.95 in Round 1 or 2, the debate concludes immediately without unnecessary turns.
+
+### 3. ToolRegistry Risk Tiering & Previews (SAF-01)
+- `swarm_get_debate_status`: Tier 0 (Read-Only query). Arguments: `SwarmGetDebateStatusArgs(debate_id: Optional[str] = None)`. Preview: `"Query status of specialist swarm synthetic debates (ID: {debate_id or 'recent'})"`.
+- `swarm_dispatch_specialists`: Tier 1 (Reversible change). Arguments: `SwarmDispatchSpecialistsArgs(title: str, description: str, diff: Optional[str] = None, risk_tier: int = 1, max_rounds: int = 3)`. Preview: `"Dispatch multi-agent synthetic debate across 4 specialists for proposal: '{title}' (Tier {risk_tier})"`.
+- `swarm_submit_user_decision`: Tier 1 (Reversible change). Arguments: `SwarmSubmitUserDecisionArgs(debate_id: str, decision: Literal['approve', 'reject'], reason: Optional[str] = None)`. Preview: `"Submit user decision '{decision}' for escalated debate '{debate_id}'"`.
+
+### 4. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `specialist_swarm_orchestrator.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- Execution SLA: All active debate loops and async agent tasks are canceled synchronously in `< 25ms` (< 1ms typical).
+- While halted, `specialist_swarm_orchestrator.is_halted` is `True`, all pending escalations are rejected with `PermissionError`, and subsequent tool calls or debate dispatches immediately raise `PermissionError`.
+- Clean state reset and resumption via `specialist_swarm_orchestrator.reset()` when Guardian transitions to `idle`.
+
+
 
 

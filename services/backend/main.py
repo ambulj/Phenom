@@ -279,6 +279,7 @@ import services.backend.tools.vision_tools
 import services.backend.tools.graph_rag_tools
 import services.backend.tools.mission_tools
 from services.backend.missions import unattended_mission_runner, morning_debrief_synthesizer
+from services.backend.swarm import specialist_swarm_orchestrator
 from services.backend.memory.multi_source_graph import multi_source_graph
 from services.backend.memory.graph_rag import graph_rag_engine
 from services.backend.vision.ambient_copilot import ambient_copilot
@@ -1515,6 +1516,7 @@ def on_guardian_state_change(new_state: str):
             multi_source_graph.halt()
             graph_rag_engine.halt()
             unattended_mission_runner.halt()
+            specialist_swarm_orchestrator.halt()
         except Exception:
             pass
 
@@ -1564,6 +1566,7 @@ def on_guardian_state_change(new_state: str):
             multi_source_graph.reset()
             graph_rag_engine.reset()
             unattended_mission_runner.reset()
+            specialist_swarm_orchestrator.reset()
         except Exception:
             pass
 
@@ -1580,6 +1583,7 @@ guardian.add_state_callback(on_guardian_state_change)
 annotation_streamer.register_broadcaster(broadcast_message)
 ambient_copilot.register_broadcaster(broadcast_message)
 morning_debrief_synthesizer.register_broadcaster(broadcast_message)
+specialist_swarm_orchestrator.register_broadcaster(broadcast_message)
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 
@@ -2459,7 +2463,19 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 
-
+            elif mtype == "swarm.debate.decision":
+                debate_id = payload.get("debate_id")
+                decision = payload.get("decision", "reject")
+                reason = payload.get("reason")
+                if debate_id:
+                    try:
+                        specialist_swarm_orchestrator.submit_user_decision(
+                            debate_id=debate_id,
+                            decision=decision,
+                            reason=reason,
+                        )
+                    except Exception as e:
+                        logger.error(f"Failed to submit swarm debate decision: {e}")
 
 
 

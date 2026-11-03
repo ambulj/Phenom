@@ -12,6 +12,13 @@ from pydantic import BaseModel, Field
 
 from services.backend.safety.registry import registry
 from services.backend.automation.swarm_manager import swarm_manager
+from services.backend.schemas.swarm_debate import (
+    SwarmProposal,
+    SwarmDispatchSpecialistsArgs,
+    SwarmGetDebateStatusArgs,
+    SwarmSubmitUserDecisionArgs,
+)
+from services.backend.swarm.specialist_orchestrator import specialist_swarm_orchestrator
 
 
 class GetSwarmStatusArgs(BaseModel):
@@ -95,3 +102,69 @@ def abort_swarm_task(task_id: str) -> Dict[str, Any]:
         "task_id": task_id,
         "success": aborted
     }
+
+
+# =========================================================================
+# Milestone 10.0 Phase 1: Autonomous Multi-Agent Collaborative Swarm Tools
+# =========================================================================
+
+@registry.register(
+    name="swarm_dispatch_specialists",
+    tier=1,
+    description="Dispatches a proposal to the 4 specialist sub-agents (Architect, Code Reviewer, Security, QA) for multi-turn synthetic debate and consensus scoring.",
+    args_schema=SwarmDispatchSpecialistsArgs,
+    preview_fn=lambda a: f"Dispatch multi-agent synthetic debate across 4 specialists for proposal: '{a.get('title')}' (Tier {a.get('risk_tier', 1)})"
+)
+async def swarm_dispatch_specialists(
+    title: str,
+    description: str,
+    diff: Optional[str] = None,
+    risk_tier: int = 1,
+    max_rounds: int = 3
+) -> Dict[str, Any]:
+    """Dispatches a proposal to the specialist swarm orchestrator."""
+    proposal = SwarmProposal(
+        title=title,
+        description=description,
+        diff=diff,
+        risk_tier=risk_tier
+    )
+    report = await specialist_swarm_orchestrator.dispatch_debate(
+        proposal,
+        max_rounds=max_rounds
+    )
+    return report.model_dump()
+
+
+@registry.register(
+    name="swarm_get_debate_status",
+    tier=0,
+    description="Returns the status of an ongoing or completed specialist synthetic debate, or a summary of recent debates. Read-only.",
+    args_schema=SwarmGetDebateStatusArgs,
+    preview_fn=lambda a: f"Query status of specialist swarm synthetic debates (ID: {a.get('debate_id') or 'recent'})"
+)
+def swarm_get_debate_status(debate_id: Optional[str] = None) -> Dict[str, Any]:
+    """Queries debate status from the specialist swarm orchestrator."""
+    return specialist_swarm_orchestrator.get_debate_status(debate_id)
+
+
+@registry.register(
+    name="swarm_submit_user_decision",
+    tier=1,
+    description="Submits a user override or rejection decision for an escalated specialist synthetic debate.",
+    args_schema=SwarmSubmitUserDecisionArgs,
+    preview_fn=lambda a: f"Submit user decision '{a.get('decision')}' for escalated debate '{a.get('debate_id')}'"
+)
+def swarm_submit_user_decision(
+    debate_id: str,
+    decision: str,
+    reason: Optional[str] = None
+) -> Dict[str, Any]:
+    """Submits a user override or rejection decision."""
+    report = specialist_swarm_orchestrator.submit_user_decision(
+        debate_id=debate_id,
+        decision=decision,
+        reason=reason
+    )
+    return report.model_dump()
+

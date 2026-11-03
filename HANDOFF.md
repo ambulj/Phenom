@@ -1169,3 +1169,41 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 
 
 
+---
+
+# Milestone 10.0 Phase 1: Autonomous Multi-Agent Collaborative Swarm & Synthetic Debate
+**Status:** Complete & Verified
+**Requirements:** `SWM-01`, `SAF-01`, `SAF-02`
+
+### Key Implementations
+1. **Specialist Sub-Agent Personas (`services/backend/swarm/specialist_personas.py`, `services/backend/schemas/swarm_debate.py`)**:
+   - Implemented 4 dedicated specialist personas: Lead Architect, Code Reviewer, Security Auditor, and QA Test Engineer.
+   - Pydantic models: `SpecialistRole`, `CritiqueVerdict` (`APPROVE`, `REQUEST_CHANGES`, `BLOCK`), `ConsensusVerdict`, `SpecialistCritique`, `DebateTurn`, `ConsensusReport`, `SwarmProposal`.
+   - Security Auditor strictly checks credential hygiene, secret leak prevention, prompt injection mitigation, and Phenom safety rules (Rules 1, 4, 7, 8, 9, 11) with unilateral veto authority.
+2. **Multi-Turn Synthetic Debate Protocol & Consensus Scoring (`services/backend/swarm/synthetic_debate.py`)**:
+   - Multi-turn synthetic debate engine capped at 3 rounds (Round 1: Independent Critiques, Round 2: Cross-Critique Rebuttals, Round 3: Convergence Synthesis).
+   - Weighted domain formula:
+     $$\text{score} = 0.35 \times \text{security} + 0.30 \times \text{architect} + 0.20 \times \text{qa} + 0.15 \times \text{code}$$
+   - Strict Tier 2+ Unanimous Gate: any proposal with `risk_tier >= 2` strictly requires unanimous `APPROVE` from Architect, Security Auditor, and QA Engineer (`GATED_PENDING_UNANIMOUS`).
+   - Security Veto: single Security Auditor `BLOCK` halts autonomous approval.
+   - User Escalation: any score $< 0.85$ or gated Tier 2 proposal escalates to the user (`ESCALATED_TO_USER`).
+3. **Specialist Swarm Orchestrator (`services/backend/swarm/specialist_orchestrator.py`)**:
+   - Singleton orchestrator managing debate lifecycles, active task tracking, escalation futures, and WebSocket broadcasting.
+4. **Desktop Cyber HUD Escalation Card (`apps/desktop/src/components/CyberHUD/SwarmDebateEscalationCard.tsx`)**:
+   - Interactive Cyber HUD card displaying proposal summary, risk tier badge, consensus gauge with 85% warning threshold, 4 specialist avatars with individual verdicts, expandable concerns/recommendations, and "Override & Approve" / "Reject" decision actions.
+   - Protocol types added to `services/backend/schemas/protocol.py` and `apps/desktop/src/types/protocol.ts`.
+5. **ToolRegistry Registration & Sub-25ms Guardian Kill Switch SLA (`SAF-01`, `SAF-02`)**:
+   - Added `swarm_get_debate_status` (Tier 0), `swarm_dispatch_specialists` (Tier 1), and `swarm_submit_user_decision` (Tier 1) in `services/backend/tools/swarm_tools.py` with Pydantic argument schemas and preview generators.
+   - Hooked `specialist_swarm_orchestrator.halt()` and `reset()` into `on_guardian_state_change()` in `services/backend/main.py`.
+   - Benchmark verified synchronous halt execution: **0.0895 ms** (< 25ms SLA, $< 1.0\text{ms}$ typical).
+   - Documented in `SAFETY.md` Section 30.
+
+### Test Results
+- `services/backend/tests/test_specialist_schemas.py`: **6/6 PASSED**
+- `services/backend/tests/test_synthetic_debate.py`: **6/6 PASSED**
+- `services/backend/tests/test_swarm_orchestrator.py`: **5/5 PASSED**
+- `services/backend/tests/test_specialist_swarm.py`: **4/4 PASSED**
+- `services/backend/tests/test_swarm_consensus_governance.py`: **6/6 PASSED**
+- `services/backend/tests/test_milestone_10_phase_1_guardian_sla.py`: **5/5 PASSED**
+- Total Phase 1 Suite: **32/32 PASSED in 11.24s**
+- Desktop Build: `npm --prefix apps/desktop run build` **PASS (0 errors)**
