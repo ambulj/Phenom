@@ -1074,3 +1074,43 @@ Implemented Phase 2 of Phenom Milestone 9.0 establishing Phenom's sub-200ms turn
 - `services/backend/tests/test_milestone_9_phase_2_guardian_sla.py`: **4/4 PASSED**
 - Total Phase 2 Suite: **17/17 PASSED in 11.86s**
 
+---
+
+# Milestone 9.0 Phase 3: Autonomous Multi-Source Personal Knowledge Graph & GraphRAG
+
+### Summary
+Implemented Phase 3 of Phenom Milestone 9.0 establishing Phenom's unified multi-source personal knowledge graph engine (`GRA-01`) auto-indexing and correlating knowledge across 4 core personal domains (Obsidian vault notes, code repositories, local documents, and workspace emails/meetings), providing hybrid GraphRAG retrieval (lexical BM25 + dense vector semantic search + graph relational expansion), strict ToolRegistry safety tiering (`SAF-01`), and sub-25ms synchronous Guardian kill switch SLA integration (`SAF-02`).
+
+### Deliverables & Verifications
+1. **Multi-Source Entity Schema & 4-Domain Parsers (`GRA-01`)**:
+   - `services/backend/schemas/graph_rag.py`: Pydantic models for `GraphNode`, `GraphEdge`, `GraphQueryResult`, `GraphStats`.
+   - `services/backend/memory/graph_parsers.py`: Multi-domain parsers across 4 personal domains:
+     - Obsidian Vault notes with `[[wikilinks]]`, `#tags`, YAML frontmatter, aliases, and daily notes (`vault://`).
+     - Code repositories using Python standard library `ast` static analysis (classes, functions, async methods, arguments, docstrings), TypeScript/JavaScript symbol regex, and local `git log` commit history (`code://`, `git://`).
+     - Local documents (PDF, DOCX, XLSX, PPTX) using `DocumentReader` with semantic overlap text chunking (`doc://#chunk=N`).
+     - Workspace context (Gmail priority thread summaries, Google Calendar meeting agendas with attendees).
+   - Strict secret file exclusion (`.env*`, `*.pem`, `*.key`, `*.cert`, `id_rsa`) and in-memory credential regex scrubbing (`nvapi-`, `sk-`, `AKIA`, private keys, passwords).
+2. **Unified Cross-Domain Knowledge Graph Engine (`GRA-01`)**:
+   - `services/backend/memory/multi_source_graph.py`: In-memory bidirectional graph model with typed edges (`references`, `implements`, `discussed_in`, `authored_by`, `documents`, `calls`, `contains`), heuristic cross-domain link synthesis, and topology centrality analytics (orphan detection, concept hub discovery).
+3. **Hybrid GraphRAG Retrieval & Query Intent Router (`GRA-01`)**:
+   - `services/backend/memory/graph_rag.py`: Tri-level hybrid search combining:
+     - Lexical BM25 keyword matching via in-memory token inverted index.
+     - Dense vector semantic search via `LocalEmbeddingPipeline` (384-dimensional dense vectors) with cosine similarity in RAM.
+     - Graph relational expansion (1-hop / 2-hop traversal with distance decay attenuation `0.7 ** hops`).
+   - Cross-domain context synthesizer formatting unified prompt context with deterministic URI citations.
+   - Natural language query intent router weighting domains based on query classification.
+   - Zero-cloud leakage invariant: all graph and embedding operations remain 100% on-device in RAM.
+4. **ToolRegistry Registration & Sub-25ms Guardian Kill Switch SLA (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/graph_rag_tools.py`: Registered `graph_rag_query` (Tier 0 Read-Only), `graph_rag_get_stats` (Tier 0 Read-Only), and `graph_rag_reindex_domain` (Tier 1 Reversible change) with Pydantic argument schemas and preview generators.
+   - `services/backend/main.py`: Synchronously hooked `multi_source_graph.halt()` / `reset()` and `graph_rag_engine.halt()` / `reset()` into `on_guardian_state_change()`.
+   - `SAFETY.md`: Updated Section 1 (Risk Tiers table) and added Section 28 (Multi-Source Personal Knowledge Graph & GraphRAG Guarantees).
+   - `services/backend/tests/test_milestone_9_phase_3_guardian_sla.py`: Verified sub-25ms synchronous Guardian trigger SLA (`< 1.0ms` measured), universal tool call blocking while halted (`PermissionError`), and clean resumption.
+
+### Test Results
+- `services/backend/tests/test_graph_parsers.py`: **7/7 PASSED**
+- `services/backend/tests/test_multi_source_graph.py`: **5/5 PASSED**
+- `services/backend/tests/test_graph_rag_engine.py`: **6/6 PASSED**
+- `services/backend/tests/test_milestone_9_phase_3_guardian_sla.py`: **4/4 PASSED**
+- Total Phase 3 Suite: **22/22 PASSED in 12.83s**
+
+
