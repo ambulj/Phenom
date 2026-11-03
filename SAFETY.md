@@ -12,9 +12,9 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 
 | --- | --- | --- | --- |
 
-| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance, graph_rag_query, graph_rag_get_stats |
+| 0 | Read-only | Runs automatically, logged | list files, read a file, search memory & vector store, search photos, inspect UI elements, take screenshot (RAM), summarize YouTube, organize Downloads dry run, get mode, list scheduled jobs, get weather, get tech news, get market quote, get financial watchlist, get mutual fund quote, get sports score, search research papers, lookup DOI citation, search/read Gmail, list calendar events, vision_get_ambient_screen_context, governor_get_resource_status, voice_get_engine_status, voice_speak_utterance, graph_rag_query, graph_rag_get_stats, mission_get_status, mission_get_morning_debrief |
 
-| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine, graph_rag_reindex_domain |
+| 1 | Reversible change | One confirmation; user may choose "remember for this folder" | create or move or copy a file, open or close an app, organize Downloads apply (reversible with undo), write Obsidian vault note, append daily log, set mode, schedule reminder, cancel scheduled job, add/remove financial watchlist, create Gmail draft, generate document (.docx, .xlsx, .pptx, .pdf), vision_configure_ambient_copilot, voice_configure_engine, graph_rag_reindex_domain, mission_start_unattended, mission_abort |
 
 | 2 | Destructive or external | Explicit confirmation with a preview of exactly what will happen; never remembered | recycle-bin delete, create a calendar event, send content to a cloud model, drive the browser or screen, fill a web cart, desktop action plans, remote approvals |
 
@@ -717,5 +717,38 @@ otification_policy == 'silent').
 - Execution SLA: All active indexing loops, worker tasks, and graph traversals halt synchronously in `< 25ms` (< 1ms typical).
 - While halted, `multi_source_graph.is_halted` is `True`, and subsequent tool calls or graph operations immediately raise `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+---
+
+## 29. Sovereign Unattended Overnight Missions & Morning Cyber HUD Debrief Guarantees (Milestone 9.0 Phase 4)
+
+### 1. Isolated Git Worktree Sandboxes & Zero Focus Theft Invariant (MIS-01)
+- **Isolated Sandbox Execution**: Unattended overnight missions execute exclusively within dedicated git worktree directories at `.phenom_sandbox/missions/{mission_id}` on ephemeral branches `mission/{mission_id}` branched from current `HEAD`.
+- **Primary Working Tree Invariant**: The developer's primary working tree, uncommitted modifications, unstaged files, and active IDE editor buffers remain 100% untouched throughout all mission iterations.
+- **Zero Cursor / Window Focus Theft Invariant**: All test runners, compilers, and patch synthesizers run as invisible background subprocesses with `CREATE_NO_WINDOW` (`0x08000000`). No windows pop up, no desktop cursor movements occur, and no audio alerts sound during nocturnal execution.
+- **Automated Lifecycle & Worktree Pruning**: Upon mission completion, failure, or abortion, git worktree references are cleanly pruned (`git worktree remove --force` / `git worktree prune`). Residual file locks on Windows are resolved by stripping readonly flags prior to tree removal. `.phenom_sandbox/` is strictly ignored in `.gitignore`.
+
+### 2. Multi-Iteration Self-Healing Test Loops & Bounded Timeouts (MIS-01)
+- **Bounded Iteration Limit**: Self-healing loops are bounded by `max_iterations` (default 5, max 20). If tests fail to heal within the allotted iterations, the runner gracefully halts, records a structured diagnostic log, and marks the mission status `failed` without corrupting branch state.
+- **Subprocess Timeout Guard**: Every test runner invocation is governed by a strict subprocess timeout (default 120s, configurable). Hanging test commands or infinite loops are terminated immediately with process tree force kill (`taskkill /F /T /PID`).
+- **Atomic Rollback & Validation**: Unified diffs are validated via `PatchDrafter.validate_patch` (`git apply --check`) before application.
+
+### 3. Non-Destructive Obsidian Second-Brain Sync & Cyber HUD Debrief (MIS-01)
+- **Non-Destructive Daily Notes Update**: Morning debrief summaries are merged into `vault/Daily Notes/YYYY-MM-DD.md` strictly under `## 🌙 Overnight Autonomous Missions`. All user handwritten journals, thoughts, and reflections above or below the header are 100% preserved.
+- **Idempotent Section Updates**: If `## 🌙 Overnight Autonomous Missions` already exists, only that specific markdown section is replaced; duplicate headers are never created.
+- **Interactive Cyber HUD Card**: Upon user return, Phenom emits `mission.morning_debrief` displaying mission objectives, healed test counts, diff line metrics (`+A / -B`), branch reviews, and triggers celebratory visual pulses on the Three.js particle orb.
+
+### 4. ToolRegistry Risk Tiering & Previews (SAF-01)
+- `mission_start_unattended`: Tier 1 (Reversible change). Arguments: `MissionStartArgs(title: str, prompt: str, repo_path: Optional[str] = None, test_command: str = "pytest", max_iterations: int = 5, timeout_seconds: int = 120)`. Preview: `"Start unattended sovereign mission '{title}' in isolated git worktree (Reversible change)"`.
+- `mission_get_status`: Tier 0 (Read-Only query). Arguments: `MissionStatusArgs(mission_id: Optional[str] = None)`. Preview: `"Get status of unattended mission '{mission_id or 'latest'}' (Read-only)"`.
+- `mission_abort`: Tier 1 (Reversible change). Arguments: `MissionAbortArgs(mission_id: str, reason: Optional[str] = "user_aborted")`. Preview: `"Abort unattended sovereign mission '{mission_id}' (Reversible change)"`.
+- `mission_get_morning_debrief`: Tier 0 (Read-Only query). Arguments: `MissionDebriefArgs(date_str: Optional[str] = None)`. Preview: `"Generate sovereign morning debrief for '{date_str or 'today'}' (Read-only)"`.
+
+### 5. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `unattended_mission_runner.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- Execution SLA: All active sandbox subprocesses, compilers, and test runners are terminated synchronously in `< 25ms` (< 1ms typical) using direct `proc.kill()` and Windows process tree kill.
+- While halted, `unattended_mission_runner.is_halted` is `True`, and subsequent tool calls or sandbox creation attempts immediately raise `PermissionError`.
+- Clean state reset and resumption via `unattended_mission_runner.reset()` when Guardian transitions to `idle`.
+
 
 

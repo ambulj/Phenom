@@ -277,6 +277,8 @@ import services.backend.tools.housekeeping_tools
 import services.backend.tools.telegram_tools
 import services.backend.tools.vision_tools
 import services.backend.tools.graph_rag_tools
+import services.backend.tools.mission_tools
+from services.backend.missions import unattended_mission_runner, morning_debrief_synthesizer
 from services.backend.memory.multi_source_graph import multi_source_graph
 from services.backend.memory.graph_rag import graph_rag_engine
 from services.backend.vision.ambient_copilot import ambient_copilot
@@ -1512,6 +1514,7 @@ def on_guardian_state_change(new_state: str):
             resource_governor.halt()
             multi_source_graph.halt()
             graph_rag_engine.halt()
+            unattended_mission_runner.halt()
         except Exception:
             pass
 
@@ -1560,6 +1563,7 @@ def on_guardian_state_change(new_state: str):
             streaming_voice_engine.reset()
             multi_source_graph.reset()
             graph_rag_engine.reset()
+            unattended_mission_runner.reset()
         except Exception:
             pass
 
@@ -1575,6 +1579,7 @@ guardian.add_state_callback(on_guardian_state_change)
 
 annotation_streamer.register_broadcaster(broadcast_message)
 ambient_copilot.register_broadcaster(broadcast_message)
+morning_debrief_synthesizer.register_broadcaster(broadcast_message)
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 
