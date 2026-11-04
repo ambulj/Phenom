@@ -8,10 +8,76 @@ import subprocess
 import psutil
 import shutil
 import winreg
+import ctypes
+from ctypes import wintypes
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
 from services.backend.safety.guardian import guardian
+
+class _STARTUPINFOW(ctypes.Structure):
+    _fields_ = [
+        ("cb", wintypes.DWORD),
+        ("lpReserved", wintypes.LPWSTR),
+        ("lpDesktop", wintypes.LPWSTR),
+        ("lpTitle", wintypes.LPWSTR),
+        ("dwX", wintypes.DWORD),
+        ("dwY", wintypes.DWORD),
+        ("dwXSize", wintypes.DWORD),
+        ("dwYSize", wintypes.DWORD),
+        ("dwXCountChars", wintypes.DWORD),
+        ("dwYCountChars", wintypes.DWORD),
+        ("dwFillAttribute", wintypes.DWORD),
+        ("dwFlags", wintypes.DWORD),
+        ("wShowWindow", wintypes.WORD),
+        ("cbReserved2", wintypes.WORD),
+        ("lpReserved2", ctypes.c_void_p),
+        ("hStdInput", wintypes.HANDLE),
+        ("hStdOutput", wintypes.HANDLE),
+        ("hStdError", wintypes.HANDLE),
+    ]
+
+class _PROCESS_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("hProcess", wintypes.HANDLE),
+        ("hThread", wintypes.HANDLE),
+        ("dwProcessId", wintypes.DWORD),
+        ("dwThreadId", wintypes.DWORD),
+    ]
+
+def _launch_on_default_desktop(cmd_line: str, desktop: str = "WinSta0\\Default") -> Optional[int]:
+    """
+    Launches a command line explicitly onto the user's interactive desktop (WinSta0\\Default).
+    This guarantees that processes spawned by background services or non-default session
+    desktops appear visibly on the user's physical monitor.
+    """
+    try:
+        si = _STARTUPINFOW()
+        si.cb = ctypes.sizeof(_STARTUPINFOW)
+        si.lpDesktop = desktop
+
+        pi = _PROCESS_INFORMATION()
+        k32 = ctypes.windll.kernel32
+        res = k32.CreateProcessW(
+            None,
+            cmd_line,
+            None,
+            None,
+            False,
+            0,
+            None,
+            None,
+            ctypes.byref(si),
+            ctypes.byref(pi)
+        )
+        if res:
+            pid = pi.dwProcessId
+            k32.CloseHandle(pi.hThread)
+            k32.CloseHandle(pi.hProcess)
+            return pid
+    except Exception:
+        pass
+    return None
 
 def resolve_application_path(name: str) -> str:
     """Resolves an application name to an executable path via Windows Registry App Paths, PATH, or well-known locations."""
@@ -122,19 +188,41 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
 
     if is_url:
         target_url = resolved if (resolved.startswith("http://") or resolved.startswith("https://")) else clean_name
-        import webbrowser
-        try:
-            webbrowser.open(target_url, new=2)
-        except Exception:
-            pass
+        
+        # 1. Primary: Launch on interactive desktop WinSta0\Default via cmd.exe start
+        cmd_str = f'cmd.exe /c start "" "{target_url}"'
+        pid = _launch_on_default_desktop(cmd_str)
+        if pid:
+            guardian.track_pid(pid)
+            return {
+                "app_name": clean_name,
+                "resolved_path": target_url,
+                "launched": True,
+                "launcher_pid": pid,
+                "message": f"Successfully opened {clean_name}"
+            }
 
+        # 2. Secondary fallback: WScript.Shell
         try:
             import win32com.client
             import pythoncom
             pythoncom.CoInitialize()
             w = win32com.client.Dispatch("WScript.Shell")
-            w.Run(target_url, 1, False)
+            w.Run(f'cmd.exe /c start "" "{target_url}"', 1, False)
             pythoncom.CoUninitialize()
+            return {
+                "app_name": clean_name,
+                "resolved_path": target_url,
+                "launched": True,
+                "message": f"Successfully opened {clean_name}"
+            }
+        except Exception:
+            pass
+
+        # 3. Tertiary fallback: webbrowser module
+        import webbrowser
+        try:
+            webbrowser.open(target_url, new=2)
         except Exception:
             pass
 
@@ -146,18 +234,36 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
         }
 
     # Application launching (e.g. "brave", "chrome", "notepad", "calc")
-    if any(b in clean_name.lower() or b in os.path.basename(resolved).lower() for b in ("brave", "chrome", "msedge", "firefox")):
-        args_str = "--new-window --disable-gpu"
+    is_chromium = any(b in clean_name.lower() or b in os.path.basename(resolved).lower() for b in ("brave", "chrome", "msedge", "firefox"))
+    if is_chromium:
+        args_str = "--new-window --disable-gpu --disable-extensions"
     if url_or_args:
         args_str = f"{args_str} {url_or_args}".strip()
 
-    # 1. Primary method: WScript.Shell (Windows standard interactive session execution)
+    # Determine command to run on Default desktop
+    if os.path.isabs(target) and os.path.exists(target):
+        cmd_to_run = f'"{target}" {args_str}'.strip() if args_str else f'"{target}"'
+    else:
+        cmd_to_run = f'cmd.exe /c start "" "{target}" {args_str}'.strip() if args_str else f'cmd.exe /c start "" "{target}"'
+
+    # 1. Primary method: CreateProcessW explicitly targeting WinSta0\Default
+    pid = _launch_on_default_desktop(cmd_to_run)
+    if pid:
+        guardian.track_pid(pid)
+        return {
+            "app_name": clean_name,
+            "resolved_path": resolved,
+            "launched": True,
+            "launcher_pid": pid,
+            "message": f"Successfully launched {clean_name}"
+        }
+
+    # 2. Secondary method: COM WScript.Shell
     try:
         import win32com.client
         import pythoncom
         pythoncom.CoInitialize()
         w = win32com.client.Dispatch("WScript.Shell")
-        cmd_to_run = f'"{target}" {args_str}'.strip() if args_str else f'"{target}"'
         w.Run(cmd_to_run, 1, False)
         pythoncom.CoUninitialize()
         return {
@@ -169,32 +275,11 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
     except Exception:
         pass
 
-    # 2. Secondary method: COM Shell.Application (explorer.exe host)
-    try:
-        import win32com.client
-        import pythoncom
-        pythoncom.CoInitialize()
-        try:
-            shell = win32com.client.Dispatch("Shell.Application")
-            shell.ShellExecute(target, args_str, "", "open", 1)
-        finally:
-            pythoncom.CoUninitialize()
-        return {
-            "app_name": clean_name,
-            "resolved_path": resolved,
-            "launched": True,
-            "message": f"Successfully launched {clean_name}"
-        }
-    except Exception:
-        pass
-
-    # 3. Tertiary method: Subprocess targeting Default desktop
-    si = subprocess.STARTUPINFO()
-    si.lpDesktop = "WinSta0\\Default"
+    # 3. Tertiary method: Subprocess fallback
     cmd = [target]
     if args_str:
         cmd.extend(args_str.split())
-    proc = subprocess.Popen(cmd, startupinfo=si)
+    proc = subprocess.Popen(cmd)
     guardian.track_pid(proc.pid)
     return {
         "app_name": clean_name,
