@@ -1221,6 +1221,45 @@ export interface VoiceKernelAbortIntentMsg extends BaseMessage {
   };
 }
 
+export interface ContextualAnticipationPayload {
+  anticipation_id: string;
+  suggested_action: string;
+  target_tool?: string | null;
+  confidence: number;
+  reasoning_path: string;
+  timestamp: number;
+}
+
+export interface CognitiveTwinStatePayload {
+  total_nodes: number;
+  total_edges: number;
+  active_context_nodes: string[];
+  anticipations: ContextualAnticipationPayload[];
+  is_locked: boolean;
+}
+
+export interface CognitiveTwinUpdateMsg extends BaseMessage {
+  type: 'cognitive_twin.update';
+  payload: CognitiveTwinStatePayload;
+}
+
+export interface CognitiveTwinIngestEpisodeMsg extends BaseMessage {
+  type: 'cognitive_twin.ingest_episode';
+  payload: {
+    activity_label: string;
+    node_type?: string;
+    related_labels?: string[];
+    attributes?: Record<string, any>;
+  };
+}
+
+export interface CognitiveTwinPruneMsg extends BaseMessage {
+  type: 'cognitive_twin.prune';
+  payload: {
+    min_affinity_weight?: number;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -1257,6 +1296,7 @@ export type InboundServerMessage =
   | UIAUpdateMsg
   | ExtensionUpdateMsg
   | VoiceKernelUpdateMsg
+  | CognitiveTwinUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1306,4 +1346,6 @@ export type OutboundClientMessage =
   | ExtensionHotReloadMsg
   | ExtensionUnloadMsg
   | VoiceKernelConfigureMsg
-  | VoiceKernelAbortIntentMsg;
+  | VoiceKernelAbortIntentMsg
+  | CognitiveTwinIngestEpisodeMsg
+  | CognitiveTwinPruneMsg;

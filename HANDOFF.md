@@ -1918,3 +1918,36 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Total Phase 1 Suite: **13/13 PASSED in 0.28s**
 - Secret Scanner: **PASSED (0 secrets detected)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.23s)**
+
+
+---
+
+# Milestone 15.0 Phase 2: Hyper-Personalized Cognitive Twin & Episodic Life-Graph Synthesizer
+**Status:** Complete & Verified
+**Requirements:** `COG-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Cognitive Twin Schemas & Data Contracts (`COG-01`)**:
+   - `services/backend/schemas/cognitive_twin.py`: Defined `EpisodicNodeType`, `EpisodicNode`, `EpisodicEdge`, `ContextualAnticipation`, `CognitiveTwinState`, and 4 tool argument models.
+2. **Episodic Life-Graph Store & Anticipation Engine (`COG-01`, `SAF-02`)**:
+   - `services/backend/cognitive_twin/graph_store.py`: Local encrypted SQLite storage for autobiographical graph nodes and edges with dynamic affinity weighting, access counts, and affinity-based pruning.
+   - **Rule 11 Credential Scrubbing**: Auto-redacts tokens, API keys (`ghp_`, `sk-`), and passwords (`[REDACTED_CREDENTIAL]`) before persisting into SQLite.
+   - `services/backend/cognitive_twin/anticipation_engine.py`: Projects next probable user actions by walking active context neighborhood subgraphs ($\ge 0.65$ confidence threshold).
+   - `services/backend/cognitive_twin/manager.py`: Implemented `CognitiveTwinManager` with sub-10ms Guardian synchronous lock (`halt()`) and resume (`reset()`).
+   - Hooked `cognitive_twin_manager.halt()` and `reset()` into `services/backend/main.py`.
+3. **Tool Safety Governance & UI HUD Dashboard (`SAF-01`, `SAF-02`, `COG-01`)**:
+   - `services/backend/tools/cognitive_twin_tools.py`: Registered 4 tools in `ToolRegistry` (Tier 0 get status, query graph; Tier 1 ingest episode, prune graph).
+   - `apps/desktop/src/types/protocol.ts`: Added cognitive twin interfaces and message unions.
+   - `apps/desktop/src/components/CyberHUD/CognitiveTwinHUD.tsx`: React HUD widget displaying live node/edge counts, active context indicator, activity ingestion input, and anticipation feed.
+   - Documented Section 53 in `SAFETY.md`.
+4. **GSAP Skills Integration**:
+   - Installed 8 GSAP skills via `npx skills add https://github.com/greensock/gsap-skills --agent antigravity`.
+
+### Test Results
+- `services/backend/tests/test_cognitive_twin.py`: **5/5 PASSED**
+- `services/backend/tests/test_cognitive_twin_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_15_phase_2_guardian_sla.py`: **1/1 PASSED (100 Halts Avg: 0.0003ms, Max: 0.0025ms)**
+- Total Phase 2 Suite: **10/10 PASSED in 0.43s**
+- Cumulative Milestone 15 Suite (Phases 1 + 2): **23/23 PASSED (100% green in 0.71s)**
+- Secret Scanner: **PASSED (0 secrets detected)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 6.44s)**

@@ -1363,3 +1363,31 @@ otification_policy == 'silent').
   - Capture is muted and all transient chunk ring buffers are cleared.
   - Active and pending action dispatches are terminated with status `guardian_halted`.
   - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$.
+
+
+---
+
+## 53. Hyper-Personalized Cognitive Twin Invariants (COG-01, SAF-01, SAF-02)
+
+### 1. In-Memory and Encrypted Local Storage (Rule 4)
+- **Zero Cloud Exfiltration**: Episodic nodes, context links, and activity histories are strictly maintained in local memory or encrypted SQLite/SQLCipher databases (`:memory:` or local secured file).
+- **Transient Active Subgraphs**: Working context node IDs are purged on Guardian shutdown.
+
+### 2. In-Place Credential Scrubbing (Rule 11)
+- **Automatic Sanitization**: All episodic activity labels, relationship strings, and attribute payloads pass through regex credential scrubbers (`[REDACTED_CREDENTIAL]`) before persisting into SQLite tables.
+- **Strict Privacy Invariants**: API keys (`ghp_`, `sk-`), auth headers, passwords, and tokens are prevented from entering the knowledge graph.
+
+### 3. Tool Classification & Risk Tiers
+| Tool Name | Risk Tier | Description | Preview Gating |
+|---|---|---|---|
+| `cognitive_twin_get_status` | Tier 0 | Inspect node/edge counts and projected anticipations | Read-only; instantaneous |
+| `cognitive_twin_query_graph` | Tier 0 | Query nodes by type or label | Read-only; instantaneous |
+| `cognitive_twin_ingest_episode` | Tier 1 | Ingest episodic trace or activity node | Preview required |
+| `cognitive_twin_prune_graph` | Tier 1 | Prune low-affinity nodes below threshold | Preview required |
+
+### 4. Sub-10ms Synchronous Guardian Disengagement SLA (SAF-02)
+- Upon Guardian kill switch activation (`guardian.trigger()`):
+  - Cognitive Twin state immediately switches to `is_locked = True`.
+  - Ingestion, queries, and pruning operations immediately fail closed with `PermissionError`.
+  - Active context node queues are wiped.
+  - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$.
