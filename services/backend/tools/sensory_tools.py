@@ -7,6 +7,7 @@ Registers Tier 0 and Tier 1 tools in the Safety ToolRegistry for:
 """
 
 from typing import Dict, Any
+from services.backend.safety.guardian import guardian
 from services.backend.safety.registry import registry
 from services.backend.schemas.sensory import (
     CameraGetFrameArgs,
@@ -111,6 +112,9 @@ async def media_drop_get_history(args: MediaDropGetHistoryArgs) -> Dict[str, Any
     ),
 )
 async def media_drop_send_file(args: MediaDropSendFileArgs) -> Dict[str, Any]:
+    if guardian.is_halted or media_drop_manager.is_halted():
+        raise PermissionError("Media drop halted by Guardian kill switch.")
+
     manifest, transfer = media_drop_manager.create_send_manifest(
         file_path=args.file_path,
         source_node_id="host-desktop",
