@@ -743,6 +743,89 @@ export interface EvolutionRollbackAdapterMsg extends BaseMessage {
   };
 }
 
+// Milestone 13 Phase 2: Volumetric Spatial 3D Canvas & Vision Gestures
+export interface Vector3DPayload {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface VolumetricNodePayload {
+  node_id: string;
+  label: string;
+  position: Vector3DPayload;
+  velocity?: Vector3DPayload;
+  color_hex: string;
+  radius: number;
+  is_pinned: boolean;
+  depth_layer: number;
+  metadata?: Record<string, unknown>;
+  created_at: number;
+}
+
+export interface VisionGesturePayload {
+  gesture_id: string;
+  gesture_type: string;
+  confidence: number;
+  hand_position: Vector3DPayload;
+  pinch_distance?: number | null;
+  timestamp: number;
+}
+
+export interface VolumetricWorkspaceStatePayload {
+  is_active: boolean;
+  projection_mode: string;
+  total_nodes: number;
+  nodes: VolumetricNodePayload[];
+  active_gesture?: VisionGesturePayload | null;
+  multi_monitor_enabled: boolean;
+  depth_buffer_enabled: boolean;
+  selected_node_id?: string | null;
+  last_updated: number;
+}
+
+export interface VolumetricStateMsg extends BaseMessage {
+  type: 'volumetric_state_update';
+  payload: VolumetricWorkspaceStatePayload;
+}
+
+export interface VolumetricSetProjectionMsg extends BaseMessage {
+  type: 'volumetric.set_projection';
+  payload: {
+    mode: 'cylindrical' | 'spherical' | 'planar';
+  };
+}
+
+export interface VolumetricSpawnNodeMsg extends BaseMessage {
+  type: 'volumetric.spawn_node';
+  payload: {
+    label: string;
+    x?: number;
+    y?: number;
+    z?: number;
+    color_hex?: string;
+    depth_layer?: number;
+    is_pinned?: boolean;
+  };
+}
+
+export interface VolumetricClearCanvasMsg extends BaseMessage {
+  type: 'volumetric.clear_canvas';
+  payload?: Record<string, unknown>;
+}
+
+export interface VolumetricIngestGestureMsg extends BaseMessage {
+  type: 'volumetric.ingest_gesture';
+  payload: {
+    gesture_type: string;
+    confidence?: number;
+    x?: number;
+    y?: number;
+    z?: number;
+    pinch_distance?: number;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -769,6 +852,7 @@ export type InboundServerMessage =
   | WebRTCMirrorUpdateMsg
   | WebRTCMirrorTerminatedMsg
   | EvolutionStatusMsg
+  | VolumetricStateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -797,4 +881,8 @@ export type OutboundClientMessage =
   | WebRTCDisconnectMsg
   | EvolutionTrainAdapterMsg
   | EvolutionActivateAdapterMsg
-  | EvolutionRollbackAdapterMsg;
+  | EvolutionRollbackAdapterMsg
+  | VolumetricSetProjectionMsg
+  | VolumetricSpawnNodeMsg
+  | VolumetricClearCanvasMsg
+  | VolumetricIngestGestureMsg;

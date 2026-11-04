@@ -1116,3 +1116,24 @@ otification_policy == 'silent').
 - **Execution SLA**: Immediately ceases active adapter fine-tuning, aborts evaluation routines, and prevents adapter mounting/rollback in `< 10ms` (hard SLA: `< 25ms`; benchmarked at **0.0003 ms** average across 100 cycles).
 - While halted, all calls to `train_adapter`, `activate_adapter`, `rollback_adapter`, and associated Tier 1 tools fail closed with `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+
+## 43. Multi-Modal Holographic Workspace & Spatial 3D Volumetric Canvas (Milestone 13.0 Phase 2)
+
+### 1. Spatial Volumetric Invariants & Privacy Guarantees (VOL-01, Permanent Rule 4)
+- **Zero Camera Pixel Exfiltration (Permanent Rule 4)**: Touchless vision gesture tracking operates purely by consuming numeric 3D Cartesian landmark vectors (`Vector3D(x, y, z)` and normalized pinch distances). Zero camera frames, video feeds, or pixel arrays are ever saved, cached to disk, logged, or exfiltrated.
+- **Fail-Closed 3D Spatial Scene Graph**: 3D spatial node positioning, raycasting intersections, and projection coordinate transforms (cylindrical, spherical, planar) run completely in local RAM.
+- **Physical Palm Dismissal**: Physical hand gestures (e.g. `PALM_DISMISS`) allow touchless wiping of unpinned ephemeral 3D cards, providing rapid tactile spatial control.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `volumetric_get_status`: **Tier 0** (Read-Only). Arguments: `VolumetricGetWorkspaceStatusArgs`. Preview: `"Inspect 3D holographic spatial workspace state and active nodes (Read-Only)"`.
+- `volumetric_set_projection`: **Tier 1** (Reversible change with preview). Arguments: `VolumetricSetProjectionModeArgs(mode: str)`. Preview: `"Switch 3D holographic projection geometry to '{mode}'"`.
+- `volumetric_spawn_node`: **Tier 1** (Reversible change with preview). Arguments: `VolumetricSpawnNodeArgs(label: str, x: float, y: float, z: float, color_hex: str, depth_layer: int, is_pinned: bool)`. Preview: `"Spawn 3D volumetric node '{label}' at ({x}, {y}, {z}) [layer {depth_layer}]"`.
+- `volumetric_clear_canvas`: **Tier 1** (Reversible change with preview). Arguments: `VolumetricClearCanvasArgs`. Preview: `"Clear all spatial nodes from the 3D volumetric canvas scene"`.
+- `volumetric_ingest_gesture`: **Tier 1** (Reversible change with preview). Arguments: `VolumetricIngestGestureArgs(gesture_type: str, confidence: float, x: float, y: float, z: float, pinch_distance: Optional[float])`. Preview: `"Ingest vision gesture '{gesture_type}' (confidence={confidence})"`.
+
+### 3. Sub-10ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `volumetric_canvas_manager.halt()` and `vision_gesture_tracker.halt()` are synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Immediately clears all active 3D spatial nodes, unsets selected raycast targets, terminates active gesture listeners, and disables projection rendering in `< 10ms` (hard SLA: `< 25ms`).
+- While halted, all calls to `set_projection_mode`, `spawn_node`, `remove_node`, `clear_canvas`, `ingest_gesture`, and associated Tier 1 tools fail closed with `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
