@@ -1063,6 +1063,74 @@ export interface EnclaveLeaseMsg extends BaseMessage {
   };
 }
 
+// Milestone 14 Phase 3: Autonomous Deep UIAutomation & Self-Healing Desktop Workflows
+export interface UIElementNodePayload {
+  element_id: string;
+  name: string;
+  automation_id: string;
+  control_type: string;
+  bounding_rect: [number, number, number, number];
+  supported_patterns: string[];
+  is_enabled: boolean;
+  is_offscreen: boolean;
+  value?: string | null;
+  children: UIElementNodePayload[];
+}
+
+export interface UIWorkflowStepPayload {
+  step_id: string;
+  action_type: string;
+  target_query: string;
+  control_type?: string | null;
+  value_payload?: string | null;
+  verification_expected?: string | null;
+  status: string;
+  healing_applied: boolean;
+}
+
+export interface UIAWorkflowResultPayload {
+  workflow_id: string;
+  total_steps: number;
+  successful_steps: number;
+  healed_steps: number;
+  is_success: boolean;
+  elapsed_ms: number;
+  log: string[];
+}
+
+export interface UIAUpdateMsg extends BaseMessage {
+  type: 'uia.update';
+  payload: {
+    type: string;
+    data: any;
+  };
+}
+
+export interface UIAInvokeMsg extends BaseMessage {
+  type: 'uia.invoke';
+  payload: {
+    element_id: string;
+    non_intrusive?: boolean;
+  };
+}
+
+export interface UIASetValueMsg extends BaseMessage {
+  type: 'uia.set_value';
+  payload: {
+    element_id: string;
+    value: string;
+    non_intrusive?: boolean;
+  };
+}
+
+export interface UIAExecuteWorkflowMsg extends BaseMessage {
+  type: 'uia.execute_workflow';
+  payload: {
+    steps: UIWorkflowStepPayload[];
+    auto_heal?: boolean;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -1096,6 +1164,7 @@ export type InboundServerMessage =
   | KernelHealingAppliedMsg
   | TelepresenceUpdateMsg
   | EnclaveUpdateMsg
+  | UIAUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1137,4 +1206,7 @@ export type OutboundClientMessage =
   | TelepresenceSetCameraMsg
   | EnclaveUnlockMsg
   | EnclaveLockMsg
-  | EnclaveLeaseMsg;
+  | EnclaveLeaseMsg
+  | UIAInvokeMsg
+  | UIASetValueMsg
+  | UIAExecuteWorkflowMsg;

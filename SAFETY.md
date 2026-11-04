@@ -1251,3 +1251,27 @@ otification_policy == 'silent').
 - **Execution SLA**: Instantly zero-wipes all active leased credential buffers in memory (`buf[i] = 0`), zero-wipes all derived partition master keys, and locks all partitions in $< 10.0\text{ms}$ (< 25ms hard SLA).
 - While halted, all calls to `enclave_unlock_partition`, `enclave_lease_credential`, and `enclave_revoke_lease` fail closed with `PermissionError`.
 - Clean resumption via `resume()` / `reset()` when Guardian transitions back to `idle`. Partitions remain safely `LOCKED` until the user re-authenticates.
+
+
+## 49. Deep UIAutomation & Self-Healing Desktop Workflows (Milestone 14.0 Phase 3)
+
+### 1. Non-Intrusive Background Execution & Invariants (RPA-01)
+- **Zero Cursor / Focus Stealing**: Invocations execute directly against Windows accessibility patterns (`InvokePattern`, `ValuePattern`, `SelectionItemPattern`) without dispatching synthetic mouse moves or stealing foreground keyboard focus from the active user.
+- **Fuzzy Self-Healing Resolution**: When exact element matching on `automation_id` or name fails due to dynamic identifiers or UI rerendering, the engine automatically falls back to normalized substring and Levenshtein similarity matching ($\ge 0.60$ confidence threshold) within the expected control type.
+- **Verification Checkpoints**: Multi-step workflows verify element values or state transitions post-action to ensure that automation steps succeed before proceeding.
+- **Strict Permanent Rules Compliance**:
+  - **Rule 7 (Recycle Bin)**: UIAutomation actions never invoke permanent file deletion commands or bypass the recycle bin.
+  - **Rule 8 (Zero Payments)**: Automated workflows are strictly prohibited from submitting payment checkout forms, typing payment card numbers, or clicking financial confirmation buttons.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `uia_get_tree`: **Tier 0** (Read-Only). Arguments: `UIAGetTreeArgs`. Preview: `"Inspect Windows UIAutomation accessibility tree hierarchy (Read-Only)"`.
+- `uia_find_element`: **Tier 0** (Read-Only). Arguments: `UIAFindElementArgs`. Preview: `"Find UI element matching query '{name_query}' (Read-Only)"`.
+- `uia_invoke_element`: **Tier 1** (Reversible change with preview). Arguments: `UIAInvokeElementArgs(element_id: str, non_intrusive: bool)`. Preview: `"Invoke UI element '{element_id}' (non_intrusive: {non_intrusive}, zero cursor stealing)"`.
+- `uia_set_value`: **Tier 1** (Reversible change with preview). Arguments: `UIASetValueArgs(element_id: str, value: str, non_intrusive: bool)`. Preview: `"Set value on UI element '{element_id}' to '{value}' (ValuePattern)"`.
+- `uia_execute_workflow`: **Tier 1** (Multi-step change with preview). Arguments: `UIAExecuteWorkflowArgs(steps: List[UIWorkflowStep], auto_heal: bool)`. Preview: `"Execute {count}-step UIAutomation desktop workflow (auto_heal={auto_heal})"`.
+
+### 3. Sub-10ms Synchronous Guardian Lockdown SLA (SAF-02)
+- `deep_uia_engine.halt()` is synchronously called from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Instantly aborts active workflow execution, disengages background pattern invocations, and marks engine state as `HALTED` in $< 10.0\text{ms}$ (< 25ms hard SLA).
+- While halted, all calls to `uia_invoke_element`, `uia_set_value`, and `uia_execute_workflow` fail closed with `PermissionError`.
+- Clean resumption via `resume()` / `reset()` when Guardian transitions back to `idle`.

@@ -293,6 +293,7 @@ import services.backend.tools.swarm_compute_tools
 import services.backend.tools.kernel_tools
 import services.backend.tools.telepresence_tools
 import services.backend.tools.enclave_tools
+import services.backend.tools.uia_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
@@ -304,6 +305,7 @@ from services.backend.swarm_compute.workload_scheduler import swarm_workload_sch
 from services.backend.kernel.telemetry_listener import kernel_telemetry_fabric
 from services.backend.telepresence import streaming_av_pipeline
 from services.backend.security import biometric_enclave_manager
+from services.backend.automation.deep_uia_engine import deep_uia_engine
 from services.backend.sensors.companion_camera import companion_camera_streamer
 from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
@@ -1575,6 +1577,7 @@ def on_guardian_state_change(new_state: str):
             kernel_telemetry_fabric.halt()
             streaming_av_pipeline.halt()
             biometric_enclave_manager.halt()
+            deep_uia_engine.halt()
         except Exception:
             pass
 
@@ -1646,6 +1649,7 @@ def on_guardian_state_change(new_state: str):
             kernel_telemetry_fabric.reset()
             streaming_av_pipeline.reset()
             biometric_enclave_manager.reset()
+            deep_uia_engine.reset()
         except Exception:
             pass
 
@@ -1676,6 +1680,7 @@ swarm_workload_scheduler.register_broadcaster(broadcast_message)
 kernel_telemetry_fabric.register_broadcaster(broadcast_message)
 streaming_av_pipeline.register_change_callback(lambda s: asyncio.create_task(broadcast_message({"type": "telepresence.update", "payload": s.model_dump()})))
 biometric_enclave_manager.register_change_callback(lambda s: asyncio.create_task(broadcast_message({"type": "enclave.update", "payload": s.model_dump()})))
+deep_uia_engine.register_change_callback(lambda msg: asyncio.create_task(broadcast_message({"type": "uia.update", "payload": msg})))
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 
