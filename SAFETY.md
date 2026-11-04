@@ -1230,3 +1230,24 @@ otification_policy == 'silent').
 - **Execution SLA**: Instantly transitions sensors to `SensorState.DISABLED`, clears the telemetry ring buffer, terminates active streaming tasks, and notifies the UI in $< 10.0\text{ms}$ (< 25ms hard SLA).
 - While halted, all calls to `telepresence_set_microphone`, `telepresence_set_camera`, `telepresence_ingest_frame`, and `start_session` fail closed with `PermissionError`.
 - Clean resumption via `resume()` / `reset()` when Guardian transitions back to `idle`.
+
+
+## 48. Biometric Enclave Partitioning & TPM 2.0 Hardware Isolation (Milestone 14.0 Phase 2)
+
+### 1. Cryptographic Boundary & Memory Invariants (SEC-01)
+- **Zero Cross-Tenant Contamination**: Workspaces are physically partitioned into `PERSONAL` and `PROFESSIONAL` domains with independent TPM-sealed cryptographic keys. A process executing in one partition cannot access or query schemas, embeddings, or files belonging to another partition.
+- **In-Memory Mutable Bytearray Zeroing (Permanent Rule 11)**: Ephemeral credentials leased to tools are maintained in mutable `bytearray` buffers. When a lease expires (default: 30s) or is revoked, every byte is overwritten with zeros (`buf[i] = 0`) before discarding the reference. Raw secrets are never included in logs, chat, memory graphs, or WebSocket payloads.
+- **Local Hardware Sealing (Permanent Rule 4)**: Key sealing operates via Windows Hello / TPM 2.0 DPAPI (`NCrypt` / `CryptProtectData`). No biometric PINs, biometric hashes, or master keys ever leave the local machine.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `enclave_get_status`: **Tier 0** (Read-Only). Arguments: `EnclaveGetStatusArgs`. Preview: `"Inspect biometric enclave status and workspace partition states (Read-Only)"`.
+- `enclave_unlock_partition`: **Tier 1** (Reversible change with preview). Arguments: `EnclaveUnlockPartitionArgs(partition_type: WorkspacePartitionType, auth_token: str, auth_method: BiometricAuthMethod)`. Preview: `"Unlock encrypted workspace partition '{partition_type}' via {auth_method}"`.
+- `enclave_lock_partition`: **Tier 1** (Reversible change with preview). Arguments: `EnclaveLockPartitionArgs(partition_type: WorkspacePartitionType)`. Preview: `"Lock workspace partition '{partition_type}' and zero-wipe master key from RAM immediately"`.
+- `enclave_lease_credential`: **Tier 1** (Reversible change with preview). Arguments: `EnclaveLeaseCredentialArgs(target_service: str, ttl_seconds: int)`. Preview: `"Lease ephemeral credential for '{target_service}' (TTL: {ttl_seconds}s, auto-zeroing memory buffer)"`.
+- `enclave_revoke_lease`: **Tier 1** (Reversible change with preview). Arguments: `EnclaveRevokeLeaseArgs(lease_id: str)`. Preview: `"Immediately revoke and zero-wipe credential lease '{lease_id}'"`.
+
+### 3. Sub-10ms Synchronous Guardian Lockdown SLA (SAF-02)
+- `biometric_enclave_manager.halt()` is synchronously called from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Instantly zero-wipes all active leased credential buffers in memory (`buf[i] = 0`), zero-wipes all derived partition master keys, and locks all partitions in $< 10.0\text{ms}$ (< 25ms hard SLA).
+- While halted, all calls to `enclave_unlock_partition`, `enclave_lease_credential`, and `enclave_revoke_lease` fail closed with `PermissionError`.
+- Clean resumption via `resume()` / `reset()` when Guardian transitions back to `idle`. Partitions remain safely `LOCKED` until the user re-authenticates.

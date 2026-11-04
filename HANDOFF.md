@@ -1796,3 +1796,31 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Total Phase 1 Suite: **10/10 PASSED in 0.32s**
 - Secret Scanner: **PASSED (0 secrets detected)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.56s)**
+
+---
+
+# Milestone 14.0 Phase 2: Biometric Enclave Partitioning & TPM 2.0 Hardware Isolation
+**Status:** Complete & Verified
+**Requirements:** `SEC-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Biometric Enclave Schemas & Data Contracts (`SEC-01`)**:
+   - `services/backend/schemas/biometrics.py`: Defined `EnclaveStatus`, `WorkspacePartitionType`, `BiometricAuthMethod`, `PartitionMetadata`, `LeasedCredentialRecord`, `BiometricEnclaveState`, and 5 tool argument models.
+2. **Hardware-Backed Biometric Enclave & Ephemeral Credential Leasing (`SEC-01`, `SAF-02`)**:
+   - `services/backend/security/credential_leaser.py`: Implemented `EphemeralCredentialLeaser` issuing bounded-TTL credential leases stored in mutable `bytearrays`, with in-place memory zeroing (`buf[i] = 0`) upon expiry, revocation, or Guardian kill switch halt (Rule 11).
+   - `services/backend/security/biometric_enclave.py`: Implemented `BiometricEnclaveManager` supporting Windows Hello / TPM 2.0 DPAPI sealed master keys, multi-tenant partition barriers (`PERSONAL` vs. `PROFESSIONAL`), and synchronous Guardian lockdown.
+   - Hooked `biometric_enclave_manager.halt()` and `reset()` into `services/backend/main.py`.
+3. **Tool Safety Governance & UI HUD Dashboard (`SAF-01`, `SAF-02`, `SEC-01`)**:
+   - `services/backend/tools/enclave_tools.py`: Registered 5 tools in `ToolRegistry` (Tier 0 query, Tier 1 partition unlock, lock, credential lease, and lease revocation).
+   - `apps/desktop/src/types/protocol.ts`: Added enclave interfaces and message unions.
+   - `apps/desktop/src/components/CyberHUD/BiometricEnclaveHUD.tsx`: React HUD widget displaying TPM 2.0 hardware seal status, partition cards, active lease countdowns, and quick-lock buttons.
+   - Documented Section 48 in `SAFETY.md`.
+
+### Test Results
+- `services/backend/tests/test_biometric_enclaves.py`: **4/4 PASSED**
+- `services/backend/tests/test_enclave_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_14_phase_2_guardian_sla.py`: **1/1 PASSED (100 Halts Avg: 0.0377ms, Max: 0.1094ms)**
+- Total Phase 2 Suite: **9/9 PASSED in 0.41s**
+- Cumulative Milestone 14 Suite (Phases 1 + 2): **19/19 PASSED (100% green)**
+- Secret Scanner: **PASSED (0 secrets detected)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.51s)**

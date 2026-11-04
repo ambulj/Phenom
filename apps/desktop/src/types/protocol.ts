@@ -1008,6 +1008,61 @@ export interface TelepresenceSetCameraMsg extends BaseMessage {
   };
 }
 
+// Milestone 14 Phase 2: Biometric Enclave Partitioning & TPM 2.0 Hardware Isolation
+export interface PartitionMetadataPayload {
+  partition_id: string;
+  name: string;
+  partition_type: 'PERSONAL' | 'PROFESSIONAL' | 'SHARED_SYSTEM';
+  status: 'LOCKED' | 'UNLOCKED' | 'QUARANTINED' | 'DISABLED';
+  encryption_cipher: string;
+  last_unlocked_at?: number | null;
+  active_lease_count: number;
+}
+
+export interface LeasedCredentialPayload {
+  lease_id: string;
+  target_service: string;
+  leased_at: number;
+  expires_at: number;
+  zeroed: boolean;
+}
+
+export interface BiometricEnclaveStatePayload {
+  hardware_tpm_present: boolean;
+  partitions: Record<string, PartitionMetadataPayload>;
+  total_leases_issued: number;
+  active_leases: LeasedCredentialPayload[];
+}
+
+export interface EnclaveUpdateMsg extends BaseMessage {
+  type: 'enclave.update';
+  payload: BiometricEnclaveStatePayload;
+}
+
+export interface EnclaveUnlockMsg extends BaseMessage {
+  type: 'enclave.unlock';
+  payload: {
+    partition_type: 'PERSONAL' | 'PROFESSIONAL';
+    auth_token: string;
+    auth_method?: 'WINDOWS_HELLO_PIN' | 'WINDOWS_HELLO_BIOMETRIC' | 'TPM_HARDWARE_SEAL';
+  };
+}
+
+export interface EnclaveLockMsg extends BaseMessage {
+  type: 'enclave.lock';
+  payload: {
+    partition_type: 'PERSONAL' | 'PROFESSIONAL';
+  };
+}
+
+export interface EnclaveLeaseMsg extends BaseMessage {
+  type: 'enclave.lease';
+  payload: {
+    target_service: string;
+    ttl_seconds?: number;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -1040,6 +1095,7 @@ export type InboundServerMessage =
   | KernelCrashAlertMsg
   | KernelHealingAppliedMsg
   | TelepresenceUpdateMsg
+  | EnclaveUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1078,4 +1134,7 @@ export type OutboundClientMessage =
   | SwarmAbortWorkloadMsg
   | KernelApplyPatchMsg
   | TelepresenceSetMicrophoneMsg
-  | TelepresenceSetCameraMsg;
+  | TelepresenceSetCameraMsg
+  | EnclaveUnlockMsg
+  | EnclaveLockMsg
+  | EnclaveLeaseMsg;
