@@ -488,6 +488,37 @@ export interface MediaDropAbortMsg extends BaseMessage {
   };
 }
 
+export interface DreamEngineStatusPayload {
+  is_running: boolean;
+  phase: 'IDLE' | 'INGESTING_EPISODES' | 'REPLAYING_TRACES' | 'COMPACTING_GRAPH' | 'ABSTRACTING_SCHEMAS' | 'COMPLETED' | 'HALTED';
+  last_cycle_at?: number | null;
+  total_cycles_completed: number;
+  total_schemas_formed: number;
+  is_halted: boolean;
+  latest_report?: {
+    cycle_id: string;
+    episodes_replayed: number;
+    schemas_formed: number;
+    edges_pruned: number;
+    duplicate_nodes_merged: number;
+    duration_ms: number;
+    completed_at: number;
+  } | null;
+}
+
+export interface DreamStatusMsg extends BaseMessage {
+  type: 'dream.status';
+  payload: DreamEngineStatusPayload;
+}
+
+export interface DreamTriggerCycleMsg extends BaseMessage {
+  type: 'dream.trigger_cycle';
+  payload: {
+    force?: boolean;
+    max_episodes?: number;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -507,6 +538,7 @@ export type InboundServerMessage =
   | CameraStatusMsg
   | CameraFramePreviewMsg
   | MediaDropUpdateMsg
+  | DreamStatusMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -525,4 +557,5 @@ export type OutboundClientMessage =
   | GoalPruneBranchMsg
   | GoalAbortMsg
   | CameraStreamToggleMsg
-  | MediaDropAbortMsg;
+  | MediaDropAbortMsg
+  | DreamTriggerCycleMsg;

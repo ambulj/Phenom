@@ -1521,3 +1521,34 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Cumulative Milestone 11 Suite (Phases 1 + 2 + 3 + 4): **83/83 PASSED (100% green)**
 - Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (476 files, 0 secrets)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.34s)**
+---
+
+# Milestone 12.0 Phase 1: Sovereign Neuro-Symbolic Sleep & Dream Engine
+**Status:** Complete & Verified
+**Requirements:** `DRM-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Pydantic v2 Data Contracts & Protocol Integration (`DRM-01`, `SAF-01`)**:
+   - `services/backend/schemas/dream.py`: Defined strict models for `DreamPhaseStatus`, `EpisodicTrace`, `GeneralizedSchema`, `ConsolidationReport`, `DreamEngineStatus`, `DreamTriggerCycleArgs`, `DreamGetStatusArgs`, and `DreamPruneStaleArgs`.
+   - `apps/desktop/src/types/protocol.ts`: Added matching TypeScript interfaces (`DreamEngineStatusPayload`, `DreamStatusMsg`, `DreamTriggerCycleMsg`) and updated `InboundServerMessage` and `OutboundClientMessage` unions.
+2. **Neuro-Symbolic Dream Consolidation Engine (`DRM-01`, `SAF-02`)**:
+   - `services/backend/memory/dream_engine.py`: Implemented `DreamConsolidationEngine`, `EpisodicReplayBuffer`, and `GraphCompactor`.
+   - Bounded replay buffer storing up to 500 episodic execution traces with FIFO eviction.
+   - Abstracted concrete recurring actions into generalized conceptual schemas (`GeneralizedSchema`) stored directly in `MultiSourceKnowledgeGraph` under domain `dream_schema`.
+   - `GraphCompactor` detects and purges dangling edges and decayed transient edges (> 14 days) and merges near-duplicate entity nodes with bidirectional edge re-routing.
+   - Enforces 100% on-device privacy (Rule 4) with zero external cloud transmission.
+3. **Safety Governance & Guardian Kill Switch SLA (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/dream_tools.py`: Registered `dream_get_status` (Tier 0), `dream_trigger_cycle` (Tier 1), and `dream_prune_stale_memory` (Tier 1) in `ToolRegistry` with Pydantic argument schemas and callable previews.
+   - Hooked `dream_engine.halt()`, `dream_engine.reset()`, and `dream_engine.register_broadcaster()` into `services/backend/main.py`.
+   - Documented Section 38 in `SAFETY.md`.
+   - Benchmarked 50 halt invocations: average latency `0.2766ms`, max `0.4879ms`, well within `< 25ms` SLA.
+4. **Desktop Cyber HUD Dream Visualizer (`DRM-01`)**:
+   - `apps/desktop/src/components/CyberHUD/DreamStateVisualizer.tsx`: Glowing neon cyber widget rendering dream phase transitions, cycle counters, active schemas, pruned edges count, latest cycle report metrics, and manual trigger controls.
+
+### Test Results
+- `services/backend/tests/test_dream_consolidation.py`: **6/6 PASSED**
+- `services/backend/tests/test_dream_tools_safety.py`: **3/3 PASSED**
+- `services/backend/tests/test_milestone_12_phase_1_guardian_sla.py`: **2/2 PASSED (50 Halts Avg: 0.2766ms, Max: 0.4879ms)**
+- Total Phase 1 Suite: **11/11 PASSED in 0.34s**
+- Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (479 files, 0 secrets)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.83s)**

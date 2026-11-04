@@ -1001,3 +1001,22 @@ otification_policy == 'silent').
 ### 3. End-to-End Multi-Component Simulation
 - Chained ToT Metacognitive Goal Planning (`PLN-01`) -> Companion Camera Vision Ingestion (`SEN-01`) -> Dynamic Micro-Tool Synthesis (`SYN-01`) -> Sandbox Execution & Trace Reflection (`PLN-01`) -> AirDrop P2P Media Drop to Obsidian Vault (`MSH-02`) -> Universal Guardian Kill Switch Halt (`SAF-02`).
 - Measured E2E Guardian halt latency: **0.9102 ms**, demonstrating complete sovereign OS safety and integration across physical companion devices and neural planning loops.
+
+## 38. Sovereign Neuro-Symbolic Sleep & Dream Consolidation Engine (Milestone 12.0 Phase 1)
+
+### 1. Offline Memory Consolidation Invariants (DRM-01)
+- **100% On-Device Privacy (Permanent Rule 4)**: All episodic trace replays, heuristic abstraction, graph compaction, and entity deduplication execute entirely locally on-device. Personal execution traces, tool arguments, and conceptual schemas are never transmitted to cloud LLMs.
+- **Idle Threshold Gating**: Dream cycles execute automatically only when system inactivity exceeds the configured idle threshold (default: 15 minutes / 900 seconds) or during quiet-time hours. Manual invocation requires explicit `force=True` parameter.
+- **Non-Destructive Graph Optimization**: The `GraphCompactor` purges only demonstrably dead edges (dangling references where source or target is missing) and decayed transient edges (`transient_ref`, `ephemeral_mention`) exceeding the staleness threshold (default: 14 days). Valid semantic associations and permanent vault links are strictly preserved.
+- **Safe Entity Merging**: Near-duplicate entity consolidation re-routes bidirectional in/out edges and merges metadata/tags into the canonical node prior to deleting duplicate nodes, preventing edge loss.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `dream_get_status`: Tier 0 (Read-Only). Arguments: `DreamGetStatusArgs(include_report: bool)`. Preview: `"Query Neuro-Symbolic Dream Consolidation Engine status and telemetry (Read-Only)"`.
+- `dream_trigger_cycle`: Tier 1 (Reversible change with preview). Arguments: `DreamTriggerCycleArgs(force: bool, max_episodes: int)`. Preview: `"Trigger Neuro-Symbolic Sleep & Dream memory consolidation cycle (force={force}, max_episodes={max_episodes})"`.
+- `dream_prune_stale_memory`: Tier 1 (Reversible change with preview). Arguments: `DreamPruneStaleArgs(decay_days_threshold: int, dry_run: bool)`. Preview: `"Prune dead links and stale graph edges (decay threshold: {decay_days_threshold} days, dry_run={dry_run})"`.
+
+### 3. Sub-25ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `dream_engine.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Immediately terminates active dream cycle loops, marks engine state as `HALTED`, releases in-memory locks, and broadcasts state change to Cyber HUD in `< 25ms` (< 1.0ms typical, measured **0.2766 ms** avg across 50 cycles).
+- While halted, all calls to `run_dream_cycle`, `prune_stale_memory`, and associated Tier 1 tools immediately raise `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.

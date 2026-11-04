@@ -284,6 +284,8 @@ import services.backend.tools.mesh_tools
 import services.backend.tools.synthesis_tools
 import services.backend.tools.tot_tools
 import services.backend.tools.sensory_tools
+import services.backend.tools.dream_tools
+from services.backend.memory.dream_engine import dream_engine
 from services.backend.sensors.companion_camera import companion_camera_streamer
 from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
@@ -1544,6 +1546,7 @@ def on_guardian_state_change(new_state: str):
             metacognitive_reflector.halt()
             companion_camera_streamer.halt()
             media_drop_manager.halt()
+            dream_engine.halt()
         except Exception:
             pass
 
@@ -1604,6 +1607,7 @@ def on_guardian_state_change(new_state: str):
             metacognitive_reflector.reset()
             companion_camera_streamer.reset()
             media_drop_manager.reset()
+            dream_engine.reset()
         except Exception:
             pass
 
@@ -1623,6 +1627,7 @@ morning_debrief_synthesizer.register_broadcaster(broadcast_message)
 specialist_swarm_orchestrator.register_broadcaster(broadcast_message)
 visual_gui_controller.register_broadcaster(broadcast_message)
 companion_camera_streamer.register_broadcaster(broadcast_message)
+dream_engine.register_broadcaster(broadcast_message)
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 
