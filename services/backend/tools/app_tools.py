@@ -122,18 +122,54 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
 
     if is_url:
         target_url = resolved if (resolved.startswith("http://") or resolved.startswith("https://")) else clean_name
-        # Open URL directly so Windows routes to the user's active/default browser smoothly
-        target = target_url
-        args_str = ""
-    else:
-        # Browser window guarantee: ensure --new-window and --disable-gpu to prevent 0xC0000005 crash on Windows 11
-        if any(b in clean_name.lower() or b in os.path.basename(resolved).lower() for b in ("brave", "chrome", "msedge", "firefox")):
-            args_str = "--new-window --disable-gpu"
-        if url_or_args:
-            args_str = f"{args_str} {url_or_args}".strip()
+        import webbrowser
+        try:
+            webbrowser.open(target_url, new=2)
+        except Exception:
+            pass
 
-    # Launch onto user interactive desktop (WinSta0\Default) via COM Shell.Application (explorer.exe host)
-    launched = False
+        try:
+            import win32com.client
+            import pythoncom
+            pythoncom.CoInitialize()
+            w = win32com.client.Dispatch("WScript.Shell")
+            w.Run(target_url, 1, False)
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
+
+        return {
+            "app_name": clean_name,
+            "resolved_path": target_url,
+            "launched": True,
+            "message": f"Successfully opened {clean_name}"
+        }
+
+    # Application launching (e.g. "brave", "chrome", "notepad", "calc")
+    if any(b in clean_name.lower() or b in os.path.basename(resolved).lower() for b in ("brave", "chrome", "msedge", "firefox")):
+        args_str = "--new-window --disable-gpu"
+    if url_or_args:
+        args_str = f"{args_str} {url_or_args}".strip()
+
+    # 1. Primary method: WScript.Shell (Windows standard interactive session execution)
+    try:
+        import win32com.client
+        import pythoncom
+        pythoncom.CoInitialize()
+        w = win32com.client.Dispatch("WScript.Shell")
+        cmd_to_run = f'"{target}" {args_str}'.strip() if args_str else f'"{target}"'
+        w.Run(cmd_to_run, 1, False)
+        pythoncom.CoUninitialize()
+        return {
+            "app_name": clean_name,
+            "resolved_path": resolved,
+            "launched": True,
+            "message": f"Successfully launched {clean_name}"
+        }
+    except Exception:
+        pass
+
+    # 2. Secondary method: COM Shell.Application (explorer.exe host)
     try:
         import win32com.client
         import pythoncom
@@ -141,50 +177,32 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
         try:
             shell = win32com.client.Dispatch("Shell.Application")
             shell.ShellExecute(target, args_str, "", "open", 1)
-            launched = True
         finally:
             pythoncom.CoUninitialize()
-    except Exception:
-        pass
-
-    if not launched:
-        try:
-            import ctypes
-            u32 = ctypes.windll.user32
-            hdesk = u32.OpenDesktopW("Default", 0, False, 0x01FF)
-            if hdesk:
-                u32.SetThreadDesktop(hdesk)
-            shell32 = ctypes.windll.shell32
-            ret = shell32.ShellExecuteW(None, "open", target, args_str if args_str else None, None, 1)
-            if ret > 32:
-                launched = True
-        except Exception:
-            pass
-
-    if not launched:
-        # Subprocess fallback targeting Default desktop
-        si = subprocess.STARTUPINFO()
-        si.lpDesktop = "WinSta0\Default"
-        cmd = [target]
-        if args_str:
-            cmd.extend(args_str.split())
-        proc = subprocess.Popen(cmd, startupinfo=si)
-        guardian.track_pid(proc.pid)
         return {
             "app_name": clean_name,
             "resolved_path": resolved,
             "launched": True,
-            "launcher_pid": proc.pid,
             "message": f"Successfully launched {clean_name}"
         }
+    except Exception:
+        pass
 
+    # 3. Tertiary method: Subprocess targeting Default desktop
+    si = subprocess.STARTUPINFO()
+    si.lpDesktop = "WinSta0\\Default"
+    cmd = [target]
+    if args_str:
+        cmd.extend(args_str.split())
+    proc = subprocess.Popen(cmd, startupinfo=si)
+    guardian.track_pid(proc.pid)
     return {
         "app_name": clean_name,
         "resolved_path": resolved,
         "launched": True,
+        "launcher_pid": proc.pid,
         "message": f"Successfully launched {clean_name}"
     }
-
 
 class CloseAppArgs(BaseModel):
     app_name: str = Field(description="Name of the process to terminate (e.g. 'notepad.exe', 'calc.exe')")

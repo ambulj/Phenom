@@ -189,36 +189,65 @@ class Orchestrator:
     def _detect_direct_intent(self, prompt: str) -> Optional[Tuple[str, Dict[str, Any], str]]:
         p = prompt.strip().lower()
 
-        # YouTube playback (e.g. "play baarishein on youtube", "play any song from youtube", "youtube par ... chalao")
-        m_yt = re.search(r"^(?:ok\s+|please\s+)?(?:play|paly|chalao|bajao)\s+(.*?)\s+(?:on|from|in)\s+youtube$", p)
-        if not m_yt:
-            m_yt = re.search(r"^(?:ok\s+|please\s+)?youtube\s+(?:par|pe|me)\s+(.*?)\s+(?:play\s*karo|chalao|bajaao|chala\s*do)$", p)
-        if not m_yt and ("youtube" in p and any(w in p for w in ["play", "paly", "chalao", "song"])):
-            m_yt_gen = re.search(r"(?:play|paly|chalao)\s+([a-zA-Z0-9_\s]+)", p)
-            if m_yt_gen:
-                m_yt = m_yt_gen
-        if m_yt:
-            song = m_yt.group(1).replace("youtube", "").strip()
-            if not song or song in ("any song", "a song", "some song", "song", "gaana"):
+        # 1. YouTube / YT Music & Video Intent
+        is_yt_keyword = any(k in p for k in ("youtube", "yt"))
+        is_play_keyword = any(k in p for k in ("play", "paly", "chalao", "bajao", "bajaao", "chala do", "listen to"))
+
+        if is_yt_keyword and is_play_keyword:
+            cleaned = re.sub(r"\b(ok|please|can you|phenom|play|paly|on|from|in|se|par|pe|me|youtube|yt|chalao|bajao|bajaao|chala do|karo)\b", " ", p).strip()
+            cleaned = re.sub(r"\s+", " ", cleaned).strip()
+            if not cleaned or cleaned in ("music", "song", "songs", "a song", "any song", "some music", "gaana", "gana"):
                 song_query = "trending hits"
             else:
-                song_query = song
+                song_query = cleaned
             yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_query)}"
             return "open_app", {"app_name": yt_url}, f"Haan Bro! Playing \"{song_query}\" on YouTube!"
 
-        # Open application (e.g. "open brave", "launch chrome", "spotify kholo", "open notepad")
-        m_open = re.search(r"^(?:ok\s+|please\s+)?(?:open|launch|start)\s+([a-zA-Z0-9_\-\.\s]+)$", p)
-        if not m_open:
-            m_open = re.search(r"^(?:ok\s+|please\s+)?([a-zA-Z0-9_\-\.\s]+)\s+(?:kholo|chalao|khol\s*do|start\s*kar\s*do)$", p)
-        if m_open:
-            raw_app = m_open.group(1).strip()
-            if raw_app not in ("file", "the file", "settings", "url", "browser", "app") and len(raw_app.split()) <= 2:
-                if "youtube" in raw_app:
-                    return "open_app", {"app_name": "https://www.youtube.com"}, "Haan Bro! Opening YouTube for you..."
-                return "open_app", {"app_name": raw_app}, f"Haan Bro! Launching {raw_app.title()}..."
+        if is_play_keyword and any(m in p for m in ("music", "song", "songs", "gaana", "gana", "track")):
+            cleaned = re.sub(r"\b(ok|please|can you|phenom|play|paly|chalao|bajao|bajaao|chala do|music|song|songs|a song|some|gaana|gana)\b", " ", p).strip()
+            song_query = cleaned if cleaned else "trending hits"
+            yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_query)}"
+            return "open_app", {"app_name": yt_url}, f"Haan Bro! Playing \"{song_query}\" on YouTube!"
+
+        # Direct YouTube site requests
+        if p in ("open youtube", "open yt", "launch youtube", "launch yt", "youtube kholo", "yt kholo", "start youtube", "start yt"):
+            return "open_app", {"app_name": "https://www.youtube.com"}, "Haan Bro! Opening YouTube for you..."
+
+        # 2. Website & URL Intent
+        m_web = re.search(r"^(?:ok\s+|please\s+)?(?:open|launch|start|visit|goto)\s+(?:website\s+|site\s+)?([a-zA-Z0-9_\-\.\:\/]+)$", p)
+        if not m_web:
+            m_web = re.search(r"^(?:ok\s+|please\s+)?([a-zA-Z0-9_\-\.\:\/]+)\s+(?:website\s+|site\s+)?(?:kholo|chalao|khol\s*do|start\s*kar\s*do|open\s*karo)$", p)
+        if m_web:
+            target = m_web.group(1).strip()
+            known_sites = {
+                "google": "https://www.google.com",
+                "youtube": "https://www.youtube.com",
+                "yt": "https://www.youtube.com",
+                "gmail": "https://mail.google.com",
+                "amazon": "https://www.amazon.com",
+                "flipkart": "https://www.flipkart.com",
+                "github": "https://www.github.com",
+                "twitter": "https://www.twitter.com",
+                "x": "https://www.x.com",
+                "reddit": "https://www.reddit.com",
+                "chatgpt": "https://chatgpt.com",
+                "netflix": "https://www.netflix.com",
+                "spotify": "https://open.spotify.com"
+            }
+            if target.startswith("http://") or target.startswith("https://"):
+                return "open_app", {"app_name": target}, f"Haan Bro! Opening {target}..."
+            if any(target.endswith(tld) or f"{tld}/" in target for tld in (".com", ".org", ".net", ".in", ".co", ".io", ".app", ".dev", ".ai", ".tv")):
+                full_url = f"https://{target}"
+                return "open_app", {"app_name": full_url}, f"Haan Bro! Opening {target}..."
+            if target in known_sites:
+                return "open_app", {"app_name": known_sites[target]}, f"Haan Bro! Opening {target.title()}..."
+
+            # 3. Application Intent
+            if target not in ("file", "the file", "settings", "url", "browser", "app"):
+                clean_disp = target.replace(".exe", "").title()
+                return "open_app", {"app_name": target}, f"Haan Bro! Launching {clean_disp}..."
 
         return None
-
 
     def _extract_learned_rule(self, text: str) -> Optional[str]:
         t = text.strip()
