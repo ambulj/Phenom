@@ -2415,6 +2415,27 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 prompt = payload.get("prompt", "")
 
+                # Typed Approval Interception (Permits approving pending confirmation via chat box)
+                prompt_clean = prompt.strip().lower()
+                if pending_confirmations and re.match(r"^(yes|approve|i approve|i approve it|approved|confirm|do it|proceed)[\s.!]*$", prompt_clean):
+                    latest_req_id = list(pending_confirmations.keys())[-1]
+                    fut = pending_confirmations[latest_req_id]
+                    if not fut.done():
+                        fut.set_result(("approved", False))
+                        await websocket.send_text(json.dumps({
+                            "id": msg_id,
+                            "type": "chat.token",
+                            "ts": "",
+                            "payload": {"token": "Haan Bro! Approved. Executing now...\n", "index": 1}
+                        }))
+                        await websocket.send_text(json.dumps({
+                            "id": msg_id,
+                            "type": "chat.done",
+                            "ts": "",
+                            "payload": {"tokens_emitted": 1}
+                        }))
+                        continue
+
 
 
                 context_files = payload.get("context_files", [])
@@ -5031,7 +5052,6 @@ async def complete_system_setup():
 
 
     return {"status": "ok", "first_run_completed": True}
-
 
 
 

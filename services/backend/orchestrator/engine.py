@@ -57,7 +57,7 @@ Core Instructions:
 {{"tool": "open_app", "args": {{"app_name": "brave"}}}}
 ```
    - CRITICAL TOOL INVOCATION RULES:
-     * You MUST ONLY use the EXACT registered tool names listed in "Available Tools" above. NEVER invent new tool names (e.g. NEVER emit `{"tool": "brave"}` or `{"tool": "youtube"}`).
+     * You MUST ONLY use the EXACT registered tool names listed in "Available Tools" above. NEVER invent new tool names (e.g. NEVER emit `{{"tool": "brave"}}` or `{{"tool": "youtube"}}`).
      * To launch ANY desktop application (Brave, Chrome, Spotify, Notepad, Calculator, VS Code) or open any website/video/music (YouTube search, news), ALWAYS call the `open_app` tool!
        Example for "open brave": {{"tool": "open_app", "args": {{"app_name": "brave"}}}}
        Example for "play Baarishein on YouTube": {{"tool": "open_app", "args": {{"app_name": "https://www.youtube.com/results?search_query=Baarishein"}}}}
@@ -169,7 +169,55 @@ class Orchestrator:
             else:
                 return "open_app", {"app_name": "brave"}
 
+        # Handle dict format like {"action": "open", "app": "brave"}
+        if t_low in ("open", "launch", "start") or "action" in args:
+            app = args.get("app") or args.get("app_name") or args.get("name") or args.get("target")
+            if app:
+                return "open_app", {"app_name": str(app)}
+
+        if t_low in ("play", "stream") or ("action" in args and args.get("action") == "play"):
+            song = args.get("song") or args.get("play") or args.get("query") or args.get("target") or ""
+            song_str = str(song).strip()
+            if song_str and song_str != "<song_name>":
+                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_str)}"
+            else:
+                yt_url = "https://www.youtube.com"
+            return "open_app", {"app_name": yt_url}
+
         return tool_name, args
+
+    def _detect_direct_intent(self, prompt: str) -> Optional[Tuple[str, Dict[str, Any], str]]:
+        p = prompt.strip().lower()
+
+        # YouTube playback (e.g. "play baarishein on youtube", "play any song from youtube", "youtube par ... chalao")
+        m_yt = re.search(r"^(?:ok\s+|please\s+)?(?:play|paly|chalao|bajao)\s+(.*?)\s+(?:on|from|in)\s+youtube$", p)
+        if not m_yt:
+            m_yt = re.search(r"^(?:ok\s+|please\s+)?youtube\s+(?:par|pe|me)\s+(.*?)\s+(?:play\s*karo|chalao|bajaao|chala\s*do)$", p)
+        if not m_yt and ("youtube" in p and any(w in p for w in ["play", "paly", "chalao", "song"])):
+            m_yt_gen = re.search(r"(?:play|paly|chalao)\s+([a-zA-Z0-9_\s]+)", p)
+            if m_yt_gen:
+                m_yt = m_yt_gen
+        if m_yt:
+            song = m_yt.group(1).replace("youtube", "").strip()
+            if not song or song in ("any song", "a song", "some song", "song", "gaana"):
+                song_query = "trending hits"
+            else:
+                song_query = song
+            yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_query)}"
+            return "open_app", {"app_name": yt_url}, f"Haan Bro! Playing \"{song_query}\" on YouTube!"
+
+        # Open application (e.g. "open brave", "launch chrome", "spotify kholo", "open notepad")
+        m_open = re.search(r"^(?:ok\s+|please\s+)?(?:open|launch|start)\s+([a-zA-Z0-9_\-\.\s]+)$", p)
+        if not m_open:
+            m_open = re.search(r"^(?:ok\s+|please\s+)?([a-zA-Z0-9_\-\.\s]+)\s+(?:kholo|chalao|khol\s*do|start\s*kar\s*do)$", p)
+        if m_open:
+            raw_app = m_open.group(1).strip()
+            if raw_app not in ("file", "the file", "settings", "url", "browser", "app") and len(raw_app.split()) <= 2:
+                if "youtube" in raw_app:
+                    return "open_app", {"app_name": "https://www.youtube.com"}, "Haan Bro! Opening YouTube for you..."
+                return "open_app", {"app_name": raw_app}, f"Haan Bro! Launching {raw_app.title()}..."
+
+        return None
 
 
     def _extract_learned_rule(self, text: str) -> Optional[str]:
@@ -221,6 +269,31 @@ class Orchestrator:
             yield {"type": "state.change", "payload": {"state": "idle"}}
             encrypted_db.add_message(os.urandom(8).hex(), "user", prompt, model="system")
             encrypted_db.add_message(os.urandom(8).hex(), "assistant", reply, model="system", tokens=8)
+            return
+
+        # Direct User Intent Interception (Instant Zero-Latency Dispatch for App Launch & YouTube)
+        direct_intent = self._detect_direct_intent(prompt)
+        if direct_intent:
+            tool_name, tool_args, reply_text = direct_intent
+            yield {"type": "state.change", "payload": {"state": "speaking"}}
+            yield {"type": "chat.token", "payload": {"token": reply_text + "\n", "index": 1}}
+            yield {"type": "state.change", "payload": {"state": "thinking", "detail": f"Executing {tool_name}"}}
+            yield {"type": "chat.token", "payload": {"token": f"[Phenom Safety Gate: Requesting {tool_name}...\n", "index": 2}}
+
+            try:
+                tool_result = await safety_engine.execute_tool(tool_name, tool_args)
+                res_val = tool_result.get("result")
+                res_msg = f"[Tool {tool_name} Result: {json.dumps(res_val)}]\nAll set."
+                yield {"type": "chat.token", "payload": {"token": res_msg, "index": 3}}
+            except Exception as tool_err:
+                res_msg = f"\n[Action Blocked or Failed: {tool_err}]"
+                yield {"type": "chat.token", "payload": {"token": res_msg, "index": 3}}
+            yield {"type": "chat.done", "payload": {"total_tokens": 15, "duration_s": 0.05, "tps": 100.0}}
+            yield {"type": "state.change", "payload": {"state": "idle"}}
+
+            full_reply = f"{reply_text}\n{res_msg}"
+            encrypted_db.add_message(os.urandom(8).hex(), "user", prompt, model="direct-intent")
+            encrypted_db.add_message(os.urandom(8).hex(), "assistant", full_reply, model="direct-intent", tokens=15)
             return
 
         yield {"type": "state.change", "payload": {"state": "thinking"}}
@@ -352,37 +425,33 @@ class Orchestrator:
 
         # 2. Check for Tool Call in Reply
         call_data = None
-        for m in re.finditer(r"```json\s*(\{.*?\})\s*```", full_reply, re.DOTALL):
+        for m in re.finditer(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", full_reply, re.DOTALL):
             try:
                 candidate = json.loads(m.group(1))
-                if isinstance(candidate, dict) and "tool" in candidate:
-                    t_name = str(candidate.get("tool", "")).strip()
-                    if t_name and not t_name.startswith("<") and not t_name.endswith(">"):
-                        call_data = candidate
-                        break
+                if isinstance(candidate, dict) and ("tool" in candidate or "action" in candidate or "app" in candidate):
+                    call_data = candidate
+                    break
             except Exception:
                 continue
 
         if not call_data:
-            for m in re.finditer(r"(\{[\s\S]*?\"tool\"\s*:\s*\"([^\"]+)\"[\s\S]*?\})", full_reply):
+            for m in re.finditer(r"(\{[\s\S]*?\})", full_reply):
                 try:
                     candidate = json.loads(m.group(1))
-                    if isinstance(candidate, dict) and "tool" in candidate:
-                        t_name = str(candidate.get("tool", "")).strip()
-                        if t_name and not t_name.startswith("<") and not t_name.endswith(">") and t_name != "<tool_name>":
-                            call_data = candidate
-                            break
+                    if isinstance(candidate, dict) and ("tool" in candidate or "action" in candidate or "app" in candidate):
+                        call_data = candidate
+                        break
                 except Exception:
                     continue
-        if not call_data and full_reply.strip().startswith("{") and full_reply.strip().endswith("}"):
-            try:
-                candidate = json.loads(full_reply.strip())
-                if isinstance(candidate, dict) and "tool" in candidate:
-                    t_name = str(candidate.get("tool", "")).strip()
-                    if t_name and not t_name.startswith("<") and not t_name.endswith(">"):
-                        call_data = candidate
-            except Exception:
-                pass
+
+        if not call_data:
+            m_yt = re.search(r"youtube[-_]play\s+[\"']([^\"']+)[\"']", full_reply, re.IGNORECASE)
+            if m_yt:
+                call_data = {"tool": "youtube", "args": {"play": m_yt.group(1)}}
+            else:
+                m_op = re.search(r"(?:open|launch)[-_]?(?:app)?\s+[\"']([^\"']+)[\"']", full_reply, re.IGNORECASE)
+                if m_op:
+                    call_data = {"tool": "open_app", "args": {"app_name": m_op.group(1)}}
 
 
 
