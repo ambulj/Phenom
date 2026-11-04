@@ -122,21 +122,13 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
 
     if is_url:
         target_url = resolved if (resolved.startswith("http://") or resolved.startswith("https://")) else clean_name
-        brave_cand = resolve_application_path("brave")
-        chrome_cand = resolve_application_path("chrome")
-        if brave_cand and os.path.exists(brave_cand) and "brave.exe" in brave_cand.lower():
-            target = brave_cand
-            args_str = f'--new-window "{target_url}"'
-        elif chrome_cand and os.path.exists(chrome_cand) and "chrome.exe" in chrome_cand.lower():
-            target = chrome_cand
-            args_str = f'--new-window "{target_url}"'
-        else:
-            target = target_url
-            args_str = ""
+        # Open URL directly so Windows routes to the user's active/default browser smoothly
+        target = target_url
+        args_str = ""
     else:
-        # Browser window guarantee: if opening a browser directly, ensure --new-window
+        # Browser window guarantee: ensure --new-window and --disable-gpu to prevent 0xC0000005 crash on Windows 11
         if any(b in clean_name.lower() or b in os.path.basename(resolved).lower() for b in ("brave", "chrome", "msedge", "firefox")):
-            args_str = "--new-window"
+            args_str = "--new-window --disable-gpu"
         if url_or_args:
             args_str = f"{args_str} {url_or_args}".strip()
 
