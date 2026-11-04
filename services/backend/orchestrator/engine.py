@@ -101,7 +101,7 @@ def build_system_prompt() -> str:
 
 async def warm_up_ollama(model_name: Optional[str] = None):
     """Preloads the model into GPU VRAM at application startup to eliminate cold-start latency."""
-    target_model = model_name or os.environ.get("PHENOM_LOCAL_MODEL", "phenom-jarvis:latest")
+    target_model = model_name or model_router.ollama_model
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             await client.post(

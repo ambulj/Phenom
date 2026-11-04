@@ -1,11 +1,11 @@
 """
 Phenom Model Router
 Implements the model routing policy from ARCHITECTURE.md Section 3:
-- Default: Local 8B (Llama 3 Q4_0 on Ollama)
-- Anything labelled 'private' stays Local 8B, unconditionally.
+- Default: Local model (configured in config.toml or PHENOM_LOCAL_MODEL)
+- Anything labelled 'private' stays Local, unconditionally.
 - Cloud Nemotron via NVIDIA API is used ONLY for long shareable inputs,
   after an explicit confirmation previewing exactly what leaves the machine.
-- Cloud failure or user denial falls back to Local 8B with chunking.
+- Cloud failure or user denial falls back to Local with chunking.
 - Logs every decision with its reason.
 """
 
@@ -19,9 +19,42 @@ CloudApprovalHandler = Callable[[str, str, int], Awaitable[bool]] # (request_id,
 
 class ModelRouter:
     def __init__(self, ollama_model: Optional[str] = None, cloud_model: str = "nvidia/llama-3.1-nemotron-70b-instruct"):
-        self.ollama_model = ollama_model or os.environ.get("PHENOM_LOCAL_MODEL", "phenom-jarvis:latest")
+        self._explicit_ollama_model = ollama_model
         self.cloud_model = cloud_model
         self._cloud_approval_handler: Optional[CloudApprovalHandler] = None
+
+    @property
+    def ollama_model(self) -> str:
+        if self._explicit_ollama_model:
+            return self._explicit_ollama_model
+        env_m = os.environ.get("PHENOM_LOCAL_MODEL")
+        if env_m:
+            return env_m
+        try:
+            from services.backend.memory.vault import load_config
+            cfg = load_config()
+            cfg_m = cfg.get("models", {}).get("local_model")
+            if cfg_m:
+                return cfg_m
+        except Exception:
+            pass
+        return "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
+
+    @ollama_model.setter
+    def ollama_model(self, val: Optional[str]):
+        self._explicit_ollama_model = val
+
+    @property
+    def fallback_local_model(self) -> str:
+        try:
+            from services.backend.memory.vault import load_config
+            cfg = load_config()
+            cfg_m = cfg.get("models", {}).get("fallback_local_model")
+            if cfg_m:
+                return cfg_m
+        except Exception:
+            pass
+        return "phenom-jarvis:latest"
 
     def set_cloud_approval_handler(self, handler: CloudApprovalHandler):
         self._cloud_approval_handler = handler
@@ -79,7 +112,7 @@ class ModelRouter:
 
         # Rule 3: Long shareable input -> Requires Cloud Escalation Approval
         if not self._cloud_approval_handler:
-            reason = "Long shareable input eligible for cloud Nemotron, but approval handler unavailable. Falling back to local 8B."
+            reason = "Long shareable input eligible for cloud Nemotron, but approval handler unavailable. Falling back to local model."
             self._log_decision("local", self.ollama_model, reason, metadata)
             metadata["routing_reason"] = reason
             return self.ollama_model, "local", metadata
@@ -90,7 +123,7 @@ class ModelRouter:
 
         user_approved = await self._cloud_approval_handler(req_id, preview_text, est_tokens)
         if not user_approved:
-            reason = "User denied cloud escalation preview. Falling back to local 8B."
+            reason = "User denied cloud escalation preview. Falling back to local model."
             self._log_decision("local", self.ollama_model, reason, metadata)
             metadata["routing_reason"] = reason
             return self.ollama_model, "local", metadata
