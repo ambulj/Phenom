@@ -1391,3 +1391,27 @@ otification_policy == 'silent').
   - Ingestion, queries, and pruning operations immediately fail closed with `PermissionError`.
   - Active context node queues are wiped.
   - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$.
+
+
+---
+
+## 54. Autonomous Subsystem Self-Governance Invariants (GOV-02, SAF-01, SAF-02)
+
+### 1. Deterministic Remediation Boundaries (Rule 1 & Rule 7)
+- **Bounded Recovery Actions**: Autonomous remediation is strictly constrained to safe operational routines: `RECYCLE_WORKER`, `FLUSH_STALE_BUFFERS`, `TRIM_GPU_CACHE`, and `RESET_CIRCUIT_BREAKER`.
+- **Zero Destructive Deletions**: Stale buffer flushes only drain volatile queue buffers in memory; they never delete disk files or user databases.
+- **Circuit Breaker Isolation**: When consecutive errors reach the failure threshold (default: 5), the subsystem breaker trips to `TRIPPED`, preventing cascading system failures.
+
+### 2. Tool Classification & Risk Tiers
+| Tool Name | Risk Tier | Description | Preview Gating |
+|---|---|---|---|
+| `subsystem_get_health` | Tier 0 | Query overall system health and circuit breaker status | Read-only; instantaneous |
+| `subsystem_trigger_remediation` | Tier 1 | Trigger worker recycle, buffer flush, or VRAM trim | Preview required |
+| `subsystem_reset_circuit_breaker` | Tier 1 | Reset a tripped circuit breaker back to NORMAL | Preview required |
+| `subsystem_configure_thresholds` | Tier 1 | Configure error count, memory, and VRAM limits | Preview required |
+
+### 3. Sub-10ms Synchronous Guardian Disengagement SLA (SAF-02)
+- Upon Guardian kill switch activation (`guardian.trigger()`):
+  - Watchdog observer immediately sets `is_active = False`.
+  - All automated remediation tasks and health updates immediately fail closed with `PermissionError`.
+  - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$.

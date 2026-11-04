@@ -312,6 +312,8 @@ from services.backend.voice_action import streaming_voice_action_kernel
 import services.backend.tools.voice_action_tools
 from services.backend.cognitive_twin import cognitive_twin_manager
 import services.backend.tools.cognitive_twin_tools
+from services.backend.governance import subsystem_governance_watchdog
+import services.backend.tools.subsystem_governance_tools
 from services.backend.sensors.companion_camera import companion_camera_streamer
 from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
@@ -1587,6 +1589,7 @@ def on_guardian_state_change(new_state: str):
             dynamic_extension_manager.halt()
             streaming_voice_action_kernel.halt()
             cognitive_twin_manager.halt()
+            subsystem_governance_watchdog.halt()
         except Exception:
             pass
 
@@ -1662,6 +1665,7 @@ def on_guardian_state_change(new_state: str):
             dynamic_extension_manager.reset()
             streaming_voice_action_kernel.reset()
             cognitive_twin_manager.reset()
+            subsystem_governance_watchdog.reset()
         except Exception:
             pass
 

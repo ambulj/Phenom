@@ -1951,3 +1951,32 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Cumulative Milestone 15 Suite (Phases 1 + 2): **23/23 PASSED (100% green in 0.71s)**
 - Secret Scanner: **PASSED (0 secrets detected)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 6.44s)**
+
+
+---
+
+# Milestone 15.0 Phase 3: Autonomous Subsystem Self-Governance & Resilient Self-Diagnostics Fabric
+**Status:** Complete & Verified
+**Requirements:** `GOV-02`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Subsystem Governance Schemas & Data Contracts (`GOV-02`)**:
+   - `services/backend/schemas/subsystem_governance.py`: Defined `CircuitBreakerStatus`, `RemediationActionType`, `SubsystemTelemetry`, `RemediationResult`, `GovernanceWatchdogState`, and 4 tool argument models.
+2. **Subsystem Watchdog & Self-Healing Circuit Breaker (`GOV-02`, `SAF-02`)**:
+   - `services/backend/governance/circuit_breaker.py`: Implemented `SelfHealingCircuitBreaker` with automatic trip and healing states, executing deterministic routines (`RECYCLE_WORKER`, `FLUSH_STALE_BUFFERS`, `TRIM_GPU_CACHE`, `RESET_CIRCUIT_BREAKER`).
+   - `services/backend/governance/watchdog.py`: Implemented `SubsystemGovernanceWatchdog` actively monitoring 6 core subsystems with memory, VRAM, and heartbeat telemetry.
+   - Hooked `subsystem_governance_watchdog.halt()` and `reset()` into `services/backend/main.py`.
+3. **Tool Safety Governance & UI HUD Dashboard (`SAF-01`, `SAF-02`, `GOV-02`)**:
+   - `services/backend/tools/subsystem_governance_tools.py`: Registered 4 tools in `ToolRegistry` (Tier 0 health check; Tier 1 trigger remediation, reset circuit breaker, configure thresholds).
+   - `apps/desktop/src/types/protocol.ts`: Added subsystem governance interfaces and message unions.
+   - `apps/desktop/src/components/CyberHUD/SubsystemGovernanceHUD.tsx`: React HUD widget displaying overall health meters, active anomalies, subsystem cards, and manual quick-remediation controls.
+   - Documented Section 54 in `SAFETY.md`.
+
+### Test Results
+- `services/backend/tests/test_subsystem_governance.py`: **4/4 PASSED**
+- `services/backend/tests/test_subsystem_governance_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_15_phase_3_guardian_sla.py`: **1/1 PASSED (100 Halts Avg: 0.0001ms, Max: 0.0009ms)**
+- Total Phase 3 Suite: **9/9 PASSED in 0.22s**
+- Cumulative Milestone 15 Suite (Phases 1 + 2 + 3): **32/32 PASSED (100% green in 5.64s)**
+- Secret Scanner: **PASSED (0 secrets detected)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 9.42s)**

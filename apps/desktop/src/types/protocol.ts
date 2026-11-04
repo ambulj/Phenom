@@ -1260,6 +1260,51 @@ export interface CognitiveTwinPruneMsg extends BaseMessage {
   };
 }
 
+export interface SubsystemTelemetryPayload {
+  subsystem_name: string;
+  health_score: number;
+  circuit_status: 'normal' | 'degraded' | 'tripped' | 'healing';
+  memory_mb: number;
+  vram_mb: number;
+  last_heartbeat: number;
+  error_count: number;
+}
+
+export interface GovernanceWatchdogStatePayload {
+  is_active: boolean;
+  subsystems: Record<string, SubsystemTelemetryPayload>;
+  overall_health: number;
+  active_anomalies: string[];
+  recent_remediations: Array<{
+    remediation_id: string;
+    subsystem_name: string;
+    action_type: string;
+    success: boolean;
+    message: string;
+    timestamp: number;
+  }>;
+}
+
+export interface SubsystemGovernanceUpdateMsg extends BaseMessage {
+  type: 'governance.update';
+  payload: GovernanceWatchdogStatePayload;
+}
+
+export interface SubsystemTriggerRemediationMsg extends BaseMessage {
+  type: 'governance.trigger_remediation';
+  payload: {
+    subsystem_name: string;
+    action_type: 'recycle_worker' | 'flush_stale_buffers' | 'trim_gpu_cache' | 'reset_circuit_breaker';
+  };
+}
+
+export interface SubsystemResetCircuitBreakerMsg extends BaseMessage {
+  type: 'governance.reset_circuit_breaker';
+  payload: {
+    subsystem_name: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -1297,6 +1342,7 @@ export type InboundServerMessage =
   | ExtensionUpdateMsg
   | VoiceKernelUpdateMsg
   | CognitiveTwinUpdateMsg
+  | SubsystemGovernanceUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1348,4 +1394,6 @@ export type OutboundClientMessage =
   | VoiceKernelConfigureMsg
   | VoiceKernelAbortIntentMsg
   | CognitiveTwinIngestEpisodeMsg
-  | CognitiveTwinPruneMsg;
+  | CognitiveTwinPruneMsg
+  | SubsystemTriggerRemediationMsg
+  | SubsystemResetCircuitBreakerMsg;
