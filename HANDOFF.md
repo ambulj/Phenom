@@ -1,5 +1,22 @@
 # HANDOFF.md
 
+## Milestone 16.0 Phase 2: Smart Window Tiler & Interactive Macro Recorder
+- **Branch**: `hardening/pass-1`
+- **Date**: November 4, 2026
+- **Commit**: `ffa35c4`
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - Native Win32 window management in `services/backend/tools/window_tiler.py` with multi-monitor enumeration, Dev Mode (60/40/40), Research Mode (50/50), Chill Mode (centered 60%x80%), granular snapping (`left`, `right`, `top`, `bottom`, `center`, `maximize`), and custom layout snapshotting.
+  - Interactive desktop macro recorder and replayer in `services/backend/tools/macro_recorder.py` backed by encrypted SQLite storage (`desktop_macros`) with cooperative Guardian abort check (< 25ms SLA) and segmented wait slices.
+  - Direct voice intents in `services/backend/orchestrator/engine.py` for `"arrange dev mode"`, `"research layout"`, `"chill mode"`, `"snap active window to left"`, `"run macro <name>"`, `"start recording macro <name>"`, `"stop recording macro"`.
+  - Cyber HUD Window Tiler & Macro Dashboard in `apps/desktop/src/components/CyberHUD/WindowTilerHUD.tsx`, integrated into `App.tsx` and Command Palette (`Ctrl+K`).
+  - SLA Benchmark: 50 iterations measured Guardian pre-check abort avg latency **0.0004ms**, max **0.0037ms** (< 25ms SLA).
+  - Tests: **10/10 Phase 2 PASSED**; **29/29 combined suite PASSED**.
+  - Frontend Build: `tsc && vite build` bundled cleanly in 5.75s with 0 errors.
+  - Safety Documentation: Updated `SAFETY.md` Section 58.
+
+---
+
 ## Milestone 16.0 Phase 1: Embedded Electron Media Suite & Native Audio Controller
 - **Branch**: `hardening/pass-1`
 - **Date**: November 4, 2026
