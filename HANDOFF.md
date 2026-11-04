@@ -1552,3 +1552,69 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Total Phase 1 Suite: **11/11 PASSED in 0.34s**
 - Secret Scanner: `python scripts/scan_secrets.py --all`: **PASSED (479 files, 0 secrets)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.83s)**
+
+
+---
+
+# Milestone 12.0 Phase 2: Transparent Holographic Spatial Canvas & Ghost Annotations
+**Status:** Complete & Verified
+**Requirements:** `OVR-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Pydantic v2 Schemas & Protocol Integration (`OVR-01`, `SAF-01`)**:
+   - `services/backend/schemas/spatial.py`: Defined strict models for `WindowRect`, `ActiveWindowTarget`, `GhostAnnotation`, `SpatialOverlayState`, and tool argument schemas (`SpatialGetFocusArgs`, `SpatialShowOverlayArgs`, `SpatialHideOverlayArgs`, `SpatialAddAnnotationArgs`, `SpatialDismissAnnotationArgs`, `SpatialToggleClickThroughArgs`).
+   - `apps/desktop/src/types/protocol.ts`: Added matching TypeScript interfaces and protocol unions.
+2. **Focus Tracking & Spatial Canvas Manager (`OVR-01`, `SAF-02`)**:
+   - `services/backend/spatial/focus_tracker.py`: Implemented `FocusTrackingEngine` tracking foreground window bounds via Win32 `GetForegroundWindow` and `GetWindowRect` with title sanitization and mock/fallback support.
+   - `services/backend/spatial/canvas_manager.py`: Implemented `SpatialCanvasManager` with DirectComposition transparent layered overlay support (`WS_EX_LAYERED`, `WS_EX_TRANSPARENT`), dynamic anchor coordinate calculation (`top-left`, `top-right`, `bottom-left`, `bottom-right`, `center`, `custom`), TTL auto-expiration pruning, and WebSocket broadcasting.
+3. **Safety Governance & Guardian Kill Switch Sub-10ms SLA (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/spatial_tools.py`: Registered 6 spatial tools in `ToolRegistry` (Tier 0 query, Tier 1 controls/annotations).
+   - Hooked `spatial_canvas_manager.halt()`, `spatial_canvas_manager.reset()`, and broadcaster into `services/backend/main.py`.
+   - Documented Section 39 in `SAFETY.md`.
+   - Benchmarked 100 halt cycles: **0.0015 ms average latency, 0.0047 ms max**, well below the < 10ms threshold and < 25ms hard SLA.
+4. **Desktop Cyber HUD Holographic Spatial Canvas (`OVR-01`)**:
+   - `apps/desktop/src/components/CyberHUD/HolographicSpatialCanvas.tsx`: DirectComposition-styled neon HUD component rendering target app metadata, anchored ghost annotations, style theme badges, and click-through controls.
+
+### Test Results
+- `services/backend/tests/test_spatial_canvas.py`: **6/6 PASSED**
+- `services/backend/tests/test_spatial_tools_safety.py`: **5/5 PASSED**
+- `services/backend/tests/test_milestone_12_phase_2_guardian_sla.py`: **1/1 PASSED (100 Halts Avg: 0.0015ms, Max: 0.0047ms)**
+- Total Phase 2 Suite: **12/12 PASSED in 0.32s**
+- Secret Scanner: **PASSED (0 secrets detected)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.35s)**
+
+---
+
+# Milestone 12.0 Phase 3: Proactive Sensory Event Bus & Ambient Feedback Fabric
+**Status:** Complete & Verified
+**Requirements:** `PRX-01`, `FBK-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Pydantic v2 Schemas & Protocol Integration (`PRX-01`, `FBK-01`, `SAF-01`)**:
+   - `services/backend/schemas/proactive_bus.py`: Defined strict models for `Win32EventType`, `Win32EventPayload`, `AudioCueType`, `AudioCuePayload`, `WebRTCMirrorSession`, `ProactiveBusStatus`, and tool argument schemas.
+   - `apps/desktop/src/types/protocol.ts`: Added matching TypeScript interfaces and protocol unions.
+2. **Real-Time Privacy Scrubber (`PRX-01`, Permanent Rule 11)**:
+   - `services/backend/proactive/privacy_scrubber.py`: In-memory regex scrubbing pipeline sanitizing OpenAI, Anthropic, HuggingFace keys, GitHub PATs, GitLab tokens, AWS keys, Bearer tokens, private keys, password fields, and credit cards with recursive dictionary support.
+3. **Proactive Sensory Event Bus (`PRX-01`, `SAF-02`)**:
+   - `services/backend/proactive/event_bus.py`: Central event bus ingesting Win32 desktop context hooks, running them through `PrivacyScrubber`, buffering in a bounded 200-event ring buffer, and dispatching to subscribers and WebSocket clients.
+4. **Ambient Feedback Synthesizer & Local WebRTC Mirror (`FBK-01`, `SAF-02`)**:
+   - `services/backend/ambient/feedback_synthesizer.py`: Procedural audio parameter and in-memory 16-bit PCM stereo WAV synthesis with constant-power spatial panning and smooth cosine envelopes.
+   - `services/backend/ambient/webrtc_mirror.py`: Local WebRTC mirror session manager strictly restricted to local Wi-Fi.
+5. **Safety Governance & Guardian Kill Switch Sub-10ms SLA (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/proactive_feedback_tools.py`: Registered 5 tools in `ToolRegistry` (Tier 0 query, Tier 1 event ingestion, audio cues, WebRTC).
+   - Hooked `proactive_event_bus.halt()`, `ambient_feedback_synthesizer.halt()`, and `local_webrtc_mirror.halt()` into `services/backend/main.py`.
+   - Documented Section 40 in `SAFETY.md`.
+   - Benchmarked 100 halt cycles: **0.0008 ms average latency, 0.0036 ms max**, well below the < 10ms threshold and < 25ms hard SLA.
+6. **Desktop Cyber HUD Proactive Feedback Fabric (`PRX-01`, `FBK-01`)**:
+   - `apps/desktop/src/components/CyberHUD/ProactiveFeedbackFabric.tsx`: React widget displaying live event feed, Rule 11 scrubbed metrics, audio cue test triggers, and local WebRTC streaming status.
+
+### Test Results
+- `services/backend/tests/test_privacy_scrubber.py`: **5/5 PASSED**
+- `services/backend/tests/test_proactive_event_bus.py`: **5/5 PASSED**
+- `services/backend/tests/test_ambient_feedback_webrtc.py`: **5/5 PASSED**
+- `services/backend/tests/test_proactive_feedback_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_12_phase_3_guardian_sla.py`: **1/1 PASSED (100 Halts Avg: 0.0008ms, Max: 0.0036ms)**
+- Total Phase 3 Suite: **20/20 PASSED in 0.33s**
+- Cumulative Milestone 12 Suite (Phases 1 + 2 + 3): **43/43 PASSED (100% green)**
+- Secret Scanner: **PASSED (0 secrets detected)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.60s)**
