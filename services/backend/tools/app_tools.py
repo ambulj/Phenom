@@ -103,27 +103,31 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
     resolved = resolve_application_path(app_name)
     clean_name = app_name.strip()
     
-    # Launch URL directly or executable with arguments
-    if resolved.startswith("http://") or resolved.startswith("https://"):
+    # Launch using native Windows ShellExecute (os.startfile)
+    try:
+        if resolved.startswith("http://") or resolved.startswith("https://"):
+            os.startfile(resolved)
+        elif url_or_args:
+            os.startfile(resolved, "open", str(url_or_args))
+        else:
+            os.startfile(resolved)
+        return {
+            "app_name": clean_name,
+            "resolved_path": resolved,
+            "launched": True,
+            "message": f"Successfully launched {clean_name}"
+        }
+    except Exception as e:
         proc = subprocess.Popen(
-            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}'"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}'"]
         )
-    elif url_or_args:
-        proc = subprocess.Popen(
-            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}' -ArgumentList '{url_or_args}'"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-    else:
-        proc = subprocess.Popen(
-            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}'"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-    guardian.track_pid(proc.pid)
-    return {"app_name": clean_name, "resolved_path": resolved, "launched": True, "launcher_pid": proc.pid}
+        guardian.track_pid(proc.pid)
+        return {
+            "app_name": clean_name,
+            "resolved_path": resolved,
+            "launched": True,
+            "launcher_pid": proc.pid
+        }
 
 class CloseAppArgs(BaseModel):
     app_name: str = Field(description="Name of the process to terminate (e.g. 'notepad.exe', 'calc.exe')")

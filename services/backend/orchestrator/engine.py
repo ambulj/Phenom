@@ -283,8 +283,18 @@ class Orchestrator:
             try:
                 tool_result = await safety_engine.execute_tool(tool_name, tool_args)
                 res_val = tool_result.get("result")
-                res_msg = f"[Tool {tool_name} Result: {json.dumps(res_val)}]\nAll set."
-                yield {"type": "chat.token", "payload": {"token": res_msg, "index": 3}}
+                if tool_name == "open_app":
+                    app_target = str(tool_args.get("app_name", ""))
+                    if "youtube" in app_target.lower():
+                        res_msg = "Done Bro! Opening YouTube for you. Enjoy the music!"
+                    else:
+                        clean_disp = app_target.split("\\")[-1].replace(".exe", "").title()
+                        res_msg = f"Done Bro! {clean_disp} is now running."
+                elif isinstance(res_val, dict) and "message" in res_val:
+                    res_msg = res_val["message"]
+                else:
+                    res_msg = f"Sab set hai Bro! {tool_name} executed."
+                yield {"type": "chat.token", "payload": {"token": res_msg + "\n", "index": 3}}
             except Exception as tool_err:
                 res_msg = f"\n[Action Blocked or Failed: {tool_err}]"
                 yield {"type": "chat.token", "payload": {"token": res_msg, "index": 3}}
@@ -474,8 +484,15 @@ class Orchestrator:
                         result_msg = f"\n{res_val['briefing_markdown']}\n"
                     elif isinstance(res_val, dict) and 'message' in res_val and len(res_val.keys()) <= 3:
                         result_msg = f"\n{res_val['message']}\n"
+                    elif tool_name == "open_app":
+                        app_target = str(tool_args.get("app_name", ""))
+                        if "youtube" in app_target.lower():
+                            result_msg = "\nDone Bro! Opening YouTube for you. Enjoy the music!\n"
+                        else:
+                            clean_disp = app_target.split("\\")[-1].replace(".exe", "").title()
+                            result_msg = f"\nDone Bro! {clean_disp} is now running.\n"
                     else:
-                        result_msg = f"[Tool {tool_name} Result: {json.dumps(res_val)}]\nAll set."
+                        result_msg = f"\nSab set hai Bro! {tool_name} executed successfully.\n"
                     yield {"type": "chat.token", "payload": {"token": result_msg, "index": token_index + 2}}
                     full_reply += f"\n{result_msg}"
             except Exception as tool_err:
