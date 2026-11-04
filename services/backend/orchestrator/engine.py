@@ -268,7 +268,14 @@ class Orchestrator:
         if p in ("active model", "which model", "current model", "model status", "routing status"):
             return "get_active_model_routing", {}, "Checking active model routing and VRAM allocation Bro!"
 
-        # 4. Media Playback Intent (YouTube / Spotify in Embedded Webview)
+        # 4. Offline Screen Vision Control Intents (VIS-02)
+        if p in ("inspect screen offline", "what's on my screen", "whats on my screen", "describe screen", "screen pe kya hai", "read screen", "screen dekho"):
+            return "inspect_screen_offline", {}, "Analyzing your screen offline using local Moondream VLM Bro!"
+
+        if p in ("offline vision status", "vision status", "check offline vision"):
+            return "verify_offline_vision_status", {}, "Checking offline vision engine and local VLM status Bro!"
+
+        # 5. Media Playback Intent (YouTube / Spotify in Embedded Webview)
         is_spotify = "spotify" in p
         is_yt_keyword = any(k in p for k in ("youtube", "yt"))
         is_play_keyword = any(k in p for k in ("play", "paly", "chalao", "bajao", "bajaao", "chala do", "listen to"))

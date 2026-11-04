@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "15.0.0",
-  "description": "Phenom 15.0: Autonomous Cognitive Operating System (ACOS): Hyper-Personalized Synthetic Intelligence, Zero-Latency Voice-to-Action Kernel, Universal Subsystem Self-Governance & Resilient Multi-Agent Mesh Protocol",
+  "version": "16.0.0",
+  "description": "Phenom 16.0: Ambient Cybernetic Intelligence & Offline Desktop Autonomy — Cyber HUD Media Suite, Smart Window Tiler, Encrypted Macro Recorder, Task-Aware Dynamic Model Router, and 100% Offline Ollama Screen Vision Engine",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

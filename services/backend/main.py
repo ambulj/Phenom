@@ -251,6 +251,7 @@ import services.backend.tools.media_tools
 import services.backend.tools.window_tiler
 import services.backend.tools.macro_recorder
 import services.backend.router.dynamic_model_router
+import services.backend.tools.offline_vision_tools
 
 
 
@@ -1710,6 +1711,10 @@ deep_uia_engine.register_change_callback(lambda msg: asyncio.create_task(broadca
 dynamic_extension_manager.register_change_callback(lambda s: asyncio.create_task(broadcast_message({"type": "extension.update", "payload": s.model_dump()})))
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
+services.backend.tools.media_tools.register_broadcaster(broadcast_message)
+services.backend.tools.window_tiler.register_broadcaster(broadcast_message)
+services.backend.tools.macro_recorder.register_broadcaster(broadcast_message)
+services.backend.router.dynamic_model_router.register_broadcaster(broadcast_message)
 
 
 

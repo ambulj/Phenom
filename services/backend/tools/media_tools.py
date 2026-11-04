@@ -14,7 +14,7 @@ import sys
 import time
 import ctypes
 import asyncio
-from typing import Dict, Any, Literal, Optional
+from typing import Dict, Any, Literal, Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
 from services.backend.safety.guardian import guardian
@@ -53,27 +53,32 @@ def _send_virtual_key(vk_code: int):
     except Exception as e:
         print(f"[Phenom Media] Virtual key error: {e}")
 
+_broadcaster: Optional[Callable[[Dict[str, Any]], Awaitable[None]]] = None
+
+def register_broadcaster(broadcaster: Callable[[Dict[str, Any]], Awaitable[None]]) -> None:
+    """Registers the WebSocket broadcast callback."""
+    global _broadcaster
+    _broadcaster = broadcaster
+
 def broadcast_media_event(event_type: str, payload: Dict[str, Any]):
     """Broadcasts media state events to connected Electron clients over WebSocket."""
+    broadcaster = _broadcaster
+    if not broadcaster:
+        main_mod = sys.modules.get("services.backend.main")
+        if main_mod and hasattr(main_mod, "broadcast_message"):
+            broadcaster = main_mod.broadcast_message
+    if not broadcaster:
+        return
+    msg = {
+        "id": f"media-{os.urandom(2).hex()}",
+        "type": event_type,
+        "ts": str(time.time()),
+        "payload": payload
+    }
     try:
-        from services.backend.main import broadcast_message
-        msg = {
-            "id": f"media-{os.urandom(2).hex()}",
-            "type": event_type,
-            "ts": str(time.time()),
-            "payload": payload
-        }
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(broadcast_message(msg))
-        except RuntimeError:
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    asyncio.run_coroutine_threadsafe(broadcast_message(msg), loop)
-            except Exception:
-                pass
-    except Exception:
+        loop = asyncio.get_running_loop()
+        loop.create_task(broadcaster(msg))
+    except RuntimeError:
         pass
 
 # Guardian Kill Switch audio silence hook (SAF-02 < 10ms SLA)

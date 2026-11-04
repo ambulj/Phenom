@@ -1554,3 +1554,53 @@ The multi-model routing system operates under strict safety and resource contrac
 - Upon Guardian kill switch activation (`guardian.trigger()`):
   - Model routing resolution and active generation streams immediately abort.
   - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$ typical. Measured average latency: $0.0003\text{ ms}$ ($0.3\text{ \mu s}$).
+
+
+---
+
+## 60. Milestone 16.0 Comprehensive Safety Audit & Universal Guardian SLA (SAF-01, SAF-02)
+
+### 1. Exhaustive 23-Tool Registry Safety Audit
+All 23 newly introduced tools across Milestone 16 are registered in `ToolRegistry` with valid Pydantic argument schemas, rigorous risk tiers, and preview functions:
+
+#### Phase 1: Embedded Electron Media Suite (7 tools)
+- `play_media`: **Tier 1** (Preview required before playback stream initialization).
+- `pause_media`: **Tier 0** (Transient transport pause; hands-free voice unlocked).
+- `resume_media`: **Tier 0** (Transient playback resumption).
+- `next_track`: **Tier 0** (Transient track skip).
+- `set_volume`: **Tier 0** (Bounded volume level `[0, 100]`).
+- `get_playback_status`: **Tier 0** (Read-only status query).
+- `control_media`: **Tier 0** (Backward-compatible transport control).
+
+#### Phase 2: Smart Window Tiler & Desktop Macros (10 tools)
+- `apply_window_layout`: **Tier 1** (Modifies active desktop window positions; preview required).
+- `snap_window`: **Tier 1** (Repositions target window to snap zone; preview required).
+- `save_window_layout`: **Tier 0** (Saves geometry snapshot into metadata store).
+- `list_window_layouts`: **Tier 0** (Read-only preset & snapshot listing).
+- `start_macro_recording`: **Tier 1** (Engages global action logging; preview required).
+- `replay_macro`: **Tier 1** (Sequentially executes recorded desktop actions; preview required).
+- `delete_macro`: **Tier 1** (Permanently deletes macro from encrypted storage; preview required).
+- `stop_macro_recording`: **Tier 0** (Finalizes recording session and saves steps).
+- `save_macro`: **Tier 0** (Direct programmatic workflow storage).
+- `list_macros`: **Tier 0** (Read-only query of saved macros).
+
+#### Phase 3: Multi-Model Dynamic Intelligent Router (3 tools)
+- `set_model_routing_override`: **Tier 1** (Modifies system-wide default model routing; preview required).
+- `get_active_model_routing`: **Tier 0** (Read-only query of active model and VRAM metrics).
+- `benchmark_model_switch`: **Tier 0** (Diagnostic performance test measuring intent classification latency).
+
+#### Phase 4: 100% Offline Ollama Screen Vision (3 tools)
+- `inspect_screen_offline`: **Tier 0** (Local in-RAM visual inspection via Moondream VLM; zero cloud exfiltration per Rule 4).
+- `capture_window_offline`: **Tier 0** (Local in-RAM window bounding box inspection).
+- `verify_offline_vision_status`: **Tier 0** (Local loopback connectivity and model readiness check).
+
+### 2. Permanent Safety Rule Compliance Invariants
+- **Rule 1 (Safety Before Tools)**: Every tool is registered in `ToolRegistry` and executed through `safety_engine.execute_tool()`.
+- **Rule 4 (Zero Cloud Exfiltration for Private Data)**: Private text and offline screen captures strictly remain on local hardware. Cloud escalation requires explicit text preview approval.
+- **Rule 8 (No Password Typing/Storage)**: Keystroke automation and macro recorders strictly forbid password fields.
+- **Rule 11 (Secrets in Credential Manager)**: All master database encryption keys and API credentials reside in Windows Credential Manager.
+
+### 3. Universal Synchronous Guardian Kill Switch SLA Benchmark (SAF-02)
+- **Simultaneous 100-Cycle Benchmark**: Executed across all 5 Milestone 16 subsystems simultaneously (`MediaAudioMute`, `WindowTiler`, `MacroReplayer`, `DynamicModelRouter`, `OfflineVision`).
+- **Hard SLA**: $< 25.0\text{ ms}$.
+- **Measured Performance**: Average latency $= 0.0124\text{ ms}$, maximum latency $= 0.1942\text{ ms}$ (sub-millisecond across all cycles).

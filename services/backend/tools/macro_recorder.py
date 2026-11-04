@@ -11,7 +11,7 @@ import time
 import json
 import sqlite3
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 
 from services.backend.safety.registry import registry
@@ -48,27 +48,32 @@ def get_db_connection() -> sqlite3.Connection:
     return conn
 
 
+_broadcaster: Optional[Callable[[Dict[str, Any]], Awaitable[None]]] = None
+
+def register_broadcaster(broadcaster: Callable[[Dict[str, Any]], Awaitable[None]]) -> None:
+    """Registers the WebSocket broadcast callback."""
+    global _broadcaster
+    _broadcaster = broadcaster
+
 def broadcast_macro_event(event_type: str, payload: Dict[str, Any]):
     """Broadcasts macro state changes to connected Electron UI clients."""
+    broadcaster = _broadcaster
+    if not broadcaster:
+        main_mod = sys.modules.get("services.backend.main")
+        if main_mod and hasattr(main_mod, "broadcast_message"):
+            broadcaster = main_mod.broadcast_message
+    if not broadcaster:
+        return
+    msg = {
+        "id": f"macro-{os.urandom(2).hex()}",
+        "type": event_type,
+        "ts": str(time.time()),
+        "payload": payload
+    }
     try:
-        from services.backend.main import broadcast_message
-        msg = {
-            "id": f"macro-{os.urandom(2).hex()}",
-            "type": event_type,
-            "ts": str(time.time()),
-            "payload": payload
-        }
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(broadcast_message(msg))
-        except RuntimeError:
-            try:
-                new_loop = asyncio.new_event_loop()
-                new_loop.run_until_complete(broadcast_message(msg))
-                new_loop.close()
-            except Exception:
-                pass
-    except Exception:
+        loop = asyncio.get_running_loop()
+        loop.create_task(broadcaster(msg))
+    except RuntimeError:
         pass
 
 
