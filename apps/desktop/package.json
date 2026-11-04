@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "11.0.0",
-  "description": "Phenom 11.0: Sovereign Neural OS, Dynamic Micro-Tool Synthesis & Multi-Device Sensory Fabric",
+  "version": "12.0.0",
+  "description": "Phenom 12.0: Neuro-Symbolic Dream Consolidation, Holographic Spatial Canvas & Proactive Event Fabric",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
