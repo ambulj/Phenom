@@ -1769,3 +1769,30 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Secret Scanner: **PASSED (0 secrets detected)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.49s)**
 - Production Release Tag: `v13.0.0`
+
+---
+
+# Milestone 14.0 Phase 1: Omni-Modal Spatial Telepresence & Zero-Copy Audio/Video Fabric
+**Status:** Complete & Verified
+**Requirements:** `AVP-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Telepresence Schemas & Media Data Contracts (`AVP-01`)**:
+   - `services/backend/schemas/telepresence.py`: Defined `MediaStreamType`, `SensorState`, `AudioMetrics`, `VideoMetrics`, `TelepresenceSessionState`, and 4 tool argument models.
+2. **Streaming AV Pipeline & Ambient Perception (`AVP-01`, `SAF-02`)**:
+   - `services/backend/telepresence/av_pipeline.py`: Implemented `StreamingAVPipeline` with a bounded zero-copy ring buffer (maxlen=100) storing lightweight telemetry samples with zero raw frame pixel or audio waveform disk persistence (Rule 4 invariant).
+   - `services/backend/telepresence/perception_manager.py`: Implemented `AmbientPerceptionManager` computing room occupancy and voice activity probability metrics strictly in memory.
+   - Hooked `streaming_av_pipeline.halt()` and `reset()` into `services/backend/main.py`.
+3. **Tool Safety Governance & UI HUD Dashboard (`SAF-01`, `SAF-02`, `AVP-01`)**:
+   - `services/backend/tools/telepresence_tools.py`: Registered 4 tools in `ToolRegistry` (Tier 0 query, Tier 1 microphone mute, camera shutter, and telemetry ingestion).
+   - `apps/desktop/src/types/protocol.ts`: Added telepresence interfaces and message unions.
+   - `apps/desktop/src/components/CyberHUD/OmniModalTelepresenceHUD.tsx`: React HUD widget displaying real-time audio energy meter, camera shutter state, ambient occupancy badge, and mute/shutter controls.
+   - Documented Section 47 in `SAFETY.md`.
+
+### Test Results
+- `services/backend/tests/test_telepresence_av.py`: **5/5 PASSED**
+- `services/backend/tests/test_telepresence_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_14_phase_1_guardian_sla.py`: **1/1 PASSED (100 Halts Avg: 0.0029ms, Max: 0.0302ms)**
+- Total Phase 1 Suite: **10/10 PASSED in 0.32s**
+- Secret Scanner: **PASSED (0 secrets detected)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 4.56s)**

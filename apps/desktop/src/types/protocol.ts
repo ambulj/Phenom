@@ -959,6 +959,55 @@ export interface KernelApplyPatchMsg extends BaseMessage {
   };
 }
 
+// Milestone 14 Phase 1: Omni-Modal Spatial Telepresence & Zero-Copy Audio/Video Fabric
+export interface AudioMetricsPayload {
+  rms_energy: number;
+  peak_volume_db: number;
+  speech_probability: number;
+  sample_rate_hz: number;
+}
+
+export interface VideoMetricsPayload {
+  fps: number;
+  resolution: string;
+  face_detected: boolean;
+  landmark_count: number;
+  zero_frame_retention: boolean;
+}
+
+export interface TelepresenceSessionPayload {
+  session_id: string;
+  is_active: boolean;
+  stream_type: 'AUDIO' | 'VIDEO' | 'AUDIO_VIDEO';
+  microphone_state: 'ACTIVE' | 'MUTED' | 'SHUTTERED' | 'DISABLED';
+  camera_state: 'ACTIVE' | 'MUTED' | 'SHUTTERED' | 'DISABLED';
+  audio_metrics: AudioMetricsPayload;
+  video_metrics: VideoMetricsPayload;
+  ambient_presence: boolean;
+  started_at?: number | null;
+}
+
+export interface TelepresenceUpdateMsg extends BaseMessage {
+  type: 'telepresence.update';
+  payload: TelepresenceSessionPayload;
+}
+
+export interface TelepresenceSetMicrophoneMsg extends BaseMessage {
+  type: 'telepresence.set_microphone';
+  payload: {
+    state: 'ACTIVE' | 'MUTED';
+    gain?: number;
+  };
+}
+
+export interface TelepresenceSetCameraMsg extends BaseMessage {
+  type: 'telepresence.set_camera';
+  payload: {
+    state: 'ACTIVE' | 'SHUTTERED';
+    resolution?: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -990,6 +1039,7 @@ export type InboundServerMessage =
   | SwarmWorkloadUpdateMsg
   | KernelCrashAlertMsg
   | KernelHealingAppliedMsg
+  | TelepresenceUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1026,4 +1076,6 @@ export type OutboundClientMessage =
   | SwarmRegisterNodeMsg
   | SwarmOffloadWorkloadMsg
   | SwarmAbortWorkloadMsg
-  | KernelApplyPatchMsg;
+  | KernelApplyPatchMsg
+  | TelepresenceSetMicrophoneMsg
+  | TelepresenceSetCameraMsg;

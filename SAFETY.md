@@ -1210,3 +1210,23 @@ otification_policy == 'silent').
 ### 2. Universal Guardian Kill Switch SLA Benchmark (SAF-02)
 - **Universal Synchronous Benchmark**: 100 consecutive synchronous halt cycles executed simultaneously across all 6 Milestone 13 subsystems (`LocalAdapterManager`, `VolumetricCanvasManager`, `VisionGestureTracker`, `SwarmNodeManager`, `SwarmWorkloadScheduler`, `KernelTelemetryFabric`).
 - Hard SLA: `< 25.0 ms`, assert typical `< 1.0 ms`.
+
+
+## 47. Omni-Modal Spatial Telepresence & Zero-Copy Audio/Video Fabric (Milestone 14.0 Phase 1)
+
+### 1. Telepresence & Privacy Invariants (AVP-01)
+- **100% Zero-Copy / Zero Disk Persistence (Permanent Rule 4)**: Camera pixel frames and uncompressed audio buffers are processed entirely in transient ring buffers (`collections.deque(maxlen=100)`). No image files, video streams, or raw audio waveforms are ever written to disk or transmitted to any cloud endpoint.
+- **Physical & Software Privacy Shutters**: Camera and microphone sensors support immediate software toggling (`ACTIVE`, `MUTED`, `SHUTTERED`, `DISABLED`). When `camera_state` is `SHUTTERED`, all landmark parsing is suspended and FPS reports 0. When `microphone_state` is `MUTED`, RMS energy is pegged to 0.
+- **Local Ambient Perception**: Room occupancy and voice activity probability metrics are calculated purely on-device without exfiltrating biometric data or voiceprints.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `telepresence_get_status`: **Tier 0** (Read-Only). Arguments: `TelepresenceGetStatusArgs`. Preview: `"Inspect AV telepresence session state, microphone/camera statuses, and ambient presence metrics (Read-Only)"`.
+- `telepresence_set_microphone`: **Tier 1** (Reversible change with preview). Arguments: `TelepresenceSetMicrophoneArgs(state: SensorState, gain: float)`. Preview: `"Set microphone hardware state to {state} (Gain: {gain:.1f}x)"`.
+- `telepresence_set_camera`: **Tier 1** (Reversible change with preview). Arguments: `TelepresenceSetCameraArgs(state: SensorState, resolution: str)`. Preview: `"Set camera privacy shutter to {state} (Target Resolution: {resolution})"`.
+- `telepresence_ingest_frame`: **Tier 1** (Data ingestion with preview). Arguments: `TelepresenceIngestFrameArgs(...)`. Preview: `"Ingest transient AV telemetry (Audio RMS: {rms:.2f}, Speech Prob: {speech:.2f}, Landmarks: {count}) without storing raw media (Rule 4)"`.
+
+### 3. Sub-10ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `streaming_av_pipeline.halt()` is synchronously called from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Instantly transitions sensors to `SensorState.DISABLED`, clears the telemetry ring buffer, terminates active streaming tasks, and notifies the UI in $< 10.0\text{ms}$ (< 25ms hard SLA).
+- While halted, all calls to `telepresence_set_microphone`, `telepresence_set_camera`, `telepresence_ingest_frame`, and `start_session` fail closed with `PermissionError`.
+- Clean resumption via `resume()` / `reset()` when Guardian transitions back to `idle`.
