@@ -1137,3 +1137,23 @@ otification_policy == 'silent').
 - **Execution SLA**: Immediately clears all active 3D spatial nodes, unsets selected raycast targets, terminates active gesture listeners, and disables projection rendering in `< 10ms` (hard SLA: `< 25ms`).
 - While halted, all calls to `set_projection_mode`, `spawn_node`, `remove_node`, `clear_canvas`, `ingest_gesture`, and associated Tier 1 tools fail closed with `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+
+## 44. Cross-Device Distributed Swarm & Offline Mesh P2P Compute Offloading (Milestone 13.0 Phase 3)
+
+### 1. Swarm Mesh Invariants & Local Privacy Guarantees (SWM-01, Permanent Rule 4, Rule 11)
+- **100% Offline Local Wi-Fi Mesh (Permanent Rule 4)**: All compute task partitioning (speculative decoding tokens, embedding batches, document indexing slices) executes strictly across authenticated local network peers (desktop GPU, laptop, mobile companion). Zero compute requests, token sequences, or embeddings are ever routed through external cloud servers.
+- **Hardware & Power Safety Constraints**: Swarm workload scheduler continuously evaluates peer battery percentage, AC power connection, and thermal throttling status. Nodes with battery below 20% on DC power or experiencing thermal throttling are automatically excluded from compute tasks to preserve device health and user battery life.
+- **Zero Secrets Exfiltration (Permanent Rule 11)**: All peer telemetry broadcasts to the Electron Cyber HUD strictly omit internal cryptographic session keys, authorization tokens, and private file contents.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `swarm_compute_get_topology`: **Tier 0** (Read-Only). Arguments: `SwarmComputeGetTopologyArgs`. Preview: `"Inspect local swarm compute cluster nodes and hardware metrics (Read-Only)"`.
+- `swarm_compute_register_node`: **Tier 1** (Reversible change with preview). Arguments: `SwarmComputeRegisterNodeArgs(node_id, device_name, node_type, available_vram_mb, available_ram_mb, battery_percent, is_plugged_in, thermal_throttled, compute_flops_rating)`. Preview: `"Register swarm peer node '{node_id}' ({device_name}) [type: {node_type}, battery: {battery_percent}%]"`.
+- `swarm_compute_offload_workload`: **Tier 1** (Reversible change with preview). Arguments: `SwarmComputeOffloadWorkloadArgs(workload_type, items_count, preferred_node_id)`. Preview: `"Offload compute workload '{workload_type}' ({items_count} items) across local mesh cluster"`.
+- `swarm_compute_abort_workload`: **Tier 1** (Reversible change with preview). Arguments: `SwarmComputeAbortWorkloadArgs(task_id)`. Preview: `"Abort in-flight swarm compute task '{task_id}'"`.
+
+### 3. Sub-10ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `swarm_workload_scheduler.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Immediately aborts all in-flight compute tasks, severs active peer offload sessions, resets cluster scheduling queues, and prevents task dispatching in `< 10ms` (hard SLA: `< 25ms`).
+- While halted, all calls to `swarm_compute_register_node`, `swarm_compute_offload_workload`, `swarm_compute_abort_workload`, and associated Tier 1 tools fail closed with `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.

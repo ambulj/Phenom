@@ -826,6 +826,87 @@ export interface VolumetricIngestGestureMsg extends BaseMessage {
   };
 }
 
+// Milestone 13 Phase 3: Distributed Swarm Compute & P2P Mesh Offloading
+export interface SwarmNodeTelemetryPayload {
+  node_id: string;
+  device_name: string;
+  node_type: string;
+  available_vram_mb: number;
+  available_ram_mb: number;
+  battery_percent: number;
+  is_plugged_in: boolean;
+  thermal_throttled: boolean;
+  compute_flops_rating: number;
+  is_online: boolean;
+  last_heartbeat: number;
+}
+
+export interface DistributedWorkloadPayload {
+  task_id: string;
+  workload_type: string;
+  payload: Record<string, unknown>;
+  assigned_node_id: string;
+  status: string;
+  assigned_at: number;
+  completed_at?: number | null;
+  result?: Record<string, unknown> | null;
+  error?: string | null;
+  failover_count: number;
+}
+
+export interface SwarmClusterStatePayload {
+  cluster_id: string;
+  active_node_count: number;
+  total_vram_mb: number;
+  total_ram_mb: number;
+  nodes: SwarmNodeTelemetryPayload[];
+  active_workload_count: number;
+  cluster_load_factor: number;
+  is_healthy: boolean;
+  last_updated: number;
+}
+
+export interface SwarmClusterStateMsg extends BaseMessage {
+  type: 'swarm_cluster_update';
+  payload: SwarmClusterStatePayload;
+}
+
+export interface SwarmWorkloadUpdateMsg extends BaseMessage {
+  type: 'swarm_workload_update';
+  payload: DistributedWorkloadPayload;
+}
+
+export interface SwarmRegisterNodeMsg extends BaseMessage {
+  type: 'swarm.register_node';
+  payload: {
+    node_id: string;
+    device_name: string;
+    node_type?: string;
+    available_vram_mb?: number;
+    available_ram_mb?: number;
+    battery_percent?: number;
+    is_plugged_in?: boolean;
+    thermal_throttled?: boolean;
+    compute_flops_rating?: number;
+  };
+}
+
+export interface SwarmOffloadWorkloadMsg extends BaseMessage {
+  type: 'swarm.offload_workload';
+  payload: {
+    workload_type: 'SPECULATIVE_DECODING' | 'EMBEDDING_BATCH' | 'DOCUMENT_INDEXING' | 'INFERENCE_PROBE';
+    items_count?: number;
+    preferred_node_id?: string;
+  };
+}
+
+export interface SwarmAbortWorkloadMsg extends BaseMessage {
+  type: 'swarm.abort_workload';
+  payload: {
+    task_id: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -853,6 +934,8 @@ export type InboundServerMessage =
   | WebRTCMirrorTerminatedMsg
   | EvolutionStatusMsg
   | VolumetricStateMsg
+  | SwarmClusterStateMsg
+  | SwarmWorkloadUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -885,4 +968,7 @@ export type OutboundClientMessage =
   | VolumetricSetProjectionMsg
   | VolumetricSpawnNodeMsg
   | VolumetricClearCanvasMsg
-  | VolumetricIngestGestureMsg;
+  | VolumetricIngestGestureMsg
+  | SwarmRegisterNodeMsg
+  | SwarmOffloadWorkloadMsg
+  | SwarmAbortWorkloadMsg;
