@@ -1179,6 +1179,48 @@ export interface ExtensionUnloadMsg extends BaseMessage {
   };
 }
 
+export interface DispatchedActionPayload {
+  action_id: string;
+  raw_transcript: string;
+  matched_intent: 'tool_call' | 'system_command' | 'query' | 'interruption' | 'unknown';
+  tool_name?: string | null;
+  confidence: number;
+  latency_ms: number;
+  status: string;
+  timestamp: number;
+}
+
+export interface VoiceActionKernelStatePayload {
+  state: 'idle' | 'listening' | 'transcribing' | 'dispatching' | 'barged_in' | 'halted';
+  is_listening: boolean;
+  noise_floor_rms: number;
+  vad_threshold: number;
+  active_session_id?: string | null;
+  total_dispatched: number;
+  recent_actions: DispatchedActionPayload[];
+}
+
+export interface VoiceKernelUpdateMsg extends BaseMessage {
+  type: 'voice_kernel.update';
+  payload: VoiceActionKernelStatePayload;
+}
+
+export interface VoiceKernelConfigureMsg extends BaseMessage {
+  type: 'voice_kernel.configure';
+  payload: {
+    vad_threshold?: number;
+    noise_floor_rms?: number;
+    barge_in_sensitivity?: number;
+  };
+}
+
+export interface VoiceKernelAbortIntentMsg extends BaseMessage {
+  type: 'voice_kernel.abort_intent';
+  payload: {
+    action_id: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -1214,6 +1256,7 @@ export type InboundServerMessage =
   | EnclaveUpdateMsg
   | UIAUpdateMsg
   | ExtensionUpdateMsg
+  | VoiceKernelUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1261,4 +1304,6 @@ export type OutboundClientMessage =
   | UIAExecuteWorkflowMsg
   | ExtensionSynthesizeMsg
   | ExtensionHotReloadMsg
-  | ExtensionUnloadMsg;
+  | ExtensionUnloadMsg
+  | VoiceKernelConfigureMsg
+  | VoiceKernelAbortIntentMsg;

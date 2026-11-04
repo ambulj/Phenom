@@ -1332,3 +1332,34 @@ otification_policy == 'silent').
 ### 2. Universal Guardian Kill Switch SLA Benchmark (SAF-02)
 - **Universal Synchronous Benchmark**: 100 consecutive synchronous halt cycles executed simultaneously across all Milestone 14 subsystems (`StreamingAVPipeline`, `AmbientPerceptionManager`, `BiometricEnclaveManager`, `EphemeralCredentialLeaser`, `DeepUIAutomationEngine`, `DynamicExtensionManager`).
 - Hard SLA: $< 25.0\text{ ms}$, assert typical $< 1.0\text{ ms}$.
+
+
+---
+
+## 52. Zero-Latency Voice-to-Action Kernel Invariants (VOX-02, SAF-01, SAF-02)
+
+### 1. In-Memory Transient Stream Processing & Zero Audio Retention (Rule 4)
+- **Ring Buffer Ingestion**: Audio chunks are buffered in transient in-memory ring buffers (`deque(maxlen=200)`).
+- **Zero Disk Persistence**: Raw audio samples and streaming frames are never written to disk, databases, or cloud endpoints.
+- **On-Device Semantic Inference**: Local Silero VAD and Whisper models parse speech features strictly within local GPU/CPU boundaries.
+
+### 2. Spoken Safety Invariants (Rules 7, 8, 9, 11)
+- **Rule 8 (Payments Impossible by Construction)**: Utterances requesting transactions (`"pay now"`, `"buy now"`, `"checkout"`, `"place order"`, `"complete purchase"`, `"transfer money"`) are hard-blocked at the intent parser level with an explicit `PermissionError`.
+- **Rule 8 & 11 (Credential Protection)**: Spoken credentials, passwords, secret PINs, and private keys are detected and rejected.
+- **Rule 7 (Recycle Bin Only)**: Permanent deletion requests (`"delete permanently"`, `"purge file"`) are rejected; deletions route to recycle bin only.
+- **Rule 9 (Email Drafts Only)**: Direct email transmission (`"send email"`, `"dispatch email"`) is rejected; drafts only.
+
+### 3. Tool Classification & Risk Tiers
+| Tool Name | Risk Tier | Description | Preview Gating |
+|---|---|---|---|
+| `voice_kernel_get_status` | Tier 0 | Query current voice kernel telemetry and actions | Read-only; instantaneous |
+| `voice_kernel_configure` | Tier 1 | Update VAD sensitivity and noise calibration | Preview required |
+| `voice_kernel_simulate_chunk` | Tier 1 | Ingest audio frame and trigger intent dispatch | Preview required |
+| `voice_kernel_abort_intent` | Tier 1 | Abort dispatched voice action | Preview required |
+
+### 4. Sub-10ms Synchronous Guardian Disengagement SLA (SAF-02)
+- Upon Guardian kill switch activation (`guardian.halt()`):
+  - Ingestion state transitions immediately to `HALTED`.
+  - Capture is muted and all transient chunk ring buffers are cleared.
+  - Active and pending action dispatches are terminated with status `guardian_halted`.
+  - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$.

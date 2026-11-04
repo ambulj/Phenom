@@ -1890,3 +1890,31 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Secret Scanner: **PASSED (0 secrets detected)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.18s)**
 - Release Tag: `v14.0.0`
+
+
+---
+
+# Milestone 15.0 Phase 1: Zero-Latency Voice-to-Action Kernel & Real-Time Intent Dispatcher
+**Status:** Complete & Verified
+**Requirements:** `VOX-02`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Voice-to-Action Schemas & Data Contracts (`VOX-02`)**:
+   - `services/backend/schemas/voice_action.py`: Defined `VoiceKernelState`, `IntentType`, `VoiceChunkMetadata`, `DispatchedActionRecord`, `VoiceActionKernelStatus`, and 4 tool argument models.
+2. **Streaming Voice-to-Action Kernel & Intent Parser (`VOX-02`, `SAF-02`)**:
+   - `services/backend/voice_action/intent_parser.py`: Fast semantic intent matcher for tool calls, system commands, queries, and interruptions. Enforces hard blocks on payments (Rule 8), passwords (Rules 8 & 11), permanent delete (Rule 7), and sending emails (Rule 9).
+   - `services/backend/voice_action/kernel.py`: Implemented `StreamingVoiceActionKernel` with bounded transient ring buffer queues (`deque(maxlen=200)`), zero audio retention on disk (Rule 4), adaptive noise floor calibration, acoustic barge-in interruption, and sub-10ms Guardian synchronous halt.
+   - Hooked `streaming_voice_action_kernel.halt()` and `reset()` into `services/backend/main.py`.
+3. **Tool Safety Governance & UI HUD Dashboard (`SAF-01`, `SAF-02`, `VOX-02`)**:
+   - `services/backend/tools/voice_action_tools.py`: Registered 4 tools in `ToolRegistry` (Tier 0 status, Tier 1 configure, simulate chunk, abort intent).
+   - `apps/desktop/src/types/protocol.ts`: Added voice action interfaces and message unions.
+   - `apps/desktop/src/components/CyberHUD/VoiceActionKernelHUD.tsx`: React HUD widget displaying real-time VAD sliders, state indicators, and recent intent dispatch streams.
+   - Documented Section 52 in `SAFETY.md`.
+
+### Test Results
+- `services/backend/tests/test_voice_action_kernel.py`: **8/8 PASSED**
+- `services/backend/tests/test_voice_action_tools_safety.py`: **4/4 PASSED**
+- `services/backend/tests/test_milestone_15_phase_1_guardian_sla.py`: **1/1 PASSED (100 Halts Avg: 0.0025ms, Max: 0.0176ms)**
+- Total Phase 1 Suite: **13/13 PASSED in 0.28s**
+- Secret Scanner: **PASSED (0 secrets detected)**
+- Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.23s)**

@@ -308,6 +308,8 @@ from services.backend.telepresence import streaming_av_pipeline
 from services.backend.security import biometric_enclave_manager
 from services.backend.automation.deep_uia_engine import deep_uia_engine
 from services.backend.extensions import dynamic_extension_manager
+from services.backend.voice_action import streaming_voice_action_kernel
+import services.backend.tools.voice_action_tools
 from services.backend.sensors.companion_camera import companion_camera_streamer
 from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
@@ -1581,6 +1583,7 @@ def on_guardian_state_change(new_state: str):
             biometric_enclave_manager.halt()
             deep_uia_engine.halt()
             dynamic_extension_manager.halt()
+            streaming_voice_action_kernel.halt()
         except Exception:
             pass
 
@@ -1654,6 +1657,7 @@ def on_guardian_state_change(new_state: str):
             biometric_enclave_manager.reset()
             deep_uia_engine.reset()
             dynamic_extension_manager.reset()
+            streaming_voice_action_kernel.reset()
         except Exception:
             pass
 
