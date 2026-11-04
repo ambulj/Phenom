@@ -1043,3 +1043,28 @@ otification_policy == 'silent').
 - **Execution SLA**: Immediately dismisses the overlay (`is_active = False`), wipes all floating ghost annotations (`annotations.clear()`), resets click-through mode, halts the underlying `FocusTrackingEngine`, and disallows further operations in `< 10ms` (hard SLA: `< 25ms`; benchmarked at **0.0015 ms** average across 100 cycles).
 - While halted, all attempts to invoke `show_overlay`, `add_annotation`, or any Tier 1 spatial tool immediately raise `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+
+## 40. Proactive Sensory Event Bus & Ambient Feedback Fabric Governance (Milestone 12.0 Phase 3)
+
+### 1. Event Ingestion & Real-Time Privacy Scrubbing (PRX-01, Permanent Rule 11)
+- **Zero-Secrets Leakage Invariant (Permanent Rule 11)**: All Win32 system events (focus changes, window crashes, terminal error codes, dialogs) are passed through `PrivacyScrubber` before entering in-memory ring buffers, subscriber callbacks, logs, or UI feeds.
+- **Redaction Coverage**: Automatically replaces OpenAI (`sk-...`), Anthropic (`sk-ant-...`), HuggingFace (`hf_...`), GitHub PATs (`ghp_...`), GitLab tokens (`glpat-...`), AWS Access Key IDs (`AKIA...`), Bearer tokens, RSA private key blocks, password key-value assignments, and credit card numbers with typed `[REDACTED_*]` tokens.
+- **Local Bounded Memory**: Event bus buffers are strictly bounded to 200 events in RAM, preventing unbounded memory growth.
+
+### 2. Ambient Audio Cues & Local WebRTC Streaming (FBK-01)
+- **Non-Jarring Procedural Audio**: Ambient audio cues are synthesized in-memory using smooth cosine envelope windowing and constant-power stereo spatial panning (-1.0 to 1.0) without requiring external sound binaries or network requests.
+- **Strict Local Wi-Fi Mirroring**: The `LocalWebRTCMirror` streams screen and spatial canvas exclusively to paired companion devices over local network interfaces. Cloud STUN/TURN relays are strictly prohibited to prevent outbound video exfiltration.
+
+### 3. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `proactive_get_bus_status`: **Tier 0** (Read-Only). Arguments: `ProactiveGetBusStatusArgs`. Preview: `"Inspect proactive sensory event bus status and privacy scrubber metrics (Read-Only)"`.
+- `proactive_ingest_event`: **Tier 1** (Reversible change with preview). Arguments: `ProactiveIngestEventArgs(...)`. Preview: `"Ingest Win32 context event: {event_type} from {process_name}"`.
+- `ambient_trigger_audio_cue`: **Tier 1** (Reversible change with preview). Arguments: `AmbientTriggerAudioCueArgs(cue_type: str, spatial_pan: float, volume: float)`. Preview: `"Play ambient audio cue '{cue_type}' (pan={spatial_pan})"`.
+- `webrtc_init_mirror_session`: **Tier 1** (Reversible change with preview). Arguments: `WebRTCInitMirrorSessionArgs(...)`. Preview: `"Establish local WebRTC screen mirror session to companion device '{device_id}'"`.
+- `webrtc_terminate_mirror`: **Tier 1** (Reversible change with preview). Arguments: `WebRTCTerminateMirrorArgs(session_id: str)`. Preview: `"Terminate local WebRTC mirror session '{session_id}'"`.
+
+### 4. Sub-10ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `proactive_event_bus.halt()`, `ambient_feedback_synthesizer.halt()`, and `local_webrtc_mirror.halt()` are synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Immediately ceases event ingestion, wipes unhandled dispatch queues, mutes all synthesized audio generation, and tears down all active local WebRTC mirror sessions in `< 10ms` (hard SLA: `< 25ms`; benchmarked at **0.0008 ms** average across 100 cycles).
+- While halted, all calls to `ingest_event`, `trigger_cue`, `init_session`, and associated Tier 1 tools fail closed with `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.

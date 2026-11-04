@@ -587,6 +587,97 @@ export interface SpatialDismissAnnotationMsg extends BaseMessage {
   };
 }
 
+export interface Win32EventPayload {
+  event_id: string;
+  event_type: 'FOCUS_CHANGE' | 'WINDOW_CRASH' | 'TERMINAL_ERROR_CODE' | 'EXCEPTION_DIALOG' | 'BACKGROUND_MILESTONE' | 'SYSTEM_ALERT';
+  process_name: string;
+  pid: number;
+  window_title: string;
+  details: Record<string, any>;
+  timestamp: number;
+  is_scrubbed: boolean;
+  scrubbed_fields: string[];
+}
+
+export interface AudioCuePayload {
+  cue_id: string;
+  cue_type: 'SUBTLE_CHIME' | 'MILESTONE_FANFARE' | 'RISK_GATE_WARNING' | 'GUARDIAN_HALT_BUZZ' | 'DREAM_CYCLE_START' | 'DREAM_CYCLE_COMPLETE';
+  frequency_hz: number;
+  duration_ms: number;
+  volume: number;
+  spatial_pan: number;
+  timestamp: number;
+}
+
+export interface WebRTCMirrorSessionPayload {
+  session_id: string;
+  device_id: string;
+  is_connected: boolean;
+  fps_target: number;
+  resolution: string;
+  local_only: boolean;
+  ice_candidates_count: number;
+  created_at: number;
+}
+
+export interface ProactiveBusEventMsg extends BaseMessage {
+  type: 'proactive_bus_event';
+  payload: Win32EventPayload;
+}
+
+export interface AmbientAudioCueMsg extends BaseMessage {
+  type: 'ambient_audio_cue';
+  payload: AudioCuePayload;
+}
+
+export interface WebRTCMirrorUpdateMsg extends BaseMessage {
+  type: 'webrtc_mirror_update';
+  payload: WebRTCMirrorSessionPayload;
+}
+
+export interface WebRTCMirrorTerminatedMsg extends BaseMessage {
+  type: 'webrtc_mirror_terminated';
+  payload: {
+    session_id: string;
+  };
+}
+
+export interface ProactiveIngestEventMsg extends BaseMessage {
+  type: 'proactive.ingest_event';
+  payload: {
+    event_type: string;
+    process_name?: string;
+    pid?: number;
+    window_title?: string;
+    details?: Record<string, any>;
+  };
+}
+
+export interface AmbientPlayCueMsg extends BaseMessage {
+  type: 'ambient.play_cue';
+  payload: {
+    cue_type: string;
+    spatial_pan?: number;
+    volume?: number;
+  };
+}
+
+export interface WebRTCConnectMsg extends BaseMessage {
+  type: 'webrtc.connect';
+  payload: {
+    device_id: string;
+    fps_target?: number;
+    resolution?: string;
+  };
+}
+
+export interface WebRTCDisconnectMsg extends BaseMessage {
+  type: 'webrtc.disconnect';
+  payload: {
+    session_id: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -608,6 +699,10 @@ export type InboundServerMessage =
   | MediaDropUpdateMsg
   | DreamStatusMsg
   | SpatialStateMsg
+  | ProactiveBusEventMsg
+  | AmbientAudioCueMsg
+  | WebRTCMirrorUpdateMsg
+  | WebRTCMirrorTerminatedMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -629,4 +724,8 @@ export type OutboundClientMessage =
   | MediaDropAbortMsg
   | DreamTriggerCycleMsg
   | SpatialToggleOverlayMsg
-  | SpatialDismissAnnotationMsg;
+  | SpatialDismissAnnotationMsg
+  | ProactiveIngestEventMsg
+  | AmbientPlayCueMsg
+  | WebRTCConnectMsg
+  | WebRTCDisconnectMsg;
