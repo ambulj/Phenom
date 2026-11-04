@@ -314,6 +314,8 @@ from services.backend.cognitive_twin import cognitive_twin_manager
 import services.backend.tools.cognitive_twin_tools
 from services.backend.governance import subsystem_governance_watchdog
 import services.backend.tools.subsystem_governance_tools
+from services.backend.mesh_protocol import local_mesh_peer_discovery
+import services.backend.tools.multi_agent_mesh_tools
 from services.backend.sensors.companion_camera import companion_camera_streamer
 from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
@@ -1590,6 +1592,7 @@ def on_guardian_state_change(new_state: str):
             streaming_voice_action_kernel.halt()
             cognitive_twin_manager.halt()
             subsystem_governance_watchdog.halt()
+            local_mesh_peer_discovery.halt()
         except Exception:
             pass
 
@@ -1666,6 +1669,7 @@ def on_guardian_state_change(new_state: str):
             streaming_voice_action_kernel.reset()
             cognitive_twin_manager.reset()
             subsystem_governance_watchdog.reset()
+            local_mesh_peer_discovery.reset()
         except Exception:
             pass
 

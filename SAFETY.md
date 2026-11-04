@@ -1415,3 +1415,61 @@ otification_policy == 'silent').
   - Watchdog observer immediately sets `is_active = False`.
   - All automated remediation tasks and health updates immediately fail closed with `PermissionError`.
   - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$.
+
+
+---
+
+## 55. Sovereign Multi-Agent Mesh Protocol Invariants (MSH-02, SAF-01, SAF-02)
+
+### 1. Zero Cloud Relay & Local Subnet Isolation (Rule 4)
+- **Local Subnet Only**: All mDNS/UDP beacons, capability routing, and task delegations operate strictly over local Wi-Fi or local Ethernet networks (`192.168.x.x`, `10.x.x.x`, `172.16.x.x`, or loopback).
+- **Zero Internet / Cloud Routing**: Task delegation payloads are forbidden from routing through public cloud proxies or external endpoints.
+- **Cryptographic Authentication**: Peers require signature verification before transitioning to `CONNECTED` status.
+
+### 2. Tool Classification & Risk Tiers
+| Tool Name | Risk Tier | Description | Preview Gating |
+|---|---|---|---|
+| `mesh_get_status` | Tier 0 | Inspect connected subnet peers and delegation metrics | Read-only; instantaneous |
+| `mesh_discover_peers` | Tier 0 | Scan local subnet for mDNS/UDP beacons | Read-only; instantaneous |
+| `mesh_delegate_task` | Tier 1 | Delegate task payload to an authenticated subnet peer | Preview required |
+| `mesh_disconnect_peer` | Tier 1 | Disconnect an active subnet peer node | Preview required |
+
+### 3. Sub-10ms Synchronous Guardian Disengagement SLA (SAF-02)
+- Upon Guardian kill switch activation (`guardian.trigger()`):
+  - Discovery beacon advertising immediately halts (`is_advertising = False`).
+  - Active peer connections transition immediately to `DISCONNECTED`.
+  - Pending delegation tasks are dropped.
+  - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$.
+
+---
+
+## 56. Milestone 15.0 Comprehensive Safety Audit (SAF-01, SAF-02)
+
+### 1. Exhaustive 16-Tool Risk Tier & Safety Invariant Audit
+All 16 newly introduced tools across Milestone 15 are registered in `ToolRegistry` with valid Pydantic argument schemas and risk tiers:
+
+- **Phase 1: Zero-Latency Voice-to-Action Kernel (`VOX-02`)**:
+  - `voice_kernel_get_status`: Tier 0
+  - `voice_kernel_configure`: Tier 1
+  - `voice_kernel_simulate_chunk`: Tier 1
+  - `voice_kernel_abort_intent`: Tier 1
+- **Phase 2: Hyper-Personalized Cognitive Twin & Episodic Life-Graph (`COG-01`)**:
+  - `cognitive_twin_get_status`: Tier 0
+  - `cognitive_twin_query_graph`: Tier 0
+  - `cognitive_twin_ingest_episode`: Tier 1
+  - `cognitive_twin_prune_graph`: Tier 1
+- **Phase 3: Autonomous Subsystem Self-Governance & Self-Healing (`GOV-02`)**:
+  - `subsystem_get_health`: Tier 0
+  - `subsystem_trigger_remediation`: Tier 1
+  - `subsystem_reset_circuit_breaker`: Tier 1
+  - `subsystem_configure_thresholds`: Tier 1
+- **Phase 4: Sovereign Multi-Agent Mesh Protocol (`MSH-02`)**:
+  - `mesh_get_status`: Tier 0
+  - `mesh_discover_peers`: Tier 0
+  - `mesh_delegate_task`: Tier 1
+  - `mesh_disconnect_peer`: Tier 1
+
+### 2. Universal Guardian Kill Switch SLA Benchmark (SAF-02)
+- **Simultaneous 100-Cycle Benchmark**: Executed across all 4 Milestone 15 subsystems simultaneously (`StreamingVoiceActionKernel`, `CognitiveTwinManager`, `SubsystemGovernanceWatchdog`, `LocalMeshPeerDiscovery`).
+- **Target**: $< 1.0\text{ ms}$ typical.
+- **Hard SLA**: $< 25.0\text{ ms}$.

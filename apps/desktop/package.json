@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "14.0.0",
-  "description": "Phenom 14.0: Sovereign Omni-Modal Telepresence, Biometric Hardware Enclaves, Deep UIAutomation & Hot-Reloadable Extension Fabric",
+  "version": "15.0.0",
+  "description": "Phenom 15.0: Autonomous Cognitive Operating System (ACOS): Hyper-Personalized Synthetic Intelligence, Zero-Latency Voice-to-Action Kernel, Universal Subsystem Self-Governance & Resilient Multi-Agent Mesh Protocol",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

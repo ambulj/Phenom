@@ -1305,6 +1305,54 @@ export interface SubsystemResetCircuitBreakerMsg extends BaseMessage {
   };
 }
 
+export interface MeshPeerNodePayload {
+  node_id: string;
+  device_name: string;
+  ip_address: string;
+  port: number;
+  capabilities: string[];
+  status: 'discovered' | 'authenticated' | 'connected' | 'disconnected';
+  last_seen: number;
+  signature_verified: boolean;
+}
+
+export interface MultiAgentMeshStatePayload {
+  local_node_id: string;
+  is_advertising: boolean;
+  peers: Record<string, MeshPeerNodePayload>;
+  total_delegated_tasks: number;
+  recent_delegations: Array<{
+    task_id: string;
+    target_node_id: string;
+    capability_required: string;
+    payload: Record<string, any>;
+    status: string;
+    latency_ms: number;
+    timestamp: number;
+  }>;
+}
+
+export interface MeshUpdateMsg extends BaseMessage {
+  type: 'mesh_protocol.update';
+  payload: MultiAgentMeshStatePayload;
+}
+
+export interface MeshDelegateTaskMsg extends BaseMessage {
+  type: 'mesh_protocol.delegate';
+  payload: {
+    target_node_id: string;
+    capability_required: string;
+    payload?: Record<string, any>;
+  };
+}
+
+export interface MeshDisconnectPeerMsg extends BaseMessage {
+  type: 'mesh_protocol.disconnect';
+  payload: {
+    node_id: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -1343,6 +1391,7 @@ export type InboundServerMessage =
   | VoiceKernelUpdateMsg
   | CognitiveTwinUpdateMsg
   | SubsystemGovernanceUpdateMsg
+  | MeshUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1396,4 +1445,6 @@ export type OutboundClientMessage =
   | CognitiveTwinIngestEpisodeMsg
   | CognitiveTwinPruneMsg
   | SubsystemTriggerRemediationMsg
-  | SubsystemResetCircuitBreakerMsg;
+  | SubsystemResetCircuitBreakerMsg
+  | MeshDelegateTaskMsg
+  | MeshDisconnectPeerMsg;
