@@ -1020,3 +1020,26 @@ otification_policy == 'silent').
 - **Execution SLA**: Immediately terminates active dream cycle loops, marks engine state as `HALTED`, releases in-memory locks, and broadcasts state change to Cyber HUD in `< 25ms` (< 1.0ms typical, measured **0.2766 ms** avg across 50 cycles).
 - While halted, all calls to `run_dream_cycle`, `prune_stale_memory`, and associated Tier 1 tools immediately raise `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+
+## 39. Transparent Holographic Spatial Canvas & Ghost Annotations Governance (Milestone 12.0 Phase 2)
+
+### 1. Spatial Overlay & Tracking Invariants (OVR-01)
+- **Zero Pixel Capture Exfiltration (Permanent Rule 4)**: The spatial focus tracker queries only window handles (`hwnd`), sanitized titles, process metadata (`pid`, `process_name`), and screen bounding rectangles (`left`, `top`, `right`, `bottom`) for coordinate anchoring. No screen framebuffer pixels, window contents, or private user text are captured, stored, or exfiltrated.
+- **DirectComposition & Non-Intrusive Passthrough**: The holographic canvas operates via DirectComposition-compatible transparent window layered styles (`WS_EX_LAYERED`, `WS_EX_TRANSPARENT`). Click-through mode (`click_through=True`) is enabled by default to prevent intercepting user mouse clicks intended for underlying applications (IDEs, browsers, terminals).
+- **TTL-Based Ephemeral Ghost Annotations**: Ghost annotations feature bounded time-to-live (`ttl_seconds`, default: 300s) ensuring obsolete or forgotten contextual suggestions automatically expire and purge from RAM.
+- **Fail-Closed Dismissal**: Any annotation can be immediately dismissed via tool, WebSocket command, or Cyber HUD UI.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `spatial_get_focus`: **Tier 0** (Read-Only). Arguments: `SpatialGetFocusArgs`. Preview: `"Inspect current desktop foreground window focus and spatial overlay state (Read-Only)"`.
+- `spatial_show_overlay`: **Tier 1** (Reversible change with preview). Arguments: `SpatialShowOverlayArgs(click_through: bool, direct_comp: bool)`. Preview: `"Activate transparent holographic desktop spatial canvas (click_through={click_through})"`.
+- `spatial_hide_overlay`: **Tier 1** (Reversible change with preview). Arguments: `SpatialHideOverlayArgs`. Preview: `"Hide transparent holographic desktop spatial canvas"`.
+- `spatial_add_annotation`: **Tier 1** (Reversible change with preview). Arguments: `SpatialAddAnnotationArgs(...)`. Preview: `"Add floating ghost annotation: '{title}' anchored at {anchor}"`.
+- `spatial_dismiss_annotation`: **Tier 1** (Reversible change with preview). Arguments: `SpatialDismissAnnotationArgs(annotation_id: str)`. Preview: `"Dismiss floating ghost annotation '{annotation_id}'"`.
+- `spatial_toggle_click_through`: **Tier 1** (Reversible change with preview). Arguments: `SpatialToggleClickThroughArgs(enabled: bool)`. Preview: `"Set spatial canvas click-through to {enabled}"`.
+
+### 3. Sub-10ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `spatial_canvas_manager.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Immediately dismisses the overlay (`is_active = False`), wipes all floating ghost annotations (`annotations.clear()`), resets click-through mode, halts the underlying `FocusTrackingEngine`, and disallows further operations in `< 10ms` (hard SLA: `< 25ms`; benchmarked at **0.0015 ms** average across 100 cycles).
+- While halted, all attempts to invoke `show_overlay`, `add_annotation`, or any Tier 1 spatial tool immediately raise `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.

@@ -519,6 +519,74 @@ export interface DreamTriggerCycleMsg extends BaseMessage {
   };
 }
 
+export interface WindowRectPayload {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+}
+
+export interface ActiveWindowTargetPayload {
+  hwnd: number;
+  title: string;
+  process_name: string;
+  pid: number;
+  bounds: WindowRectPayload;
+  is_minimized: boolean;
+  is_focused: boolean;
+  captured_at: number;
+}
+
+export interface GhostAnnotationPayload {
+  id: string;
+  title: string;
+  content: string;
+  target_window_title?: string | null;
+  anchor_point: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'custom';
+  offset_x: number;
+  offset_y: number;
+  screen_x: number;
+  screen_y: number;
+  opacity: number;
+  click_through: boolean;
+  created_at: number;
+  ttl_seconds?: number | null;
+  is_dismissed: boolean;
+  style_preset: 'cyber_cyan' | 'neon_amber' | 'matrix_green' | 'crimson_alert';
+}
+
+export interface SpatialOverlayStatePayload {
+  is_active: boolean;
+  click_through: boolean;
+  direct_composition_enabled: boolean;
+  active_window?: ActiveWindowTargetPayload | null;
+  annotations: GhostAnnotationPayload[];
+  total_annotations_created: number;
+  last_updated: number;
+}
+
+export interface SpatialStateMsg extends BaseMessage {
+  type: 'spatial_state_update';
+  payload: SpatialOverlayStatePayload;
+}
+
+export interface SpatialToggleOverlayMsg extends BaseMessage {
+  type: 'spatial.toggle_overlay';
+  payload: {
+    is_active: boolean;
+    click_through?: boolean;
+  };
+}
+
+export interface SpatialDismissAnnotationMsg extends BaseMessage {
+  type: 'spatial.dismiss_annotation';
+  payload: {
+    annotation_id: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -539,6 +607,7 @@ export type InboundServerMessage =
   | CameraFramePreviewMsg
   | MediaDropUpdateMsg
   | DreamStatusMsg
+  | SpatialStateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -558,4 +627,6 @@ export type OutboundClientMessage =
   | GoalAbortMsg
   | CameraStreamToggleMsg
   | MediaDropAbortMsg
-  | DreamTriggerCycleMsg;
+  | DreamTriggerCycleMsg
+  | SpatialToggleOverlayMsg
+  | SpatialDismissAnnotationMsg;
