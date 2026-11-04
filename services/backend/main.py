@@ -290,6 +290,7 @@ import services.backend.tools.proactive_feedback_tools
 import services.backend.tools.evolution_tools
 import services.backend.tools.volumetric_tools
 import services.backend.tools.swarm_compute_tools
+import services.backend.tools.kernel_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
@@ -298,6 +299,7 @@ from services.backend.ambient.webrtc_mirror import local_webrtc_mirror
 from services.backend.evolution.adapter_manager import local_adapter_manager
 from services.backend.volumetric.canvas_manager import volumetric_canvas_manager
 from services.backend.swarm_compute.workload_scheduler import swarm_workload_scheduler
+from services.backend.kernel.telemetry_listener import kernel_telemetry_fabric
 from services.backend.sensors.companion_camera import companion_camera_streamer
 from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
@@ -1566,6 +1568,7 @@ def on_guardian_state_change(new_state: str):
             local_adapter_manager.halt()
             volumetric_canvas_manager.halt()
             swarm_workload_scheduler.halt()
+            kernel_telemetry_fabric.halt()
         except Exception:
             pass
 
@@ -1634,6 +1637,7 @@ def on_guardian_state_change(new_state: str):
             local_adapter_manager.reset()
             volumetric_canvas_manager.reset()
             swarm_workload_scheduler.reset()
+            kernel_telemetry_fabric.reset()
         except Exception:
             pass
 
@@ -1661,6 +1665,7 @@ local_webrtc_mirror.register_broadcaster(broadcast_message)
 local_adapter_manager.register_broadcaster(broadcast_message)
 volumetric_canvas_manager.register_broadcaster(broadcast_message)
 swarm_workload_scheduler.register_broadcaster(broadcast_message)
+kernel_telemetry_fabric.register_broadcaster(broadcast_message)
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 

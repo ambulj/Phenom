@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "12.0.0",
-  "description": "Phenom 12.0: Neuro-Symbolic Dream Consolidation, Holographic Spatial Canvas & Proactive Event Fabric",
+  "version": "13.0.0",
+  "description": "Phenom 13.0: Autonomous Neuro-Evolutionary OS, Volumetric Spatial 3D Canvas, Distributed Swarm Compute & Self-Healing Kernel Fabric",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

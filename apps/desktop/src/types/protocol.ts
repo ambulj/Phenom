@@ -907,6 +907,58 @@ export interface SwarmAbortWorkloadMsg extends BaseMessage {
   };
 }
 
+// Milestone 13 Phase 4: Deep OS Telemetry & Self-Healing Kernel Fabric
+export interface SelfHealingPatchPayload {
+  patch_id: string;
+  action_type: string;
+  target_entity: string;
+  proposed_command: string;
+  requires_tier_1_confirmation: boolean;
+  is_applied: boolean;
+  applied_at?: number | null;
+  result_message?: string | null;
+}
+
+export interface KernelCrashEventPayload {
+  event_id: string;
+  timestamp: number;
+  event_type: string;
+  severity: string;
+  process_name: string;
+  pid?: number | null;
+  exception_code?: string | null;
+  stack_trace: string;
+  root_cause_diagnosis: string;
+  remediation_patch?: SelfHealingPatchPayload | null;
+  is_resolved: boolean;
+}
+
+export interface KernelFabricStatePayload {
+  is_monitoring: boolean;
+  total_crashes_diagnosed: number;
+  active_crashes: KernelCrashEventPayload[];
+  pending_patches: SelfHealingPatchPayload[];
+  remediation_success_rate: number;
+  last_scan_timestamp: number;
+}
+
+export interface KernelCrashAlertMsg extends BaseMessage {
+  type: 'kernel_crash_alert';
+  payload: KernelCrashEventPayload;
+}
+
+export interface KernelHealingAppliedMsg extends BaseMessage {
+  type: 'kernel_healing_applied';
+  payload: SelfHealingPatchPayload;
+}
+
+export interface KernelApplyPatchMsg extends BaseMessage {
+  type: 'kernel.apply_patch';
+  payload: {
+    patch_id: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -936,6 +988,8 @@ export type InboundServerMessage =
   | VolumetricStateMsg
   | SwarmClusterStateMsg
   | SwarmWorkloadUpdateMsg
+  | KernelCrashAlertMsg
+  | KernelHealingAppliedMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -971,4 +1025,5 @@ export type OutboundClientMessage =
   | VolumetricIngestGestureMsg
   | SwarmRegisterNodeMsg
   | SwarmOffloadWorkloadMsg
-  | SwarmAbortWorkloadMsg;
+  | SwarmAbortWorkloadMsg
+  | KernelApplyPatchMsg;

@@ -1157,3 +1157,56 @@ otification_policy == 'silent').
 - **Execution SLA**: Immediately aborts all in-flight compute tasks, severs active peer offload sessions, resets cluster scheduling queues, and prevents task dispatching in `< 10ms` (hard SLA: `< 25ms`).
 - While halted, all calls to `swarm_compute_register_node`, `swarm_compute_offload_workload`, `swarm_compute_abort_workload`, and associated Tier 1 tools fail closed with `PermissionError`.
 - Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+
+## 45. Deep OS Telemetry & Autonomous Environment Self-Healing Fabric (Milestone 13.0 Phase 4)
+
+### 1. Kernel Telemetry & Self-Healing Invariants (KER-01, Rules 1, 4, 7, 11)
+- **Deterministic Constrained Healing Only (Permanent Rule 1)**: Self-healing remediation actions are strictly deterministic (`INSTALL_PINNED_PACKAGE`, `PURGE_CORRUPT_CACHE`, `RELOAD_VENV_MANIFEST`, `RESTART_SUBPROCESS_DAEMON`). Arbitrary shell execution or unsupervised script execution is prohibited.
+- **Strict Tier 1 User Confirmation (Rule 1)**: Any environment remediation patch modifies system software state and categorically requires user preview approval (`kernel_apply_healing_patch` is Tier 1).
+- **100% On-Device Local Telemetry (Rule 4)**: All ETW system event capture, crash triage, and venv inspection execute strictly locally in memory. Zero stack traces, process telemetry, or memory dumps are ever transmitted to external cloud endpoints.
+- **Recycle Bin Deletion for Cache Purges (Rule 7)**: All cache clearing and temporary directory resets use `send2trash` to ensure no irrecoverable file deletion occurs.
+- **In-Memory Privacy Scrubbing (Rule 11)**: All process stack traces, terminal exception strings, and exception context frames are automatically sanitized through `PrivacyScrubber` before being logged, persisted, or broadcast over WebSockets to the desktop Cyber HUD.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `kernel_get_telemetry_status`: **Tier 0** (Read-Only). Arguments: `KernelGetTelemetryStatusArgs`. Preview: `"Inspect OS kernel telemetry, crash logs, and self-healing fabric state (Read-Only)"`.
+- `kernel_diagnose_crash`: **Tier 0** (Read-Only). Arguments: `KernelDiagnoseCrashArgs(process_name, exception_code, stack_trace)`. Preview: `"Diagnose process crash in '{process_name}' (code: {exception_code}) [Read-Only]"`.
+- `kernel_scan_venv_discrepancies`: **Tier 0** (Read-Only). Arguments: `KernelScanVenvDiscrepanciesArgs`. Preview: `"Scan Python virtual environment for missing or corrupted dependencies (Read-Only)"`.
+- `kernel_apply_healing_patch`: **Tier 1** (Reversible change with preview). Arguments: `KernelApplyHealingPatchArgs(patch_id)`. Preview: `"Apply self-healing remediation patch '{patch_id}' to repair virtual environment"`.
+
+### 3. Sub-10ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `kernel_telemetry_fabric.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Ceases active ETW listeners, cancels in-flight patch execution routines, and fail-closes tool endpoints in `< 10ms` (hard SLA: `< 25ms`).
+- While halted, all calls to `kernel_apply_healing_patch` and related mutation tools fail closed with `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.
+
+
+## 46. Milestone 13.0 Comprehensive Safety Audit (SAF-01, SAF-02)
+
+### 1. Complete Tool Inventory (18 Tools Across 4 Phases)
+- **Phase 1: Autonomous Self-Improving Engine & Dynamic LoRA Tuning (`EVO-01`)**
+  - `evolution_get_status`: Tier 0
+  - `evolution_distill_instructions`: Tier 1
+  - `evolution_train_adapter`: Tier 1
+  - `evolution_activate_adapter`: Tier 1
+  - `evolution_rollback_adapter`: Tier 1
+- **Phase 2: Multi-Modal Holographic Workspace & Spatial 3D Volumetric Canvas (`VOL-01`)**
+  - `volumetric_get_status`: Tier 0
+  - `volumetric_set_projection`: Tier 1
+  - `volumetric_spawn_node`: Tier 1
+  - `volumetric_clear_canvas`: Tier 1
+  - `volumetric_ingest_gesture`: Tier 1
+- **Phase 3: Cross-Device Distributed Swarm & Offline Mesh P2P Compute Offloading (`SWM-01`)**
+  - `swarm_compute_get_topology`: Tier 0
+  - `swarm_compute_register_node`: Tier 1
+  - `swarm_compute_offload_workload`: Tier 1
+  - `swarm_compute_abort_workload`: Tier 1
+- **Phase 4: Deep OS Telemetry & Autonomous Environment Self-Healing Fabric (`KER-01`)**
+  - `kernel_get_telemetry_status`: Tier 0
+  - `kernel_diagnose_crash`: Tier 0
+  - `kernel_scan_venv_discrepancies`: Tier 0
+  - `kernel_apply_healing_patch`: Tier 1
+
+### 2. Universal Guardian Kill Switch SLA Benchmark (SAF-02)
+- **Universal Synchronous Benchmark**: 100 consecutive synchronous halt cycles executed simultaneously across all 6 Milestone 13 subsystems (`LocalAdapterManager`, `VolumetricCanvasManager`, `VisionGestureTracker`, `SwarmNodeManager`, `SwarmWorkloadScheduler`, `KernelTelemetryFabric`).
+- Hard SLA: `< 25.0 ms`, assert typical `< 1.0 ms`.
