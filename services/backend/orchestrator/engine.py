@@ -12,6 +12,7 @@ import json
 import time
 import os
 import re
+import urllib.parse
 from typing import AsyncGenerator, Dict, Any, Optional, List, Tuple
 import httpx
 from openai import OpenAI
@@ -50,14 +51,22 @@ Available Tools:
 {tool_descriptions}
 
 Core Instructions:
-1. Action Execution: When the user requests ANY action, media control, playback change, volume adjustment, app launch, news briefing, weather, calculation, reminder, or system task — whether phrased in English or Hinglish (e.g. "Spotify pause kar do", "Volume badhao", "News sunao", "Chrome kholo", "Calculate this"):
-   Output ONLY the JSON execution block immediately:
+1. Action Execution: When the user requests ANY action, media control, playback change, volume adjustment, app launch, news briefing, weather, calculation, reminder, or system task:
+   - Output ONLY the JSON execution block immediately:
 ```json
-{{"tool": "<tool_name>", "args": {{<arguments>}}}}
+{{"tool": "open_app", "args": {{"app_name": "brave"}}}}
 ```
-   Do NOT provide conversational preamble, greetings, or meta-explanations. Output the tool JSON immediately.
+   - CRITICAL TOOL INVOCATION RULES:
+     * You MUST ONLY use the EXACT registered tool names listed in "Available Tools" above. NEVER invent new tool names (e.g. NEVER emit `{"tool": "brave"}` or `{"tool": "youtube"}`).
+     * To launch ANY desktop application (Brave, Chrome, Spotify, Notepad, Calculator, VS Code) or open any website/video/music (YouTube search, news), ALWAYS call the `open_app` tool!
+       Example for "open brave": {{"tool": "open_app", "args": {{"app_name": "brave"}}}}
+       Example for "play Baarishein on YouTube": {{"tool": "open_app", "args": {{"app_name": "https://www.youtube.com/results?search_query=Baarishein"}}}}
+       Example for "Spotify kholo": {{"tool": "open_app", "args": {{"app_name": "spotify"}}}}
+   - Do NOT provide conversational preamble, greetings, or meta-explanations before the tool JSON block. Output the JSON execution block immediately.
 
-2. General Conversation: When the user greets you (e.g. "hi", "kya haal hai Bro", "hello") or makes casual conversation, respond in 1-2 natural, punchy Hinglish sentences addressing the user as "Bro". Never mention JSON, tools, or schemas to the user. Never offer canned system status reports unless explicitly asked.
+2. General Conversation & Interruption:
+   - When the user greets you (e.g. "hi", "kya haal hai Bro", "hello") or makes casual conversation, respond in 1-2 natural, punchy Hinglish sentences addressing the user as "Bro". Never mention JSON, tools, or schemas to the user. Never offer canned system status reports unless explicitly asked.
+   - If the user says "shut up", "stop", "chup", "quiet", "shaant", never preach, lecture, or apologize like a generic customer service bot. Be crisp and loyal: "Got it Bro, standing by. Sab shaant."
 
 3. Questions & Knowledge: When the user asks a question, explain directly and concisely in natural Hinglish, keeping technical details in crisp English.
 """
@@ -106,6 +115,63 @@ class Orchestrator:
     def __init__(self):
         pass
 
+    def _resolve_tool_alias(self, tool_name: str, tool_args: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        t_low = (tool_name or "").lower().strip()
+        args = dict(tool_args or {})
+        if "name" in args and "app_name" not in args:
+            args["app_name"] = args.pop("name")
+
+        known_app_aliases = {
+            "brave": "brave",
+            "chrome": "chrome",
+            "google_chrome": "chrome",
+            "google-chrome": "chrome",
+            "edge": "msedge",
+            "msedge": "msedge",
+            "firefox": "firefox",
+            "spotify": "spotify",
+            "notepad": "notepad",
+            "calc": "calc",
+            "calculator": "calc",
+            "code": "code",
+            "vscode": "code",
+            "vs_code": "code",
+            "terminal": "wt",
+            "windows_terminal": "wt",
+            "powershell": "powershell",
+            "explorer": "explorer",
+            "cmd": "cmd",
+        }
+        if t_low in known_app_aliases:
+            target_app = known_app_aliases[t_low]
+            url_or_args = args.get("url") or args.get("args") or args.get("query")
+            return "open_app", {"app_name": target_app, "url_or_args": str(url_or_args) if url_or_args else None}
+
+        if t_low in ("launch_app", "start_app", "run_app", "open_application"):
+            return "open_app", args
+
+        if t_low in ("youtube", "play_youtube", "play_song", "play_music", "song", "video"):
+            query = args.get("play") or args.get("song") or args.get("query") or args.get("search") or args.get("title") or ""
+            query_str = str(query).strip()
+            if query_str and query_str != "<song_name>":
+                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(query_str)}"
+            else:
+                yt_url = "https://www.youtube.com"
+            return "open_app", {"app_name": yt_url}
+
+        if t_low in ("browser", "web", "google"):
+            query = args.get("query") or args.get("search") or args.get("url") or ""
+            query_str = str(query).strip()
+            if query_str.startswith("http://") or query_str.startswith("https://"):
+                return "open_app", {"app_name": query_str}
+            elif query_str:
+                return "open_app", {"app_name": f"https://www.google.com/search?q={urllib.parse.quote(query_str)}"}
+            else:
+                return "open_app", {"app_name": "brave"}
+
+        return tool_name, args
+
+
     def _extract_learned_rule(self, text: str) -> Optional[str]:
         t = text.strip()
         patterns = [
@@ -138,6 +204,23 @@ class Orchestrator:
             yield {"type": "state.change", "payload": {"state": "halted"}}
             yield {"type": "chat.token", "payload": {"token": "Phenom is currently halted by the Guardian kill switch.", "index": 1}}
             yield {"type": "chat.done", "payload": {"total_tokens": 10, "duration_s": 0.1, "tps": 0.0}}
+            return
+
+                # Fast silence / stop / interrupt interception
+        clean_prompt = prompt.lower().strip()
+        if re.search(r"^(shut\s*up|stop|chup|chup\s*ho\s*ja|shaant|quiet|silence|halt|bas|band\s*kar)[\s.!\?]*$", clean_prompt):
+            try:
+                from services.backend.voice.tts import tts_engine
+                tts_engine.stop_speech()
+            except Exception:
+                pass
+            reply = "Got it Bro, standing by. Sab shaant."
+            yield {"type": "state.change", "payload": {"state": "speaking"}}
+            yield {"type": "chat.token", "payload": {"token": reply, "index": 1}}
+            yield {"type": "chat.done", "payload": {"total_tokens": 8, "duration_s": 0.01, "tps": 100.0}}
+            yield {"type": "state.change", "payload": {"state": "idle"}}
+            encrypted_db.add_message(os.urandom(8).hex(), "user", prompt, model="system")
+            encrypted_db.add_message(os.urandom(8).hex(), "assistant", reply, model="system", tokens=8)
             return
 
         yield {"type": "state.change", "payload": {"state": "thinking"}}
@@ -309,6 +392,7 @@ class Orchestrator:
                 tool_name = call_data.get("tool")
                 tool_args = call_data.get("args", {})
                 if tool_name:
+                    tool_name, tool_args = self._resolve_tool_alias(tool_name, tool_args)
                     yield {"type": "state.change", "payload": {"state": "thinking", "detail": f"Executing {tool_name}"}}
                     yield {"type": "chat.token", "payload": {"token": f"\n\n[Phenom Safety Gate: Requesting {tool_name}...]\n", "index": token_index + 1}}
                     

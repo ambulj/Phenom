@@ -1463,6 +1463,9 @@ pending_confirmations: Dict[str, asyncio.Future] = {}
 
 
 async def broadcast_message(msg_dict: Dict[str, Any]):
+    mtype = msg_dict.get("type", "")
+    if mtype not in ("voice.amplitude", "companion.frame"):
+        print(f"[LIVE MONITOR - BROADCAST] type='{mtype}'", flush=True)
 
 
 
@@ -2394,6 +2397,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
             payload = msg.get("payload", {})
+            print(f"[LIVE MONITOR - INBOUND] type='{mtype}' id='{msg_id}' payload_keys={list(payload.keys())}", flush=True)
 
 
 

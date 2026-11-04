@@ -6,10 +6,57 @@ Enables listing, launching, and terminating applications safely.
 import os
 import subprocess
 import psutil
-from typing import List, Dict, Any
+import shutil
+import winreg
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
 from services.backend.safety.guardian import guardian
+
+def resolve_application_path(name: str) -> str:
+    """Resolves an application name to an executable path via Windows Registry App Paths, PATH, or well-known locations."""
+    clean = name.strip()
+    if clean.startswith("http://") or clean.startswith("https://"):
+        return clean
+
+    # 1. Check Windows Registry App Paths (HKCU and HKLM)
+    for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        for subkey in (
+            f"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{clean}.exe",
+            f"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\{clean}"
+        ):
+            try:
+                with winreg.OpenKey(root, subkey) as k:
+                    val, _ = winreg.QueryValueEx(k, "")
+                    if val and os.path.exists(val):
+                        return val
+            except Exception:
+                pass
+
+    # 2. Check system PATH via shutil.which
+    which_path = shutil.which(clean) or shutil.which(f"{clean}.exe")
+    if which_path:
+        return which_path
+
+    # 3. Check well-known install locations on Windows
+    local_app_data = os.environ.get("LOCALAPPDATA", "")
+    program_files = os.environ.get("ProgramFiles", "C:\\Program Files")
+    program_files_x86 = os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)")
+    app_data = os.environ.get("APPDATA", "")
+
+    candidates = [
+        os.path.join(local_app_data, "BraveSoftware", "Brave-Browser", "Application", "brave.exe"),
+        os.path.join(program_files, "BraveSoftware", "Brave-Browser", "Application", "brave.exe"),
+        os.path.join(program_files, "Google", "Chrome", "Application", "chrome.exe"),
+        os.path.join(program_files_x86, "Google", "Chrome", "Application", "chrome.exe"),
+        os.path.join(local_app_data, "Programs", "Microsoft VS Code", "Code.exe"),
+        os.path.join(app_data, "Spotify", "Spotify.exe"),
+    ]
+    for cand in candidates:
+        if cand and os.path.exists(cand) and clean.lower() in os.path.basename(cand).lower():
+            return cand
+
+    return clean
 
 class ListAppsArgs(BaseModel):
     filter_system: bool = Field(default=True, description="Filter out background system processes")
@@ -41,26 +88,42 @@ def list_apps(filter_system: bool = True) -> List[Dict[str, Any]]:
     return apps[:100]
 
 class OpenAppArgs(BaseModel):
-    app_name: str = Field(description="Name or command of application to open (e.g. 'notepad', 'calc', 'spotify')")
+    app_name: str = Field(description="Name or command of application to open, or web URL (e.g. 'brave', 'chrome', 'spotify', 'notepad', 'https://youtube.com')")
+    url_or_args: Optional[str] = Field(default=None, description="Optional URL or arguments to pass to the application")
 
 @registry.register(
     name="open_app",
     tier=1,
-    description="Launch an application",
+    description="Launch an application or open a web URL",
     args_schema=OpenAppArgs,
-    preview_fn=lambda a: f"Launch application: '{a.get('app_name')}'",
+    preview_fn=lambda a: f"Launch application or URL: '{a.get('app_name')}'" + (f" with args '{a.get('url_or_args')}'" if a.get('url_or_args') else ""),
     can_remember_per_folder=False
 )
-def open_app(app_name: str) -> Dict[str, Any]:
-    # Use Windows 'start' via powershell or os.startfile
+def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]:
+    resolved = resolve_application_path(app_name)
     clean_name = app_name.strip()
-    proc = subprocess.Popen(
-        ["powershell", "-Command", f"Start-Process '{clean_name}'"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    
+    # Launch URL directly or executable with arguments
+    if resolved.startswith("http://") or resolved.startswith("https://"):
+        proc = subprocess.Popen(
+            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}'"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+    elif url_or_args:
+        proc = subprocess.Popen(
+            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}' -ArgumentList '{url_or_args}'"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+    else:
+        proc = subprocess.Popen(
+            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}'"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
     guardian.track_pid(proc.pid)
-    return {"app_name": clean_name, "launched": True, "launcher_pid": proc.pid}
+    return {"app_name": clean_name, "resolved_path": resolved, "launched": True, "launcher_pid": proc.pid}
 
 class CloseAppArgs(BaseModel):
     app_name: str = Field(description="Name of the process to terminate (e.g. 'notepad.exe', 'calc.exe')")
