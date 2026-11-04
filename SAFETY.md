@@ -1275,3 +1275,60 @@ otification_policy == 'silent').
 - **Execution SLA**: Instantly aborts active workflow execution, disengages background pattern invocations, and marks engine state as `HALTED` in $< 10.0\text{ms}$ (< 25ms hard SLA).
 - While halted, all calls to `uia_invoke_element`, `uia_set_value`, and `uia_execute_workflow` fail closed with `PermissionError`.
 - Clean resumption via `resume()` / `reset()` when Guardian transitions back to `idle`.
+
+
+## 50. Self-Synthesizing Extension Fabric Invariants (Milestone 14.0 Phase 4)
+
+### 1. AST Static Inspection & Security Invariants (EXT-01)
+- **Mandatory Pre-Execution AST Analysis**: Synthesized Python source code is parsed with `ast.parse` and audited by `ASTSafetyAuditor` prior to in-process compilation.
+- **Prohibited Constructs**:
+  - Dangerous builtins: `eval`, `exec`, `globals`, `locals`, `__import__`, `breakpoint`, `compile`, raw `open`.
+  - Network & system modules: `subprocess`, `socket`, `ctypes`, `winreg`, `requests`, `urllib`, `http`, `pty`.
+  - Permanent deletions: `.remove()`, `.unlink()`, `.rmdir()`, `.rmtree()` (Rule 7).
+  - Financial payment terms: `pay_now`, `buy_now`, `place_order`, `complete_purchase`, `credit_card`, `stripe`, `paypal` (Rule 8).
+  - Reflection primitives: `__subclasses__`, `__bases__`, `__mro__`, `__globals__` (Rule 1).
+- **Restricted In-Process Compilation**: Validated code executes in an isolated namespace containing safe primitive builtins only.
+- **Clean ToolRegistry Lifecycle**: Synthesized extensions hot-register into `ToolRegistry` and are cleanly pruned on unload without lingering references or ghost tools.
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `extension_get_status`: **Tier 0** (Read-Only). Arguments: `ExtensionGetStatusArgs`. Preview: `"Inspect dynamic extension state and loaded micro-tools (Read-Only)"`.
+- `extension_synthesize`: **Tier 1** (Reversible change with preview). Arguments: `ExtensionSynthesizeArgs(name: str, description: str, python_code: str, risk_tier: int)`. Preview: `"Synthesize and hot-load Python micro-tool '{name}' (Tier {risk_tier}): {description}"`.
+- `extension_hot_reload`: **Tier 1** (Reversible change with preview). Arguments: `ExtensionHotReloadArgs(extension_id: str)`. Preview: `"Recompile and hot-reload dynamic extension '{extension_id}' in-process"`.
+- `extension_unload`: **Tier 1** (Reversible change with preview). Arguments: `ExtensionUnloadArgs(extension_id: str)`. Preview: `"Unload dynamic extension '{extension_id}' and unregister tool from ToolRegistry"`.
+
+### 3. Sub-10ms Synchronous Guardian Lockdown SLA (SAF-02)
+- `dynamic_extension_manager.halt()` is synchronously called from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Instantly purges all dynamically loaded micro-tools from `ToolRegistry`, sets their statuses to `UNLOADED`, and blocks dynamic compilation in $< 10.0\text{ms}$ (< 25ms hard SLA).
+- While halted, all calls to `extension_synthesize`, `extension_hot_reload`, and `extension_unload` fail closed with `PermissionError`.
+- Clean resumption via `resume()` / `reset()` when Guardian transitions back to `idle`.
+
+
+## 51. Milestone 14.0 Comprehensive Safety Audit (SAF-01, SAF-02)
+
+### 1. Complete Tool Inventory (19 Tools Across 4 Phases)
+- **Phase 1: Omni-Modal Spatial Telepresence & Zero-Copy Audio/Video Fabric (`AVP-01`)**
+  - `telepresence_get_status`: Tier 0
+  - `telepresence_set_microphone`: Tier 1
+  - `telepresence_set_camera`: Tier 1
+  - `telepresence_ingest_frame`: Tier 1
+- **Phase 2: Biometric Enclave Partitioning & TPM 2.0 Hardware Isolation (`SEC-01`)**
+  - `enclave_get_status`: Tier 0
+  - `enclave_unlock_partition`: Tier 1
+  - `enclave_lock_partition`: Tier 1
+  - `enclave_lease_credential`: Tier 1
+  - `enclave_revoke_lease`: Tier 1
+- **Phase 3: Autonomous Deep UIAutomation & Self-Healing Desktop Workflows (`RPA-01`)**
+  - `uia_get_tree`: Tier 0
+  - `uia_find_element`: Tier 0
+  - `uia_invoke_element`: Tier 1
+  - `uia_set_value`: Tier 1
+  - `uia_execute_workflow`: Tier 1
+- **Phase 4: Self-Synthesizing Extension Fabric (`EXT-01`)**
+  - `extension_get_status`: Tier 0
+  - `extension_synthesize`: Tier 1
+  - `extension_hot_reload`: Tier 1
+  - `extension_unload`: Tier 1
+
+### 2. Universal Guardian Kill Switch SLA Benchmark (SAF-02)
+- **Universal Synchronous Benchmark**: 100 consecutive synchronous halt cycles executed simultaneously across all Milestone 14 subsystems (`StreamingAVPipeline`, `AmbientPerceptionManager`, `BiometricEnclaveManager`, `EphemeralCredentialLeaser`, `DeepUIAutomationEngine`, `DynamicExtensionManager`).
+- Hard SLA: $< 25.0\text{ ms}$, assert typical $< 1.0\text{ ms}$.

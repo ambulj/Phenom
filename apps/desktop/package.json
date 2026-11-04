@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "13.0.0",
-  "description": "Phenom 13.0: Autonomous Neuro-Evolutionary OS, Volumetric Spatial 3D Canvas, Distributed Swarm Compute & Self-Healing Kernel Fabric",
+  "version": "14.0.0",
+  "description": "Phenom 14.0: Sovereign Omni-Modal Telepresence, Biometric Hardware Enclaves, Deep UIAutomation & Hot-Reloadable Extension Fabric",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

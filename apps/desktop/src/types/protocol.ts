@@ -1131,6 +1131,54 @@ export interface UIAExecuteWorkflowMsg extends BaseMessage {
   };
 }
 
+// Milestone 14 Phase 4: Self-Synthesizing Extension Fabric
+export interface ExtensionMetadataPayload {
+  extension_id: string;
+  name: string;
+  description: string;
+  risk_tier: number;
+  code: string;
+  ast_verified: boolean;
+  status: 'DRAFT' | 'VALIDATED' | 'LOADED' | 'FAILED' | 'QUARANTINED' | 'UNLOADED';
+  loaded_at?: number | null;
+  invocation_count: number;
+}
+
+export interface DynamicExtensionStatePayload {
+  loaded_extensions_count: number;
+  extensions: Record<string, ExtensionMetadataPayload>;
+  is_active: boolean;
+}
+
+export interface ExtensionUpdateMsg extends BaseMessage {
+  type: 'extension.update';
+  payload: DynamicExtensionStatePayload;
+}
+
+export interface ExtensionSynthesizeMsg extends BaseMessage {
+  type: 'extension.synthesize';
+  payload: {
+    name: string;
+    description: string;
+    python_code: string;
+    risk_tier?: number;
+  };
+}
+
+export interface ExtensionHotReloadMsg extends BaseMessage {
+  type: 'extension.hot_reload';
+  payload: {
+    extension_id: string;
+  };
+}
+
+export interface ExtensionUnloadMsg extends BaseMessage {
+  type: 'extension.unload';
+  payload: {
+    extension_id: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -1165,6 +1213,7 @@ export type InboundServerMessage =
   | TelepresenceUpdateMsg
   | EnclaveUpdateMsg
   | UIAUpdateMsg
+  | ExtensionUpdateMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -1209,4 +1258,7 @@ export type OutboundClientMessage =
   | EnclaveLeaseMsg
   | UIAInvokeMsg
   | UIASetValueMsg
-  | UIAExecuteWorkflowMsg;
+  | UIAExecuteWorkflowMsg
+  | ExtensionSynthesizeMsg
+  | ExtensionHotReloadMsg
+  | ExtensionUnloadMsg;
