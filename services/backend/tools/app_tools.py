@@ -52,9 +52,20 @@ def resolve_application_path(name: str) -> str:
         os.path.join(local_app_data, "Programs", "Microsoft VS Code", "Code.exe"),
         os.path.join(app_data, "Spotify", "Spotify.exe"),
     ]
+    clow = clean.lower()
     for cand in candidates:
-        if cand and os.path.exists(cand) and clean.lower() in os.path.basename(cand).lower():
-            return cand
+        if cand and os.path.exists(cand):
+            base = os.path.basename(cand).lower()
+            if clow in base:
+                return cand
+            if 'brave' in clow and 'brave' in base:
+                return cand
+            if 'chrome' in clow and 'chrome' in base:
+                return cand
+            if ('code' in clow or 'vscode' in clow) and 'code' in base:
+                return cand
+            if 'spotify' in clow and 'spotify' in base:
+                return cand
 
     return clean
 
@@ -103,19 +114,69 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
     resolved = resolve_application_path(app_name)
     clean_name = app_name.strip()
 
-    # Browser window guarantee: if opening a browser directly without args, ensure --new-window
-    if clean_name.lower() in ("brave", "chrome", "msedge", "firefox") and not url_or_args:
-        url_or_args = "--new-window"
+    target = resolved
+    args_str = ""
 
-    # Explicitly target user interactive desktop (WinSta0\Default) so windows appear on monitor
-    si = subprocess.STARTUPINFO()
-    si.lpDesktop = "WinSta0\\Default"
+    # Check if target is a web URL
+    is_url = clean_name.startswith("http://") or clean_name.startswith("https://") or resolved.startswith("http://") or resolved.startswith("https://")
 
-    try:
-        cmd_args = ["cmd.exe", "/c", "start", "", resolved]
+    if is_url:
+        target_url = resolved if (resolved.startswith("http://") or resolved.startswith("https://")) else clean_name
+        brave_cand = resolve_application_path("brave")
+        chrome_cand = resolve_application_path("chrome")
+        if brave_cand and os.path.exists(brave_cand) and "brave.exe" in brave_cand.lower():
+            target = brave_cand
+            args_str = f'--new-window "{target_url}"'
+        elif chrome_cand and os.path.exists(chrome_cand) and "chrome.exe" in chrome_cand.lower():
+            target = chrome_cand
+            args_str = f'--new-window "{target_url}"'
+        else:
+            target = target_url
+            args_str = ""
+    else:
+        # Browser window guarantee: if opening a browser directly, ensure --new-window
+        if any(b in clean_name.lower() or b in os.path.basename(resolved).lower() for b in ("brave", "chrome", "msedge", "firefox")):
+            args_str = "--new-window"
         if url_or_args:
-            cmd_args.append(str(url_or_args))
-        proc = subprocess.Popen(cmd_args, startupinfo=si)
+            args_str = f"{args_str} {url_or_args}".strip()
+
+    # Launch onto user interactive desktop (WinSta0\Default) via COM Shell.Application (explorer.exe host)
+    launched = False
+    try:
+        import win32com.client
+        import pythoncom
+        pythoncom.CoInitialize()
+        try:
+            shell = win32com.client.Dispatch("Shell.Application")
+            shell.ShellExecute(target, args_str, "", "open", 1)
+            launched = True
+        finally:
+            pythoncom.CoUninitialize()
+    except Exception:
+        pass
+
+    if not launched:
+        try:
+            import ctypes
+            u32 = ctypes.windll.user32
+            hdesk = u32.OpenDesktopW("Default", 0, False, 0x01FF)
+            if hdesk:
+                u32.SetThreadDesktop(hdesk)
+            shell32 = ctypes.windll.shell32
+            ret = shell32.ShellExecuteW(None, "open", target, args_str if args_str else None, None, 1)
+            if ret > 32:
+                launched = True
+        except Exception:
+            pass
+
+    if not launched:
+        # Subprocess fallback targeting Default desktop
+        si = subprocess.STARTUPINFO()
+        si.lpDesktop = "WinSta0\Default"
+        cmd = [target]
+        if args_str:
+            cmd.extend(args_str.split())
+        proc = subprocess.Popen(cmd, startupinfo=si)
         guardian.track_pid(proc.pid)
         return {
             "app_name": clean_name,
@@ -124,15 +185,14 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
             "launcher_pid": proc.pid,
             "message": f"Successfully launched {clean_name}"
         }
-    except Exception as e:
-        proc = subprocess.Popen([resolved], startupinfo=si)
-        guardian.track_pid(proc.pid)
-        return {
-            "app_name": clean_name,
-            "resolved_path": resolved,
-            "launched": True,
-            "launcher_pid": proc.pid
-        }
+
+    return {
+        "app_name": clean_name,
+        "resolved_path": resolved,
+        "launched": True,
+        "message": f"Successfully launched {clean_name}"
+    }
+
 
 class CloseAppArgs(BaseModel):
     app_name: str = Field(description="Name of the process to terminate (e.g. 'notepad.exe', 'calc.exe')")
