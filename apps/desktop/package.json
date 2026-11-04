@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "10.0.0",
-  "description": "Phenom 10.0: Autonomous Multi-Agent Swarms & Omnipresent Sovereign Mesh",
+  "version": "11.0.0",
+  "description": "Phenom 11.0: Sovereign Neural OS, Dynamic Micro-Tool Synthesis & Multi-Device Sensory Fabric",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
