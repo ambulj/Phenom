@@ -102,25 +102,30 @@ class OpenAppArgs(BaseModel):
 def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]:
     resolved = resolve_application_path(app_name)
     clean_name = app_name.strip()
-    
-    # Launch using native Windows ShellExecute (os.startfile)
+
+    # Browser window guarantee: if opening a browser directly without args, ensure --new-window
+    if clean_name.lower() in ("brave", "chrome", "msedge", "firefox") and not url_or_args:
+        url_or_args = "--new-window"
+
+    # Explicitly target user interactive desktop (WinSta0\Default) so windows appear on monitor
+    si = subprocess.STARTUPINFO()
+    si.lpDesktop = "WinSta0\\Default"
+
     try:
-        if resolved.startswith("http://") or resolved.startswith("https://"):
-            os.startfile(resolved)
-        elif url_or_args:
-            os.startfile(resolved, "open", str(url_or_args))
-        else:
-            os.startfile(resolved)
+        cmd_args = ["cmd.exe", "/c", "start", "", resolved]
+        if url_or_args:
+            cmd_args.append(str(url_or_args))
+        proc = subprocess.Popen(cmd_args, startupinfo=si)
+        guardian.track_pid(proc.pid)
         return {
             "app_name": clean_name,
             "resolved_path": resolved,
             "launched": True,
+            "launcher_pid": proc.pid,
             "message": f"Successfully launched {clean_name}"
         }
     except Exception as e:
-        proc = subprocess.Popen(
-            ["powershell", "-NoProfile", "-Command", f"Start-Process '{resolved}'"]
-        )
+        proc = subprocess.Popen([resolved], startupinfo=si)
         guardian.track_pid(proc.pid)
         return {
             "app_name": clean_name,
