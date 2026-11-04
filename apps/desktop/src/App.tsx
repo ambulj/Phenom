@@ -40,6 +40,7 @@ import { StreamingConsole, ConsoleLine } from './components/StreamingConsole';
 import { HumanTakeoverBanner } from './components/CyberHUD/HumanTakeoverBanner';
 import { MediaPlayerHUD } from './components/CyberHUD/MediaPlayerHUD';
 import { WindowTilerHUD } from './components/CyberHUD/WindowTilerHUD';
+import { ActiveModelIndicator } from './components/CyberHUD/ActiveModelIndicator';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -150,6 +151,7 @@ export const App: React.FC = () => {
   const [mediaExternalEvent, setMediaExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showWindowTiler, setShowWindowTiler] = useState<boolean>(false);
   const [windowTilerExternalEvent, setWindowTilerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [modelExternalEvent, setModelExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -330,6 +332,8 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('WINDOW_') || mtype.startsWith('MACRO_')) {
             setWindowTilerExternalEvent({ type: mtype, payload });
             setShowWindowTiler(true);
+          } else if (mtype === 'MODEL_ROUTED' || mtype === 'MODEL_ROUTING_OVERRIDE_CHANGED') {
+            setModelExternalEvent({ type: mtype, payload });
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -1040,6 +1044,18 @@ export const App: React.FC = () => {
         workspaceState={workspaceState}
 
       />
+
+      {/* Task-Aware Dynamic Model Indicator (MOD-01) */}
+      <div style={{ position: 'absolute', top: 12, right: 300, zIndex: 110 }}>
+        <ActiveModelIndicator
+          externalEvent={modelExternalEvent}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      </div>
 
 
 

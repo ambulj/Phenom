@@ -252,7 +252,23 @@ class Orchestrator:
         if p in ("list window layouts", "show window layouts", "layouts dikhao"):
             return "list_window_layouts", {}, "Fetching window layout presets Bro!"
 
-        # 3. Media Playback Intent (YouTube / Spotify in Embedded Webview)
+        # 3. Dynamic Model Routing Control Intents (MOD-01)
+        if p in ("force coder model", "switch to coder model", "coder model", "use coder model", "switch to qwen coder"):
+            return "set_model_routing_override", {"model_name": "qwen2.5-coder:14b"}, "Locking local model to Qwen 2.5 Coder 14B Bro!"
+
+        if p in ("force reasoning model", "force reasoner", "switch to reasoning model", "use llama reasoning", "reasoning model"):
+            return "set_model_routing_override", {"model_name": "llama3:8b-instruct-q8_0"}, "Locking local model to Llama 3 8B Reasoner Bro!"
+
+        if p in ("force fast model", "force chat model", "switch to fast model", "fast model", "chat model"):
+            return "set_model_routing_override", {"model_name": "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"}, "Locking local model to Qwen 3.5 4B Fast Chat Bro!"
+
+        if p in ("auto model routing", "reset model routing", "reset model", "auto model", "model auto"):
+            return "set_model_routing_override", {"model_name": None}, "Resetting to automatic task-aware multi-model dynamic routing Bro!"
+
+        if p in ("active model", "which model", "current model", "model status", "routing status"):
+            return "get_active_model_routing", {}, "Checking active model routing and VRAM allocation Bro!"
+
+        # 4. Media Playback Intent (YouTube / Spotify in Embedded Webview)
         is_spotify = "spotify" in p
         is_yt_keyword = any(k in p for k in ("youtube", "yt"))
         is_play_keyword = any(k in p for k in ("play", "paly", "chalao", "bajao", "bajaao", "chala do", "listen to"))

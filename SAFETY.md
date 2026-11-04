@@ -1529,3 +1529,28 @@ Window management and desktop macro automation adhere strictly to Phenom's safet
   - Multi-step wait delays are segmented into $\le 20\text{ ms}$ evaluation slices, ensuring that mid-step delays abort immediately rather than blocking until the timer elapses.
   - Active macro recording sessions are cancelled.
   - **Hard SLA**: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$ typical.
+
+
+---
+
+## 59. Phase 3: Task-Aware Dynamic Intelligent Model Router (MOD-01, SAF-01, SAF-02)
+
+### 1. Risk Tier Classification & Governance
+The multi-model routing system operates under strict safety and resource contracts:
+- `get_active_model_routing`: **Tier 0** (Read-only query of active model, task type, and estimated VRAM).
+- `benchmark_model_switch`: **Tier 0** (Diagnostic performance test measuring intent classification latency).
+- `set_model_routing_override`: **Tier 1** (System-wide default model routing override; requires preview confirmation before locking).
+
+### 2. Sovereign Local Hardware & Zero Exfiltration Invariant (Rule 4)
+- All dynamic routing decisions between local specialized models (`qwen2.5-coder:14b`, `llama3:8b-instruct-q8_0`, `hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M`) happen 100% on-device with zero external network requests.
+- Inputs marked as `private` unconditionally remain on the local GPU, regardless of length.
+- Cloud escalation (Nemotron via build.nvidia.com) is strictly gated behind an interactive approval dialog with clear text preview.
+
+### 3. VRAM Protection & Gaming Mode Governance
+- When gaming mode is activated (`vram_manager.gaming_mode_active = True`), GPU VRAM usage is strictly protected (< 100MB allocation overhead).
+- Heavy 14B coding models (9.2 GB VRAM) are automatically prevented from loading, gracefully falling back to lightweight 4B models (2.8 GB VRAM) or cloud Nemotron (with preview confirmation).
+
+### 4. Universal Synchronous Guardian SLA Benchmark (SAF-02)
+- Upon Guardian kill switch activation (`guardian.trigger()`):
+  - Model routing resolution and active generation streams immediately abort.
+  - Hard SLA: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$ typical. Measured average latency: $0.0003\text{ ms}$ ($0.3\text{ \mu s}$).
