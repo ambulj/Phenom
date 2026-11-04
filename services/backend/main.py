@@ -248,6 +248,8 @@ import services.backend.tools.integration_tools
 
 
 import services.backend.tools.media_tools
+import services.backend.tools.window_tiler
+import services.backend.tools.macro_recorder
 
 
 

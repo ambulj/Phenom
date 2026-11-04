@@ -187,6 +187,14 @@ class Orchestrator:
                 return "play_media", {"query": song_str, "platform": "youtube"}
             return "open_app", {"app_name": "https://www.youtube.com"}
 
+        if t_low in ("tile_windows", "window_layout", "arrange_windows", "tile_layout"):
+            layout = args.get("layout") or args.get("layout_name") or args.get("preset") or "dev_mode"
+            return "apply_window_layout", {"layout_name": str(layout)}
+
+        if t_low in ("run_macro", "play_macro", "execute_macro"):
+            name = args.get("name") or args.get("macro_name") or args.get("alias") or ""
+            return "replay_macro", {"name": str(name)}
+
         return tool_name, args
 
     def _detect_direct_intent(self, prompt: str) -> Optional[Tuple[str, Dict[str, Any], str]]:
@@ -209,7 +217,42 @@ class Orchestrator:
             vol_val = max(0, min(100, int(m_vol.group(1))))
             return "set_volume", {"level": vol_val}, f"Setting volume to {vol_val}% Bro!"
 
-        # 1. Media Playback Intent (YouTube / Spotify in Embedded Webview)
+        # 1. Window Tiling & Workspace Staging Intents
+        if re.search(r"^(?:ok\s+|please\s+)?(?:arrange|layout|tile|set(?:up)?)\s+(?:workspace\s+)?dev(?:eloper)?(?:\s*mode)?(?:\s+windows?)?$", p) or p in ("dev mode windows", "dev layout", "arrange dev"):
+            return "apply_window_layout", {"layout_name": "dev_mode"}, "All set Bro! Arranging workspace in Developer Mode."
+
+        if re.search(r"^(?:ok\s+|please\s+)?(?:arrange|layout|tile|set(?:up)?)\s+(?:workspace\s+)?research(?:\s*mode)?(?:\s+windows?)?$", p) or p in ("research layout", "research mode windows", "study layout"):
+            return "apply_window_layout", {"layout_name": "research_mode"}, "Focus mode engaged Bro! Arranging Research Mode."
+
+        if re.search(r"^(?:ok\s+|please\s+)?(?:arrange|layout|tile|set(?:up)?)\s+(?:workspace\s+)?chill(?:\s*mode)?(?:\s+windows?)?$", p) or p in ("chill layout", "chill mode windows"):
+            return "apply_window_layout", {"layout_name": "chill_mode"}, "Vibe mode activated Bro! Centering media in Chill Mode."
+
+        m_snap = re.search(r"^(?:ok\s+|please\s+)?snap(?:\s+active\s+window|\s+this\s+window)?\s+(?:to\s+)?(left|right|top|bottom|center|maximize)$", p)
+        if m_snap:
+            zone = m_snap.group(1).lower()
+            return "snap_window", {"snap_zone": zone}, f"Snapping active window to {zone} Bro!"
+
+        # 2. Desktop Macro Control Intents
+        m_run_macro = re.search(r"^(?:ok\s+|please\s+)?(?:run|replay|execute)\s+macro\s+([a-zA-Z0-9_\-\s]+)$", p)
+        if m_run_macro:
+            m_name = m_run_macro.group(1).strip().replace(" ", "_")
+            return "replay_macro", {"name": m_name}, f"Replaying macro '{m_name}' Bro!"
+
+        m_rec_macro = re.search(r"^(?:ok\s+|please\s+)?(?:start\s+recording|record)\s+macro\s+([a-zA-Z0-9_\-\s]+)$", p)
+        if m_rec_macro:
+            m_name = m_rec_macro.group(1).strip().replace(" ", "_")
+            return "start_macro_recording", {"name": m_name}, f"Starting recording for macro '{m_name}' Bro!"
+
+        if p in ("stop recording macro", "stop macro recording", "stop recording", "recording roko", "stop macro"):
+            return "stop_macro_recording", {}, "Stopping macro recording and saving steps Bro!"
+
+        if p in ("list macros", "show macros", "my macros", "macros dikhao"):
+            return "list_macros", {}, "Fetching saved desktop macros Bro!"
+
+        if p in ("list window layouts", "show window layouts", "layouts dikhao"):
+            return "list_window_layouts", {}, "Fetching window layout presets Bro!"
+
+        # 3. Media Playback Intent (YouTube / Spotify in Embedded Webview)
         is_spotify = "spotify" in p
         is_yt_keyword = any(k in p for k in ("youtube", "yt"))
         is_play_keyword = any(k in p for k in ("play", "paly", "chalao", "bajao", "bajaao", "chala do", "listen to"))

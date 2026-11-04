@@ -1496,3 +1496,36 @@ The media suite tools are classified under strict governance rules in `ToolRegis
   - `MEDIA_MUTE` WebSocket event is broadcast to Electron main process.
   - Electron main process synchronously iterates all active guest `webContents` and invokes `wc.setAudioMuted(true)`.
   - **Measured SLA**: 50 cycles: average $= 0.0108\text{ ms}$, maximum $= 0.1898\text{ ms}$ (Hard SLA $< 10.0\text{ ms}$).
+
+
+---
+
+## 58. Phase 2: Smart Window Tiler & Interactive Macro Recorder (WIN-01, MAC-01, SAF-01, SAF-02)
+
+### 1. Risk Tier Classification & Desktop Safety Governance
+Window management and desktop macro automation adhere strictly to Phenom's safety contracts in `ToolRegistry`:
+
+#### Window Tiler Tools (`WIN-01`):
+- `apply_window_layout`: **Tier 1** (Modifies active top-level application window coordinates and dimensions; requires preview confirmation).
+- `snap_window`: **Tier 1** (Repositions target or active window into specified screen zone; requires preview confirmation).
+- `save_window_layout`: **Tier 0** (Captures geometry snapshot into in-memory/metadata store; non-destructive read).
+- `list_window_layouts`: **Tier 0** (Read-only query of available layout presets and saved snapshots).
+
+#### Desktop Macro Tools (`MAC-01`):
+- `start_macro_recording`: **Tier 1** (Engages global action and keystroke capture buffer; requires preview confirmation).
+- `replay_macro`: **Tier 1** (Sequentially executes mouse clicks, keystrokes, and hotkeys; requires preview confirmation).
+- `delete_macro`: **Tier 1** (Permanently removes macro from encrypted storage; requires preview confirmation).
+- `stop_macro_recording`: **Tier 0** (Finalizes active recording session and commits steps to encrypted database).
+- `save_macro`: **Tier 0** (Stores user-provided workflow definition directly into encrypted database).
+- `list_macros`: **Tier 0** (Read-only query of saved macros and step counts).
+
+### 2. Encrypted Storage Invariants (Rule 11)
+- Macro step sequences and window geometry snapshots are stored in encrypted SQLite/SQLCipher databases with WAL mode enabled.
+- Password fields and sensitive credential entries are strictly forbidden from macro step recordings per `SAFETY.md` Rule 8 and Rule 11.
+
+### 3. Universal Synchronous Guardian Kill Switch Macro Abort SLA (SAF-02)
+- Upon Guardian kill switch activation (`guardian.trigger()`):
+  - Every step in `replay_macro` checks `if guardian.is_halted:` synchronously before dispatching mouse or keyboard events.
+  - Multi-step wait delays are segmented into $\le 20\text{ ms}$ evaluation slices, ensuring that mid-step delays abort immediately rather than blocking until the timer elapses.
+  - Active macro recording sessions are cancelled.
+  - **Hard SLA**: $< 25.0\text{ ms}$; target $< 1.0\text{ ms}$ typical.

@@ -39,6 +39,7 @@ import { StreamingConsole, ConsoleLine } from './components/StreamingConsole';
 
 import { HumanTakeoverBanner } from './components/CyberHUD/HumanTakeoverBanner';
 import { MediaPlayerHUD } from './components/CyberHUD/MediaPlayerHUD';
+import { WindowTilerHUD } from './components/CyberHUD/WindowTilerHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -147,6 +148,8 @@ export const App: React.FC = () => {
   const [showMiniOverlay, setShowMiniOverlay] = useState<boolean>(true);
   const [showMediaPlayer, setShowMediaPlayer] = useState<boolean>(false);
   const [mediaExternalEvent, setMediaExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showWindowTiler, setShowWindowTiler] = useState<boolean>(false);
+  const [windowTilerExternalEvent, setWindowTilerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -324,6 +327,9 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('media.') || mtype.startsWith('MEDIA_')) {
             setMediaExternalEvent({ type: mtype, payload });
             setShowMediaPlayer(true);
+          } else if (mtype.startsWith('WINDOW_') || mtype.startsWith('MACRO_')) {
+            setWindowTilerExternalEvent({ type: mtype, payload });
+            setShowWindowTiler(true);
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -972,6 +978,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowMediaPlayer((prev) => !prev)
     },
     {
+      id: 'cmd-toggle-window-tiler',
+      title: 'Toggle Window Tiler & Macro Dashboard',
+      subtitle: 'Open native Win32 window layout manager and macro recorder HUD',
+      category: 'Assistant',
+      onExecute: () => setShowWindowTiler((prev) => !prev)
+    },
+    {
       id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
@@ -1090,6 +1103,21 @@ export const App: React.FC = () => {
           <MediaPlayerHUD
             externalEvent={mediaExternalEvent}
             onClose={() => setShowMediaPlayer(false)}
+          />
+        </div>
+      )}
+
+      {/* Smart Window Tiler & Desktop Macro Dashboard (WIN-01, MAC-01) */}
+      {showWindowTiler && (
+        <div style={{ position: 'absolute', bottom: 90, left: 24, zIndex: 120 }}>
+          <WindowTilerHUD
+            externalEvent={windowTilerExternalEvent}
+            onClose={() => setShowWindowTiler(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
           />
         </div>
       )}
