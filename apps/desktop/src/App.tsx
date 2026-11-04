@@ -38,6 +38,7 @@ import { HUDCard, HUDCardProps } from './components/HUDCard';
 import { StreamingConsole, ConsoleLine } from './components/StreamingConsole';
 
 import { HumanTakeoverBanner } from './components/CyberHUD/HumanTakeoverBanner';
+import { MediaPlayerHUD } from './components/CyberHUD/MediaPlayerHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -144,6 +145,8 @@ export const App: React.FC = () => {
   const [watchlistItems, setWatchlistItems] = useState<any[]>([]);
 
   const [showMiniOverlay, setShowMiniOverlay] = useState<boolean>(true);
+  const [showMediaPlayer, setShowMediaPlayer] = useState<boolean>(false);
+  const [mediaExternalEvent, setMediaExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -318,6 +321,9 @@ export const App: React.FC = () => {
             setTimeout(() => {
               setAmbientAlerts((prev) => prev.filter((a) => a.id !== alertItem.id));
             }, autoDismiss);
+          } else if (mtype.startsWith('media.') || mtype.startsWith('MEDIA_')) {
+            setMediaExternalEvent({ type: mtype, payload });
+            setShowMediaPlayer(true);
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -960,6 +966,13 @@ export const App: React.FC = () => {
 
       id: 'cmd-persona-silent',
 
+      title: 'Toggle Cyber HUD Media Player',
+      subtitle: 'Open or dock YouTube and Spotify embedded player',
+      category: 'Assistant',
+      onExecute: () => setShowMediaPlayer((prev) => !prev)
+    },
+    {
+      id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
       subtitle: 'Visual HUD diffs and code summaries only',
@@ -1070,6 +1083,16 @@ export const App: React.FC = () => {
       />
 
 
+
+      {/* Embedded Cyber HUD Media Player (MED-01) */}
+      {showMediaPlayer && (
+        <div style={{ position: 'absolute', bottom: 90, right: 24, zIndex: 120 }}>
+          <MediaPlayerHUD
+            externalEvent={mediaExternalEvent}
+            onClose={() => setShowMediaPlayer(false)}
+          />
+        </div>
+      )}
 
       {/* Mini Overlay Widget (Phase 5) */}
 

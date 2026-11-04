@@ -50,5 +50,22 @@ contextBridge.exposeInMainWorld('phenom', {
     ipcRenderer.on('guardian:hotkey', () => {
       if (typeof callback === 'function') callback();
     });
+  },
+  muteAllAudio: (muted) => {
+    try {
+      return ipcRenderer.invoke('media:mute-all', Boolean(muted));
+    } catch {
+      return Promise.resolve(false);
+    }
+  },
+  onMediaTransportKey: (callback) => {
+    ipcRenderer.on('media:transport-key', (_, action) => {
+      if (typeof callback === 'function') callback(action);
+    });
+  },
+  onMediaGuardianMute: (callback) => {
+    ipcRenderer.on('media:guardian-mute', () => {
+      if (typeof callback === 'function') callback();
+    });
   }
 });

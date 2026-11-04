@@ -175,39 +175,57 @@ class Orchestrator:
             if app:
                 return "open_app", {"app_name": str(app)}
 
+        if t_low in ("play_song", "play_music", "play_video", "stream_music", "stream_song", "play_track") or (t_low in ("play", "stream") and ("song" in args or "query" in args)):
+            query = args.get("query") or args.get("song") or args.get("song_name") or args.get("target") or "trending hits"
+            platform = args.get("platform", "youtube")
+            return "play_media", {"query": str(query), "platform": platform}
+
         if t_low in ("play", "stream") or ("action" in args and args.get("action") == "play"):
             song = args.get("song") or args.get("play") or args.get("query") or args.get("target") or ""
             song_str = str(song).strip()
             if song_str and song_str != "<song_name>":
-                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_str)}"
-            else:
-                yt_url = "https://www.youtube.com"
-            return "open_app", {"app_name": yt_url}
+                return "play_media", {"query": song_str, "platform": "youtube"}
+            return "open_app", {"app_name": "https://www.youtube.com"}
 
         return tool_name, args
 
     def _detect_direct_intent(self, prompt: str) -> Optional[Tuple[str, Dict[str, Any], str]]:
         p = prompt.strip().lower()
 
-        # 1. YouTube / YT Music & Video Intent
+        # 0. Media Transport Controls (Tier 0 direct execution)
+        if p in ("pause music", "pause song", "pause", "music pause", "gaana roko", "gaana pause karo", "stop music", "music stop"):
+            return "pause_media", {}, "Scene sorted Bro! Pausing playback."
+
+        if p in ("resume music", "resume song", "resume", "continue music", "play music again", "gaana chalao firse", "unpause"):
+            return "resume_media", {}, "Resuming playback Bro!"
+
+        if p in ("next song", "next track", "skip song", "skip track", "agla gaana"):
+            return "next_track", {}, "Skipping to next track Bro!"
+
+        m_vol = re.search(r"^(?:ok\s+|please\s+)?(?:set\s+)?volume\s+(?:to\s+)?(\d{1,3})(?:%)?$", p)
+        if not m_vol:
+            m_vol = re.search(r"^(?:ok\s+|please\s+)?aawaaz\s+(\d{1,3})(?:%)?\s*(?:karo|pe\s*karo)?$", p)
+        if m_vol:
+            vol_val = max(0, min(100, int(m_vol.group(1))))
+            return "set_volume", {"level": vol_val}, f"Setting volume to {vol_val}% Bro!"
+
+        # 1. Media Playback Intent (YouTube / Spotify in Embedded Webview)
+        is_spotify = "spotify" in p
         is_yt_keyword = any(k in p for k in ("youtube", "yt"))
         is_play_keyword = any(k in p for k in ("play", "paly", "chalao", "bajao", "bajaao", "chala do", "listen to"))
 
-        if is_yt_keyword and is_play_keyword:
-            cleaned = re.sub(r"\b(ok|please|can you|phenom|play|paly|on|from|in|se|par|pe|me|youtube|yt|chalao|bajao|bajaao|chala do|karo)\b", " ", p).strip()
+        if (is_yt_keyword or is_spotify) and is_play_keyword:
+            cleaned = re.sub(r"\b(ok|please|can you|phenom|play|paly|on|from|in|se|par|pe|me|youtube|yt|spotify|chalao|bajao|bajaao|chala do|karo)\b", " ", p).strip()
             cleaned = re.sub(r"\s+", " ", cleaned).strip()
-            if not cleaned or cleaned in ("music", "song", "songs", "a song", "any song", "some music", "gaana", "gana"):
-                song_query = "trending hits"
-            else:
-                song_query = cleaned
-            yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_query)}"
-            return "open_app", {"app_name": yt_url}, f"Haan Bro! Playing \"{song_query}\" on YouTube!"
+            song_query = cleaned if (cleaned and cleaned not in ("music", "song", "songs", "a song", "any song", "some music", "gaana", "gana")) else "trending hits"
+            target_platform = "spotify" if is_spotify else "youtube"
+            return "play_media", {"query": song_query, "platform": target_platform}, f"Haan Bro! Streaming \"{song_query}\" on {target_platform.title()}!"
 
         if is_play_keyword and any(m in p for m in ("music", "song", "songs", "gaana", "gana", "track")):
             cleaned = re.sub(r"\b(ok|please|can you|phenom|play|paly|chalao|bajao|bajaao|chala do|music|song|songs|a song|some|gaana|gana)\b", " ", p).strip()
+            cleaned = re.sub(r"\s+", " ", cleaned).strip()
             song_query = cleaned if cleaned else "trending hits"
-            yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(song_query)}"
-            return "open_app", {"app_name": yt_url}, f"Haan Bro! Playing \"{song_query}\" on YouTube!"
+            return "play_media", {"query": song_query, "platform": "youtube"}, f"Haan Bro! Streaming \"{song_query}\" on YouTube!"
 
         # Direct YouTube site requests
         if p in ("open youtube", "open yt", "launch youtube", "launch yt", "youtube kholo", "yt kholo", "start youtube", "start yt"):
