@@ -453,6 +453,11 @@ class DreamConsolidationEngine:
                 latest_report=self._latest_report,
             )
 
+    def get_schemas(self) -> List[GeneralizedSchema]:
+        """Retrieve list of currently abstracted generalized schemas."""
+        with self._lock:
+            return list(self._schemas.values())
+
 
 # Global singleton instance
 dream_engine = DreamConsolidationEngine()

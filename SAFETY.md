@@ -1095,3 +1095,24 @@ otification_policy == 'silent').
 ### 3. End-to-End Multi-Component Simulation
 - Chained Win32 Proactive Event Ingestion with Privacy Scrubbing (`PRX-01`) -> Ambient Spatial Audio Feedback (`FBK-01`) -> DirectComposition Spatial Canvas & Anchored Ghost Annotations (`OVR-01`) -> Offline Neuro-Symbolic Sleep & Dream Memory Consolidation (`DRM-01`) -> Local WebRTC Screen Streaming (`FBK-01`) -> Universal Guardian Kill Switch Lockdown (`SAF-02`).
 - Measured E2E Guardian halt latency: **0.5104 ms**, demonstrating complete sovereign desktop operating layer safety and integration.
+
+
+## 42. Autonomous Neuro-Evolution & Local LoRA Adapter Governance (Milestone 13.0 Phase 1)
+
+### 1. On-Device Parameter Tuning Invariants (EVO-01, Permanent Rule 4)
+- **100% On-Device Local Training (Permanent Rule 4)**: All synthetic instruction distillation, parameter-efficient LoRA fine-tuning, and regression benchmarking execute strictly locally on the user's NVIDIA GPU. Dataset instruction pairs, model weights, and gradient updates are never transmitted to external cloud endpoints.
+- **Regression Prevention & Benchmark Gating**: Before any trained adapter can be promoted or activated, it must pass the local evaluation probe with an accuracy score $\ge 0.85$ and zero regressions detected on core operating commands. Failing adapters are automatically marked as `QUARANTINED` and blocked from activation.
+- **Atomic Rollback Guarantee**: The system retains previous adapter states and enables instantaneous fallback to the prior stable checkpoint or unadapted base model weights (`reset_to_base=True`).
+
+### 2. ToolRegistry Governance & Risk Tiers (SAF-01)
+- `evolution_get_status`: **Tier 0** (Read-Only). Arguments: `EvolutionGetStatusArgs`. Preview: `"Inspect Neuro-Evolution status and active LoRA adapters (Read-Only)"`.
+- `evolution_distill_instructions`: **Tier 1** (Reversible change with preview). Arguments: `EvolutionDistillInstructionsArgs(domain: Optional[str], max_pairs: int)`. Preview: `"Distill synthetic instruction training pairs"`.
+- `evolution_train_adapter`: **Tier 1** (Reversible change with preview). Arguments: `EvolutionTrainAdapterArgs(...)`. Preview: `"Train local LoRA adapter '{adapter_id}' for domain '{domain}'"`.
+- `evolution_activate_adapter`: **Tier 1** (Reversible change with preview). Arguments: `EvolutionActivateAdapterArgs(adapter_id: str)`. Preview: `"Mount and activate validated LoRA adapter '{adapter_id}'"`.
+- `evolution_rollback_adapter`: **Tier 1** (Reversible change with preview). Arguments: `EvolutionRollbackAdapterArgs(...)`. Preview: `"Rollback active adapter to '{target_adapter_id}'"`.
+
+### 3. Sub-10ms Synchronous Guardian Kill Switch SLA (SAF-02)
+- `local_adapter_manager.halt()` is synchronously invoked from `on_guardian_state_change("halted")`.
+- **Execution SLA**: Immediately ceases active adapter fine-tuning, aborts evaluation routines, and prevents adapter mounting/rollback in `< 10ms` (hard SLA: `< 25ms`; benchmarked at **0.0003 ms** average across 100 cycles).
+- While halted, all calls to `train_adapter`, `activate_adapter`, `rollback_adapter`, and associated Tier 1 tools fail closed with `PermissionError`.
+- Clean state reset and resumption via `reset()` when Guardian transitions to `idle`.

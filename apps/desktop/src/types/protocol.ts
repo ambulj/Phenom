@@ -678,6 +678,71 @@ export interface WebRTCDisconnectMsg extends BaseMessage {
   };
 }
 
+export interface AdapterMetadataPayload {
+  adapter_id: string;
+  domain: string;
+  base_model: string;
+  lora_rank: number;
+  lora_alpha: number;
+  training_loss: number;
+  benchmark_score: number;
+  status: 'ACTIVE' | 'STANDBY' | 'TRAINING' | 'EVALUATING' | 'QUARANTINED' | 'ARCHIVED';
+  dataset_pairs_count: number;
+  created_at: number;
+  is_active: boolean;
+}
+
+export interface EvaluationBenchmarkReportPayload {
+  report_id: string;
+  adapter_id: string;
+  accuracy_score: number;
+  latency_ms: number;
+  regression_detected: boolean;
+  dataset_size: number;
+  passed_threshold: boolean;
+  timestamp: number;
+}
+
+export interface EvolutionEngineStatusPayload {
+  is_running: boolean;
+  is_halted: boolean;
+  active_adapter?: AdapterMetadataPayload | null;
+  registered_adapters: AdapterMetadataPayload[];
+  total_instructions_distilled: number;
+  last_tuning_timestamp?: number | null;
+  last_benchmark_report?: EvaluationBenchmarkReportPayload | null;
+}
+
+export interface EvolutionStatusMsg extends BaseMessage {
+  type: 'evolution_status_update';
+  payload: EvolutionEngineStatusPayload;
+}
+
+export interface EvolutionTrainAdapterMsg extends BaseMessage {
+  type: 'evolution.train_adapter';
+  payload: {
+    adapter_id: string;
+    domain: string;
+    lora_rank?: number;
+    lora_alpha?: number;
+    epochs?: number;
+  };
+}
+
+export interface EvolutionActivateAdapterMsg extends BaseMessage {
+  type: 'evolution.activate_adapter';
+  payload: {
+    adapter_id: string;
+  };
+}
+
+export interface EvolutionRollbackAdapterMsg extends BaseMessage {
+  type: 'evolution.rollback_adapter';
+  payload: {
+    target_adapter_id?: string;
+  };
+}
+
 export type InboundServerMessage =
   | ChatTokenMsg
   | ChatDoneMsg
@@ -703,6 +768,7 @@ export type InboundServerMessage =
   | AmbientAudioCueMsg
   | WebRTCMirrorUpdateMsg
   | WebRTCMirrorTerminatedMsg
+  | EvolutionStatusMsg
   | ErrorMsg;
 
 export type OutboundClientMessage =
@@ -728,4 +794,7 @@ export type OutboundClientMessage =
   | ProactiveIngestEventMsg
   | AmbientPlayCueMsg
   | WebRTCConnectMsg
-  | WebRTCDisconnectMsg;
+  | WebRTCDisconnectMsg
+  | EvolutionTrainAdapterMsg
+  | EvolutionActivateAdapterMsg
+  | EvolutionRollbackAdapterMsg;

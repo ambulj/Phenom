@@ -287,11 +287,13 @@ import services.backend.tools.sensory_tools
 import services.backend.tools.dream_tools
 import services.backend.tools.spatial_tools
 import services.backend.tools.proactive_feedback_tools
+import services.backend.tools.evolution_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
 from services.backend.ambient.feedback_synthesizer import ambient_feedback_synthesizer
 from services.backend.ambient.webrtc_mirror import local_webrtc_mirror
+from services.backend.evolution.adapter_manager import local_adapter_manager
 from services.backend.sensors.companion_camera import companion_camera_streamer
 from services.backend.mesh.media_drop import media_drop_manager
 from services.backend.orchestrator.tot_planner import tot_planner
@@ -1557,6 +1559,7 @@ def on_guardian_state_change(new_state: str):
             proactive_event_bus.halt()
             ambient_feedback_synthesizer.halt()
             local_webrtc_mirror.halt()
+            local_adapter_manager.halt()
         except Exception:
             pass
 
@@ -1622,6 +1625,7 @@ def on_guardian_state_change(new_state: str):
             proactive_event_bus.reset()
             ambient_feedback_synthesizer.reset()
             local_webrtc_mirror.reset()
+            local_adapter_manager.reset()
         except Exception:
             pass
 
@@ -1646,6 +1650,7 @@ spatial_canvas_manager.register_broadcaster(broadcast_message)
 proactive_event_bus.register_broadcaster(broadcast_message)
 ambient_feedback_synthesizer.register_broadcaster(broadcast_message)
 local_webrtc_mirror.register_broadcaster(broadcast_message)
+local_adapter_manager.register_broadcaster(broadcast_message)
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 
