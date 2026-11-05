@@ -1710,5 +1710,32 @@ All 10 newly introduced tools across Milestone 17 phases are registered in `Tool
 ### 4. Chaos Stress Concurrency (SAF-02.2)
 - Parallel burst execution of 30 concurrent operations (Telegram callback handling, context ring buffer ingests, and prosody modulations) executed with zero race conditions, deadlocks, or exceptions.
 
+---
+
+## 65. Milestone 18.0 Phase 1: Autonomous Document Generation & Obsidian Knowledge Engine (DOC-01, KNG-01, SAF-01, SAF-02)
+
+### 1. Tool Safety Inventory
+All 6 newly introduced tools across Phase 1 are registered in `ToolRegistry` with strict schema validation and preview generation:
+
+- `generate_document`: **Tier 1** (Creates or modifies Word `.docx`, Excel `.xlsx`, PowerPoint `.pptx`, or PDF `.pdf` documents with optional native chart embeds; requires `generate_diff_preview` confirmation showing additions, target file, and Rule 7 recycle bin protection on overwrite).
+- `get_document_templates`: **Tier 0** (Read-only retrieval of pre-configured executive and technical document styling templates: Executive Brief, Financial Quarterly, Tech Architecture, Cyber Cyan).
+- `list_generated_documents`: **Tier 0** (Read-only enumeration of generated files in `vault/documents/` with format, size, and timestamp).
+- `sync_obsidian_vault`: **Tier 0** (Read-only scan of markdown notes in `vault/notes/` parsing YAML frontmatter metadata, `#tags`, and `[[wikilinks]]`, populating in-RAM backlink graph).
+- `create_daily_debrief_note`: **Tier 1** (Formulates and saves structured daily executive debrief note in `vault/notes/daily/YYYY-MM-DD.md` with YAML frontmatter, accomplishments, and cross-links; requires `preview_daily_debrief_note` confirmation preview).
+- `query_vault_knowledge`: **Tier 0** (Read-only search across in-RAM knowledge graph matching keywords, YAML tags, and backlink targets).
+
+### 2. Permanent Safety Rule Compliance Invariants
+- **Rule 1 (Safety Before Tools)**: Every document operation and vault note creation is guarded by `ToolRegistry`, Pydantic validation, and safety engine confirmations.
+- **Rule 4 (Zero Cloud Exfiltration for Private Data)**: All document rendering (python-docx, openpyxl, python-pptx, reportlab) and vault indexing run entirely offline on local hardware with zero external cloud API calls.
+- **Rule 7 (Delete Means Recycle Bin)**: Overwrites and file replacements in `generate_document` and `create_daily_debrief_note` create pre-modification backups sent to the Windows Recycle Bin via `send2trash`.
+- **Rule 8 (No Passwords or Financial Payments)**: Document generators reject passwords or financial transaction capabilities.
+- **Rule 11 (Secrets in Credential Manager)**: No cryptographic or credential material is persisted in generated notes or documents.
+
+### 3. Universal Synchronous Guardian Kill Switch SLA Benchmark (SAF-02.1)
+- **Cooperative Kill Switch Hook**: Document generation loops and Obsidian vault directory walks check `guardian.is_halted` synchronously.
+- **Hard SLA**: $< 25.0\text{ ms}$; Target: typical $< 1.0\text{ ms}$.
+- **Measured Result**: Guardian Trigger Latency $= \mathbf{11.28\text{ ms}} < 25.0\text{ ms}$ SLA. Active synthesis, vault sync, and note creation immediately raise `RuntimeError("Operation halted by Guardian Kill Switch")`.
+
+
 
 

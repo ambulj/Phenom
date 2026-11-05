@@ -44,6 +44,7 @@ import { ActiveModelIndicator } from './components/CyberHUD/ActiveModelIndicator
 import { VoicePersonaHUD } from './components/CyberHUD/VoicePersonaHUD';
 import { ContextStreamHUD } from './components/CyberHUD/ContextStreamHUD';
 import { TelegramCompanionHUD } from './components/CyberHUD/TelegramCompanionHUD';
+import { DocumentSynthesisHUD } from './components/CyberHUD/DocumentSynthesisHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -161,6 +162,8 @@ export const App: React.FC = () => {
   const [contextStreamExternalEvent, setContextStreamExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTelegramCompanion, setShowTelegramCompanion] = useState<boolean>(false);
   const [telegramCompanionExternalEvent, setTelegramCompanionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showDocumentSynthesis, setShowDocumentSynthesis] = useState<boolean>(false);
+  const [documentSynthesisExternalEvent, setDocumentSynthesisExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -349,6 +352,9 @@ export const App: React.FC = () => {
             setContextStreamExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('TELEGRAM_')) {
             setTelegramCompanionExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('DOCUMENT_') || mtype === 'document_generated' || mtype === 'documents_list_update') {
+            setDocumentSynthesisExternalEvent({ type: mtype, payload });
+            setShowDocumentSynthesis(true);
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -1025,6 +1031,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowTelegramCompanion((prev) => !prev)
     },
     {
+      id: 'cmd-toggle-document-synthesis',
+      title: 'Toggle Document Synthesis HUD',
+      subtitle: 'Autonomous Word, Excel, PowerPoint & PDF generation, charts, and Obsidian hub',
+      category: 'Assistant',
+      onExecute: () => setShowDocumentSynthesis((prev) => !prev)
+    },
+    {
       id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
@@ -1210,6 +1223,21 @@ export const App: React.FC = () => {
           <TelegramCompanionHUD
             externalEvent={telegramCompanionExternalEvent}
             onClose={() => setShowTelegramCompanion(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Autonomous Document Synthesis HUD (DOC-01, KNG-01) */}
+      {showDocumentSynthesis && (
+        <div style={{ position: 'absolute', top: 80, right: 24, zIndex: 125 }}>
+          <DocumentSynthesisHUD
+            externalEvent={documentSynthesisExternalEvent}
+            onClose={() => setShowDocumentSynthesis(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

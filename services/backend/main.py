@@ -254,6 +254,8 @@ import services.backend.router.dynamic_model_router
 import services.backend.tools.offline_vision_tools
 import services.backend.tools.voice_persona_tools
 import services.backend.tools.context_fusion_tools
+import services.backend.tools.document_tools
+import services.backend.tools.obsidian_tools
 
 
 

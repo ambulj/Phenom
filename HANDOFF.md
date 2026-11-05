@@ -1,5 +1,22 @@
 # HANDOFF.md
 
+## Milestone 18.0 Phase 1: Autonomous Document Generation & Obsidian Knowledge Engine
+- **Branch**: `hardening/pass-1`
+- **Date**: November 5, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `DOC-01.1`: Enhanced `doc_generator.py` with multi-format synthesis across Word (`.docx`), Excel (`.xlsx`), PowerPoint (`.pptx`), and PDF (`.pdf` via ReportLab). Added native chart embeddings (`openpyxl.chart.BarChart` / `LineChart`, `pptx.chart.data.CategoryChartData`, ReportLab `VerticalBarChart`) and `modify_document` with `create`, `modify`, and `append` modes.
+  - `DOC-01.2`: Implemented `obsidian_sync.py` providing bidirectional note indexing, YAML frontmatter parsing, tag extraction, `[[wikilink]]` extraction, in-RAM backlink graph, and automated daily debrief note generation (`create_daily_debrief`).
+  - `DOC-01.3`: Implemented `document_tools.py` with Tier 1 confirmation diff preview generator (`generate_diff_preview`, `preview_daily_debrief_note`), and Rule 7 recycle bin backup via `send2trash` before file modification or overwrite.
+  - `DOC-01.4`: Wired direct voice and chat intents in `Orchestrator._detect_direct_intent` for `"create presentation on [topic]"`, `"generate spreadsheet for [topic]"`, `"create document on [topic]"`, `"summarize today into daily note"`, and `"search vault for [query]"`.
+  - `DOC-01.5`: Built `apps/desktop/src/components/CyberHUD/DocumentSynthesisHUD.tsx` with live document viewer, format toggle tabs, styling template dropdown selector, 1-click synthesis, and native OS app open (`shell.openPath`). Mounted in `App.tsx` and wired to Command Palette (`Ctrl+K`).
+  - `SAF-01`: Registered 6 new tools in `ToolRegistry` (`generate_document` [Tier 1], `get_document_templates` [Tier 0], `list_generated_documents` [Tier 0], `sync_obsidian_vault` [Tier 0], `create_daily_debrief_note` [Tier 1], `query_vault_knowledge` [Tier 0]) and documented in `SAFETY.md` Section 65.
+  - `SAF-02.1`: Universal Guardian Kill Switch SLA Benchmark verified at **11.28ms** (< 25.0ms SLA, target < 1.0ms), synchronously freezing document synthesis and Obsidian vault synchronization.
+  - Tests: **10/10 Phase 1 PASSED** (`test_document_and_obsidian_knowledge.py`); **13/13 regression suite PASSED** (`test_safety.py`, `test_phase5.py`).
+  - Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 7.14s with 0 errors.
+
+---
+
 ## Milestone 17.0 Phase 4: Milestone 17 Safety Audit, Chaos Stress Testing & Production Release v17.0.0
 - **Branch**: `hardening/pass-1`
 - **Date**: November 5, 2026

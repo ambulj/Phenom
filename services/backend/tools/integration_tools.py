@@ -426,37 +426,5 @@ def lookup_doi_citation(doi_or_query: str) -> Dict[str, Any]:
 # 7. DOCUMENT CREATION TOOLS
 # ==========================================
 
-class GenerateDocumentArgs(BaseModel):
-    doc_type: str = Field(description="Document format: 'word' (.docx), 'excel' (.xlsx), 'powerpoint' (.pptx), or 'pdf' (.pdf)")
-    filename: str = Field(description="Target filename (e.g. 'ProjectPlan.docx', 'Budget.xlsx')")
-    title: str = Field(description="Main document title")
-    content_spec: Dict[str, Any] = Field(description="Structured content payload (sections, headers, rows, slides, etc.)")
-    folder: Optional[str] = Field(default=None, description="Optional target directory")
-
-@registry.register(
-    name="generate_document",
-    tier=1,
-    description="Creates a formatted document (Word, Excel, PowerPoint, or PDF) and saves to a folder.",
-    args_schema=GenerateDocumentArgs,
-    preview_fn=lambda a: f"Generate {a.get('doc_type')} document '{a.get('filename')}' in {a.get('folder') or 'vault/documents'}"
-)
-def generate_document(doc_type: str, filename: str, title: str, content_spec: Dict[str, Any], folder: Optional[str] = None) -> Dict[str, Any]:
-    dtype = doc_type.lower().strip()
-    if "word" in dtype or "docx" in dtype:
-        sections = content_spec.get("sections", [{"heading": "Overview", "content": content_spec.get("text", "")}])
-        return doc_generator.create_word_document(filename, title, sections, folder=folder)
-    elif "excel" in dtype or "sheet" in dtype or "xlsx" in dtype:
-        headers = content_spec.get("headers", ["Column 1", "Column 2"])
-        rows = content_spec.get("rows", [["Data 1", "Data 2"]])
-        sheet_title = content_spec.get("sheet_title", "Sheet1")
-        return doc_generator.create_excel_spreadsheet(filename, sheet_title, headers, rows, folder=folder)
-    elif "ppt" in dtype or "powerpoint" in dtype or "presentation" in dtype:
-        subtitle = content_spec.get("subtitle", "Created by Phenom")
-        slides = content_spec.get("slides", [{"title": "Introduction", "bullets": ["First point", "Second point"]}])
-        return doc_generator.create_powerpoint_presentation(filename, title, subtitle, slides, folder=folder)
-    elif "pdf" in dtype:
-        paragraphs = content_spec.get("paragraphs", [content_spec.get("text", "Report content")])
-        table_data = content_spec.get("table_data", None)
-        return doc_generator.create_pdf_report(filename, title, paragraphs, table_data=table_data, folder=folder)
-    else:
-        raise ValueError(f"Unsupported doc_type '{doc_type}'. Allowed: word, excel, powerpoint, pdf.")
+# Milestone 18: generate_document upgraded to services.backend.tools.document_tools
+from services.backend.tools.document_tools import generate_document, GenerateDocumentArgs

@@ -370,6 +370,62 @@ class Orchestrator:
                 clean_disp = target.replace(".exe", "").title()
                 return "open_app", {"app_name": target}, f"Haan Bro! Launching {clean_disp}..."
 
+        # 8. Autonomous Document Synthesis & Obsidian Knowledge Intents (DOC-01, KNG-01)
+        if p in (
+            "summarize today into daily note",
+            "summarize today",
+            "create daily debrief",
+            "create daily debrief note",
+            "daily debrief note",
+            "write daily note",
+            "save daily note"
+        ):
+            return "create_daily_debrief_note", {}, "Synthesizing today's accomplishments into your executive daily debrief note, Bro!"
+
+        if p in ("sync obsidian vault", "sync vault", "sync notes", "refresh vault", "index vault"):
+            return "sync_obsidian_vault", {}, "Synchronizing Obsidian vault and updating in-memory knowledge graph, Bro!"
+
+        m_search_vault = re.search(r"^(?:ok\s+|please\s+)?(?:search|query|find\s+in)\s+(?:obsidian\s+)?(?:vault|notes)\s+(?:for\s+)?(.+)$", p)
+        if m_search_vault:
+            q_term = m_search_vault.group(1).strip()
+            return "query_vault_knowledge", {"query": q_term}, f"Searching Obsidian knowledge vault for '{q_term}', Bro!"
+
+        m_pres = re.search(r"^(?:ok\s+|please\s+)?(?:create|make|generate)\s+presentation\s+(?:on|about|for)\s+(.+)$", p)
+        if not m_pres:
+            m_pres = re.search(r"^(?:ok\s+|please\s+)?(?:create|make|generate)\s+(?:a\s+)?(?:slide\s+deck|pptx?)\s+(?:on|about|for)\s+(.+)$", p)
+        if m_pres:
+            topic = m_pres.group(1).strip()
+            slug = re.sub(r"[^a-zA-Z0-9_\-]+", "_", topic).strip("_") or "Executive_Presentation"
+            return "generate_document", {
+                "filename": f"{slug}.pptx",
+                "format": "pptx",
+                "title": topic.title(),
+                "subtitle": "Formulated Autonomously by Phenom"
+            }, f"Generating executive PowerPoint presentation on '{topic.title()}', Bro!"
+
+        m_sheet = re.search(r"^(?:ok\s+|please\s+)?(?:create|make|generate)\s+spreadsheet\s+(?:for|on|about)\s+(.+)$", p)
+        if not m_sheet:
+            m_sheet = re.search(r"^(?:ok\s+|please\s+)?(?:create|make|generate)\s+(?:an?\s+)?(?:excel|xlsx?)\s+(?:sheet\s+)?(?:for|on|about)\s+(.+)$", p)
+        if m_sheet:
+            topic = m_sheet.group(1).strip()
+            slug = re.sub(r"[^a-zA-Z0-9_\-]+", "_", topic).strip("_") or "Financial_Data"
+            return "generate_document", {
+                "filename": f"{slug}.xlsx",
+                "format": "xlsx",
+                "title": topic.title()
+            }, f"Synthesizing structured Excel spreadsheet for '{topic.title()}', Bro!"
+
+        m_doc = re.search(r"^(?:ok\s+|please\s+)?(?:create|make|generate)\s+(?:executive\s+)?(?:document|report|pdf)\s+(?:on|about|for)\s+(.+)$", p)
+        if m_doc:
+            topic = m_doc.group(1).strip()
+            slug = re.sub(r"[^a-zA-Z0-9_\-]+", "_", topic).strip("_") or "Executive_Report"
+            target_fmt = "docx" if "document" in p else "pdf"
+            return "generate_document", {
+                "filename": f"{slug}.{target_fmt}",
+                "format": target_fmt,
+                "title": topic.title()
+            }, f"Generating executive {target_fmt.upper()} report on '{topic.title()}', Bro!"
+
         return None
 
     def _extract_learned_rule(self, text: str) -> Optional[str]:
