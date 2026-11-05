@@ -1650,3 +1650,27 @@ All 3 context fusion tools are registered in `ToolRegistry` with strict schema v
   - In-RAM context event buffer is purged immediately.
   - Hard SLA: $< 25.0\text{ ms}$; measured 50-run average latency: **$< 0.1\text{ ms}$** (sub-millisecond across all benchmark cycles).
 
+---
+
+## 63. Milestone 17.0 Phase 3: Remote Telegram Mobile Super-Companion & Bidirectional Controls (TEL-02, SAF-01, SAF-02)
+
+### 1. Tool Registry & Safety Tier Classification (SAF-01)
+All Phase 3 tools are registered in `ToolRegistry` with strict schema validation and preview functions:
+- `get_telegram_companion_status`: **Tier 0** (Read-only query of companion connectivity, connected owner ID, lock state, and registered quick-action buttons).
+- `send_telegram_snapshot`: **Tier 1** (Captures 35px privacy-blurred desktop screen and dispatches photo preview to owner; requires confirmation preview: `"Send privacy-masked desktop snapshot to Telegram owner"`).
+- `register_telegram_action`: **Tier 1** (Registers dynamic custom action button on Telegram companion; requires confirmation preview: `"Register remote action button '{action_id}' ({label}) for Telegram companion"`).
+- `telegram_get_remote_status`: **Tier 0** (Preserved backward-compatible alias for existing automated tests).
+
+### 2. Privacy & Rule 4 Invariants for Remote Snapshot Previews
+- **Rule 4 Compliance**: Desktop snapshots strictly apply 35px Gaussian obfuscation over detected sensitive application windows prior to buffer encoding.
+- **Cloud Chat Warning**: Every screen photo sent over Telegram includes an explicit warning caption: *"Image transits Telegram servers and is stored in cloud chat history."*
+- **Ephemerality**: Ephemeral PIN submission messages and sensitive alerts are purged after 15 seconds SLA.
+
+### 3. Universal Synchronous Remote Guardian Kill Switch SLA (TEL-02.4, SAF-02)
+- Upon receiving `/kill`, `/halt`, or mobile button `cmd:kill`:
+  - `guardian.trigger("Telegram remote kill switch")` executes immediately.
+  - All Phenom execution streams, model generations, and desktop automations are immediately terminated.
+  - In-memory speech queues are drained and media audio is muted.
+  - Hard SLA: $< 25.0\text{ ms}$; measured 50-run average latency: **$0.0118\text{ ms}$** (typical $< 0.1\text{ ms}$).
+
+

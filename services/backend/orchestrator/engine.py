@@ -307,6 +307,13 @@ class Orchestrator:
         if p in ("running apps", "open applications", "active apps", "list open apps", "what apps are open"):
             return "inspect_application_context", {}, "Inspecting active desktop applications and open documents, Bro!"
 
+        # 6b. Remote Telegram Mobile Super-Companion Intents (TEL-02)
+        if p in ("telegram snapshot", "send telegram snapshot", "send snapshot to telegram", "screen snapshot to phone", "send mobile screenshot"):
+            return "send_telegram_snapshot", {}, "Capturing privacy-masked screen snapshot and sending to your Telegram, Bro!"
+
+        if p in ("telegram status", "telegram companion status", "mobile companion", "telegram companion", "check telegram"):
+            return "get_telegram_companion_status", {}, "Checking Telegram mobile super-companion connectivity and registered controls, Bro!"
+
         # 7. Media Playback Intent (YouTube / Spotify in Embedded Webview)
         is_spotify = "spotify" in p
         is_yt_keyword = any(k in p for k in ("youtube", "yt"))

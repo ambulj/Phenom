@@ -35,7 +35,7 @@ class EpisodicReplayBuffer:
     def __init__(self, max_traces: int = 500):
         self.max_traces = max_traces
         self._traces: List[EpisodicTrace] = []
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def record_trace(self, trace: EpisodicTrace) -> None:
         with self._lock:
@@ -185,7 +185,7 @@ class DreamConsolidationEngine:
         self._compactor = GraphCompactor(self._graph)
         self._replay_buffer = EpisodicReplayBuffer(max_traces=500)
 
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._halted: bool = False
         self._is_running: bool = False
         self._phase: DreamPhaseStatus = DreamPhaseStatus.IDLE

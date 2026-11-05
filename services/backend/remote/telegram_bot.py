@@ -69,6 +69,33 @@ class TelegramBotController:
         self._pending_pin_tasks: Dict[int, Dict[str, Any]] = {}
         self.ignored_messages_log: List[Dict[str, Any]] = []
         self._active_timers: List[asyncio.Task] = []
+        self._registered_actions: Dict[str, Dict[str, Any]] = {}
+
+    def register_custom_action(
+        self,
+        action_id: str,
+        label: str,
+        tool_name: str,
+        args: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Registers a dynamic custom action button for the Telegram mobile companion."""
+        action_data = {
+            "action_id": action_id,
+            "label": label,
+            "tool_name": tool_name,
+            "args": args or {},
+            "registered_at": time.time()
+        }
+        self._registered_actions[action_id] = action_data
+        return action_data
+
+    def unregister_custom_action(self, action_id: str) -> bool:
+        """Removes a registered custom action button."""
+        return self._registered_actions.pop(action_id, None) is not None
+
+    def get_registered_actions(self) -> List[Dict[str, Any]]:
+        """Returns all currently registered custom actions."""
+        return list(self._registered_actions.values())
 
     def set_credentials(self, token: str, owner_id: int):
         self._token = token
@@ -155,11 +182,58 @@ class TelegramBotController:
             "inline_keyboard": [
                 [
                     {"text": "🔄 Refresh", "callback_data": "status:refresh"},
+                    {"text": "🎛️ Controls", "callback_data": "cmd:controls"},
                     {"text": "🌿 Git", "callback_data": "cmd:git"},
                     {"text": "🔒 Lock Remote", "callback_data": "lock:remote"}
                 ]
             ]
         }
+
+    def _build_controls_markup(self) -> Dict[str, Any]:
+        """Builds rich bidirectional control keyboard for media, windows, models, voice, and macros."""
+        buttons = [
+            # Row 1: Media Controls
+            [
+                {"text": "⏯️ Play/Pause", "callback_data": "cmd:media:toggle"},
+                {"text": "⏭️ Next", "callback_data": "cmd:media:next"},
+                {"text": "🔇 Mute", "callback_data": "cmd:media:mute"}
+            ],
+            # Row 2: Window Staging
+            [
+                {"text": "💻 Dev Mode (60/40)", "callback_data": "cmd:window:dev"},
+                {"text": "☕ Chill Mode", "callback_data": "cmd:window:chill"},
+                {"text": "📐 Restore Layout", "callback_data": "cmd:window:restore"}
+            ],
+            # Row 3: AI Model Routing
+            [
+                {"text": "🧠 Coder (14B)", "callback_data": "cmd:model:coder"},
+                {"text": "⚡ Fast (4B)", "callback_data": "cmd:model:fast"},
+                {"text": "🔄 Auto Router", "callback_data": "cmd:model:auto"}
+            ],
+            # Row 4: Voice Persona Style
+            [
+                {"text": "🎩 Witty Jarvis", "callback_data": "cmd:voice:jarvis"},
+                {"text": "🤫 Whisper Mode", "callback_data": "cmd:voice:whisper"},
+                {"text": "🧘 Calm Mode", "callback_data": "cmd:voice:calm"}
+            ],
+            # Row 5: Quick Utilities & Macros
+            [
+                {"text": "📸 Screen Snapshot", "callback_data": "cmd:snapshot"},
+                {"text": "📜 List Macros", "callback_data": "cmd:macro:list"},
+                {"text": "🛑 Halt (Kill)", "callback_data": "cmd:kill"}
+            ]
+        ]
+
+        if self._registered_actions:
+            action_row = []
+            for action in list(self._registered_actions.values())[:4]:
+                action_row.append({
+                    "text": f"⚡ {action['label']}",
+                    "callback_data": f"action:{action['action_id']}"
+                })
+            buttons.append(action_row)
+
+        return {"inline_keyboard": buttons}
 
     def _build_git_text(self) -> str:
         """Returns dedicated developer git repository tracker report."""
@@ -543,6 +617,171 @@ class TelegramBotController:
                     await self.client.edit_message_text(chat_id, msg_id, "ℹ️ *Full desktop view verified by Owner.*")
                 return {"status": "screenshot_full_approved"}
 
+            # Controls Menu Callback
+            elif data == "cmd:controls":
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text="Opening Mobile Controls...")
+                    await self.client.send_message(
+                        chat_id=chat_id,
+                        text="🎛️ *Phenom Mobile Executive Controls*\nTap any action below to control your desktop session:",
+                        reply_markup=self._build_controls_markup()
+                    )
+                return {"status": "controls_sent"}
+
+            # Snapshot Preview Callback
+            elif data == "cmd:snapshot":
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text="Capturing privacy snapshot...")
+                res_snap = await self._handle_screenshot_command(chat_id)
+                return {"status": "snapshot_sent", "details": res_snap}
+
+            # Remote Kill Switch Callback
+            elif data == "cmd:kill":
+                guardian.trigger("Telegram mobile button kill switch")
+                reply_markup = {
+                    "inline_keyboard": [
+                        [{"text": "▶️ Resume Desktop", "callback_data": "guardian:resume"}]
+                    ]
+                }
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text="Guardian Halted!", show_alert=True)
+                    await self.client.send_message(
+                        chat_id,
+                        "🛑 *Guardian Kill Switch Activated via Mobile Button.*\nAll Phenom operations halted immediately (< 25ms SLA).",
+                        reply_markup=reply_markup
+                    )
+                return {"status": "halted_by_button"}
+
+            # Media Controls
+            elif data.startswith("cmd:media:"):
+                action = data.split(":", 2)[2]
+                from services.backend.tools.media_tools import _send_virtual_key, VK_MEDIA_PLAY_PAUSE, VK_MEDIA_NEXT_TRACK, VK_VOLUME_MUTE
+                if action == "toggle":
+                    _send_virtual_key(VK_MEDIA_PLAY_PAUSE)
+                    feedback = "Toggled Media Play/Pause"
+                elif action == "next":
+                    _send_virtual_key(VK_MEDIA_NEXT_TRACK)
+                    feedback = "Skipped to Next Track"
+                elif action == "mute":
+                    _send_virtual_key(VK_VOLUME_MUTE)
+                    feedback = "Toggled System Volume Mute"
+                else:
+                    feedback = f"Unknown media command: {action}"
+
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text=feedback)
+                return {"status": "media_executed", "action": action}
+
+            # Window Staging
+            elif data.startswith("cmd:window:"):
+                mode = data.split(":", 2)[2]
+                from services.backend.tools.window_tiler import apply_window_layout
+                layout_map = {
+                    "dev": "dev_mode",
+                    "chill": "chill_mode",
+                    "restore": "default"
+                }
+                layout_name = layout_map.get(mode, mode)
+                await apply_window_layout(layout_name)
+                feedback = f"Applied window layout '{layout_name}'"
+
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text=feedback)
+                return {"status": "window_executed", "mode": mode}
+
+            # Model Routing
+            elif data.startswith("cmd:model:"):
+                target_model = data.split(":", 2)[2]
+                from services.backend.router.dynamic_model_router import dynamic_model_router
+                if target_model == "auto":
+                    dynamic_model_router.set_override(None)
+                    feedback = "Model router set to Auto"
+                else:
+                    dynamic_model_router.set_override(target_model)
+                    feedback = f"Model locked to {target_model.upper()}"
+
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text=feedback)
+                return {"status": "model_routed", "target": target_model}
+
+            # Voice Persona Style
+            elif data.startswith("cmd:voice:"):
+                style = data.split(":", 2)[2]
+                from services.backend.voice.prosody_manager import prosody_manager
+                prosody_manager.set_style(style)
+                feedback = f"Voice persona set to {style.replace('_', ' ').title()}"
+
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text=feedback)
+                return {"status": "voice_styled", "style": style}
+
+            # Macro Controls
+            elif data == "cmd:macro:list":
+                from services.backend.tools.macro_recorder import macro_recorder
+                macros = macro_recorder.list_macros()
+                if not macros:
+                    if self.client:
+                        await self.client.answer_callback_query(cb_id, text="No macros recorded.")
+                        await self.client.send_message(chat_id, "📜 *Saved Macros:*\nNo desktop macros currently saved.")
+                    return {"status": "macros_empty"}
+
+                macro_buttons = []
+                for m in macros[:6]:
+                    name = m.get("name", "macro")
+                    macro_buttons.append([{"text": f"▶️ {name}", "callback_data": f"cmd:macro:run:{name}"}])
+
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text=f"Found {len(macros)} macros.")
+                    await self.client.send_message(
+                        chat_id,
+                        "📜 *Select a Macro to Replay:*",
+                        reply_markup={"inline_keyboard": macro_buttons}
+                    )
+                return {"status": "macro_list_sent", "count": len(macros)}
+
+            elif data.startswith("cmd:macro:run:"):
+                macro_name = data.split("cmd:macro:run:", 1)[1]
+                from services.backend.tools.macro_recorder import macro_recorder
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text=f"Replaying macro '{macro_name}'...")
+                res_macro = macro_recorder.replay_macro(macro_name)
+                if self.client:
+                    await self.client.send_message(chat_id, f"✅ *Macro Replayed:* `{macro_name}` ({res_macro.get('status', 'done')})")
+                return {"status": "macro_replayed", "macro_name": macro_name}
+
+            # Custom Registered Action Callback
+            elif data.startswith("action:"):
+                action_id = data.split("action:", 1)[1]
+                action_spec = self._registered_actions.get(action_id)
+                if not action_spec:
+                    if self.client:
+                        await self.client.answer_callback_query(cb_id, text=f"Action '{action_id}' not found.", show_alert=True)
+                    return {"status": "action_not_found", "action_id": action_id}
+
+                tool_name = action_spec.get("tool_name")
+                args = action_spec.get("args", {})
+                from services.backend.safety.registry import registry
+                tool = registry.get(tool_name)
+                if not tool:
+                    if self.client:
+                        await self.client.answer_callback_query(cb_id, text=f"Tool '{tool_name}' missing.", show_alert=True)
+                    return {"status": "tool_missing", "tool_name": tool_name}
+
+                if self.client:
+                    await self.client.answer_callback_query(cb_id, text=f"Executing {action_spec.get('label')}...")
+
+                try:
+                    res_tool = tool.handler_fn(**args)
+                    if asyncio.iscoroutine(res_tool):
+                        res_tool = await res_tool
+                    if self.client:
+                        await self.client.send_message(chat_id, f"✅ *Action Executed:* `{action_spec.get('label')}`\nResult: `{res_tool}`")
+                    return {"status": "action_executed", "action_id": action_id, "result": res_tool}
+                except Exception as ex:
+                    if self.client:
+                        await self.client.send_message(chat_id, f"❌ *Action Failed:* `{action_spec.get('label')}`\nError: `{ex}`")
+                    return {"status": "action_failed", "action_id": action_id, "error": str(ex)}
+
             return None
 
         # 2. Handle Regular Messages & Voice Notes
@@ -742,9 +981,19 @@ class TelegramBotController:
                 await self.client.send_message(chat_id=chat_id, text=diff_text)
             return {"status": "diff_sent"}
 
-        # 14. Command: /screenshot (Captures screen, blurs sensitive apps, generates preview)
-        if text.startswith("/screenshot"):
+        # 14. Command: /screenshot or /snapshot (Captures screen, blurs sensitive apps, generates preview)
+        if text.startswith("/screenshot") or text.startswith("/snapshot"):
             return await self._handle_screenshot_command(chat_id)
+
+        # 14b. Command: /controls or /menu (Interactive Executive Control Hub)
+        if text.startswith("/controls") or text.startswith("/menu"):
+            if self.client:
+                await self.client.send_message(
+                    chat_id=chat_id,
+                    text="🎛️ *Phenom Mobile Executive Controls*\nTap any action below to control your desktop session:",
+                    reply_markup=self._build_controls_markup()
+                )
+            return {"status": "controls_sent"}
 
         # 15. Command: /do <task> (Executes remote task with Tier 2 PIN protection)
         if text.startswith("/do "):

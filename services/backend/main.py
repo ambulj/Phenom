@@ -3939,7 +3939,8 @@ async def get_telegram_status():
 
 
 
-        "pin_status": check_pin_rotation_status()
+        "pin_status": check_pin_rotation_status(),
+        "registered_actions": telegram_controller.get_registered_actions()
 
 
 

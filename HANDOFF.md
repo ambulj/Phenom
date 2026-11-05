@@ -1,5 +1,21 @@
 # HANDOFF.md
 
+## Milestone 17.0 Phase 3: Remote Telegram Mobile Super-Companion & Bidirectional Controls
+- **Branch**: `hardening/pass-1`
+- **Date**: November 5, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `TEL-02.1`: On-demand privacy-masked desktop snapshot previews (`/snapshot`, `send_telegram_snapshot`) with 35px Gaussian obfuscation over sensitive windows, cloud transit warning caption, and photo delivery to authorized Telegram chat.
+  - `TEL-02.2`: Interactive mobile executive control hub (`/controls`, `/menu`) with 5-row responsive inline keyboard: media play/pause/skip/mute, window layout staging (Dev/Chill Mode), AI dynamic model routing (Coder/Fast/Auto), voice persona style (Jarvis/Whisper/Calm), macro replaying, and dynamic custom action triggers.
+  - `TEL-02.2` & `TEL-02.3`: Dynamic custom action registry supporting runtime registration and invocation of user-defined action buttons (`register_telegram_action`, `register_custom_action`) mapped to backend tools.
+  - `TEL-02.4` & `SAF-02`: Remote Guardian kill switch (`/kill`, `/halt`, or mobile button `cmd:kill`) executing synchronous halt in **0.0118ms average latency** (< 25.0ms SLA).
+  - `SAF-01`: 3 new companion tools registered in `ToolRegistry` (`get_telegram_companion_status` [Tier 0], `send_telegram_snapshot` [Tier 1], `register_telegram_action` [Tier 1]) alongside preserved backward-compatible alias `telegram_get_remote_status` [Tier 0], documented in `SAFETY.md` Section 63.
+  - UI: Built `TelegramCompanionHUD.tsx` mounted in `apps/desktop/src/App.tsx` with Command Palette integration (`Ctrl+K`).
+  - Tests: **6/6 Phase 3 PASSED** (`test_telegram_mobile_companion_v2.py`); **7/7 legacy suite PASSED** (`test_telegram_mobile_companion.py`); **57/57 combined suite PASSED**.
+  - Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 5.22s with 0 errors.
+
+---
+
 ## Milestone 17.0 Phase 2: Autonomous Multi-App Context Fusion & Semantic Tracking
 - **Branch**: `hardening/pass-1`
 - **Date**: November 5, 2026

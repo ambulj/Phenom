@@ -43,6 +43,7 @@ import { WindowTilerHUD } from './components/CyberHUD/WindowTilerHUD';
 import { ActiveModelIndicator } from './components/CyberHUD/ActiveModelIndicator';
 import { VoicePersonaHUD } from './components/CyberHUD/VoicePersonaHUD';
 import { ContextStreamHUD } from './components/CyberHUD/ContextStreamHUD';
+import { TelegramCompanionHUD } from './components/CyberHUD/TelegramCompanionHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -158,6 +159,8 @@ export const App: React.FC = () => {
   const [voicePersonaExternalEvent, setVoicePersonaExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showContextStream, setShowContextStream] = useState<boolean>(false);
   const [contextStreamExternalEvent, setContextStreamExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showTelegramCompanion, setShowTelegramCompanion] = useState<boolean>(false);
+  const [telegramCompanionExternalEvent, setTelegramCompanionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -344,6 +347,8 @@ export const App: React.FC = () => {
             setVoicePersonaExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('CONTEXT_')) {
             setContextStreamExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('TELEGRAM_')) {
+            setTelegramCompanionExternalEvent({ type: mtype, payload });
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -1013,6 +1018,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowContextStream((prev) => !prev)
     },
     {
+      id: 'cmd-toggle-telegram-companion',
+      title: 'Toggle Telegram Companion HUD',
+      subtitle: 'Manage remote mobile controls, quick action buttons, and snapshot previews',
+      category: 'Assistant',
+      onExecute: () => setShowTelegramCompanion((prev) => !prev)
+    },
+    {
       id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
@@ -1183,6 +1195,21 @@ export const App: React.FC = () => {
           <ContextStreamHUD
             externalEvent={contextStreamExternalEvent}
             onClose={() => setShowContextStream(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Telegram Mobile Super-Companion HUD (TEL-02) */}
+      {showTelegramCompanion && (
+        <div style={{ position: 'absolute', bottom: 90, right: 340, zIndex: 125 }}>
+          <TelegramCompanionHUD
+            externalEvent={telegramCompanionExternalEvent}
+            onClose={() => setShowTelegramCompanion(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
