@@ -297,7 +297,17 @@ class Orchestrator:
         if p in ("voice status", "persona status", "voice persona", "active persona"):
             return "get_voice_persona_status", {}, "Checking active voice persona telemetry and cadence rate, Bro!"
 
-        # 6. Media Playback Intent (YouTube / Spotify in Embedded Webview)
+        # 6. Autonomous Multi-App Context Fusion Intents (CTX-01)
+        if p in ("workspace context", "active context", "what am i working on", "context status", "active workspace", "current context"):
+            return "get_active_workspace_context", {}, "Sampling active multi-application workspace context, Bro!"
+
+        if p in ("clear workspace context", "clear context", "reset context", "flush context"):
+            return "clear_workspace_context", {}, "Flushing in-RAM workspace context ring buffer, Bro!"
+
+        if p in ("running apps", "open applications", "active apps", "list open apps", "what apps are open"):
+            return "inspect_application_context", {}, "Inspecting active desktop applications and open documents, Bro!"
+
+        # 7. Media Playback Intent (YouTube / Spotify in Embedded Webview)
         is_spotify = "spotify" in p
         is_yt_keyword = any(k in p for k in ("youtube", "yt"))
         is_play_keyword = any(k in p for k in ("play", "paly", "chalao", "bajao", "bajaao", "chala do", "listen to"))
@@ -442,6 +452,13 @@ class Orchestrator:
             return
 
         yield {"type": "state.change", "payload": {"state": "thinking"}}
+
+        # Context enrichment for ambiguous queries (CTX-01.4)
+        try:
+            from services.backend.ambient.context_fusion import context_fusion
+            prompt, _ = context_fusion.enrich_query(prompt)
+        except Exception:
+            pass
 
         # 1. Route Request
         model_name, backend_type, meta = await model_router.route_request(

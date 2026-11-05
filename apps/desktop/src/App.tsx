@@ -42,6 +42,7 @@ import { MediaPlayerHUD } from './components/CyberHUD/MediaPlayerHUD';
 import { WindowTilerHUD } from './components/CyberHUD/WindowTilerHUD';
 import { ActiveModelIndicator } from './components/CyberHUD/ActiveModelIndicator';
 import { VoicePersonaHUD } from './components/CyberHUD/VoicePersonaHUD';
+import { ContextStreamHUD } from './components/CyberHUD/ContextStreamHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -155,6 +156,8 @@ export const App: React.FC = () => {
   const [modelExternalEvent, setModelExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showVoicePersona, setShowVoicePersona] = useState<boolean>(false);
   const [voicePersonaExternalEvent, setVoicePersonaExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showContextStream, setShowContextStream] = useState<boolean>(false);
+  const [contextStreamExternalEvent, setContextStreamExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -339,6 +342,8 @@ export const App: React.FC = () => {
             setModelExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('VOICE_PERSONA_')) {
             setVoicePersonaExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('CONTEXT_')) {
+            setContextStreamExternalEvent({ type: mtype, payload });
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -1001,6 +1006,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowVoicePersona((prev) => !prev)
     },
     {
+      id: 'cmd-toggle-context-stream',
+      title: 'Toggle Context Fusion HUD',
+      subtitle: 'Inspect active workspace foreground/background multi-app stream',
+      category: 'Assistant',
+      onExecute: () => setShowContextStream((prev) => !prev)
+    },
+    {
       id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
@@ -1156,6 +1168,21 @@ export const App: React.FC = () => {
           <VoicePersonaHUD
             externalEvent={voicePersonaExternalEvent}
             onClose={() => setShowVoicePersona(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Multi-App Context Fusion HUD (CTX-01) */}
+      {showContextStream && (
+        <div style={{ position: 'absolute', bottom: 90, left: showWindowTiler ? 380 : 24, zIndex: 120 }}>
+          <ContextStreamHUD
+            externalEvent={contextStreamExternalEvent}
+            onClose={() => setShowContextStream(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

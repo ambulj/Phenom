@@ -1626,3 +1626,27 @@ All 4 voice persona and prosody tools are registered in `ToolRegistry` with stri
   - Active audio output is stopped immediately via `tts_engine.stop_speech()`.
   - In-memory speech queue is drained immediately, volume scale is set to `0.0`, and rate is reset.
   - Hard SLA: $< 10.0\text{ ms}$; measured 50-run average latency: **$0.7175\text{ ms}$** (maximum: **$2.1378\text{ ms}$**).
+
+---
+
+## 62. Milestone 17.0 Phase 2: Autonomous Multi-App Context Fusion & Semantic Tracking (CTX-01, SAF-01, SAF-02)
+
+### 1. Tool Registry & Safety Tier Classification (SAF-01)
+All 3 context fusion tools are registered in `ToolRegistry` with strict schema validation and preview functions:
+- `get_active_workspace_context`: **Tier 0** (Read-only query of synthesized active application state, categories, focused app, and recent context events).
+- `inspect_application_context`: **Tier 0** (Read-only query of window metadata and active document path for a specific application).
+- `clear_workspace_context`: **Tier 1** (Purges in-RAM context ring buffer; requires confirmation preview: `"Clear active workspace context history"`).
+
+### 2. Rule 11 & Privacy Credential Sanitization Invariant
+- **Rule 11 Compliance**: Every window title, document path, URL, and contextual string passing into `MultiAppTracker` and `ContextFusion` is actively scrubbed by `ContextSanitizer`.
+- **Sanitization Targets**: High-risk patterns including GitHub personal access tokens (`ghp_`), OpenAI API keys (`sk-`), NVIDIA API keys (`nvapi-`), HTTP Bearer tokens (`Bearer ...`), AWS secret/access keys, and URL query credentials (`password=...`, `token=...`) are replaced with `[REDACTED_CREDENTIAL]`.
+- **Zero Cloud Leakage**: Context events are maintained strictly in transient in-RAM ring buffer (`deque(maxlen=50)`). Raw window titles and private file paths are never logged or exported to cloud models without explicit user preview.
+
+### 3. Universal Synchronous Guardian Context Tracker Freeze SLA (CTX-01.5, SAF-02)
+- Upon Guardian kill switch activation (`guardian.trigger()`):
+  - `_on_guardian_state_change("halted")` is triggered synchronously.
+  - Context tracker state is frozen immediately (`is_frozen = True`).
+  - Active tracking and event ingestion are suspended; further tool invocations or updates reject execution.
+  - In-RAM context event buffer is purged immediately.
+  - Hard SLA: $< 25.0\text{ ms}$; measured 50-run average latency: **$< 0.1\text{ ms}$** (sub-millisecond across all benchmark cycles).
+

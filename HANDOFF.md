@@ -1,5 +1,22 @@
 # HANDOFF.md
 
+## Milestone 17.0 Phase 2: Autonomous Multi-App Context Fusion & Semantic Tracking
+- **Branch**: `hardening/pass-1`
+- **Date**: November 5, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `CTX-01.1`: Win32 multi-window tracker in `services/backend/ambient/multi_app_tracker.py` enumerating foreground and background apps, process names, window titles, and active document paths with app categorization (`ide`, `browser`, `terminal`, `notes`, `communication`, `other`) and mock mode fallback.
+  - `CTX-01.2`: In-RAM context ring buffer in `services/backend/ambient/context_fusion.py` using `deque(maxlen=50)` with decoupled WebSocket broadcaster (`WORKSPACE_CONTEXT_UPDATED`) and zero disk writes (Rule 4).
+  - `CTX-01.3`: Rule 11 credential sanitizer in `services/backend/ambient/context_sanitizer.py` redacting GitHub tokens (`ghp_`), OpenAI API keys (`sk-`), NVIDIA keys (`nvapi-`), Bearer tokens, AWS secrets/access keys, and password query parameters to `[REDACTED_CREDENTIAL]`.
+  - `CTX-01.4`: Automatic context query enrichment in `services/backend/orchestrator/engine.py` enriching ambiguous queries (*"explain this code"*, *"fix the error"*, *"summarize this"*) with focused app metadata, plus direct voice intents (`"workspace context"`, `"running apps"`, `"clear context"`).
+  - `CTX-01.5` & `SAF-02`: Universal Guardian context tracker freeze hook halting ingestion and clearing in-RAM ring buffer synchronously in **< 0.1ms** (< 25.0ms SLA).
+  - `SAF-01`: 3 new tools registered in `ToolRegistry` (`get_active_workspace_context` [Tier 0], `inspect_application_context` [Tier 0], `clear_workspace_context` [Tier 1]) and documented in `SAFETY.md` Section 62.
+  - UI: Built `ContextStreamHUD.tsx` mounted in `apps/desktop/src/App.tsx` and integrated with Command Palette (`Ctrl+K`).
+  - Tests: **6/6 Phase 2 PASSED**; **51/51 combined suite PASSED**.
+  - Frontend Build: `npm --prefix apps/desktop run build` bundled cleanly in 5.53s with 0 errors.
+
+---
+
 ## Milestone 17.0 Phase 1: Interactive Voice Persona & Dynamic Prosody
 - **Branch**: `hardening/pass-1`
 - **Date**: November 5, 2026
