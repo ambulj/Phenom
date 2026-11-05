@@ -45,6 +45,7 @@ import { VoicePersonaHUD } from './components/CyberHUD/VoicePersonaHUD';
 import { ContextStreamHUD } from './components/CyberHUD/ContextStreamHUD';
 import { TelegramCompanionHUD } from './components/CyberHUD/TelegramCompanionHUD';
 import { DocumentSynthesisHUD } from './components/CyberHUD/DocumentSynthesisHUD';
+import { BrowserOperatorHUD } from './components/CyberHUD/BrowserOperatorHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -164,6 +165,8 @@ export const App: React.FC = () => {
   const [telegramCompanionExternalEvent, setTelegramCompanionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showDocumentSynthesis, setShowDocumentSynthesis] = useState<boolean>(false);
   const [documentSynthesisExternalEvent, setDocumentSynthesisExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showBrowserOperator, setShowBrowserOperator] = useState<boolean>(false);
+  const [browserOperatorExternalEvent, setBrowserOperatorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -355,6 +358,9 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('DOCUMENT_') || mtype === 'document_generated' || mtype === 'documents_list_update') {
             setDocumentSynthesisExternalEvent({ type: mtype, payload });
             setShowDocumentSynthesis(true);
+          } else if (mtype.startsWith('browser.') || mtype.startsWith('BROWSER_')) {
+            setBrowserOperatorExternalEvent({ type: mtype, payload });
+            setShowBrowserOperator(true);
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -1038,6 +1044,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowDocumentSynthesis((prev) => !prev)
     },
     {
+      id: 'cmd-toggle-browser-operator',
+      title: 'Toggle Browser Operator HUD',
+      subtitle: 'Persistent Playwright sovereign web agent & live viewport stream',
+      category: 'Assistant',
+      onExecute: () => setShowBrowserOperator((prev) => !prev)
+    },
+    {
       id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
@@ -1238,6 +1251,21 @@ export const App: React.FC = () => {
           <DocumentSynthesisHUD
             externalEvent={documentSynthesisExternalEvent}
             onClose={() => setShowDocumentSynthesis(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Sovereign Autonomous Browser Operator HUD (WEB-02, RES-01) */}
+      {showBrowserOperator && (
+        <div style={{ position: 'absolute', top: 80, left: 24, zIndex: 125 }}>
+          <BrowserOperatorHUD
+            externalEvent={browserOperatorExternalEvent}
+            onClose={() => setShowBrowserOperator(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

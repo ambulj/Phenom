@@ -1736,6 +1736,35 @@ All 6 newly introduced tools across Phase 1 are registered in `ToolRegistry` wit
 - **Hard SLA**: $< 25.0\text{ ms}$; Target: typical $< 1.0\text{ ms}$.
 - **Measured Result**: Guardian Trigger Latency $= \mathbf{11.28\text{ ms}} < 25.0\text{ ms}$ SLA. Active synthesis, vault sync, and note creation immediately raise `RuntimeError("Operation halted by Guardian Kill Switch")`.
 
+---
+
+## 66. Milestone 18.0 Phase 2: Sovereign Autonomous Browser Agent & Interactive Web Operator (WEB-02, RES-01, SAF-01, SAF-02)
+
+### 1. Tool Safety Inventory
+All 7 newly integrated browser tools across Phase 2 are registered in `ToolRegistry` with strict schema validation and preview generation:
+
+- `browser_navigate`: **Tier 2** (Directs Playwright browser to target URL; requires explicit user preview of full URL and domain; never auto-remembered).
+- `browser_click`: **Tier 2** (Dispatches mouse click on element matching selector or text; hard-blocked against payment/checkout triggers by Rule 8).
+- `browser_type`: **Tier 2** (Types keystrokes into targeted input; hard-blocked against password fields, CVVs, and credit card numbers by Rule 8).
+- `browser_scroll`: **Tier 0** (Non-destructive viewport positioning: up, down, top, bottom).
+- `browser_extract_content`: **Tier 0** (Structured DOM extraction: metadata, headings H1-H3, paragraphs, and HTML tables with DOM provenance; no synthetic fabrication).
+- `browser_manage_tabs`: **Tier 0/1** (Enumerates tabs, creates new tabs, switches active tab [Tier 0], or closes specified tab [Tier 1]).
+- `browser_takeover_control`: **Tier 0** (Pause automation, resume automation, or yield immediate manual control to user via `takeover_manager`).
+
+### 2. Permanent Safety Rule Compliance Invariants
+- **Rule 1 (Safety Before Tools)**: Browser navigation and interaction operations are routed through `ToolRegistry` with Tier 2 confirmation prompts.
+- **Rule 4 (Zero Cloud Exfiltration for Private Data)**: Extracted DOM text, tables, and tab lists are maintained in a transient in-RAM quarantine buffer (`_transient_quarantine`) with automatic TTL, preventing unapproved leakages to cloud APIs.
+- **Rule 8 (Hard Payment & Password Blocker by Construction)**:
+  - Cart filling is permitted; checkout payments (`checkout`, `pay`, `place order`, `buy now`, `submit payment`, etc.) are caught by `BLOCKED_PAYMENT_PATTERNS` regex and raise a strict `PermissionError`.
+  - Passwords, CVV codes, PINs, and credit card patterns in selectors or typed values are caught by `BLOCKED_PASSWORD_PATTERNS` regex and rejected with `PermissionError`. No passwords stored or typed.
+- **Rule 11 (Secrets in Credential Manager)**: Browser cookies and session tokens never log credentials or secret tokens to disk or chat.
+
+### 3. Universal Synchronous Guardian Kill Switch SLA Benchmark (SAF-02.1)
+- **Cooperative Kill Switch Hook**: Browser navigation, element interactions, and content extraction poll `guardian.is_halted` synchronously before and during Playwright dispatches.
+- **Hard SLA**: $< 25.0\text{ ms}$; Target: typical $< 1.0\text{ ms}$.
+- **Measured Result**: Guardian Trigger Latency $= \mathbf{11.3177\text{ ms}} < 25.0\text{ ms}$ SLA. Immediate cessation of browser automation and rejection of subsequent commands with `RuntimeError("Operation halted by Guardian Kill Switch")`.
+
+
 
 
 

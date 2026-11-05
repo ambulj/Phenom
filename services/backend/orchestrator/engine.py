@@ -426,6 +426,27 @@ class Orchestrator:
                 "title": topic.title()
             }, f"Generating executive {target_fmt.upper()} report on '{topic.title()}', Bro!"
 
+        # 9. Sovereign Browser Operator & Deep Web Research Intents (WEB-02, RES-01)
+        if p in ("pause browser", "pause automation", "browser pause", "hold browser"):
+            return "browser_takeover_control", {"action": "pause"}, "Pausing autonomous browser operator Bro!"
+
+        if p in ("resume browser", "continue automation", "browser resume", "unpause browser", "browser chalao"):
+            return "browser_takeover_control", {"action": "resume"}, "Resuming autonomous browser operator Bro!"
+
+        if p in ("takeover browser", "manual takeover", "i will drive", "take over"):
+            return "browser_takeover_control", {"action": "takeover"}, "Yielding manual browser control to you Bro!"
+
+        if p in ("list tabs", "browser tabs", "show tabs", "open tabs", "tabs dikhao"):
+            return "browser_manage_tabs", {"action": "list"}, "Enumerating open browser tabs Bro!"
+
+        if p in ("scrape page", "extract table from page", "extract page content", "scrape this page", "page content"):
+            return "browser_extract_content", {}, "Extracting structured content and tables from active page Bro!"
+
+        m_browse = re.search(r"^(?:ok\s+|please\s+)?(?:browse\s+to|navigate\s+to|open\s+in\s+browser)\s+(.+)$", p)
+        if m_browse:
+            target_url = m_browse.group(1).strip()
+            return "browser_navigate", {"url": target_url}, f"Navigating sovereign browser to '{target_url}', Bro!"
+
         return None
 
     def _extract_learned_rule(self, text: str) -> Optional[str]:

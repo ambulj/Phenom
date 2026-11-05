@@ -2173,3 +2173,59 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Secret Scanner: **PASSED (0 secrets detected)**
 - Desktop Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 6.73s)**
 - Release Tag: `v15.0.0`
+
+---
+
+# Milestone 18.0 Phase 1: Autonomous Document Generation & Obsidian Knowledge Engine
+**Status:** Complete & Verified
+**Requirements:** `DOC-01`, `KNG-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Document Synthesis & Chart Embeds (`DOC-01`)**:
+   - `services/backend/documents/doc_generator.py`: Autonomous synthesis of Word (`.docx`), Excel (`.xlsx`), PowerPoint (`.pptx`), and PDF (`.pdf`) documents with native charts (`openpyxl.chart.BarChart`/`LineChart`, `pptx.chart.data.CategoryChartData`, ReportLab `VerticalBarChart`). Supports `create`, `modify`, and `append` operations.
+2. **Obsidian Vault Knowledge Engine (`KNG-01`)**:
+   - `services/backend/knowledge/obsidian_sync.py`: Bidirectional markdown vault parser indexing frontmatter metadata, `#tags`, and `[[wikilinks]]`. Maintains in-RAM knowledge backlink graph.
+   - `services/backend/knowledge/obsidian_tools.py`: Daily executive debrief generator writing structured daily summaries to `vault/notes/daily/YYYY-MM-DD.md`.
+3. **Safety Layer Governance (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/document_tools.py`: Registered 6 tools in `ToolRegistry` (`generate_document` [Tier 1], `get_document_templates` [Tier 0], `list_generated_documents` [Tier 0], `sync_obsidian_vault` [Tier 0], `create_daily_debrief_note` [Tier 1], `query_vault_knowledge` [Tier 0]).
+   - `generate_diff_preview` & `preview_daily_debrief_note` preview generators. Pre-modification backups routed to Windows Recycle Bin via `send2trash` (Rule 7).
+4. **UI HUD & Direct Intents**:
+   - `apps/desktop/src/components/CyberHUD/DocumentSynthesisHUD.tsx`: React widget for 1-click template document generation and native OS opening.
+   - Direct intents wired in `Orchestrator._detect_direct_intent` for report synthesis, spreadsheets, decks, daily debriefs, and vault searches.
+   - Documented Section 65 in `SAFETY.md`.
+
+### Test Results
+- `services/backend/tests/test_document_and_obsidian_knowledge.py`: **10/10 PASSED in 12.56s**
+- Guardian Trigger Latency Benchmark: **11.28ms** (< 25.0ms SLA)
+- Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 7.14s)**
+
+---
+
+# Milestone 18.0 Phase 2: Sovereign Autonomous Browser Agent & Interactive Web Operator
+**Status:** Complete & Verified
+**Requirements:** `WEB-02`, `RES-01`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Persistent Playwright Browser Controller (`WEB-02`)**:
+   - `services/backend/automation/browser_controller.py`: Headless/headed multi-tab Chromium manager supporting tab creation, listing, switching, closing, and semantic element navigation.
+   - Live viewport frame capture for desktop CyberHUD streaming.
+2. **Deep Structured Web Scraping (`RES-01`)**:
+   - Extraction of document metadata, headings (`H1`-`H3`), paragraphs, and structured HTML tables with DOM provenance, strictly avoiding synthetic hallucinations (no-fabricated-data).
+3. **Rule 8 Hard Payment & Password Blocker (`SAF-01`)**:
+   - `BLOCKED_PAYMENT_PATTERNS`: Regex blocker across selectors and interaction text (`checkout`, `pay`, `place order`, `buy now`, `submit payment`, etc.) raising `PermissionError`.
+   - `BLOCKED_PASSWORD_PATTERNS`: Regex blocker preventing typing or selecting password, CVV, PIN, or credit card fields. Cart filling is permitted; checkout is blocked by construction.
+4. **Safety Governance & Takeover Controls (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/browser_operator_tools.py`: Registered 7 tools (`browser_navigate` [Tier 2], `browser_click` [Tier 2], `browser_type` [Tier 2], `browser_scroll` [Tier 0], `browser_extract_content` [Tier 0], `browser_manage_tabs` [Tier 0/1], `browser_takeover_control` [Tier 0]).
+   - Transient in-RAM quarantine buffer (`_transient_quarantine`) preventing unapproved cloud exfiltration of scraped web data (Rule 4).
+   - `services/backend/automation/human_takeover.py`: Instant pause, resume, and manual human takeover routines.
+5. **UI HUD & Direct Intents**:
+   - `apps/desktop/src/components/CyberHUD/BrowserOperatorHUD.tsx`: Live stream view, takeover bar (Pause, Resume, Takeover), tab switcher, URL bar, and Rule 8 shield badge.
+   - Direct intents wired in `Orchestrator._detect_direct_intent` for browsing, pausing, resuming, taking over, scraping, and managing tabs.
+   - Documented Section 66 in `SAFETY.md`.
+
+### Test Results
+- `services/backend/tests/test_browser_operator_agent.py`: **8/8 PASSED in 15.56s**
+- Guardian Kill Switch Trigger Latency: **11.3177ms** (< 25.0ms SLA)
+- Regression Test Suite (`test_document_and_obsidian_knowledge.py`, `test_safety.py`): **15/15 PASSED in 15.41s**
+- Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.79s)**
+

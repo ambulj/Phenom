@@ -51,6 +51,10 @@ class HumanTakeoverManager:
     def is_paused(self) -> bool:
         return self._is_paused
 
+    @property
+    def is_takeover_active(self) -> bool:
+        return self._is_paused and not self._is_automating
+
     def start_automation(self):
         with self._lock:
             self._is_automating = True
@@ -130,5 +134,31 @@ class HumanTakeoverManager:
                 self._is_automating = False
                 self._is_paused = False
                 raise HumanTakeoverAbort("Automation aborted by user takeover.")
+
+    def request_pause(self, reason: str = "user_pause"):
+        """Convenience method to trigger pause from UI or tools."""
+        with self._lock:
+            self._is_paused = True
+            self._last_takeover_time = time.time()
+        if self._on_takeover_callback:
+            try:
+                self._on_takeover_callback()
+            except Exception:
+                pass
+
+    def resume_from_user(self):
+        """Resumes automation explicitly from user action."""
+        self.resolve_takeover("continue")
+
+    def trigger_takeover(self, reason: str = "user_takeover"):
+        """Immediately halts automation and yields direct manual control to user."""
+        with self._lock:
+            self._is_paused = True
+            self._is_automating = False
+        if self._on_takeover_callback:
+            try:
+                self._on_takeover_callback()
+            except Exception:
+                pass
 
 takeover_manager = HumanTakeoverManager()

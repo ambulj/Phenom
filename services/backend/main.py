@@ -256,6 +256,7 @@ import services.backend.tools.voice_persona_tools
 import services.backend.tools.context_fusion_tools
 import services.backend.tools.document_tools
 import services.backend.tools.obsidian_tools
+import services.backend.tools.browser_operator_tools
 
 
 
