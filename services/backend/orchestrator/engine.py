@@ -447,6 +447,33 @@ class Orchestrator:
             target_url = m_browse.group(1).strip()
             return "browser_navigate", {"url": target_url}, f"Navigating sovereign browser to '{target_url}', Bro!"
 
+        # 10. Local Wake-Word, Streaming Whisper & Reactive 3D Particle Orb Intents (VOX-04, ORB-02)
+        if p in ("wake word status", "mic status", "wake status", "listener status", "audio status"):
+            return "get_wake_word_status", {}, "Inspecting local wake-word listener, streaming Whisper, and 3D Particle Orb state, Bro!"
+
+        if p in ("trigger wake word", "wake phenom", "wake up phenom", "hey phenom", "test wake word"):
+            return "trigger_manual_wake", {"phrase": "hey phenom"}, "Activating manual wake trigger Bro!"
+
+        if p in ("mute microphone", "mute mic", "mic mute", "silence microphone"):
+            return "mute_audio_input", {"muted": True}, "Microphone input muted, Bro!"
+
+        if p in ("unmute microphone", "unmute mic", "mic unmute", "enable microphone"):
+            return "mute_audio_input", {"muted": False}, "Microphone input unmuted, Bro!"
+
+        m_sens = re.search(r"^(?:ok\s+|please\s+)?(?:set\s+)?wake(?:\s*word)?\s+sensitivity\s+(?:to\s+)?(\d+(?:\.\d+)?)(?:%)?$", p)
+        if m_sens:
+            raw_val = float(m_sens.group(1))
+            val = raw_val / 100.0 if raw_val > 1.0 else raw_val
+            val = max(0.0, min(1.0, val))
+            return "set_wake_word_sensitivity", {"sensitivity": val}, f"Configuring wake-word detection sensitivity to {val:.2f}, Bro!"
+
+        m_orb = re.search(r"^(?:ok\s+|please\s+)?(?:set\s+)?orb\s+emotion\s+(?:to\s+)?(urgent|focused|chill|idle|speaking)$", p)
+        if not m_orb:
+            m_orb = re.search(r"^(?:ok\s+|please\s+)?orb\s+(urgent|focused|chill|idle|speaking)$", p)
+        if m_orb:
+            target_em = m_orb.group(1).lower()
+            return "set_orb_emotion_preset", {"emotion": target_em}, f"Modulating 3D Particle Orb emotion to '{target_em}', Bro!"
+
         return None
 
     def _extract_learned_rule(self, text: str) -> Optional[str]:

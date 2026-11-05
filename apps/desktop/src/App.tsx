@@ -46,6 +46,7 @@ import { ContextStreamHUD } from './components/CyberHUD/ContextStreamHUD';
 import { TelegramCompanionHUD } from './components/CyberHUD/TelegramCompanionHUD';
 import { DocumentSynthesisHUD } from './components/CyberHUD/DocumentSynthesisHUD';
 import { BrowserOperatorHUD } from './components/CyberHUD/BrowserOperatorHUD';
+import { ParticleOrbHUD } from './components/CyberHUD/ParticleOrbHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -167,6 +168,7 @@ export const App: React.FC = () => {
   const [documentSynthesisExternalEvent, setDocumentSynthesisExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showBrowserOperator, setShowBrowserOperator] = useState<boolean>(false);
   const [browserOperatorExternalEvent, setBrowserOperatorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showParticleOrb, setShowParticleOrb] = useState<boolean>(false);
 
 
 
@@ -361,6 +363,8 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('browser.') || mtype.startsWith('BROWSER_')) {
             setBrowserOperatorExternalEvent({ type: mtype, payload });
             setShowBrowserOperator(true);
+          } else if (mtype.startsWith('orb.') || mtype.startsWith('wake.') || mtype.startsWith('whisper.')) {
+            setShowParticleOrb(true);
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -1051,6 +1055,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowBrowserOperator((prev) => !prev)
     },
     {
+      id: 'cmd-particle-orb',
+      title: 'Toggle Reactive 3D Particle Orb HUD',
+      subtitle: 'Sound-reactive Three.js WebGL particle orb & wake-word controls',
+      category: 'Assistant',
+      onExecute: () => setShowParticleOrb((prev) => !prev)
+    },
+    {
       id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
@@ -1269,6 +1280,20 @@ export const App: React.FC = () => {
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Sound-Reactive 3D Particle Orb HUD (VOX-04, ORB-02) */}
+      {showParticleOrb && (
+        <div style={{ position: 'absolute', top: 80, right: 24, zIndex: 126 }}>
+          <ParticleOrbHUD
+            onClose={() => setShowParticleOrb(false)}
+            onSendIntent={(intent) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({ type: 'prompt', payload: { text: intent } }));
               }
             }}
           />

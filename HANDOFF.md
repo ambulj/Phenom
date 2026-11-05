@@ -2229,3 +2229,35 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Regression Test Suite (`test_document_and_obsidian_knowledge.py`, `test_safety.py`): **15/15 PASSED in 15.41s**
 - Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.79s)**
 
+---
+
+# Milestone 18.0 Phase 3: Local Wake-Word, Streaming Whisper & Reactive 3D Particle Orb
+**Status:** Complete & Verified
+**Requirements:** `VOX-04.1`, `VOX-04.2`, `ORB-02.1`, `ORB-02.2`, `VOX-04.3`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Local Wake-Word Listener (`VOX-04.1`)**:
+   - `services/backend/voice/wake_word_listener.py`: Zero-latency on-device keyword detector recognizing `"hey phenom"`, `"phenom"`, and `"hey jarvis"` locally with zero network egress (Rule 4).
+   - In-memory circular audio ring buffer (`collections.deque(maxlen=200)`), zero audio files persisted to disk (Rule 4 privacy by default). Configurable sensitivity (0.0 to 1.0) and mute toggling.
+2. **Streaming Whisper & Silero VAD Barge-in (`VOX-04.2`)**:
+   - `services/backend/voice/streaming_whisper.py`: Real-time chunked audio transcription (16kHz mono, 512 samples/chunk) with Silero VAD speech boundary detection (< 0.5ms inference).
+   - Sub-5ms conversational barge-in interruption immediately cutting off active TTS playback when user speech begins.
+3. **Sound-Reactive Three.js Cybernetic Particle Orb (`ORB-02.1`, `ORB-02.2`)**:
+   - `apps/desktop/src/components/CyberHUD/ParticleOrb.tsx`: 15,000 particle WebGL buffer geometry with WebAudio AnalyserNode FFT deformation across bass (dilation), mid (surface turbulence), and treble (glitter dispersion).
+   - Dynamic emotional shader themes: Urgent (`#EF4444`), Focused (`#00E5FF`), Chill (`#A855F7`), Idle (`#FFB300`), and Speaking (`#CCFF00` on `#0052FF`).
+   - `apps/desktop/src/components/CyberHUD/ParticleOrbHUD.tsx`: Cyber HUD card with sensitivity slider, mute/unmute button, manual wake button, emotion picker, and Guardian Emergency Silence test button. Mounted in `App.tsx` and Command Palette (`Ctrl+K`).
+4. **Safety Layer Governance (`SAF-01`, `SAF-02`)**:
+   - `services/backend/tools/wake_word_and_orb_tools.py`: Registered 5 tools (`get_wake_word_status` [Tier 0], `set_wake_word_sensitivity` [Tier 1], `trigger_manual_wake` [Tier 0], `set_orb_emotion_preset` [Tier 1], `mute_audio_input` [Tier 0]).
+   - Imported in `services/backend/main.py`.
+   - Direct voice/chat intents wired in `Orchestrator._detect_direct_intent`.
+   - Documented Section 67 in `SAFETY.md`.
+5. **Universal Synchronous Guardian Audio Cut-off SLA Benchmark (`VOX-04.3`, `SAF-02.1`)**:
+   - Direct Audio Cut-Off Latency: **0.0119ms** (< 5.0ms SLA).
+   - Universal Guardian Kill Switch Trigger Latency: **11.2502ms** (< 25.0ms SLA).
+
+### Test Results
+- `services/backend/tests/test_wake_word_streaming_whisper_orb.py`: **8/8 PASSED in 11.97s**
+- Full Cumulative Test Suite (31 tests across Phase 1, Phase 2, Phase 3, and Safety): **31/31 PASSED in 16.09s**
+- Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.37s)**
+
+

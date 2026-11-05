@@ -257,6 +257,7 @@ import services.backend.tools.context_fusion_tools
 import services.backend.tools.document_tools
 import services.backend.tools.obsidian_tools
 import services.backend.tools.browser_operator_tools
+import services.backend.tools.wake_word_and_orb_tools
 
 
 

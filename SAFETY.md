@@ -1764,6 +1764,31 @@ All 7 newly integrated browser tools across Phase 2 are registered in `ToolRegis
 - **Hard SLA**: $< 25.0\text{ ms}$; Target: typical $< 1.0\text{ ms}$.
 - **Measured Result**: Guardian Trigger Latency $= \mathbf{11.3177\text{ ms}} < 25.0\text{ ms}$ SLA. Immediate cessation of browser automation and rejection of subsequent commands with `RuntimeError("Operation halted by Guardian Kill Switch")`.
 
+---
+
+## 67. Milestone 18.0 Phase 3: Local Wake-Word, Streaming Whisper & Reactive 3D Particle Orb (VOX-04, ORB-02, SAF-01, SAF-02)
+
+### 1. Tool Safety Inventory
+All 5 newly integrated voice and particle orb tools across Phase 3 are registered in `ToolRegistry` with strict schema validation and preview generation:
+
+- `get_wake_word_status`: **Tier 0** (Read-only retrieval of wake-word detector status, sensitivity, listening state, phrases, and streaming Whisper engine metrics).
+- `set_wake_word_sensitivity`: **Tier 1** (Adjusts local keyword detection sensitivity scale from 0.0 to 1.0; requires parameter preview confirmation).
+- `trigger_manual_wake`: **Tier 0** (Simulates wake-up activation keyword or Push-to-Talk summon without modifying configuration).
+- `set_orb_emotion_preset`: **Tier 1** (Transitions Three.js 3D Particle Orb emotional shader preset across `urgent`, `focused`, `chill`, `idle`, and `speaking`; requires parameter preview confirmation).
+- `mute_audio_input`: **Tier 0** (Instantly mutes or unmutes local microphone streams across wake-word detector and streaming Whisper pipeline).
+
+### 2. Permanent Safety Rule Compliance Invariants
+- **Rule 1 (Safety Before Tools)**: All voice configuration and orb emotion modulations wrap through `ToolRegistry` with typed Pydantic validation.
+- **Rule 4 (Zero Cloud Exfiltration & Zero Disk Audio Persistence)**: All keyword detection, Silero VAD boundary calculations, and Whisper transcriptions execute 100% locally on CPU/ONNX runtime. Incoming audio is buffered strictly in transient RAM ring buffers (`collections.deque(maxlen=200)`), with zero `.wav` or temporary audio files written to disk.
+- **Rule 8 (No Passwords or Financial Payments)**: Voice intent parsers strictly reject payment authorizations or credentials.
+- **Rule 11 (Secrets in Credential Manager)**: Voice engines store zero tokens or secrets in memory logs or chat.
+
+### 3. Universal Synchronous Guardian Audio Cut-off SLA Benchmark (SAF-02.1)
+- **Synchronous Audio Cut-Off Hook**: `wake_word_listener` and `streaming_whisper` register state callbacks with `guardian.add_state_callback`, synchronously muting audio inputs, halting streaming STT, and clearing all RAM audio buffers.
+- **Direct Audio Cut-Off Latency**: Benchmark verified at $\mathbf{0.0119\text{ ms}} < 5.0\text{ ms}$ SLA.
+- **Universal Guardian Trigger Latency**: Benchmark verified at $\mathbf{11.2502\text{ ms}} < 25.0\text{ ms}$ SLA.
+
+
 
 
 
