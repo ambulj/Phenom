@@ -252,6 +252,7 @@ import services.backend.tools.window_tiler
 import services.backend.tools.macro_recorder
 import services.backend.router.dynamic_model_router
 import services.backend.tools.offline_vision_tools
+import services.backend.tools.voice_persona_tools
 
 
 
@@ -1715,6 +1716,7 @@ services.backend.tools.media_tools.register_broadcaster(broadcast_message)
 services.backend.tools.window_tiler.register_broadcaster(broadcast_message)
 services.backend.tools.macro_recorder.register_broadcaster(broadcast_message)
 services.backend.router.dynamic_model_router.register_broadcaster(broadcast_message)
+services.backend.voice.prosody_manager.register_broadcaster(broadcast_message)
 
 
 

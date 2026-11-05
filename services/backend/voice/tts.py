@@ -274,4 +274,7 @@ class TTSEngine:
 
         threading.Thread(target=_purge_hardware, daemon=True).start()
 
+    # Alias for consistency
+    stop = stop_speech
+
 tts_engine = TTSEngine()

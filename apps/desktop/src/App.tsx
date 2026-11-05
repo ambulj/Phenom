@@ -41,6 +41,7 @@ import { HumanTakeoverBanner } from './components/CyberHUD/HumanTakeoverBanner';
 import { MediaPlayerHUD } from './components/CyberHUD/MediaPlayerHUD';
 import { WindowTilerHUD } from './components/CyberHUD/WindowTilerHUD';
 import { ActiveModelIndicator } from './components/CyberHUD/ActiveModelIndicator';
+import { VoicePersonaHUD } from './components/CyberHUD/VoicePersonaHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -152,6 +153,8 @@ export const App: React.FC = () => {
   const [showWindowTiler, setShowWindowTiler] = useState<boolean>(false);
   const [windowTilerExternalEvent, setWindowTilerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [modelExternalEvent, setModelExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showVoicePersona, setShowVoicePersona] = useState<boolean>(false);
+  const [voicePersonaExternalEvent, setVoicePersonaExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -334,6 +337,8 @@ export const App: React.FC = () => {
             setShowWindowTiler(true);
           } else if (mtype === 'MODEL_ROUTED' || mtype === 'MODEL_ROUTING_OVERRIDE_CHANGED') {
             setModelExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('VOICE_PERSONA_')) {
+            setVoicePersonaExternalEvent({ type: mtype, payload });
           } else if (mtype === 'mode.changed') {
 
             setCurrentMode(payload.mode || 'work');
@@ -989,6 +994,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowWindowTiler((prev) => !prev)
     },
     {
+      id: 'cmd-toggle-voice-persona',
+      title: 'Toggle Voice Persona & Prosody HUD',
+      subtitle: 'View emotion telemetry, cadence rate, and lock persona voice styles',
+      category: 'Assistant',
+      onExecute: () => setShowVoicePersona((prev) => !prev)
+    },
+    {
       id: 'cmd-persona-silent',
       title: 'Switch Persona: Silent Co-Pilot',
 
@@ -1129,6 +1141,21 @@ export const App: React.FC = () => {
           <WindowTilerHUD
             externalEvent={windowTilerExternalEvent}
             onClose={() => setShowWindowTiler(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Voice Persona & Dynamic Prosody HUD (VOX-03) */}
+      {showVoicePersona && (
+        <div style={{ position: 'absolute', bottom: 90, right: showMediaPlayer ? 380 : 24, zIndex: 120 }}>
+          <VoicePersonaHUD
+            externalEvent={voicePersonaExternalEvent}
+            onClose={() => setShowVoicePersona(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

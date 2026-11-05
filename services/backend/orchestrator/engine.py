@@ -275,7 +275,29 @@ class Orchestrator:
         if p in ("offline vision status", "vision status", "check offline vision"):
             return "verify_offline_vision_status", {}, "Checking offline vision engine and local VLM status Bro!"
 
-        # 5. Media Playback Intent (YouTube / Spotify in Embedded Webview)
+        # 5. Voice Persona & Prosody Control Intents (VOX-03)
+        if p in ("speak faster", "speed up voice", "fast voice", "talk faster", "increase speech speed"):
+            return "adjust_voice_prosody", {"rate_delta": 2}, "Stepping up speech cadence, Bro! Moving briskly."
+
+        if p in ("speak slower", "slow down voice", "slow voice", "talk slower", "decrease speech speed"):
+            return "adjust_voice_prosody", {"rate_delta": -2}, "Slowing down speech cadence, Bro. Measured and clear."
+
+        if p in ("whisper mode", "whisper", "night mode voice", "quiet voice"):
+            return "set_voice_persona_style", {"style": "whisper"}, "Whisper mode engaged, Bro. Keeping it ultra-quiet."
+
+        if p in ("calm down", "calm voice", "relax voice", "chill voice", "soothing voice"):
+            return "set_voice_persona_style", {"style": "calm"}, "Calm persona engaged, Bro. Smooth waters ahead."
+
+        if p in ("witty voice", "lock persona witty", "jarvis mode", "witty persona", "british jarvis"):
+            return "set_voice_persona_style", {"style": "witty_jarvis"}, "Classic witty Jarvis persona locked in, Bro! Ready for banter."
+
+        if p in ("normal voice", "reset voice", "default voice", "reset persona", "auto voice"):
+            return "reset_voice_persona", {}, "Resetting voice persona and cadence to dynamic adaptive baseline, Bro!"
+
+        if p in ("voice status", "persona status", "voice persona", "active persona"):
+            return "get_voice_persona_status", {}, "Checking active voice persona telemetry and cadence rate, Bro!"
+
+        # 6. Media Playback Intent (YouTube / Spotify in Embedded Webview)
         is_spotify = "spotify" in p
         is_yt_keyword = any(k in p for k in ("youtube", "yt"))
         is_play_keyword = any(k in p for k in ("play", "paly", "chalao", "bajao", "bajaao", "chala do", "listen to"))

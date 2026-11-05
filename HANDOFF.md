@@ -1,5 +1,21 @@
 # HANDOFF.md
 
+## Milestone 17.0 Phase 1: Interactive Voice Persona & Dynamic Prosody
+- **Branch**: `hardening/pass-1`
+- **Date**: November 5, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `VOX-03.1`: Heuristic token/regex sentiment and emotion classifier in `services/backend/voice/emotion_classifier.py` evaluating `urgent`, `frustrated`, `excited`, `focused`, `calm`, and `casual` in 0.015ms average latency (< 0.1ms SLA) with 0 cloud calls (Rule 4).
+  - `VOX-03.2`: Dynamic prosody manager in `services/backend/voice/prosody_manager.py` dynamically modulating SAPI5/Sarvam speech rate `[-10, 10]`, volume scale `[0.0, 1.0]`, and witty British Jarvis conversational prefixes.
+  - `VOX-03.3`: Direct voice control intents in `services/backend/orchestrator/engine.py` (`"speak faster"`, `"speak slower"`, `"whisper mode"`, `"calm down"`, `"witty voice"`, `"normal voice"`, `"voice status"`).
+  - `VOX-03.4`: Cyber HUD Voice Persona widget in `apps/desktop/src/components/CyberHUD/VoicePersonaHUD.tsx` with live emotion badges, cadence/volume sliders, preset picker, mute toggle, and visualizer bars.
+  - `VOX-03.5` & `SAF-02`: Universal Guardian audio cut-off hook stopping speech, draining queue, and muting volume within **0.7175ms average latency** (< 10.0ms SLA).
+  - `SAF-01`: 4 new tools registered in `ToolRegistry` (`get_voice_persona_status` [Tier 0], `set_voice_persona_style` [Tier 1], `adjust_voice_prosody` [Tier 1], `reset_voice_persona` [Tier 0]) and documented in `SAFETY.md` Section 61.
+  - Tests: **5/5 Phase 1 PASSED**; **45/45 combined suite PASSED**.
+  - Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly with 0 errors.
+
+---
+
 ## Milestone 16.0 Phase 4: 100% Offline Ollama Screen Vision, Safety Audit & Milestone 16 Release
 - **Branch**: `hardening/pass-1`
 - **Date**: November 5, 2026

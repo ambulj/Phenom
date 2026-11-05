@@ -1604,3 +1604,25 @@ All 23 newly introduced tools across Milestone 16 are registered in `ToolRegistr
 - **Simultaneous 100-Cycle Benchmark**: Executed across all 5 Milestone 16 subsystems simultaneously (`MediaAudioMute`, `WindowTiler`, `MacroReplayer`, `DynamicModelRouter`, `OfflineVision`).
 - **Hard SLA**: $< 25.0\text{ ms}$.
 - **Measured Performance**: Average latency $= 0.0124\text{ ms}$, maximum latency $= 0.1942\text{ ms}$ (sub-millisecond across all cycles).
+
+---
+
+## 61. Milestone 17.0 Phase 1: Voice Persona & Dynamic Prosody (VOX-03, SAF-01, SAF-02)
+
+### 1. Tool Registry & Safety Tier Classification (SAF-01)
+All 4 voice persona and prosody tools are registered in `ToolRegistry` with strict schema validation and preview functions:
+- `get_voice_persona_status`: **Tier 0** (Read-only query of active emotion, locked style, speech rate, volume, and mute state).
+- `set_voice_persona_style`: **Tier 1** (Mutating action locking or switching persona style preset: `witty_jarvis`, `whisper`, `calm`, `fast`, `urgent`, `normal`, or `auto`; requires confirmation preview: `"Lock voice persona style to '{style}'"`).
+- `adjust_voice_prosody`: **Tier 1** (Mutating action fine-tuning speech cadence rate `[-10, 10]` or volume scaling `[0.0, 1.0]`; requires confirmation preview: `"Adjust speech prosody: rate_delta={rate_delta}, volume_scale={volume_scale}"`).
+- `reset_voice_persona`: **Tier 0** (Safe restoration of persona and prosody to baseline defaults).
+
+### 2. Privacy & Zero-Cloud Invariant (Rule 4)
+- User emotion and sentiment classification (`EmotionClassifier`) executes 100% locally on CPU using lexical token and regex heuristics in $< 0.1\text{ ms}$.
+- Zero audio samples or user text are sent to cloud APIs for emotion recognition.
+
+### 3. Universal Synchronous Guardian Audio Silence SLA (VOX-03.5, SAF-02)
+- Upon Guardian kill switch activation (`guardian.trigger()`):
+  - `_on_guardian_state_change("halted")` is triggered synchronously.
+  - Active audio output is stopped immediately via `tts_engine.stop_speech()`.
+  - In-memory speech queue is drained immediately, volume scale is set to `0.0`, and rate is reset.
+  - Hard SLA: $< 10.0\text{ ms}$; measured 50-run average latency: **$0.7175\text{ ms}$** (maximum: **$2.1378\text{ ms}$**).
