@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "16.0.0",
-  "description": "Phenom 16.0: Ambient Cybernetic Intelligence & Offline Desktop Autonomy — Cyber HUD Media Suite, Smart Window Tiler, Encrypted Macro Recorder, Task-Aware Dynamic Model Router, and 100% Offline Ollama Screen Vision Engine",
+  "version": "17.0.0",
+  "description": "Phenom 17.0: Dynamic Voice Persona, Multi-App Context Fusion & Remote Mobile Super-Companion — Heuristic Emotion Prosody Modulation, Win32 Multi-App In-RAM Context Tracking, Bidirectional Telegram Executive Mobile Controls & Privacy Screen Previews",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

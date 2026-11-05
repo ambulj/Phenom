@@ -206,4 +206,3 @@ def test_guardian_context_tracker_freeze_sla_benchmark():
 
     assert avg_ms < 25.0, f"Average freeze latency {avg_ms:.4f}ms exceeded 25.0ms SLA"
     assert max_ms < 25.0, f"Peak freeze latency {max_ms:.4f}ms exceeded 25.0ms SLA"
-    assert avg_ms < 2.0

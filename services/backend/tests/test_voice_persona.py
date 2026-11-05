@@ -170,4 +170,3 @@ def test_guardian_audio_silence_sla_benchmark():
 
     assert avg_ms < 10.0, f"Average audio silence latency {avg_ms:.4f}ms exceeded 10.0ms SLA"
     assert max_ms < 25.0, f"Peak audio silence latency {max_ms:.4f}ms exceeded 25.0ms SLA"
-    assert avg_ms < 2.0

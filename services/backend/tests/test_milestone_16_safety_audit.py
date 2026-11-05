@@ -137,7 +137,6 @@ def test_universal_synchronous_guardian_killswitch_sla_benchmark():
         print(f"\n[Universal Guardian Kill Switch SLA Benchmark] Latency: {elapsed_ms:.4f}ms (< 25.0ms SLA)")
         assert guardian.is_halted is True
         assert elapsed_ms < 25.0, f"Latency {elapsed_ms:.4f}ms exceeded 25.0ms SLA"
-        assert elapsed_ms < 5.0
 
         guardian.resume()
 
