@@ -70,7 +70,7 @@ class ObsidianSyncEngine:
         os.makedirs(self.notes_dir, exist_ok=True)
         os.makedirs(self.daily_dir, exist_ok=True)
 
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._notes: Dict[str, NoteMetadata] = {}
         self._tags_index: Dict[str, Set[str]] = {}
         self._backlinks_index: Dict[str, Set[str]] = {}

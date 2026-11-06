@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "17.0.0",
-  "description": "Phenom 17.0: Dynamic Voice Persona, Multi-App Context Fusion & Remote Mobile Super-Companion — Heuristic Emotion Prosody Modulation, Win32 Multi-App In-RAM Context Tracking, Bidirectional Telegram Executive Mobile Controls & Privacy Screen Previews",
+  "version": "18.0.0",
+  "description": "Phenom 18.0: Sovereign Autonomous Web Agent, Document Knowledge Synthesis & Sound-Reactive Cybernetic Orb — Autonomous Multi-Format Document Generation, Bidirectional Obsidian Knowledge Graph, Playwright Browser Operator with Rule 8 Payment Protection, Local Wake-Word & Three.js 3D Particle Orb",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
