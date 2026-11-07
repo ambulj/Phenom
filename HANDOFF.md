@@ -1,5 +1,21 @@
 # HANDOFF.md
 
+## Milestone 19.0 Phase 1: Sovereign Telegram Remote Uplink & Mobile Command Center
+- **Branch**: `hardening/pass-1`
+- **Date**: November 7, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `TEL-03.1`: Sovereign outbound HTTPS long polling loop in `services/backend/remote/telegram_bot.py` using `TelegramClient.get_updates(offset=..., timeout=30)` with atomic offset advancement, exponential backoff (1s-30s), and zero open router ports or tunnel relays.
+  - `TEL-03.2`: Strict pairing authentication state machine with owner user ID whitelisting, 6-digit rolling PIN authorization for Tier 2 actions, 3-strike lockout, and 15-second ephemeral message deletion.
+  - `TEL-03.3` & `TEL-03.4`: Full multimodal voice loop with strict Rule 4 compliance (zero disk writes): inbound voice notes downloaded directly into `io.BytesIO` in RAM and transcribed via local Whisper; outbound replies synthesized in RAM and uploaded via `sendVoice` alongside companion formatted Markdown text.
+  - `TEL-03.5`: Enhanced `TelegramCompanionHUD.tsx` with live long polling connection status badge, paired device telemetry, PIN rotation trigger, and emergency remote lock toggle.
+  - `SAF-01`: Registered `send_telegram_voice_note` (Tier 0) in `ToolRegistry` with Pydantic arguments schema and preview generator; audited `SAFETY.md` Section 69.
+  - `SAF-02.1`: Top-of-stack immediate `/halt` and `/resume` dispatch bypassing database I/O, achieving verified **11.2ms** synchronous trigger latency (< 25.0ms hard SLA).
+  - Tests: **6/6 Phase 1 tests PASSED** (`test_telegram_mobile_companion_v2.py`); **23/23 cumulative regression tests PASSED** in 28.17s.
+  - Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 7.67s with 0 errors.
+
+---
+
 ## Milestone 18.0 Phase 1: Autonomous Document Generation & Obsidian Knowledge Engine
 - **Branch**: `hardening/pass-1`
 - **Date**: November 5, 2026
