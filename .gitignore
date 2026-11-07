@@ -26,4 +26,5 @@ venv/
 *.egg-info/
 services/backend/data/*.db*
 .phenom_sandbox/
+.phenom_worktrees/
 

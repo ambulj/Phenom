@@ -2027,3 +2027,28 @@ All Phase 1 code intelligence and refactoring tools are registered with `service
 - `index_workspace_symbols` checks `guardian.is_halted` periodically during file traversal.
 - `apply_code_refactor` inspects `guardian.is_halted` before writing any file to disk and triggers immediate rollback if Guardian halts mid-refactor.
 - Halts synchronously with verified latency $< 25.0\text{ ms}$ (target $< 1.0\text{ ms}$).
+
+---
+
+## 75. Milestone 20.0 — Phase 2: Autonomous Diagnostic Test-Runner & Self-Healing Worktree Mission Agent (DEV-02, MIS-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 diagnostic runner and worktree sandbox tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `create_worktree_sandbox`: **Tier 1** (Creates ephemeral isolated git worktree under `.phenom_worktrees/` without dirtying user working tree; requires confirmation preview).
+- `remove_worktree_sandbox`: **Tier 1** (Removes isolated worktree directory and deletes ephemeral branch; requires confirmation preview).
+- `run_isolated_tests`: **Tier 1** (Executes pytest, vitest, or tsc inside isolated worktree or workspace, capturing structured failure diagnostics; requires confirmation preview).
+- `diagnose_and_heal_failure`: **Tier 2** (Autonomous self-healing diagnostic mission in isolated worktree: executes baseline test, applies patch in sandbox, verifies green status, and rolls back automatically if regression occurs; requires confirmation preview).
+- `prune_worktrees`: **Tier 1** (Prunes expired or orphaned worktrees from `.phenom_worktrees/`; requires confirmation preview).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every worktree mutation and diagnostic execution goes through Safety layer with strict human preview strings.
+- **Rule 4 (Zero Cloud Exfiltration)**: All test runs, stack trace parsing, and patch drafting occur 100% locally on device with zero telemetry or code egress.
+- **Rule 7 (Reversibility & Sandboxing)**: All diagnostic patches and test runs are confined strictly within `.phenom_worktrees/<sandbox_id>`. The user's active branch and working directory are never modified during diagnostic trials. If a patch fails verification, it is automatically rolled back.
+- **Rule 8 (Payment & Checkout Invariant)**: No automated checkout or credential input.
+- **Rule 11 (Credential Protection)**: Secrets and environment variables are never printed in test diagnostics or unified patch diffs.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- All test runners and worktree operations check `guardian_kill_switch.assert_healthy()` before invocation and during iterations. If the kill switch is triggered, subprocesses are killed immediately and operations halt synchronously in $< 25.0\text{ ms}$ SLA (typically $< 1.0\text{ ms}$).
+
