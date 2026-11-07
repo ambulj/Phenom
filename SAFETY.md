@@ -1868,3 +1868,30 @@ All Telegram remote tools are registered with `services.backend.safety.registry.
 ### 3. Remote Guardian Kill Switch (< 25.0ms SLA)
 - Dedicated `/halt` command immediately fires `guardian.trigger(reason="Remote emergency halt via Telegram")`.
 - Halts all audio, browser, model, and automation tasks with guaranteed synchronous latency $< 25.0\text{ ms}$ (typical $< 1.0\text{ ms}$).
+
+
+---
+
+## 70. Milestone 19.0 — Phase 2: Multimodal Screen Vision & Windows GUI Automation Agent (VIS-01, GUI-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 GUI automation and screen vision tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `capture_smart_screen`: **Tier 0** (Captures focused active window or full primary display into in-memory buffer with automatic privacy masking. Zero disk writes under Rule 4).
+- `gui_find_and_click_element`: **Tier 0** (Deterministic Windows UIA tree traversal with visual OCR fallback for non-mutating desktop element navigation. Protected by Rule 8 checkout shield).
+- `gui_type_text`: **Tier 1** (Injects keystrokes into active desktop application fields; requires confirmation preview. Strictly blocked if target or input contains credentials or passwords).
+- `get_focused_window_info`: **Tier 0** (Inspects active foreground window handle, title, bounding rectangle, and sensitivity classification; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every GUI interaction is inspected by `check_rule_8_shield` before mouse or keyboard injection.
+- **Rule 4 (Zero Cloud Exfiltration & In-RAM Privacy Masking)**: Focused window cropping and privacy masking run purely in RAM. Any window matching password managers, banking, or private chats is obfuscated before visual inspection.
+- **Rule 8 (Permanent Payment & Password Shield)**:
+  - "Fill carts and stop. Never place trades. Never type or store passwords."
+  - Payment buttons (`"buy now"`, `"place order"`, `"checkout"`, `"complete purchase"`, `"pay now"`, `"pay $"`) are hard-blocked by construction and raise `Rule8ViolationError`.
+  - Password and CVV input fields are hard-blocked by construction and raise `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private keys, or tokens are ever typed into desktop inputs by the agent.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- Any ongoing GUI automation step checks `guardian.is_halted` before and during action dispatch.
+- When Guardian triggers, all mouse clicks, movements, and keystrokes are halted immediately with verified latency $< 25.0\text{ ms}$ (target $< 1.0\text{ ms}$).
