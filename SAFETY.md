@@ -1920,3 +1920,27 @@ All Phase 3 background scheduler and morning briefing tools are registered with 
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - The background daemon checks `guardian.is_halted` on every tick of its asyncio loop.
 - When Guardian triggers, all scheduled job evaluations, morning briefings, file watcher indexing, and alert dispatches halt synchronously in $< 25.0\text{ ms}$ (target $< 1.0\text{ ms}$).
+
+
+---
+
+## 72. Milestone 19.0 — Phase 4: Deep Associative Long-Term Memory & Vector Knowledge Graph (MEM-02, VEC-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 associative memory and vector recall tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `store_associative_memory`: **Tier 1** (Stores explicit user memory or preference permanently in encrypted SQLCipher storage with 384-d vector embeddings; requires confirmation preview).
+- `recall_associative_memory`: **Tier 0** (Executes sub-10ms semantic similarity recall over associative memory; read-only).
+- `delete_associative_memory`: **Tier 1** (Soft-deletes memory to recycle bin under Rule 7; requires confirmation preview).
+- `get_associative_memory_stats`: **Tier 0** (Queries memory count, dimension, and encryption status; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 4 (Zero Cloud Exfiltration & 100% Offline Inference)**: Dense vector embeddings (`all-MiniLM-L6-v2`) and cosine similarity calculations run 100% locally on CPU/ONNX. Zero text, vectors, or memories are transmitted to cloud endpoints.
+- **Rule 7 (Recycle Bin Only)**: Memory deletion is implemented strictly as a soft-delete (`is_deleted = 1`). Records are never permanently destroyed without explicit user consent.
+- **Rule 8 (No Password or Payment Storage)**: Memory engine sanitizes and blocks storage of raw payment credentials or passwords.
+- **Rule 11 (Secrets in Credential Manager)**: The SQLCipher database encryption key is safeguarded in Windows Credential Manager.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- All memory operations inspect `guardian.is_halted` before computing embeddings, querying the database, or writing records.
+- When Guardian triggers, any ongoing memory storage or recall task aborts synchronously with latency $< 25.0\text{ ms}$ (target $< 1.0\text{ ms}$).

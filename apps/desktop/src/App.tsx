@@ -49,6 +49,7 @@ import { BrowserOperatorHUD } from './components/CyberHUD/BrowserOperatorHUD';
 import { ParticleOrbHUD } from './components/CyberHUD/ParticleOrbHUD';
 import { ScreenVisionHUD } from './components/CyberHUD/ScreenVisionHUD';
 import { ProactiveSchedulerHUD } from './components/CyberHUD/ProactiveSchedulerHUD';
+import { AssociativeMemoryHUD } from './components/CyberHUD/AssociativeMemoryHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -175,6 +176,8 @@ export const App: React.FC = () => {
   const [screenVisionExternalEvent, setScreenVisionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showProactiveScheduler, setShowProactiveScheduler] = useState<boolean>(false);
   const [proactiveSchedulerExternalEvent, setProactiveSchedulerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showAssociativeMemory, setShowAssociativeMemory] = useState<boolean>(false);
+  const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -369,6 +372,8 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('browser.') || mtype.startsWith('BROWSER_')) {
             setBrowserOperatorExternalEvent({ type: mtype, payload });
             setShowBrowserOperator(true);
+          } else if (mtype.startsWith('memory.')) {
+            setAssociativeMemoryExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1065,6 +1070,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowBrowserOperator((prev) => !prev)
     },
     {
+      id: 'cmd-associative-memory',
+      title: 'Toggle Associative Memory HUD',
+      subtitle: 'Search 384-d dense vector knowledge graph, view similarity scores, and manage memories',
+      category: 'Assistant',
+      onExecute: () => setShowAssociativeMemory((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1286,6 +1298,21 @@ export const App: React.FC = () => {
           <DocumentSynthesisHUD
             externalEvent={documentSynthesisExternalEvent}
             onClose={() => setShowDocumentSynthesis(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Deep Associative Long-Term Memory HUD (MEM-02, VEC-01) */}
+      {showAssociativeMemory && (
+        <div style={{ position: 'absolute', top: 90, right: 340, zIndex: 125 }}>
+          <AssociativeMemoryHUD
+            externalEvent={associativeMemoryExternalEvent}
+            onClose={() => setShowAssociativeMemory(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
