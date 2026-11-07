@@ -189,3 +189,46 @@ def handle_register_telegram_action(
         "status": "registered",
         "action": action
     }
+
+
+# ==========================================
+# Telegram Send Voice Note (Tier 0 - Milestone 19 TEL-03.4)
+# ==========================================
+
+class SendTelegramVoiceNoteArgs(BaseModel):
+    text: str = Field(description="Spoken text to synthesize into an audio voice note for Telegram.")
+    caption: Optional[str] = Field(default=None, description="Optional caption for the voice note.")
+
+def send_telegram_voice_note_preview(args: Dict[str, Any]) -> str:
+    return f"Synthesize and send audio voice note to Telegram owner: '{args.get('text', '')[:40]}...'"
+
+@registry.register(
+    name="send_telegram_voice_note",
+    tier=0,
+    description="Synthesizes speech in-RAM and transmits an audio voice note to the authorized Telegram owner.",
+    args_schema=SendTelegramVoiceNoteArgs,
+    preview_fn=send_telegram_voice_note_preview,
+    can_remember_per_folder=False
+)
+async def handle_send_telegram_voice_note(text: str, caption: Optional[str] = None) -> Dict[str, Any]:
+    if not telegram_controller.is_configured:
+        return {"status": "not_configured", "delivered": False, "reason": "Telegram bot not configured"}
+    if is_remote_locked():
+        return {"status": "remote_locked", "delivered": False, "reason": "Remote control locked"}
+    owner_id = telegram_controller.owner_id
+    if not owner_id:
+        return {"status": "no_owner", "delivered": False, "reason": "No owner ID configured"}
+
+    try:
+        from services.backend.voice.madhur_tts import madhur_tts
+        voice_bytes = madhur_tts.synthesize(text)
+    except Exception:
+        voice_bytes = None
+
+    if not voice_bytes:
+        return {"status": "synthesis_failed", "delivered": False, "reason": "Voice synthesis failed"}
+
+    if telegram_controller.client:
+        res = await telegram_controller.client.send_voice(owner_id, voice_bytes, caption=caption)
+        return {"status": "delivered", "delivered": True, "details": res}
+    return {"status": "no_client", "delivered": False, "reason": "No client instance"}

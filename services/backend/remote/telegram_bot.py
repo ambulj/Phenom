@@ -70,6 +70,17 @@ class TelegramBotController:
         self.ignored_messages_log: List[Dict[str, Any]] = []
         self._active_timers: List[asyncio.Task] = []
         self._registered_actions: Dict[str, Dict[str, Any]] = {}
+        self._is_polling = False
+        self._last_poll_time = 0.0
+        self._poll_error_count = 0
+
+    @property
+    def is_polling(self) -> bool:
+        return self._running and self._is_polling
+
+    @property
+    def last_poll_time(self) -> float:
+        return self._last_poll_time
 
     def register_custom_action(
         self,
@@ -814,6 +825,40 @@ class TelegramBotController:
         if not text:
             return None
 
+        # 1. IMMEDIATE GUARDIAN KILL SWITCH & RESUME (SAF-02.1 - SLA < 25ms)
+        # Kill switch has absolute priority: executes synchronously before DB queries or taint inspection
+        if text.startswith("/halt") or text.startswith("/kill") or text == "/stop":
+            guardian.trigger("Telegram remote kill switch")
+            reply_markup = {
+                "inline_keyboard": [
+                    [{"text": "▶️ Resume Desktop", "callback_data": "guardian:resume"}]
+                ]
+            }
+            if self.client:
+                try:
+                    await self.client.send_message(
+                        chat_id,
+                        "🛑 *Guardian Kill Switch Activated.*\n"
+                        "All Phenom actions, running model streams, and automation tasks have been immediately halted.",
+                        reply_markup=reply_markup
+                    )
+                except Exception:
+                    pass
+            return {"status": "halted"}
+
+        if text.startswith("/resume"):
+            guardian.resume()
+            if self.client:
+                try:
+                    await self.client.send_message(
+                        chat_id,
+                        "▶️ *Guardian Kill Switch Resumed.*\n"
+                        "Phenom is back online and ready for tasks."
+                    )
+                except Exception:
+                    pass
+            return {"status": "resumed"}
+
         # INBOUND TAINT & PROMPT INJECTION DEFENSE (Rule 1, Rule 4)
         sanitized_text, has_injection, matches = taint_tracker.inspect_and_sanitize(text, source="telegram")
         if has_injection:
@@ -905,35 +950,7 @@ class TelegramBotController:
                     )
             return {"status": "locked"}
 
-        # 6. Command: /halt or /kill or /stop (Remote Kill Switch - SLA < 25ms)
-        if text.startswith("/halt") or text.startswith("/kill") or text == "/stop":
-            guardian.trigger("Telegram remote kill switch")
-            reply_markup = {
-                "inline_keyboard": [
-                    [{"text": "▶️ Resume Desktop", "callback_data": "guardian:resume"}]
-                ]
-            }
-            if self.client:
-                await self.client.send_message(
-                    chat_id,
-                    "🛑 *Guardian Kill Switch Activated.*\n"
-                    "All Phenom actions, running model streams, and automation tasks have been immediately halted.",
-                    reply_markup=reply_markup
-                )
-            return {"status": "halted"}
-
-        # 7. Command: /resume
-        if text.startswith("/resume"):
-            guardian.resume()
-            if self.client:
-                await self.client.send_message(
-                    chat_id,
-                    "▶️ *Guardian Kill Switch Resumed.*\n"
-                    "Phenom is back online and ready for tasks."
-                )
-            return {"status": "resumed"}
-
-        # 8. Command: /status
+        # 6. Command: /status
         if text.startswith("/status"):
             status_text = self._build_status_text()
             if self.client:
@@ -1117,7 +1134,7 @@ class TelegramBotController:
             return await self._handle_remote_chat(chat_id, task)
 
     async def _handle_voice_update(self, chat_id: int, msg_id: int, voice: Dict[str, Any]) -> Dict[str, Any]:
-        """Downloads audio note in RAM, transcribes locally via faster-whisper, processes command."""
+        """Downloads audio note in RAM, transcribes locally via faster-whisper, processes command, and returns audio voice note + companion text."""
         file_id = voice.get("file_id")
         if not file_id or not self.client:
             return {"status": "voice_failed", "reason": "no_file_id"}
@@ -1147,7 +1164,7 @@ class TelegramBotController:
                 f"🎙️ *Voice Note Transcribed Locally:*\n_{transcribed_text}_\n\nExecuting..."
             )
 
-            return await self._handle_remote_chat(chat_id, transcribed_text)
+            return await self._handle_remote_chat(chat_id, transcribed_text, is_voice=True)
 
         except Exception as e:
             err = f"Voice note processing error: {e}"
@@ -1155,8 +1172,8 @@ class TelegramBotController:
                 await self.client.send_message(chat_id, f"⚠️ {err}")
             return {"status": "voice_error", "error": str(e)}
 
-    async def _handle_remote_chat(self, chat_id: int, prompt: str) -> Dict[str, Any]:
-        """Runs prompt through orchestrator turn and replies back to Telegram."""
+    async def _handle_remote_chat(self, chat_id: int, prompt: str, is_voice: bool = False) -> Dict[str, Any]:
+        """Runs prompt through orchestrator turn and replies back to Telegram (with synthesized voice note if is_voice is True)."""
         if guardian.is_halted:
             if self.client:
                 await self.client.send_message(
@@ -1175,10 +1192,30 @@ class TelegramBotController:
                 if event.get("type") == "chat.token":
                     tokens.append(event.get("payload", {}).get("token", ""))
 
-            full_reply = "".join(tokens).strip() or "Task completed."
+            full_reply = "".join(tokens).strip() or "Sab set hai Bro! Task completed."
+            
+            # 1. Deliver text companion message
             if self.client:
                 await self.client.send_message(chat_id, full_reply)
-            return {"status": "chat_replied", "reply": full_reply}
+
+            # 2. If prompt arrived as a voice note, synthesize and deliver response voice note (TEL-03.4)
+            voice_delivered = False
+            if is_voice and self.client:
+                try:
+                    from services.backend.voice.madhur_tts import madhur_tts
+                    voice_bytes = madhur_tts.synthesize(full_reply)
+                    if voice_bytes:
+                        await self.client.send_voice(chat_id, voice_bytes, caption="🎙️ Phenom Voice Response")
+                        voice_delivered = True
+                except Exception as e:
+                    print(f"[Telegram] Failed to generate/send response voice note: {e}")
+
+            return {
+                "status": "chat_replied",
+                "reply": full_reply,
+                "is_voice": is_voice,
+                "voice_delivered": voice_delivered
+            }
 
         except Exception as e:
             err_msg = f"Error processing remote request: {str(e)}"
@@ -1200,20 +1237,30 @@ class TelegramBotController:
 
     # ----------------- LONG POLLING LOOP -----------------
     async def _poll_loop(self):
+        self._is_polling = True
+        backoff = 1.0
         while self._running:
             if not self.client or not self._owner_id:
                 await asyncio.sleep(2.0)
                 continue
 
             try:
-                updates = await self.client.get_updates(offset=self._last_update_id + 1, timeout=10)
+                self._last_poll_time = time.time()
+                updates = await self.client.get_updates(offset=self._last_update_id + 1, timeout=30)
+                backoff = 1.0
+                self._poll_error_count = 0
+                if not updates:
+                    await asyncio.sleep(0.05)
                 for update in updates:
                     u_id = update.get("update_id", 0)
                     if u_id > self._last_update_id:
                         self._last_update_id = u_id
                     await self.process_update(update)
-            except Exception:
-                await asyncio.sleep(3.0)
+            except Exception as e:
+                self._poll_error_count += 1
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2.0, 30.0)
+        self._is_polling = False
 
     def start(self):
         if not self._running:

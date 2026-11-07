@@ -272,12 +272,30 @@ export const TelegramCompanionHUD: React.FC<TelegramCompanionHUDProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 14,
+          marginBottom: 8,
           fontSize: 11
         }}
       >
         <span style={{ color: 'rgba(224, 247, 250, 0.7)' }}>Authorized Chat ID:</span>
         <span style={{ fontFamily: 'monospace', color: '#00f0ff', fontWeight: 600 }}>{ownerId}</span>
+      </div>
+
+      {/* Sovereign Long Polling Network Badge */}
+      <div
+        style={{
+          background: 'rgba(0, 240, 255, 0.04)',
+          border: '1px solid rgba(0, 240, 255, 0.15)',
+          borderRadius: 8,
+          padding: '6px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 14,
+          fontSize: 10
+        }}
+      >
+        <span style={{ color: 'rgba(224, 247, 250, 0.7)' }}>Network Uplink:</span>
+        <span style={{ color: '#00f0ff', fontWeight: 600 }}>Sovereign Long Polling (Outbound HTTPS)</span>
       </div>
 
       {/* Quick Action Buttons */}

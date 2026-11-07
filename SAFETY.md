@@ -1842,3 +1842,29 @@ All 18 newly introduced tools across Milestone 18 are registered in `ToolRegistr
 
 
 
+
+
+---
+
+## 69. Milestone 19.0 — Phase 1: Sovereign Telegram Remote Uplink & Mobile Command Center (TEL-03, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Telegram remote tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `telegram_send_mobile_alert`: **Tier 0** (Dispatches ambient push notification to authorized owner's Telegram; read-only communication).
+- `telegram_get_remote_status`: **Tier 0** (Returns configuration state, lock state, and owner ID).
+- `get_telegram_companion_status`: **Tier 0** (Queries telemetry, owner configuration, lock status, and registered action buttons).
+- `send_telegram_snapshot`: **Tier 1** (Captures desktop screenshot with 35px privacy blur over sensitive windows and delivers via Telegram; requires confirmation preview).
+- `register_telegram_action`: **Tier 1** (Registers dynamic quick-action button in mobile companion menu; requires parameter preview).
+- `send_telegram_voice_note`: **Tier 0** (Synthesizes spoken text in-RAM and transmits interactive voice note bubble to owner; zero `.wav` on disk).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every remote action and tool call executes via the Safety Engine with source tracking (`source="telegram"`).
+- **Rule 4 (Zero Cloud Exfiltration & In-RAM Audio)**: Inbound voice notes and outbound TTS speech are streamed purely through RAM buffers (`io.BytesIO`). Zero audio files or voice recordings are written to disk.
+- **Rule 8 (Hard Payment & Password Blocker)**: Remote commands cannot trigger payment flows or enter passwords. Prohibited keywords (`pay`, `checkout`, `cvv`, `otp`) are permanently blocked by construction.
+- **Rule 11 (Secrets in Credential Manager)**: Telegram Bot Token, owner user ID, and rolling 6-digit PIN reside in Windows Credential Manager or protected `.env`.
+
+### 3. Remote Guardian Kill Switch (< 25.0ms SLA)
+- Dedicated `/halt` command immediately fires `guardian.trigger(reason="Remote emergency halt via Telegram")`.
+- Halts all audio, browser, model, and automation tasks with guaranteed synchronous latency $< 25.0\text{ ms}$ (typical $< 1.0\text{ ms}$).
