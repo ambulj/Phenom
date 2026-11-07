@@ -2001,3 +2001,29 @@ The Universal Guardian Kill Switch (`guardian.trigger(reason=...)`) overrides al
 5. **Rule 11 (Credential Protection)**:
    - SQLite vector database encrypted via SQLCipher; encryption key stored in Windows Credential Manager.
    - No secrets, tokens, or PINs stored in unencrypted memory or logs.
+
+
+---
+
+## 74. Milestone 20.0 — Phase 1: AST Code Intelligence & Multi-File Semantic Workspace Indexer (DEV-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 code intelligence and refactoring tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `index_workspace_symbols`: **Tier 0** (Parses workspace AST and builds an in-memory symbol table; read-only).
+- `lookup_symbol_definition`: **Tier 0** (Locates symbol definitions, signatures, line numbers, and docstrings; read-only).
+- `find_symbol_references`: **Tier 0** (Discovers incoming callers and references across the dependency call graph; read-only).
+- `preview_code_refactor`: **Tier 0** (Generates unified diff preview of proposed multi-file symbol renames without writing to disk; read-only).
+- `apply_code_refactor`: **Tier 1** (Atomically writes multi-file refactoring updates with in-memory backups and automatic rollback on failure; requires confirmation preview).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Multi-file code modifications must pass through `preview_code_refactor` and require explicit user approval via `apply_code_refactor` (Tier 1).
+- **Rule 4 (Zero Cloud Exfiltration)**: All AST parsing and symbol graph traversal run 100% locally on device. No code or AST data is sent to external servers.
+- **Rule 7 (Recycle Bin / Backup Rollback)**: Any failed atomic multi-file modification restores original backups immediately.
+- **Rule 11 (Credential Protection)**: The AST parser and refactoring engine never display or inject raw credential variables, private keys, or secret tokens.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- `index_workspace_symbols` checks `guardian.is_halted` periodically during file traversal.
+- `apply_code_refactor` inspects `guardian.is_halted` before writing any file to disk and triggers immediate rollback if Guardian halts mid-refactor.
+- Halts synchronously with verified latency $< 25.0\text{ ms}$ (target $< 1.0\text{ ms}$).

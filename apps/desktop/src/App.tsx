@@ -50,6 +50,7 @@ import { ParticleOrbHUD } from './components/CyberHUD/ParticleOrbHUD';
 import { ScreenVisionHUD } from './components/CyberHUD/ScreenVisionHUD';
 import { ProactiveSchedulerHUD } from './components/CyberHUD/ProactiveSchedulerHUD';
 import { AssociativeMemoryHUD } from './components/CyberHUD/AssociativeMemoryHUD';
+import { WorkspaceCodeHUD } from './components/CyberHUD/WorkspaceCodeHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -177,6 +178,8 @@ export const App: React.FC = () => {
   const [showProactiveScheduler, setShowProactiveScheduler] = useState<boolean>(false);
   const [proactiveSchedulerExternalEvent, setProactiveSchedulerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAssociativeMemory, setShowAssociativeMemory] = useState<boolean>(false);
+  const [showWorkspaceCode, setShowWorkspaceCode] = useState<boolean>(false);
+  const [workspaceCodeExternalEvent, setWorkspaceCodeExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -374,6 +377,8 @@ export const App: React.FC = () => {
             setShowBrowserOperator(true);
           } else if (mtype.startsWith('memory.')) {
             setAssociativeMemoryExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('code.')) {
+            setWorkspaceCodeExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1077,6 +1082,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowAssociativeMemory((prev) => !prev)
     },
     {
+      id: 'cmd-workspace-code-hud',
+      title: 'Toggle Workspace Code & Symbol HUD',
+      subtitle: 'Explore AST symbols, find callers & preview multi-file atomic refactor diffs',
+      category: 'Assistant',
+      onExecute: () => setShowWorkspaceCode((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1298,6 +1310,21 @@ export const App: React.FC = () => {
           <DocumentSynthesisHUD
             externalEvent={documentSynthesisExternalEvent}
             onClose={() => setShowDocumentSynthesis(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* AST Code Intelligence & Symbol HUD (DEV-01) */}
+      {showWorkspaceCode && (
+        <div style={{ position: 'absolute', top: 90, left: 340, zIndex: 126 }}>
+          <WorkspaceCodeHUD
+            externalEvent={workspaceCodeExternalEvent}
+            onClose={() => setShowWorkspaceCode(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
