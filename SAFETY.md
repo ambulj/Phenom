@@ -1895,3 +1895,28 @@ All Phase 2 GUI automation and screen vision tools are registered with `services
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - Any ongoing GUI automation step checks `guardian.is_halted` before and during action dispatch.
 - When Guardian triggers, all mouse clicks, movements, and keystrokes are halted immediately with verified latency $< 25.0\text{ ms}$ (target $< 1.0\text{ ms}$).
+
+
+---
+
+## 71. Milestone 19.0 — Phase 3: Autonomous Proactive Background Daemon & Event Scheduler (SCH-02, AUT-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 background scheduler and morning briefing tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `schedule_proactive_job`: **Tier 1** (Registers a new recurring job or timer with the background daemon; requires confirmation preview showing interval).
+- `list_scheduled_jobs`: **Tier 0** (Inspects active background daemon tasks, interval frequencies, and next run times; read-only).
+- `cancel_scheduled_job`: **Tier 1** (Cancels an active scheduled task by job ID; requires confirmation preview).
+- `trigger_morning_briefing`: **Tier 0** (Generates executive morning briefing, spoken Jarvis voice prompt, and Obsidian daily debrief note in `vault/Daily/`).
+- `get_scheduler_daemon_status`: **Tier 0** (Inspects daemon loop health, watched directories, and recent trigger history; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every scheduled job execution and file watcher event routes through the Safety Engine.
+- **Rule 4 (Zero Cloud Exfiltration)**: Morning briefings and workspace file watcher activity indexes are stored locally in the local Obsidian vault (`vault/Daily/`, `vault/Activity/`). No user files, notes, or schedules reach the cloud without explicit consent.
+- **Rule 7 (Recycle Bin Only)**: Scheduled cleanup jobs must use recycle bin deletions (`send2trash`), never permanent deletion.
+- **Anti-Fatigue & Focus Protection**: The multi-channel alert dispatcher respects `DEEP_FOCUS` and `GAMING` modes and enforces anti-fatigue cooldowns for non-urgent notifications.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- The background daemon checks `guardian.is_halted` on every tick of its asyncio loop.
+- When Guardian triggers, all scheduled job evaluations, morning briefings, file watcher indexing, and alert dispatches halt synchronously in $< 25.0\text{ ms}$ (target $< 1.0\text{ ms}$).

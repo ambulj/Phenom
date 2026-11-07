@@ -48,6 +48,7 @@ import { DocumentSynthesisHUD } from './components/CyberHUD/DocumentSynthesisHUD
 import { BrowserOperatorHUD } from './components/CyberHUD/BrowserOperatorHUD';
 import { ParticleOrbHUD } from './components/CyberHUD/ParticleOrbHUD';
 import { ScreenVisionHUD } from './components/CyberHUD/ScreenVisionHUD';
+import { ProactiveSchedulerHUD } from './components/CyberHUD/ProactiveSchedulerHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -172,6 +173,8 @@ export const App: React.FC = () => {
   const [showParticleOrb, setShowParticleOrb] = useState<boolean>(false);
   const [showScreenVision, setShowScreenVision] = useState<boolean>(false);
   const [screenVisionExternalEvent, setScreenVisionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showProactiveScheduler, setShowProactiveScheduler] = useState<boolean>(false);
+  const [proactiveSchedulerExternalEvent, setProactiveSchedulerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
 
@@ -366,6 +369,8 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('browser.') || mtype.startsWith('BROWSER_')) {
             setBrowserOperatorExternalEvent({ type: mtype, payload });
             setShowBrowserOperator(true);
+          } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
+            setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
             setScreenVisionExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('orb.') || mtype.startsWith('wake.') || mtype.startsWith('whisper.')) {
@@ -1060,6 +1065,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowBrowserOperator((prev) => !prev)
     },
     {
+      id: 'cmd-proactive-scheduler',
+      title: 'Toggle Proactive Scheduler HUD',
+      subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
+      category: 'Assistant',
+      onExecute: () => setShowProactiveScheduler((prev) => !prev)
+    },
+    {
       id: 'cmd-screen-vision',
       title: 'Toggle Screen Vision Viewport HUD',
       subtitle: 'Inspect Smart Context active window capture, UIA target bounding boxes, and Rule 8 shield',
@@ -1274,6 +1286,21 @@ export const App: React.FC = () => {
           <DocumentSynthesisHUD
             externalEvent={documentSynthesisExternalEvent}
             onClose={() => setShowDocumentSynthesis(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Autonomous Proactive Scheduler HUD (SCH-02, AUT-01) */}
+      {showProactiveScheduler && (
+        <div style={{ position: 'absolute', bottom: 90, left: 340, zIndex: 125 }}>
+          <ProactiveSchedulerHUD
+            externalEvent={proactiveSchedulerExternalEvent}
+            onClose={() => setShowProactiveScheduler(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

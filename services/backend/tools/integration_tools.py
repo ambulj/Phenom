@@ -93,7 +93,7 @@ class CancelScheduledJobArgs(BaseModel):
     tier=1,
     description="Cancels or disables an active scheduled job or reminder.",
     args_schema=CancelScheduledJobArgs,
-    preview_fn=lambda a: f"Cancel scheduled job ID '{a.get('job_id')}'"
+    preview_fn=lambda a: f"Cancel scheduled job ID '{(a.get('job_id') if isinstance(a, dict) else getattr(a, 'job_id', ''))}'"
 )
 def cancel_scheduled_job(job_id: str) -> Dict[str, Any]:
     success = background_scheduler.cancel_job(job_id)
