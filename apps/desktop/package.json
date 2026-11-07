@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "18.0.0",
-  "description": "Phenom 18.0: Sovereign Autonomous Web Agent, Document Knowledge Synthesis & Sound-Reactive Cybernetic Orb — Autonomous Multi-Format Document Generation, Bidirectional Obsidian Knowledge Graph, Playwright Browser Operator with Rule 8 Payment Protection, Local Wake-Word & Three.js 3D Particle Orb",
+  "version": "19.0.0",
+  "description": "Phenom 19.0: Complete Autonomous Sovereign Intelligence Suite — Sovereign Telegram Remote Uplink, Multimodal Screen Vision & Windows GUI Automation Agent, Autonomous Proactive Background Daemon & Event Scheduler, and Deep Associative Long-Term Memory & Vector Knowledge Graph",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

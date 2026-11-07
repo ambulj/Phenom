@@ -5,10 +5,15 @@ Runs on CPU/ONNX runtime to preserve 100% of GPU VRAM for the primary LLM and vi
 Includes deterministic offline fallback for airgapped environments and instantaneous testing.
 """
 
+import os
 import hashlib
 import logging
 from typing import List, Union
 import numpy as np
+
+# Enforce 100% offline local embeddings under Rule 4
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 logger = logging.getLogger("phenom.vector_embeddings")
 

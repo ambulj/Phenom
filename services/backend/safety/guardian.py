@@ -10,6 +10,7 @@ import sys
 import time
 import threading
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import Set, Callable, Optional, List
 import psutil
 from services.backend.safety.action_log import action_log
@@ -22,13 +23,24 @@ class GuardianKillSwitch:
         self._callbacks: List[Callable[[str], None]] = []
         self._lock = threading.Lock()
         self._hotkey_hook = None
+        self._log_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="guardian_log")
 
     @property
     def is_halted(self) -> bool:
         return self._halted
 
     def add_state_callback(self, cb: Callable[[str], None]):
-        self._callbacks.append(cb)
+        with self._lock:
+            self._callbacks.append(cb)
+
+    def remove_state_callback(self, cb: Callable[[str], None]):
+        with self._lock:
+            if cb in self._callbacks:
+                self._callbacks.remove(cb)
+
+    def clear_callbacks(self):
+        with self._lock:
+            self._callbacks.clear()
 
     def track_pid(self, pid: int):
         with self._lock:
@@ -78,18 +90,18 @@ class GuardianKillSwitch:
                 pass
 
         # 4. Asynchronously log killswitch activation to avoid disk I/O blocking the < 25ms halt SLA
-        threading.Thread(
-            target=action_log.log_action,
-            kwargs={
-                "tool": "guardian_killswitch",
-                "tier": 3,
-                "args": {"reason": reason, "processes_killed": killed_processes},
-                "decision": "auto",
-                "result_status": "HALTED",
-                "source": "system",
-            },
-            daemon=True,
-        ).start()
+        try:
+            self._log_executor.submit(
+                action_log.log_action,
+                tool="guardian_killswitch",
+                tier=3,
+                args={"reason": reason, "processes_killed": killed_processes},
+                decision="auto",
+                result_status="HALTED",
+                source="system"
+            )
+        except Exception:
+            pass
 
         return killed_processes
 
@@ -105,18 +117,18 @@ class GuardianKillSwitch:
             except Exception:
                 pass
 
-        threading.Thread(
-            target=action_log.log_action,
-            kwargs={
-                "tool": "guardian_resume",
-                "tier": 0,
-                "args": {"action": "user_resume"},
-                "decision": "approved",
-                "result_status": "RESUMED",
-                "source": "desktop",
-            },
-            daemon=True,
-        ).start()
+        try:
+            self._log_executor.submit(
+                action_log.log_action,
+                tool="guardian_resume",
+                tier=0,
+                args={"action": "user_resume"},
+                decision="approved",
+                result_status="RESUMED",
+                source="desktop"
+            )
+        except Exception:
+            pass
 
     def setup_global_hotkey(self, hotkey: str = "ctrl+alt+pause"):
         """Configures global system-wide hotkey listener, including triple_escape detection."""
