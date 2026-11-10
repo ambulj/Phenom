@@ -51,6 +51,7 @@ import { ScreenVisionHUD } from './components/CyberHUD/ScreenVisionHUD';
 import { ProactiveSchedulerHUD } from './components/CyberHUD/ProactiveSchedulerHUD';
 import { AssociativeMemoryHUD } from './components/CyberHUD/AssociativeMemoryHUD';
 import { WorkspaceCodeHUD } from './components/CyberHUD/WorkspaceCodeHUD';
+import { KnowledgeCanvasHUD } from './components/CyberHUD/KnowledgeCanvasHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -180,6 +181,8 @@ export const App: React.FC = () => {
   const [showAssociativeMemory, setShowAssociativeMemory] = useState<boolean>(false);
   const [showWorkspaceCode, setShowWorkspaceCode] = useState<boolean>(false);
   const [workspaceCodeExternalEvent, setWorkspaceCodeExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showKnowledgeCanvas, setShowKnowledgeCanvas] = useState<boolean>(false);
+  const [knowledgeCanvasExternalEvent, setKnowledgeCanvasExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -379,6 +382,8 @@ export const App: React.FC = () => {
             setAssociativeMemoryExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('code.')) {
             setWorkspaceCodeExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('obsidian.')) {
+            setKnowledgeCanvasExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1089,6 +1094,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowWorkspaceCode((prev) => !prev)
     },
     {
+      id: 'cmd-knowledge-canvas-hud',
+      title: 'Toggle Knowledge Canvas & Cross-Vault HUD',
+      subtitle: 'Interactive Obsidian graph, cross-vault wikilinks, hybrid RAG inspector & worktree monitor',
+      category: 'Assistant',
+      onExecute: () => setShowKnowledgeCanvas((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1250,6 +1262,21 @@ export const App: React.FC = () => {
           <WindowTilerHUD
             externalEvent={windowTilerExternalEvent}
             onClose={() => setShowWindowTiler(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Obsidian Cross-Vault Graph & Dev Canvas (KNG-02, UI-02) */}
+      {showKnowledgeCanvas && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <KnowledgeCanvasHUD
+            externalEvent={knowledgeCanvasExternalEvent}
+            onClose={() => setShowKnowledgeCanvas(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

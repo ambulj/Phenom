@@ -2075,4 +2075,28 @@ All Phase 3 hybrid RAG and document synthesis tools are registered with `service
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - All document parsing, BM25 indexing, hybrid retrieval, and synthesis operations verify `guardian.is_halted` before execution and between chunk loops, halting synchronously in $< 25.0\text{ ms}$ SLA (typically $< 1.0\text{ ms}$).
 
+---
+
+## 77. Milestone 20.0 — Phase 4: Obsidian Cross-Vault Bidirectional Graph Copilot & Cyber HUD Dev Canvas (KNG-02, UI-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 cross-vault Obsidian knowledge and concept synthesis tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `sync_cross_vaults`: **Tier 0** (Scans all registered vaults, builds unified cross-vault link graph and tag taxonomy; read-only).
+- `generate_architectural_decision_record`: **Tier 1** (Creates a structured ADR markdown file in Developer Vault; requires confirmation preview).
+- `synthesize_concept_note`: **Tier 1** (Creates a structured concept synthesis note in Research Vault with bidirectional wikilinks; requires confirmation preview).
+- `query_cross_vault_graph`: **Tier 0** (Searches cross-vault graph nodes, backlinks, and returns visualization payload; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every note creation action requires explicit user confirmation (Tier 1) with descriptive preview string showing note title and target vault.
+- **Rule 4 (Zero Cloud Exfiltration)**: All cross-vault indexing, graph mapping, and note synthesis operate 100% locally on device. No notes or vault links leave the local machine.
+- **Rule 7 (Reversibility & Safe Creation)**: ADRs and concept notes use collision-free filenames (`ADR-00N_slug.md`) and non-destructive file writes.
+- **Rule 8 (Payment & Checkout Invariant)**: Invariant maintained; Obsidian tools cannot process transactions or purchases.
+- **Rule 11 (Credential Protection)**: Notes and ADRs never include plain-text passwords, tokens, or private keys.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- All vault traversals, note writings, and graph queries verify `guardian.is_halted` before execution, halting synchronously in $< 25.0\text{ ms}$ SLA (typically $< 1.0\text{ ms}$).
+
+
 
