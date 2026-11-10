@@ -2324,3 +2324,25 @@ oute_model_adapter: **Tier 0** (Evaluates task intent keywords and activates dom
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts adapter activation, weight loading, and dataset compilation in strictly $< 25.0$ ms.
+
+
+## 88. Milestone 23.0 — Phase 3: Cross-Modal Conversational Workspace Synapse & Real-Time Code-Voice Co-Editing (SYN-01, VOX-06, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 code-voice workspace synapse and acoustic earcon tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- pply_voice_code_mutation: **Tier 1** (Parses spoken code directives into atomic AST modifications with unified diff preview; requires confirmation when not running in dry-run mode).
+- play_acoustic_earcon: **Tier 0** (Generates procedural non-verbal auditory cues strictly in RAM without file writes; read-only audio feedback).
+- get_synapse_buffer_state: **Tier 0** (Inspects active in-memory code editor buffer content and transaction history; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every AST mutation is verified against standard syntax parsers prior to buffer application; syntax parse failures abort immediately and trigger non-intrusive error earcons.
+- **Rule 4 (Local Audio RAM & Zero Persistence)**: All acoustic earcons are generated procedurally as raw PCM buffers in RAM and streamed directly to the desktop audio layer. Zero .wav or audio files are written to disk.
+- **Rule 7 (Reversibility & Atomic Buffer Transactions)**: Every spoken mutation creates an atomic transaction with previous code cached in memory, allowing instant rollback (
+ollback_transaction()).
+- **Rule 8 (Payment Prohibitions)**: Spoken mutations targeting payment logic, checkout carts, or password input fields are rejected with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No secrets or credentials are inserted or modified via voice-code synapse.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously terminates active buffer mutations and silences audio earcons in strictly $< 25.0$ ms.
