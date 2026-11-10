@@ -59,7 +59,7 @@ class WorkflowEngine:
 
     PARAM_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
     RULE_8_PAYMENT_RE = re.compile(
-        r"\b(?:checkout|place\s+order|pay\s+now|buy\s+now|complete\s+purchase|credit\s+card|cvv|password)\b",
+        r"\b(?:checkout|place\s+order|pay\s+now|buy\s+now|complete\s+purchase|complete\s+payment|payment|credit\s+card|cvv|password)\b",
         re.IGNORECASE
     )
 

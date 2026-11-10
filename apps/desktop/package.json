@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "20.0.0",
-  "description": "Phenom 20.0: Sovereign Autonomous Developer & Enterprise Offline Knowledge OS — AST Code Intelligence, Worktree Mission Agent, Offline Hybrid RAG Engine, and Obsidian Cross-Vault Graph Copilot",
+  "version": "21.0.0",
+  "description": "Phenom 21.0: Sovereign Omnimodal Intelligence & Autonomous Cross-Platform Workflow OS — Multimodal Context Fusion, Desktop Macro Synthesis, Telegram Command Mesh, and Adaptive Neural Voice",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

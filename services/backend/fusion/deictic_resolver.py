@@ -52,7 +52,7 @@ class DeicticResolver:
     BUTTON_TRIGGER_RE = re.compile(r"\b(?:this|the|that)\s+(?:button|checkbox|toggle|input|tab|link|icon)\b", re.IGNORECASE)
 
     RULE_8_PAYMENT_RE = re.compile(
-        r"\b(?:checkout|place\s+order|pay\s+now|buy\s+now|complete\s+purchase|credit\s+card|cvv|password)\b",
+        r"\b(?:checkout|place\s+order|pay\s+now|buy\s+now|complete\s+purchase|complete\s+payment|payment|credit\s+card|cvv|password)\b",
         re.IGNORECASE
     )
 
