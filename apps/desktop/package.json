@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "19.0.0",
-  "description": "Phenom 19.0: Complete Autonomous Sovereign Intelligence Suite — Sovereign Telegram Remote Uplink, Multimodal Screen Vision & Windows GUI Automation Agent, Autonomous Proactive Background Daemon & Event Scheduler, and Deep Associative Long-Term Memory & Vector Knowledge Graph",
+  "version": "20.0.0",
+  "description": "Phenom 20.0: Sovereign Autonomous Developer & Enterprise Offline Knowledge OS — AST Code Intelligence, Worktree Mission Agent, Offline Hybrid RAG Engine, and Obsidian Cross-Vault Graph Copilot",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
