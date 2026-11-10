@@ -318,6 +318,7 @@ import services.backend.tools.temporal_reasoning_tools
 import services.backend.tools.spatial_layout_tools
 import services.backend.tools.ambient_intelligence_tools
 import services.backend.tools.metacognitive_tools
+import services.backend.tools.adapter_evolution_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus

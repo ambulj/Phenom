@@ -2302,3 +2302,25 @@ ecord_reflection_note: **Tier 1** (Writes a structured post-mortem note with fro
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts trajectory auditing and reflection logging in strictly $< 25.0$ ms.
+
+
+## 87. Milestone 23.0 — Phase 2: Autonomous Local Fine-Tuning & Adaptive LoRA Adapter Synthesis (ADA-01, MOD-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 PEFT/LoRA adapter evolution and instruction dataset synthesis tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- synthesize_tuning_dataset: **Tier 1** (Exports sanitized user interactions and tool execution traces into local JSONL fine-tuning datasets under .phenom/datasets/; requires confirmation before writing dataset files).
+- 
+oute_model_adapter: **Tier 0** (Evaluates task intent keywords and activates domain-specialized LoRA weights: coding_adapter, reasoning_adapter, witty_persona_adapter, or base_model; read-only weight routing).
+- get_adapter_telemetry: **Tier 0** (Queries active LoRA rank, scaling factors, GPU VRAM allocation, and dataset sample volumes; read-only telemetry).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: LoRA adapters inherit the parent model's safety constraints. Domain adapters cannot override confirmation gates or bypass the Safety layer.
+- **Rule 4 (Local Offline Training & Inference)**: All PEFT adapter weight routing and instruction tuning dataset synthesis operate 100% locally on-device. Zero telemetry, dataset samples, or adapter weights are exfiltrated to the cloud.
+- **Rule 7 (Reversibility & Base Model Fallback)**: Any loaded adapter can be instantaneously unloaded back to the clean base 8B instruct model (ctivate_adapter(None)).
+- **Rule 8 (Payment Prohibitions)**: Dataset samples and user queries containing payment or checkout directives are strictly screened with regex and rejected with Rule8ViolationError.
+- **Rule 11 (Credential Scrubbing)**: Before saving any instruction tuning sample, raw text is passed through multi-pattern scrubbing filters that replace API keys, GitHub tokens, Bearer headers, and passwords with sanitized placeholder tokens ([SCRUBBED_API_KEY], [SCRUBBED_TOKEN]).
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts adapter activation, weight loading, and dataset compilation in strictly $< 25.0$ ms.

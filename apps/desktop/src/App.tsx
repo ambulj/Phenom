@@ -61,6 +61,7 @@ import { TemporalReasoningHUD } from './components/CyberHUD/TemporalReasoningHUD
 import { SpatialLayoutHUD } from './components/CyberHUD/SpatialLayoutHUD';
 import { AmbientIntelligenceHUD } from './components/CyberHUD/AmbientIntelligenceHUD';
 import { MetacognitiveReflectorHUD } from './components/CyberHUD/MetacognitiveReflectorHUD';
+import { LoRAAdapterHubHUD } from './components/CyberHUD/LoRAAdapterHubHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -210,6 +211,8 @@ export const App: React.FC = () => {
   const [ambientIntelligenceExternalEvent, setAmbientIntelligenceExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showMetacognitiveReflector, setShowMetacognitiveReflector] = useState<boolean>(false);
   const [metacognitiveReflectorExternalEvent, setMetacognitiveReflectorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showLoRAAdapterHub, setShowLoRAAdapterHub] = useState<boolean>(false);
+  const [loraAdapterHubExternalEvent, setLoraAdapterHubExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -429,6 +432,8 @@ export const App: React.FC = () => {
             setAmbientIntelligenceExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('metacognition.') || mtype.startsWith('reflection.')) {
             setMetacognitiveReflectorExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('evolution.') || mtype.startsWith('adapter.')) {
+            setLoraAdapterHubExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1209,6 +1214,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowMetacognitiveReflector((prev) => !prev)
     },
     {
+      id: 'cmd-lora-adapter-hub-hud',
+      title: 'Toggle LoRA Adapter Hub & Evolution HUD',
+      subtitle: 'Monitor task-specific PEFT adapters, local GPU VRAM allocations & dataset volumes',
+      category: 'Assistant',
+      onExecute: () => setShowLoRAAdapterHub((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1520,6 +1532,21 @@ export const App: React.FC = () => {
           <MetacognitiveReflectorHUD
             externalEvent={metacognitiveReflectorExternalEvent}
             onClose={() => setShowMetacognitiveReflector(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Autonomous Local Fine-Tuning & Adaptive LoRA Adapter Hub HUD (ADA-01, MOD-02) */}
+      {showLoRAAdapterHub && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <LoRAAdapterHubHUD
+            externalEvent={loraAdapterHubExternalEvent}
+            onClose={() => setShowLoRAAdapterHub(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
