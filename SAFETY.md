@@ -2235,3 +2235,26 @@ ecord_temporal_preference: **Tier 1** (Records a new user or system preference w
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts active reasoning syntheses and preference mutations in strictly $< 25.0$ ms.
+
+
+## 84. Milestone 22.0 — Phase 3: Multi-Display Spatial Holographic Canvas & Dynamic Window Layout Choreography (WIN-03, DSP-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 multi-display and window layout choreography tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- detect_display_topology: **Tier 0** (Inspects physical and virtual monitor boundaries, resolutions, and DPI scale factors; read-only query).
+- pply_window_layout_preset: **Tier 1** (Choreographs desktop application windows into task-oriented presets such as coding_focus, debugging_split, research_reading, monitoring_grid; creates reversible snapshots before repositioning).
+- save_custom_layout_preset: **Tier 1** (Saves customized multi-display window coordinate layouts; requires confirmation to prevent accidental overwrites).
+- get_active_layout_state: **Tier 0** (Queries active layout preset, monitor arrangements, and snapshot history; read-only state).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Window layout choreography executes within the Safety layer; window movements never obscure critical confirmation dialogs or Guardian kill switch banners.
+- **Rule 4 (Local Offline Processing)**: Display enumeration, geometric coordinate calculation, and window repositioning execute 100% locally on-device with zero network requests.
+- **Rule 7 (Reversibility & Snapshot History)**: Every layout change automatically records a reversible LayoutStateSnapshot in memory. Users can instantly rollback window arrangements to previous coordinates (
+ollback_last_layout()).
+- **Rule 8 (Payment Prohibitions)**: Layout presets cannot target or automate checkout or password submission fields.
+- **Rule 11 (Credential Protection)**: No credentials or tokens are manipulated or logged by spatial window managers.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously terminates layout transitions and monitor polling in strictly $< 25.0$ ms.

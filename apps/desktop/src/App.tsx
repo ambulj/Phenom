@@ -58,6 +58,7 @@ import { TelegramMeshHUD } from './components/CyberHUD/TelegramMeshHUD';
 import { AdaptiveVoicePersonaHUD } from './components/CyberHUD/AdaptiveVoicePersonaHUD';
 import { SwarmOrchestratorHUD } from './components/CyberHUD/SwarmOrchestratorHUD';
 import { TemporalReasoningHUD } from './components/CyberHUD/TemporalReasoningHUD';
+import { SpatialLayoutHUD } from './components/CyberHUD/SpatialLayoutHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -201,6 +202,8 @@ export const App: React.FC = () => {
   const [swarmOrchestratorExternalEvent, setSwarmOrchestratorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTemporalReasoning, setShowTemporalReasoning] = useState<boolean>(false);
   const [temporalReasoningExternalEvent, setTemporalReasoningExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSpatialLayout, setShowSpatialLayout] = useState<boolean>(false);
+  const [spatialLayoutExternalEvent, setSpatialLayoutExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -414,6 +417,8 @@ export const App: React.FC = () => {
             setSwarmOrchestratorExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('reasoning.') || mtype.startsWith('temporal.')) {
             setTemporalReasoningExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('spatial.layout') || mtype.startsWith('layout.')) {
+            setSpatialLayoutExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1173,6 +1178,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowTemporalReasoning((prev) => !prev)
     },
     {
+      id: 'cmd-spatial-layout-hud',
+      title: 'Toggle Multi-Display Spatial Layout HUD',
+      subtitle: 'Choreograph desktop windows across monitors with task presets & reversible rollback',
+      category: 'Assistant',
+      onExecute: () => setShowSpatialLayout((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1439,6 +1451,21 @@ export const App: React.FC = () => {
           <TemporalReasoningHUD
             externalEvent={temporalReasoningExternalEvent}
             onClose={() => setShowTemporalReasoning(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Multi-Display Spatial Holographic Canvas HUD (DSP-01, WIN-03) */}
+      {showSpatialLayout && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '940px', height: '620px', zIndex: 128 }}>
+          <SpatialLayoutHUD
+            externalEvent={spatialLayoutExternalEvent}
+            onClose={() => setShowSpatialLayout(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
