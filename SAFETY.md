@@ -2213,3 +2213,25 @@ All Phase 1 dynamic swarm task orchestrator and subagent delegation tools are re
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop() or bort_swarm_execution()) synchronously cancels all running subagent futures, terminates thread pools, and halts execution in strictly $< 25.0$ ms.
+
+
+## 83. Milestone 22.0 — Phase 2: Semantic Intent Memory Graph & Temporal Decision Reasoning Engine (MEM-03, RSN-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 temporal intent memory and counterfactual decision reasoning tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- 
+ecord_temporal_preference: **Tier 1** (Records a new user or system preference with temporal validity tracking, setting validity windows and supersession lineage; requires confirmation if overriding established policies).
+- query_temporal_intent_graph: **Tier 0** (Retrieves active preferences, point-in-time snapshots, or walks historical version lineage across the temporal intent graph; read-only memory query).
+- explain_decision_rationale: **Tier 0** (Provides evidence-based counterfactual reasoning explaining why a specific plan was chosen over candidate alternatives with citation markers; read-only synthesis).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Counterfactual decision reasoning explicitly inspects Safety layer rules before presenting or evaluating any execution plan.
+- **Rule 4 (Local Offline Memory & Reasoning)**: All temporal intent nodes, preference relationships, and counterfactual evaluations execute 100% locally with zero cloud egress or external API telemetry.
+- **Rule 7 (Reversibility & Non-Destructive Memory Lineage)**: When a preference is updated or superseded, previous records are never deleted; their alid_until timestamp is sealed and an explicit supersedes lineage edge is preserved for full auditability.
+- **Rule 8 (Payment & Credential Prohibitions)**: Preference statements and reasoning objectives are strictly scanned for credit card numbers, passwords, CVVs, or payment directives. Storing payment preferences raises a Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No tokens, passwords, or secrets are stored in temporal intent nodes.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts active reasoning syntheses and preference mutations in strictly $< 25.0$ ms.

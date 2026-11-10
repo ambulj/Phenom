@@ -57,6 +57,7 @@ import { MacroWorkflowHUD } from './components/CyberHUD/MacroWorkflowHUD';
 import { TelegramMeshHUD } from './components/CyberHUD/TelegramMeshHUD';
 import { AdaptiveVoicePersonaHUD } from './components/CyberHUD/AdaptiveVoicePersonaHUD';
 import { SwarmOrchestratorHUD } from './components/CyberHUD/SwarmOrchestratorHUD';
+import { TemporalReasoningHUD } from './components/CyberHUD/TemporalReasoningHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -198,6 +199,8 @@ export const App: React.FC = () => {
   const [adaptiveVoiceExternalEvent, setAdaptiveVoiceExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSwarmOrchestrator, setShowSwarmOrchestrator] = useState<boolean>(false);
   const [swarmOrchestratorExternalEvent, setSwarmOrchestratorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showTemporalReasoning, setShowTemporalReasoning] = useState<boolean>(false);
+  const [temporalReasoningExternalEvent, setTemporalReasoningExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -409,6 +412,8 @@ export const App: React.FC = () => {
             setAdaptiveVoiceExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('swarm.dag') || mtype.startsWith('dag.')) {
             setSwarmOrchestratorExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('reasoning.') || mtype.startsWith('temporal.')) {
+            setTemporalReasoningExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1161,6 +1166,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSwarmOrchestrator((prev) => !prev)
     },
     {
+      id: 'cmd-temporal-reasoning-hud',
+      title: 'Toggle Temporal Intent Memory & Reasoning HUD',
+      subtitle: 'Inspect preference lineage, counterfactual decision rationale & alternative evaluations',
+      category: 'Assistant',
+      onExecute: () => setShowTemporalReasoning((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1412,6 +1424,21 @@ export const App: React.FC = () => {
           <SwarmOrchestratorHUD
             externalEvent={swarmOrchestratorExternalEvent}
             onClose={() => setShowSwarmOrchestrator(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Temporal Intent Memory & Counterfactual Reasoning HUD (MEM-03, RSN-01) */}
+      {showTemporalReasoning && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <TemporalReasoningHUD
+            externalEvent={temporalReasoningExternalEvent}
+            onClose={() => setShowTemporalReasoning(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
