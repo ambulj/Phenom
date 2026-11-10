@@ -63,6 +63,7 @@ import { AmbientIntelligenceHUD } from './components/CyberHUD/AmbientIntelligenc
 import { MetacognitiveReflectorHUD } from './components/CyberHUD/MetacognitiveReflectorHUD';
 import { LoRAAdapterHubHUD } from './components/CyberHUD/LoRAAdapterHubHUD';
 import { VoiceCodeSynapseHUD } from './components/CyberHUD/VoiceCodeSynapseHUD';
+import { PredictiveTaskHubHUD } from './components/CyberHUD/PredictiveTaskHubHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -216,6 +217,8 @@ export const App: React.FC = () => {
   const [loraAdapterHubExternalEvent, setLoraAdapterHubExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showVoiceCodeSynapse, setShowVoiceCodeSynapse] = useState<boolean>(false);
   const [voiceCodeSynapseExternalEvent, setVoiceCodeSynapseExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showPredictiveTaskHub, setShowPredictiveTaskHub] = useState<boolean>(false);
+  const [predictiveTaskHubExternalEvent, setPredictiveTaskHubExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -439,6 +442,8 @@ export const App: React.FC = () => {
             setLoraAdapterHubExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('synapse.') || mtype.startsWith('code.voice')) {
             setVoiceCodeSynapseExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('predictive.') || mtype.startsWith('anticipation.') || mtype.startsWith('pipelining.')) {
+            setPredictiveTaskHubExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1233,6 +1238,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowVoiceCodeSynapse((prev) => !prev)
     },
     {
+      id: 'cmd-predictive-task-hub-hud',
+      title: 'Toggle Predictive Task Anticipation & Ambient Pipelining HUD',
+      subtitle: 'Markov workflow state transitions, proactive action cards & cache pre-warming',
+      category: 'Assistant',
+      onExecute: () => setShowPredictiveTaskHub((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1559,6 +1571,21 @@ export const App: React.FC = () => {
           <LoRAAdapterHubHUD
             externalEvent={loraAdapterHubExternalEvent}
             onClose={() => setShowLoRAAdapterHub(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Predictive Task Anticipation & Ambient Pipelining HUD (PRED-01, AUT-04) */}
+      {showPredictiveTaskHub && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '800px', height: '620px', zIndex: 129 }}>
+          <PredictiveTaskHubHUD
+            externalEvent={predictiveTaskHubExternalEvent}
+            onClose={() => setShowPredictiveTaskHub(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

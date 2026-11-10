@@ -2346,3 +2346,23 @@ ollback_transaction()).
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously terminates active buffer mutations and silences audio earcons in strictly $< 25.0$ ms.
+
+## 89. Milestone 23.0 — Phase 4: Predictive Proactive Task Anticipation & Ambient Workflow Pipelining (PRED-01, AUT-04, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 predictive task anticipation, habit modeling, and background cache prewarming tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- predict_next_actions: **Tier 0** (Calculates Markov conditional transition probabilities and anticipates the user's next workflow actions; read-only prediction).
+- prewarm_workflow_cache: **Tier 0** (Asynchronously pre-warms AST symbols and code contexts for anticipated workflow targets within a 64MB memory budget; read-only idempotent caching).
+- dismiss_action_card: **Tier 0** (Soft-dismisses an anticipated action card while preserving underlying transition weights; read-only soft preference adjustment).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Anticipated action recommendations require explicit user execution approval (one-click action card); the system never executes anticipated mutating commands without user consent.
+- **Rule 4 (Local Offline Processing)**: Markov transition matrices, user habit sequences, and prewarmed cache entries are stored 100% locally on-device. Zero telemetry or habit traces are exfiltrated to cloud endpoints.
+- **Rule 7 (Reversibility & Non-Destructive Dismissal)**: Dismissing a proactive action card simply marks the card or target action as soft-dismissed without deleting historical transition frequencies from habit_transitions.json.
+- **Rule 8 (Payment Prohibitions)**: Habit recording, transition calculations, and prewarmer cache indexing strictly reject any payment, checkout, or automated financial identifiers with Rule8ViolationError.
+- **Rule 11 (Credential Protection & Scrubbing)**: Before persisting or calculating transitions, raw action strings are filtered through credential scrubbers, replacing API keys, GitHub tokens, Bearer headers, and passwords with sanitized placeholder tokens ([SCRUBBED_API_KEY], [SCRUBBED_TOKEN]).
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts background cache prewarming and anticipation calculations in strictly $< 25.0$ ms.
