@@ -2386,3 +2386,23 @@ All Phase 1 runtime traceback diagnosis, symbolic AST patch synthesis, and rever
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously halts traceback diagnosis, patch synthesis, and disk patch writes in strictly $< 25.0$ ms.
+
+## 91. Milestone 24.0 — Phase 2: Sovereign Dynamic Micro-Sandbox & Isolated AST Execution Jail (SEC-04, ENV-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 AST security inspection, micro-sandbox execution, and capability telemetry tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- validate_code_security: **Tier 0** (Audits source code trees for disallowed module imports, dangerous calls, and jail escape vectors; read-only security inspection).
+- execute_in_sandbox_jail: **Tier 1** (Executes code in an ephemeral isolated sandbox jail with restricted builtins, execution timeouts, and capability blocks; requires confirmation before executing untrusted code).
+- get_sandbox_telemetry: **Tier 0** (Queries sandbox execution metrics, capability gates, and blocked security attempt counts; read-only telemetry query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every snippet submitted for sandboxed execution undergoes mandatory pre-execution static AST security inspection; code with disallowed imports or escape vectors is categorically halted with SECURITY_VIOLATION prior to execution.
+- **Rule 4 (Local Micro-Sandbox & Zero External Sockets)**: All sandboxed code runs locally in-process without network access. Sockets and HTTP libraries (socket, requests, urllib) are disallowed and blocked at both the AST and builtins levels.
+- **Rule 7 (Filesystem Non-Destructibility & Isolation)**: Sandboxed code operates under strict filesystem isolation. Open in write mode, os.remove, and shutil operations are blocked by AST security gates and excluded from the SAFE_BUILTINS whitelist.
+- **Rule 8 (Payment Prohibitions)**: Both the AST security visitor and the execution jail inspect all identifiers, strings, and function definitions, instantly rejecting any payment, checkout, or billing tokens with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No environment variables, credential managers, or secret tokens are mapped into sandbox globals.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously terminates active sandboxed code threads and security audits in strictly $< 25.0$ ms.

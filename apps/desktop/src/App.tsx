@@ -65,6 +65,7 @@ import { LoRAAdapterHubHUD } from './components/CyberHUD/LoRAAdapterHubHUD';
 import { VoiceCodeSynapseHUD } from './components/CyberHUD/VoiceCodeSynapseHUD';
 import { PredictiveTaskHubHUD } from './components/CyberHUD/PredictiveTaskHubHUD';
 import { SelfHealingKernelHUD } from './components/CyberHUD/SelfHealingKernelHUD';
+import { SandboxExecutionJailHUD } from './components/CyberHUD/SandboxExecutionJailHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -222,6 +223,8 @@ export const App: React.FC = () => {
   const [predictiveTaskHubExternalEvent, setPredictiveTaskHubExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSelfHealingKernel, setShowSelfHealingKernel] = useState<boolean>(false);
   const [selfHealingKernelExternalEvent, setSelfHealingKernelExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSandboxExecutionJail, setShowSandboxExecutionJail] = useState<boolean>(false);
+  const [sandboxExecutionJailExternalEvent, setSandboxExecutionJailExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -449,6 +452,8 @@ export const App: React.FC = () => {
             setPredictiveTaskHubExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('healing.') || mtype.startsWith('diagnostic.') || mtype.startsWith('patch.')) {
             setSelfHealingKernelExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('sandbox.') || mtype.startsWith('jail.') || mtype.startsWith('security.')) {
+            setSandboxExecutionJailExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1257,6 +1262,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSelfHealingKernel((prev) => !prev)
     },
     {
+      id: 'cmd-sandbox-execution-jail-hud',
+      title: 'Toggle Sandbox Execution Jail HUD',
+      subtitle: 'Static AST security auditing, capability-gated ephemeral execution, and timeout enforcement',
+      category: 'Assistant',
+      onExecute: () => setShowSandboxExecutionJail((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1583,6 +1595,21 @@ export const App: React.FC = () => {
           <LoRAAdapterHubHUD
             externalEvent={loraAdapterHubExternalEvent}
             onClose={() => setShowLoRAAdapterHub(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Dynamic Micro-Sandbox & AST Jail HUD (SEC-04, ENV-02) */}
+      {showSandboxExecutionJail && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '840px', height: '620px', zIndex: 131 }}>
+          <SandboxExecutionJailHUD
+            externalEvent={sandboxExecutionJailExternalEvent}
+            onClose={() => setShowSandboxExecutionJail(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
