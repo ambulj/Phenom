@@ -52,6 +52,7 @@ import { ProactiveSchedulerHUD } from './components/CyberHUD/ProactiveSchedulerH
 import { AssociativeMemoryHUD } from './components/CyberHUD/AssociativeMemoryHUD';
 import { WorkspaceCodeHUD } from './components/CyberHUD/WorkspaceCodeHUD';
 import { KnowledgeCanvasHUD } from './components/CyberHUD/KnowledgeCanvasHUD';
+import { MultimodalFusionHUD } from './components/CyberHUD/MultimodalFusionHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -183,6 +184,8 @@ export const App: React.FC = () => {
   const [workspaceCodeExternalEvent, setWorkspaceCodeExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showKnowledgeCanvas, setShowKnowledgeCanvas] = useState<boolean>(false);
   const [knowledgeCanvasExternalEvent, setKnowledgeCanvasExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showMultimodalFusion, setShowMultimodalFusion] = useState<boolean>(false);
+  const [multimodalFusionExternalEvent, setMultimodalFusionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -384,6 +387,8 @@ export const App: React.FC = () => {
             setWorkspaceCodeExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('obsidian.')) {
             setKnowledgeCanvasExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('fusion.')) {
+            setMultimodalFusionExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1101,6 +1106,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowKnowledgeCanvas((prev) => !prev)
     },
     {
+      id: 'cmd-multimodal-fusion-hud',
+      title: 'Toggle Multimodal Context Fusion HUD',
+      subtitle: 'Live 4-channel matrix (Voice, Window, OCR, AST) & deictic reference resolution',
+      category: 'Assistant',
+      onExecute: () => setShowMultimodalFusion((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1277,6 +1289,21 @@ export const App: React.FC = () => {
           <KnowledgeCanvasHUD
             externalEvent={knowledgeCanvasExternalEvent}
             onClose={() => setShowKnowledgeCanvas(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Multimodal Context Fusion & Visual-Semantic Grounding HUD (FUS-01, SAF-01) */}
+      {showMultimodalFusion && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <MultimodalFusionHUD
+            externalEvent={multimodalFusionExternalEvent}
+            onClose={() => setShowMultimodalFusion(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

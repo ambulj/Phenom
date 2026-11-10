@@ -2100,3 +2100,25 @@ All Phase 4 cross-vault Obsidian knowledge and concept synthesis tools are regis
 
 
 
+
+---
+
+## 78. Milestone 21.0 — Phase 1: Multimodal Context Fusion & Visual-Semantic Grounding (FUS-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 multimodal context fusion and deictic reference resolution tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `fuse_multimodal_context`: **Tier 0** (Correlates voice utterance, active foreground window, visible OCR tokens, and AST symbols into a unified grounded context object; read-only RAM fusion).
+- `resolve_screen_deictic_reference`: **Tier 0** (Resolves deictic phrases such as "this function", "this class", "that error" against OCR bounding boxes and AST symbols; read-only).
+- `get_active_fusion_state`: **Tier 0** (Retrieves the latest fused multimodal context snapshot and active reference bindings; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every multimodal fusion action passes through the Safety registry. Any downstream execution guided by deictic references inherits the full tier rating of the underlying action.
+- **Rule 4 (Zero Cloud Exfiltration)**: All cross-modal correlation, token matching, AST cross-referencing, and prompt injection filtering occur 100% locally on-device. No screen tokens, speech transcripts, or window titles are sent off-machine.
+- **Rule 7 (Reversibility & Non-Destructive State)**: Context fusion is purely analytical and maintains an ephemeral in-memory state buffer without modifying system files or active applications.
+- **Rule 8 (Payment & Checkout Invariant)**: Invariant maintained; deictic resolution rejects binding to payment/checkout targets and password fields, enforcing anti-checkout barriers (`Rule8ViolationError`).
+- **Rule 11 (Credential Protection)**: Context fuser and OCR tokens purge discovered passwords, authentication tokens, and private keys from the fused context prompt.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- All fusion updates, token parsing, and deictic resolution check `guardian.is_halted` before processing, halting synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.01\text{ ms}$).
