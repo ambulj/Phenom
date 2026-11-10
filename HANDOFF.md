@@ -2561,3 +2561,32 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 ### Test Results
 - `services/backend/tests/test_telegram_mobile_command_mesh.py`: **6/6 PASSED in 0.77s**
 - Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.39s)**
+
+---
+
+# Milestone 21.0 Phase 4: Adaptive Low-Latency Neural Voice & Proactive Persona Engine
+**Status:** Complete & Verified
+**Requirements:** `VOX-05.1`, `VOX-05.2`, `PER-02.1`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Adaptive Neural TTS Streaming Engine (`VOX-05.1`, `PER-02.1`)**:
+   - `services/backend/voice/adaptive_tts_engine.py`: Local neural speech streaming engine yielding in-RAM PCM chunks without disk persistence under Rule 4.
+   - Ultra-low latency benchmark: First audio chunk delivered in < 150ms SLA (benchmarked at ~42.8ms).
+   - Dynamic SSML and prosody modulation across 4 personas: `witty_jarvis` (+5% pitch, 1.1x rate, witty framing), `focused_coder` (0% pitch, 1.25x rate, concise technical cadence), `urgent_alert` (+10% pitch, 1.35x rate, intense alert cadence), and `calm_briefing` (-5% pitch, 0.95x rate, warm relaxed cadence).
+2. **Desktop Audio Ducking Manager (`VOX-05.2`)**:
+   - `services/backend/voice/audio_ducking_manager.py`: Automated attenuation manager that ducks external music/media audio sessions down to 20% volume during assistant speech and smoothly restores full volume over a 300ms cubic ramp upon speech completion.
+3. **Safety Tool Registration (`SAF-01.1`)**:
+   - Registered 3 tools in `services/backend/tools/adaptive_voice_tools.py`:
+     - `synthesize_adaptive_speech` (Tier 0)
+     - `set_voice_prosody_mode` (Tier 0)
+     - `get_audio_ducking_state` (Tier 0)
+   - Audited Section 81 in `SAFETY.md`.
+4. **Cyber HUD Adaptive Voice Studio (`UI-01`, `VOX-05`)**:
+   - `apps/desktop/src/components/CyberHUD/AdaptiveVoicePersonaHUD.tsx`: Interactive persona card selector, real-time animated prosody waveform, desktop ducking attenuation gauge, and live speech test player.
+   - Mounted in `apps/desktop/src/App.tsx` and Command Palette (`Ctrl+K`).
+5. **Universal Guardian SLA (< 25.0ms SLA)**:
+   - Synchronous kill switch halts verified (< 0.05ms typical).
+
+### Test Results
+- `services/backend/tests/test_adaptive_neural_voice_persona.py`: **6/6 PASSED in 3.05s**
+- Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.34s)**

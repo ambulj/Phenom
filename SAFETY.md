@@ -2169,3 +2169,25 @@ All Phase 3 bi-directional Telegram mobile command mesh tools are registered wit
 
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - Inbound `/halt` command triggers the Guardian kill switch immediately, halting all desktop automation, speech audio, and tool execution synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.05\text{ ms}$).
+
+---
+
+## 81. Milestone 21.0 — Phase 4: Adaptive Low-Latency Neural Voice & Proactive Persona Engine (VOX-05, PER-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 adaptive neural voice and persona tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `synthesize_adaptive_speech`: **Tier 0** (Generates adaptive streaming speech audio chunks with dynamic prosody tags in-memory; read-only RAM).
+- `set_voice_prosody_mode`: **Tier 0** (Switches active persona prosody profile: witty_jarvis, focused_coder, urgent_alert, calm_briefing; read-only settings).
+- `get_audio_ducking_state`: **Tier 0** (Retrieves desktop system audio session ducking attenuation level and active sessions; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Prosody modulation and persona framing execute entirely within the Safety framework; speech outputs never disguise dangerous actions.
+- **Rule 4 (Zero Cloud Exfiltration & In-Memory Audio)**: All neural speech synthesis, PCM generation, and prosody modulation run 100% locally on-device. Audio chunks remain strictly in volatile RAM and are never written to disk as `.wav` files.
+- **Rule 7 (Reversibility & Audio Ducking Ramp)**: Audio session attenuation is non-destructive and automatically restored to 100% volume via a smooth 300ms release ramp upon speech completion.
+- **Rule 8 (Payment & Checkout Invariant)**: Invariant maintained; voice tools cannot process transactions or purchases.
+- **Rule 11 (Credential Protection)**: Spoken voice output strictly filters passwords, private keys, and authentication tokens from text content before audio generation.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- All streaming speech synthesis chunk loops and ducking transitions verify `guardian.is_halted` before yielding every frame, halting audio generation and muting output synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.05\text{ ms}$).

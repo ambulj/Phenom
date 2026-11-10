@@ -55,6 +55,7 @@ import { KnowledgeCanvasHUD } from './components/CyberHUD/KnowledgeCanvasHUD';
 import { MultimodalFusionHUD } from './components/CyberHUD/MultimodalFusionHUD';
 import { MacroWorkflowHUD } from './components/CyberHUD/MacroWorkflowHUD';
 import { TelegramMeshHUD } from './components/CyberHUD/TelegramMeshHUD';
+import { AdaptiveVoicePersonaHUD } from './components/CyberHUD/AdaptiveVoicePersonaHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -192,6 +193,8 @@ export const App: React.FC = () => {
   const [macroWorkflowExternalEvent, setMacroWorkflowExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTelegramMesh, setShowTelegramMesh] = useState<boolean>(false);
   const [telegramMeshExternalEvent, setTelegramMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showAdaptiveVoice, setShowAdaptiveVoice] = useState<boolean>(false);
+  const [adaptiveVoiceExternalEvent, setAdaptiveVoiceExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -399,6 +402,8 @@ export const App: React.FC = () => {
             setMacroWorkflowExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('telegram.mesh') || mtype.startsWith('mesh.')) {
             setTelegramMeshExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('voice.adaptive') || mtype.startsWith('persona.')) {
+            setAdaptiveVoiceExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1137,6 +1142,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowTelegramMesh((prev) => !prev)
     },
     {
+      id: 'cmd-adaptive-voice-hud',
+      title: 'Toggle Adaptive Neural Voice & Persona HUD',
+      subtitle: 'Dynamic prosody presets, live waveform monitor & automatic audio ducking',
+      category: 'Assistant',
+      onExecute: () => setShowAdaptiveVoice((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1366,6 +1378,22 @@ export const App: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Adaptive Low-Latency Neural Voice & Proactive Persona Engine HUD (VOX-05, PER-02) */}
+      {showAdaptiveVoice && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <AdaptiveVoicePersonaHUD
+            externalEvent={adaptiveVoiceExternalEvent}
+            onClose={() => setShowAdaptiveVoice(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
 
 
 
