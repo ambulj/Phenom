@@ -2280,3 +2280,25 @@ All Phase 4 proactive ambient intelligence and focus filtering tools are registe
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts background polling, alert evaluations, and briefing synthesis in strictly $< 25.0$ ms.
+
+
+## 86. Milestone 23.0 — Phase 1: Metacognitive Self-Reflection & Execution Calibration Engine (META-01, COG-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 metacognitive auditing and execution calibration tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- udit_execution_trajectory: **Tier 0** (Evaluates executed tool steps against original user intent, computing epistemic confidence and calibration accuracy scores; read-only analysis).
+- 
+ecord_reflection_note: **Tier 1** (Writes a structured post-mortem note with frontmatter metadata to .phenom/reflection/; requires confirmation to write file to local workspace).
+- get_metacognitive_calibration_stats: **Tier 0** (Retrieves aggregate confidence calibration metrics, audit counts, and drift statistics; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Metacognitive auditing evaluates whether any safety rule was near-breached or triggered during tool execution, recommending stricter verification before subsequent planning.
+- **Rule 4 (Local Offline Auditing)**: Trajectory evaluation, calibration math, and reflection markdown notes are synthesized 100% locally with zero cloud telemetry.
+- **Rule 7 (Reversibility & Non-Destructive Reflection Notes)**: Reflection logs are saved as append-only markdown documents under .phenom/reflection/ with immutable timestamps; past audits are never deleted.
+- **Rule 8 (Payment Prohibitions)**: Trajectories or user intents containing automated checkout, card numbers, or payment verbs are rejected with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No passwords, keys, or auth headers are logged inside trajectory audits or reflection post-mortems.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts trajectory auditing and reflection logging in strictly $< 25.0$ ms.

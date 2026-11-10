@@ -60,6 +60,7 @@ import { SwarmOrchestratorHUD } from './components/CyberHUD/SwarmOrchestratorHUD
 import { TemporalReasoningHUD } from './components/CyberHUD/TemporalReasoningHUD';
 import { SpatialLayoutHUD } from './components/CyberHUD/SpatialLayoutHUD';
 import { AmbientIntelligenceHUD } from './components/CyberHUD/AmbientIntelligenceHUD';
+import { MetacognitiveReflectorHUD } from './components/CyberHUD/MetacognitiveReflectorHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -207,6 +208,8 @@ export const App: React.FC = () => {
   const [spatialLayoutExternalEvent, setSpatialLayoutExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAmbientIntelligence, setShowAmbientIntelligence] = useState<boolean>(false);
   const [ambientIntelligenceExternalEvent, setAmbientIntelligenceExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showMetacognitiveReflector, setShowMetacognitiveReflector] = useState<boolean>(false);
+  const [metacognitiveReflectorExternalEvent, setMetacognitiveReflectorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -424,6 +427,8 @@ export const App: React.FC = () => {
             setSpatialLayoutExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('ambient.feed') || mtype.startsWith('ambient.intel')) {
             setAmbientIntelligenceExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('metacognition.') || mtype.startsWith('reflection.')) {
+            setMetacognitiveReflectorExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1197,6 +1202,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowAmbientIntelligence((prev) => !prev)
     },
     {
+      id: 'cmd-metacognitive-reflector-hud',
+      title: 'Toggle Metacognitive Reflector & Calibration HUD',
+      subtitle: 'Inspect execution trajectory post-mortems, epistemic confidence & calibration stats',
+      category: 'Assistant',
+      onExecute: () => setShowMetacognitiveReflector((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1493,6 +1505,21 @@ export const App: React.FC = () => {
           <AmbientIntelligenceHUD
             externalEvent={ambientIntelligenceExternalEvent}
             onClose={() => setShowAmbientIntelligence(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Metacognitive Self-Reflection & Execution Calibration HUD (META-01, COG-01) */}
+      {showMetacognitiveReflector && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <MetacognitiveReflectorHUD
+            externalEvent={metacognitiveReflectorExternalEvent}
+            onClose={() => setShowMetacognitiveReflector(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
