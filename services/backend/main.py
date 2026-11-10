@@ -311,6 +311,7 @@ import services.backend.tools.hybrid_rag_tools
 import services.backend.tools.obsidian_cross_vault_tools
 import services.backend.tools.multimodal_fusion_tools
 import services.backend.tools.workflow_macro_tools
+import services.backend.tools.telegram_mesh_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus

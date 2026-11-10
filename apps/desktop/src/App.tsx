@@ -54,6 +54,7 @@ import { WorkspaceCodeHUD } from './components/CyberHUD/WorkspaceCodeHUD';
 import { KnowledgeCanvasHUD } from './components/CyberHUD/KnowledgeCanvasHUD';
 import { MultimodalFusionHUD } from './components/CyberHUD/MultimodalFusionHUD';
 import { MacroWorkflowHUD } from './components/CyberHUD/MacroWorkflowHUD';
+import { TelegramMeshHUD } from './components/CyberHUD/TelegramMeshHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -189,6 +190,8 @@ export const App: React.FC = () => {
   const [multimodalFusionExternalEvent, setMultimodalFusionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showMacroWorkflow, setShowMacroWorkflow] = useState<boolean>(false);
   const [macroWorkflowExternalEvent, setMacroWorkflowExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showTelegramMesh, setShowTelegramMesh] = useState<boolean>(false);
+  const [telegramMeshExternalEvent, setTelegramMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -394,6 +397,8 @@ export const App: React.FC = () => {
             setMultimodalFusionExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('workflow.') || mtype.startsWith('macro.')) {
             setMacroWorkflowExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('telegram.mesh') || mtype.startsWith('mesh.')) {
+            setTelegramMeshExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1125,6 +1130,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowMacroWorkflow((prev) => !prev)
     },
     {
+      id: 'cmd-telegram-mesh-hud',
+      title: 'Toggle Telegram Mobile Mesh HUD',
+      subtitle: 'Live interactive approval queue, remote voice RAG feed & emergency /halt control',
+      category: 'Assistant',
+      onExecute: () => setShowTelegramMesh((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1339,6 +1351,22 @@ export const App: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Advanced Bi-Directional Telegram Mobile Command Mesh HUD (TEL-04, REM-02) */}
+      {showTelegramMesh && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <TelegramMeshHUD
+            externalEvent={telegramMeshExternalEvent}
+            onClose={() => setShowTelegramMesh(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
 
 
       {/* Voice Persona & Dynamic Prosody HUD (VOX-03) */}

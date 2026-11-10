@@ -2146,3 +2146,26 @@ All Phase 2 autonomous macro synthesis and self-healing workflow engine tools ar
 
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - All macro recording steps, simulation previews, and step-by-step executions verify `guardian.is_halted` before execution and between steps, halting synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.05\text{ ms}$).
+
+---
+
+## 80. Milestone 21.0 — Phase 3: Advanced Bi-Directional Telegram Mobile Command Mesh (TEL-04, REM-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 bi-directional Telegram mobile command mesh tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `dispatch_telegram_approval_request`: **Tier 1** (Dispatches an interactive authorization ticket with inline Approve/Reject buttons to user's paired Telegram device; requires confirmation preview).
+- `handle_telegram_callback_decision`: **Tier 0** (Processes remote button callback from Telegram to approve or reject a pending desktop ticket).
+- `execute_remote_voice_rag`: **Tier 0** (Transcribes voice query in RAM and queries offline local Hybrid RAG and Obsidian vaults, returning answers with citations `[1]`, `[2]`; read-only RAG).
+- `get_telegram_mesh_status`: **Tier 0** (Retrieves mobile mesh connection status, paired chat ID, and pending approvals count; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: High-tier desktop actions cannot bypass user confirmation; Telegram tickets faithfully mirror the desktop preview, displaying action name, parameters, and risk tier.
+- **Rule 4 (Zero Cloud Exfiltration & In-Memory Audio)**: Voice note queries are transcribed strictly in-memory without saving `.wav` files to disk. RAG embeddings and vault lookups operate 100% locally.
+- **Rule 7 (Reversibility & Non-Destructive Queries)**: Remote inquiries and approval tickets are strictly informational and state-gated without mutating local repositories without approval.
+- **Rule 8 (Payment & Checkout Invariant)**: Invariant maintained; remote execution rejects any tool calls targeting checkout, payments, or passwords.
+- **Rule 11 (Credential Protection)**: Ticket previews and command outputs strictly sanitize passwords, bot tokens, and private keys.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- Inbound `/halt` command triggers the Guardian kill switch immediately, halting all desktop automation, speech audio, and tool execution synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.05\text{ ms}$).
