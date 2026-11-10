@@ -2258,3 +2258,25 @@ ollback_last_layout()).
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously terminates layout transitions and monitor polling in strictly $< 25.0$ ms.
+
+
+## 85. Milestone 22.0 — Phase 4: Proactive Ambient Intelligence & Multi-Modal Contextual Notification Hub (AMB-02, NOT-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 proactive ambient intelligence and focus filtering tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- get_ambient_intelligence_feed: **Tier 0** (Retrieves prioritized proactive ambient alerts, delivery decisions, and focus threshold telemetry; read-only query).
+- configure_notification_filter: **Tier 0** (Configures focus mode thresholds: deep_focus, balanced, ambient to suppress non-urgent interruptions; read-only settings adjustment).
+- dismiss_ambient_alert: **Tier 0** (Soft-dismisses an active alert without deleting underlying event records; non-destructive archive).
+- synthesize_proactive_briefing: **Tier 0** (Synthesizes conversational natural-language overview of system resources, developer tasks, and ambient alerts; read-only synthesis).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Ambient alert delivery strictly respects Safety tiers. Critical security alerts bypass focus filters to ensure immediate user awareness, while low-priority telemetry is filtered silently.
+- **Rule 4 (Local Offline Intelligence)**: Telemetry aggregation, focus state evaluation, and briefing synthesis execute 100% locally with zero cloud telemetry.
+- **Rule 7 (Reversibility & Soft Dismissal)**: Dismissed alerts are marked with is_dismissed = True and timestamped; historical alert telemetry is never permanently deleted.
+- **Rule 8 (Payment Prohibitions)**: No payment requests or automated checkout alerts are generated or accepted by the ambient intelligence daemon.
+- **Rule 11 (Credential Protection)**: No passwords, tokens, or credential manager secrets are included in ambient briefings or alert summaries.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts background polling, alert evaluations, and briefing synthesis in strictly $< 25.0$ ms.

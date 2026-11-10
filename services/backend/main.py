@@ -316,6 +316,7 @@ import services.backend.tools.adaptive_voice_tools
 import services.backend.tools.swarm_orchestrator_tools
 import services.backend.tools.temporal_reasoning_tools
 import services.backend.tools.spatial_layout_tools
+import services.backend.tools.ambient_intelligence_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
