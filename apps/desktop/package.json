@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "21.0.0",
-  "description": "Phenom 21.0: Sovereign Omnimodal Intelligence & Autonomous Cross-Platform Workflow OS — Multimodal Context Fusion, Desktop Macro Synthesis, Telegram Command Mesh, and Adaptive Neural Voice",
+  "version": "22.0.0",
+  "description": "Phenom 22.0: Sovereign Autonomous Swarm Intelligence, Distributed Task Graph & Adaptive Multi-Agent Synthesis OS — Dynamic DAG Swarm Task Orchestrator, Semantic Intent Memory Graph, Multi-Display Spatial Holographic Canvas, and Proactive Ambient Intelligence",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
