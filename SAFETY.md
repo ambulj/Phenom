@@ -2366,3 +2366,23 @@ All Phase 4 predictive task anticipation, habit modeling, and background cache p
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts background cache prewarming and anticipation calculations in strictly $< 25.0$ ms.
+
+## 90. Milestone 24.0 — Phase 1: Autonomous Neuro-Symbolic Diagnostic & Self-Healing Engine (HEAL-01, SYM-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 runtime traceback diagnosis, symbolic AST patch synthesis, and reversible patch application tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- diagnose_runtime_failure: **Tier 0** (Parses runtime exception tracebacks, isolates culprit AST frames, and classifies fault categories; read-only diagnostic analysis).
+- synthesize_healing_patch: **Tier 0** (Deterministically synthesizes symbolic AST repair patches and generates unified diff previews without modifying files on disk; read-only code synthesis).
+- apply_healing_patch: **Tier 1** (Applies a synthesized AST patch to target source code with atomic transaction rollback checkpoint; requires confirmation before modifying files on disk).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every synthesized patch is reviewed via unified diff preview prior to disk modification; unconfirmed mutating patches are never applied silently.
+- **Rule 4 (Local Offline Fault Isolation)**: All traceback parsing, frame extraction, AST inspection, and patch synthesis operate 100% locally on-device. Zero tracebacks or source codes are transmitted to cloud services.
+- **Rule 7 (Reversibility & Transaction Rollback)**: Every applied patch creates an atomic in-memory snapshot of the pre-mutation source code, enabling instant one-click rollback (rollback_patch(patch_id)) to restore original code.
+- **Rule 8 (Payment Prohibitions)**: Tracebacks, source code, and patch candidates targeting payment execution, shopping cart checkouts, or credit card handling are strictly screened with regex and rejected with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No secrets, passwords, or tokens are altered or stored in self-healing snapshots.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously halts traceback diagnosis, patch synthesis, and disk patch writes in strictly $< 25.0$ ms.

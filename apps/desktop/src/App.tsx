@@ -64,6 +64,7 @@ import { MetacognitiveReflectorHUD } from './components/CyberHUD/MetacognitiveRe
 import { LoRAAdapterHubHUD } from './components/CyberHUD/LoRAAdapterHubHUD';
 import { VoiceCodeSynapseHUD } from './components/CyberHUD/VoiceCodeSynapseHUD';
 import { PredictiveTaskHubHUD } from './components/CyberHUD/PredictiveTaskHubHUD';
+import { SelfHealingKernelHUD } from './components/CyberHUD/SelfHealingKernelHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -219,6 +220,8 @@ export const App: React.FC = () => {
   const [voiceCodeSynapseExternalEvent, setVoiceCodeSynapseExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showPredictiveTaskHub, setShowPredictiveTaskHub] = useState<boolean>(false);
   const [predictiveTaskHubExternalEvent, setPredictiveTaskHubExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSelfHealingKernel, setShowSelfHealingKernel] = useState<boolean>(false);
+  const [selfHealingKernelExternalEvent, setSelfHealingKernelExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -444,6 +447,8 @@ export const App: React.FC = () => {
             setVoiceCodeSynapseExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('predictive.') || mtype.startsWith('anticipation.') || mtype.startsWith('pipelining.')) {
             setPredictiveTaskHubExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('healing.') || mtype.startsWith('diagnostic.') || mtype.startsWith('patch.')) {
+            setSelfHealingKernelExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1245,6 +1250,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowPredictiveTaskHub((prev) => !prev)
     },
     {
+      id: 'cmd-self-healing-kernel-hud',
+      title: 'Toggle Self-Healing Kernel HUD',
+      subtitle: 'Automated traceback diagnosis, AST fault localization, and reversible patch synthesis',
+      category: 'Assistant',
+      onExecute: () => setShowSelfHealingKernel((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1571,6 +1583,21 @@ export const App: React.FC = () => {
           <LoRAAdapterHubHUD
             externalEvent={loraAdapterHubExternalEvent}
             onClose={() => setShowLoRAAdapterHub(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Autonomous Self-Healing Kernel HUD (HEAL-01, SYM-02) */}
+      {showSelfHealingKernel && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '840px', height: '620px', zIndex: 130 }}>
+          <SelfHealingKernelHUD
+            externalEvent={selfHealingKernelExternalEvent}
+            onClose={() => setShowSelfHealingKernel(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
