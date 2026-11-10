@@ -2406,3 +2406,23 @@ All Phase 2 AST security inspection, micro-sandbox execution, and capability tel
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously terminates active sandboxed code threads and security audits in strictly $< 25.0$ ms.
+
+## 92. Milestone 24.0 — Phase 3: Adaptive Cross-Modal Spatial Cursor-Voice Intent Interactor (VOX-07, GES-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 spatial cursor tracking, deictic speech intent resolution, and target highlight tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- resolve_spatial_intent: **Tier 0** (Correlates spoken deictic commands with active screen cursor coordinates to resolve target AST symbols or UI controls in < 35ms; read-only intent resolution).
+- get_cursor_spatial_context: **Tier 0** (Queries real-time cursor screen coordinates, active window boundaries, and UI element context; read-only telemetry query).
+- highlight_spatial_target: **Tier 0** (Broadcasts an on-screen beacon and bounding box highlight for a resolved spatial target; read-only visual overlay beacon).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Spatial intent resolution resolves target bindings only; any mutating actions derived from resolved intents (e.g. refactoring, file edits) must independently route through confirmation gates before execution.
+- **Rule 4 (Local Offline Coordinates & Zero Cloud Telemetry)**: All screen coordinates, window bounds, and spoken directives are processed 100% locally on-device. Zero cursor coordinates or audio transcripts are exfiltrated to cloud services.
+- **Rule 7 (Non-Destructibility & Ephemeral Overlays)**: Screen beacons and highlight bounding boxes are purely visual overlays and never alter window geometry, desktop state, or underlying source code.
+- **Rule 8 (Payment Prohibitions)**: Spoken commands and resolved symbols containing payment, checkout, or billing tokens are strictly rejected with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No passwords or credential fields can be bound as targets via spatial cursor resolution.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously halts spatial telemetry tracking and intent resolution in strictly $< 25.0$ ms.

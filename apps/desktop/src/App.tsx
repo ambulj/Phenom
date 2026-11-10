@@ -66,6 +66,7 @@ import { VoiceCodeSynapseHUD } from './components/CyberHUD/VoiceCodeSynapseHUD';
 import { PredictiveTaskHubHUD } from './components/CyberHUD/PredictiveTaskHubHUD';
 import { SelfHealingKernelHUD } from './components/CyberHUD/SelfHealingKernelHUD';
 import { SandboxExecutionJailHUD } from './components/CyberHUD/SandboxExecutionJailHUD';
+import { SpatialVoiceSynapseHUD } from './components/CyberHUD/SpatialVoiceSynapseHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -225,6 +226,8 @@ export const App: React.FC = () => {
   const [selfHealingKernelExternalEvent, setSelfHealingKernelExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSandboxExecutionJail, setShowSandboxExecutionJail] = useState<boolean>(false);
   const [sandboxExecutionJailExternalEvent, setSandboxExecutionJailExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSpatialVoiceSynapse, setShowSpatialVoiceSynapse] = useState<boolean>(false);
+  const [spatialVoiceSynapseExternalEvent, setSpatialVoiceSynapseExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -454,6 +457,8 @@ export const App: React.FC = () => {
             setSelfHealingKernelExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('sandbox.') || mtype.startsWith('jail.') || mtype.startsWith('security.')) {
             setSandboxExecutionJailExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('spatial.voice') || mtype.startsWith('deictic.') || mtype.startsWith('cursor.')) {
+            setSpatialVoiceSynapseExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1269,6 +1274,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSandboxExecutionJail((prev) => !prev)
     },
     {
+      id: 'cmd-spatial-voice-synapse-hud',
+      title: 'Toggle Spatial Cursor-Voice Intent Synapse HUD',
+      subtitle: 'Cross-modal deictic speech and screen coordinate intent resolver (< 35ms SLA)',
+      category: 'Assistant',
+      onExecute: () => setShowSpatialVoiceSynapse((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1595,6 +1607,21 @@ export const App: React.FC = () => {
           <LoRAAdapterHubHUD
             externalEvent={loraAdapterHubExternalEvent}
             onClose={() => setShowLoRAAdapterHub(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Spatial Cursor-Voice Intent Synapse HUD (VOX-07, GES-01) */}
+      {showSpatialVoiceSynapse && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '840px', height: '620px', zIndex: 132 }}>
+          <SpatialVoiceSynapseHUD
+            externalEvent={spatialVoiceSynapseExternalEvent}
+            onClose={() => setShowSpatialVoiceSynapse(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
