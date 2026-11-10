@@ -27,4 +27,5 @@ venv/
 services/backend/data/*.db*
 .phenom_sandbox/
 .phenom_worktrees/
+.phenom/
 
