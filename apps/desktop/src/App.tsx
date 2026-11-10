@@ -56,6 +56,7 @@ import { MultimodalFusionHUD } from './components/CyberHUD/MultimodalFusionHUD';
 import { MacroWorkflowHUD } from './components/CyberHUD/MacroWorkflowHUD';
 import { TelegramMeshHUD } from './components/CyberHUD/TelegramMeshHUD';
 import { AdaptiveVoicePersonaHUD } from './components/CyberHUD/AdaptiveVoicePersonaHUD';
+import { SwarmOrchestratorHUD } from './components/CyberHUD/SwarmOrchestratorHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -195,6 +196,8 @@ export const App: React.FC = () => {
   const [telegramMeshExternalEvent, setTelegramMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAdaptiveVoice, setShowAdaptiveVoice] = useState<boolean>(false);
   const [adaptiveVoiceExternalEvent, setAdaptiveVoiceExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSwarmOrchestrator, setShowSwarmOrchestrator] = useState<boolean>(false);
+  const [swarmOrchestratorExternalEvent, setSwarmOrchestratorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -404,6 +407,8 @@ export const App: React.FC = () => {
             setTelegramMeshExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('voice.adaptive') || mtype.startsWith('persona.')) {
             setAdaptiveVoiceExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('swarm.dag') || mtype.startsWith('dag.')) {
+            setSwarmOrchestratorExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1149,6 +1154,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowAdaptiveVoice((prev) => !prev)
     },
     {
+      id: 'cmd-swarm-orchestrator-hud',
+      title: 'Toggle Dynamic Swarm Task Graph (DAG) HUD',
+      subtitle: 'Inspect topological wave partitioning, dynamic subagent delegation & live node states',
+      category: 'Assistant',
+      onExecute: () => setShowSwarmOrchestrator((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1385,6 +1397,21 @@ export const App: React.FC = () => {
           <AdaptiveVoicePersonaHUD
             externalEvent={adaptiveVoiceExternalEvent}
             onClose={() => setShowAdaptiveVoice(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Dynamic DAG Swarm Task Orchestrator HUD (SWM-01, AUT-03) */}
+      {showSwarmOrchestrator && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '960px', height: '640px', zIndex: 128 }}>
+          <SwarmOrchestratorHUD
+            externalEvent={swarmOrchestratorExternalEvent}
+            onClose={() => setShowSwarmOrchestrator(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

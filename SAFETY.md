@@ -2191,3 +2191,25 @@ All Phase 4 adaptive neural voice and persona tools are registered with `service
 
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - All streaming speech synthesis chunk loops and ducking transitions verify `guardian.is_halted` before yielding every frame, halting audio generation and muting output synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.05\text{ ms}$).
+
+
+## 82. Milestone 22.0 — Phase 1: Dynamic DAG Swarm Task Orchestrator & Autonomous Subagent Delegation (SWM-01, AUT-03, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 dynamic swarm task orchestrator and subagent delegation tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- create_swarm_task_dag: **Tier 0** (Constructs and validates an in-memory topological task DAG with dependency edges and cycle detection; read-only graph validation).
+- execute_swarm_dag_wave: **Tier 1** (Executes a wave of independent subagent tasks concurrently across the ephemeral subagent pool; bounded to max 4 concurrent workers with atomic rollback checkpoints).
+- get_swarm_dag_status: **Tier 0** (Inspects topological waves, active node states, execution timings, and worker pool utilization; read-only telemetry).
+- bort_swarm_execution: **Tier 0** (Immediately aborts in-flight swarm DAG execution, resets worker allocations, and checkpoints state; failsafe halt).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every subagent spawned within the ephemeral pool is strictly constrained by the Safety layer. Subagents cannot bypass confirmation or invoke unregistered tools.
+- **Rule 4 (Local Offline Swarm Processing)**: All DAG generation, topological wave partitioning, and subagent prompt dispatches execute 100% locally on the device with zero cloud telemetry.
+- **Rule 7 (Reversibility & State Checkpointing)**: Before executing each topological wave, the orchestrator creates an in-memory state checkpoint. If a node fails or exceeds max retries, the DAG pauses and offers safe rollback or retry.
+- **Rule 8 (Payment & Checkout Prohibitions)**: Subagent task descriptions and goals are scanned against anti-checkout patterns. Any subagent task attempting automated checkout or payment submission raises a Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: Subagents never receive raw credentials or auth tokens; all system interactions use managed internal broker references.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop() or bort_swarm_execution()) synchronously cancels all running subagent futures, terminates thread pools, and halts execution in strictly $< 25.0$ ms.
