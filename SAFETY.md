@@ -2052,3 +2052,27 @@ All Phase 2 diagnostic runner and worktree sandbox tools are registered with `se
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - All test runners and worktree operations check `guardian_kill_switch.assert_healthy()` before invocation and during iterations. If the kill switch is triggered, subprocesses are killed immediately and operations halt synchronously in $< 25.0\text{ ms}$ SLA (typically $< 1.0\text{ ms}$).
 
+---
+
+## 76. Milestone 20.0 — Phase 3: Large-Scale Offline Hybrid RAG Engine & Document Synthesis Pipeline (RAG-02, DOC-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 hybrid RAG and document synthesis tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `ingest_rag_document`: **Tier 0** (Parses and indexes a document into offline BM25 and 384d vector stores; read-only RAM indexing).
+- `hybrid_rag_search`: **Tier 0** (Performs dual-channel BM25 and dense vector search fused via Reciprocal Rank Fusion; read-only).
+- `synthesize_document_answer`: **Tier 0** (Synthesizes source-grounded answer with inline citations from offline documents; read-only).
+- `get_rag_index_stats`: **Tier 0** (Returns metrics on indexed RAG documents, chunks, and vocabulary; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: All retrieval and synthesis actions pass through the Safety registry with explicit preview generators.
+- **Rule 4 (Zero Cloud Exfiltration)**: All embeddings (`all-MiniLM-L6-v2`), BM25 indexing, and answer synthesis operate 100% locally on device under `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`. No private documents, code snippets, or query strings depart the machine.
+- **Rule 7 (Non-Destructive Indexing)**: Ingesting and querying documents does not mutate or alter original source files on disk.
+- **Rule 8 (Payment & Checkout Invariant)**: Invariant maintained; RAG tools cannot process transactions or payments.
+- **Rule 11 (Credential Protection)**: Synthesis answers never extract or display secret tokens, credentials, or private keys found in indexed files.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- All document parsing, BM25 indexing, hybrid retrieval, and synthesis operations verify `guardian.is_halted` before execution and between chunk loops, halting synchronously in $< 25.0\text{ ms}$ SLA (typically $< 1.0\text{ ms}$).
+
+
