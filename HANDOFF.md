@@ -2495,3 +2495,38 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 ### Test Results
 - `services/backend/tests/test_multimodal_context_fusion.py`: **8/8 PASSED in 0.96s**
 - Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.41s)**
+
+---
+
+# Milestone 21.0 Phase 2: Autonomous Desktop Macro Synthesis & Self-Healing Workflow Engine
+**Status:** Complete & Verified
+**Requirements:** `MAC-02.1`, `MAC-02.2`, `AUT-02.1`, `SAF-01`, `SAF-02`
+
+### Accomplishments
+1. **Desktop Macro Recording & Parameterized YAML Synthesis (`MAC-02.1`, `AUT-02.1`)**:
+   - `services/backend/automation/macro_synthesizer.py`: Session-based interaction recorder that captures multi-app desktop actions, hotkeys, and CLI commands.
+   - Automatically detects parameter placeholders (`${param_name}`) and synthesizes clean, idempotent YAML workflow recipes with configurable schema defaults.
+   - File persistence and YAML parser with round-trip validation.
+2. **Deterministic Execution & Self-Healing Retargeting (`MAC-02.2`)**:
+   - `services/backend/automation/workflow_engine.py`: Step-by-step workflow executor with dynamic parameter interpolation and multi-strategy self-healing (exact UIA selector -> tokenized OCR on-screen text -> relative normalized coordinates).
+   - Generates `SelfHealEvent` audit logs when UI elements drift or change automation IDs.
+   - Includes dry-run simulation mode with step diff preview.
+3. **Strict Rule 8 Anti-Checkout Protection (`SAF-01.2`)**:
+   - Categorically blocks recording, synthesis, preview, or execution of any step targeting checkout, payment (`pay now`, `complete purchase`, `place order`), or password inputs with `Rule8ViolationError`.
+4. **Safety Tool Registration (`SAF-01.1`)**:
+   - Registered 5 tools in `services/backend/tools/workflow_macro_tools.py`:
+     - `record_macro_step` (Tier 0)
+     - `synthesize_workflow_recipe` (Tier 1)
+     - `preview_workflow_execution` (Tier 0)
+     - `execute_workflow_recipe` (Tier 1 / Tier 2)
+     - `list_workflow_recipes` (Tier 0)
+   - Audited Section 79 in `SAFETY.md`.
+5. **Cyber HUD Workflow Studio (`UI-01`, `MAC-02`)**:
+   - `apps/desktop/src/components/CyberHUD/MacroWorkflowHUD.tsx`: Full-featured workflow studio with synthesized recipe catalog, live YAML editor, parameter binding inputs, execution runner with self-healing badges, and Rule 8 shield indicator.
+   - Mounted in `apps/desktop/src/App.tsx` and Command Palette (`Ctrl+K`).
+6. **Universal Guardian SLA (< 25.0ms SLA)**:
+   - Synchronous kill switch halts verified (< 0.05ms typical).
+
+### Test Results
+- `services/backend/tests/test_autonomous_macro_workflow_engine.py`: **7/7 PASSED in 0.85s**
+- Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.39s)**

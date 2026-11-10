@@ -2122,3 +2122,27 @@ All Phase 1 multimodal context fusion and deictic reference resolution tools are
 
 ### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
 - All fusion updates, token parsing, and deictic resolution check `guardian.is_halted` before processing, halting synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.01\text{ ms}$).
+
+---
+
+## 79. Milestone 21.0 — Phase 2: Autonomous Desktop Macro Synthesis & Self-Healing Workflow Engine (MAC-02, AUT-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 autonomous macro synthesis and self-healing workflow engine tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `record_macro_step`: **Tier 0** (Records an individual user action or hotkey into active in-memory session buffer; read-only RAM).
+- `synthesize_workflow_recipe`: **Tier 1** (Compiles recorded steps into a structured, parameterized YAML recipe file; creates recipe file, requires confirmation preview).
+- `preview_workflow_execution`: **Tier 0** (Simulates workflow execution and predicts self-healing retargeting without desktop mutation; read-only simulation).
+- `execute_workflow_recipe`: **Tier 1 / Tier 2** (Executes the validated desktop workflow recipe step-by-step with live self-healing retargeting; requires confirmation preview; Tier 2 if containing CLI commands).
+- `list_workflow_recipes`: **Tier 0** (Lists available workflow recipes with step count and safety tier; read-only).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every workflow execution requires user confirmation with a descriptive preview detailing the recipe name, parameters, and step count.
+- **Rule 4 (Zero Cloud Exfiltration)**: All macro recording, recipe synthesis, YAML storage, and self-healing retargeting operate strictly on local machine hardware. No workflows or parameters leave the system.
+- **Rule 7 (Reversibility & Idempotent Workflows)**: Macro recipes are stored as standalone YAML files in `.phenom/recipes/` with non-destructive overwrite guards and dry-run preview simulation.
+- **Rule 8 (Payment & Checkout Invariant)**: Invariant maintained; macro synthesizer and workflow engine strictly reject recording, synthesis, preview, or execution of any step targeting checkout, payment (`pay now`, `complete purchase`, `place order`), or password inputs with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: Parameter placeholders never persist plain-text credentials or API keys; secrets are loaded dynamically from Windows Credential Manager.
+
+### 3. Universal Guardian Kill Switch SLA (< 25.0ms SLA)
+- All macro recording steps, simulation previews, and step-by-step executions verify `guardian.is_halted` before execution and between steps, halting synchronously in $< 25.0\text{ ms}$ SLA (typically $< 0.05\text{ ms}$).

@@ -53,6 +53,7 @@ import { AssociativeMemoryHUD } from './components/CyberHUD/AssociativeMemoryHUD
 import { WorkspaceCodeHUD } from './components/CyberHUD/WorkspaceCodeHUD';
 import { KnowledgeCanvasHUD } from './components/CyberHUD/KnowledgeCanvasHUD';
 import { MultimodalFusionHUD } from './components/CyberHUD/MultimodalFusionHUD';
+import { MacroWorkflowHUD } from './components/CyberHUD/MacroWorkflowHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -186,6 +187,8 @@ export const App: React.FC = () => {
   const [knowledgeCanvasExternalEvent, setKnowledgeCanvasExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showMultimodalFusion, setShowMultimodalFusion] = useState<boolean>(false);
   const [multimodalFusionExternalEvent, setMultimodalFusionExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showMacroWorkflow, setShowMacroWorkflow] = useState<boolean>(false);
+  const [macroWorkflowExternalEvent, setMacroWorkflowExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -389,6 +392,8 @@ export const App: React.FC = () => {
             setKnowledgeCanvasExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('fusion.')) {
             setMultimodalFusionExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('workflow.') || mtype.startsWith('macro.')) {
+            setMacroWorkflowExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1113,6 +1118,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowMultimodalFusion((prev) => !prev)
     },
     {
+      id: 'cmd-macro-workflow-hud',
+      title: 'Toggle Desktop Macro Synthesis & Workflow HUD',
+      subtitle: 'Synthesize parameterized YAML workflows, test step execution & self-healing element retargeting',
+      category: 'Assistant',
+      onExecute: () => setShowMacroWorkflow((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1312,6 +1324,22 @@ export const App: React.FC = () => {
           />
         </div>
       )}
+
+      {/* Autonomous Desktop Macro Synthesis & Self-Healing Workflow HUD (MAC-02, AUT-02) */}
+      {showMacroWorkflow && (
+        <div style={{ position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)', width: '920px', height: '620px', zIndex: 128 }}>
+          <MacroWorkflowHUD
+            externalEvent={macroWorkflowExternalEvent}
+            onClose={() => setShowMacroWorkflow(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
 
       {/* Voice Persona & Dynamic Prosody HUD (VOX-03) */}
       {showVoicePersona && (
