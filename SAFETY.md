@@ -2426,3 +2426,23 @@ All Phase 3 spatial cursor tracking, deictic speech intent resolution, and targe
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously halts spatial telemetry tracking and intent resolution in strictly $< 25.0$ ms.
+
+## 93. Milestone 24.0 â Phase 4: Predictive Resource Governor & Heterogeneous CUDA/RAM Dynamic Balancer (GOV-03, RES-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 host resource telemetry, throttle mode configuration, and safety headroom tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- get_host_resource_telemetry: **Tier 0** (Samples real-time CPU load, RAM utilization, CUDA VRAM allocation, and thermal stress metrics; read-only telemetry query).
+- set_governor_throttle_mode: **Tier 1** (Manually sets or overrides the system resource throttling mode to adjust subagent concurrency, background indexing, and context window allocations; requires confirmation).
+- override_resource_headroom: **Tier 1** (Overrides dynamic safety headroom constraints to preserve GPU memory responsiveness under high host load; requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Throttling policy overrides adjust operational bounds through verified configuration models; invalid or unconfirmed tier shifts do not destabilize the host kernel.
+- **Rule 4 (Local Offline Telemetry & Zero Cloud Reporting)**: All host resource metrics, thermal telemetry, and VRAM utilization are queried 100% locally from the Windows host and local CUDA drivers. Zero hardware telemetry or usage patterns are sent to cloud servers.
+- **Rule 7 (Reversibility & Auto-Governor Reversion)**: Manual throttle overrides and headroom adjustments can be cleared instantly via reset_override(), automatically resuming autonomous telemetry-driven governor balancing without persistent configuration loss.
+- **Rule 8 (Payment Prohibitions)**: Governor throttle parameters, target mode identifiers, and headroom values are strictly checked against payment and billing keywords and rejected with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: Resource telemetry metrics contain only hardware load percentages and memory megabytes; zero credentials, keys, or private payload data are included in telemetry samples or logs.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts governor telemetry sampling and resets throttling tasks in strictly $< 25.0$ ms.

@@ -324,6 +324,7 @@ import services.backend.tools.predictive_task_tools
 import services.backend.tools.self_healing_tools
 import services.backend.tools.sandbox_jail_tools
 import services.backend.tools.spatial_voice_tools
+import services.backend.tools.resource_governor_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus

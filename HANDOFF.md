@@ -2855,3 +2855,34 @@ Milestone 9.0 (**Phenom 9.0: Omnipresent Ambient Co-Pilot & Sovereign Autonomous
 - Full Cumulative Test Suite (32 tests across Milestone 21): **32/32 PASSED in 6.51s (100% green)**
 - Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.41s)**
 - Release Tag: `v21.0.0`
+
+# Milestone 24.0 Phase 4: Predictive Resource Governor & Heterogeneous CUDA/RAM Dynamic Balancer
+**Status:** Complete & Verified
+**Requirements:** GOV-03.1, GOV-03.2, RES-02.1, SAF-01, SAF-02
+
+### Accomplishments
+1. **Continuous Host Telemetry Sampler (GOV-03.1)**:
+   - services/backend/governor/resource_governor.py: Samples host CPU load %, RAM used/total GB, CUDA GPU VRAM allocated/total MB, and thermal package temperature.
+   - Calculates composite load rating (.0$ to .0$) and categorizes operating state into NORMAL, CONSERVE, or EMERGENCY_THROTTLE.
+2. **Adaptive Concurrency & Workload Throttler (GOV-03.2, RES-02.1)**:
+   - services/backend/governor/adaptive_throttler.py: Dynamically re-balances subagent concurrency ( \to 2 \to 1$), pauses background AST symbol indexing, adjusts LLM context window caps ( \to 4096 \to 2048$), and maintains dynamic VRAM safety headroom.
+   - Provides manual override and auto-governor reset (
+eset_override()).
+3. **Safety-Wrapped Governor Tools (SAF-01)**:
+   - services/backend/tools/resource_governor_tools.py: Registered 3 tools with Pydantic schemas and preview generators:
+     - get_host_resource_telemetry: **Tier 0** (Samples continuous host telemetry metrics; read-only).
+     - set_governor_throttle_mode: **Tier 1** (Sets or overrides the system resource throttling mode; requires confirmation).
+     - override_resource_headroom: **Tier 1** (Overrides dynamic safety headroom constraints; requires confirmation).
+4. **Desktop Cyber HUD (UI-05.7, UI-05.8)**:
+   - pps/desktop/src/components/CyberHUD/ResourceGovernorHUD.tsx: Telemetry gauge bars (CPU, RAM, VRAM, Thermal), dynamic throttle state indicator (NORMAL, CONSERVE, EMERGENCY_THROTTLE), concurrency/context/indexing metric tiles, manual override controls, and load simulation presets.
+   - Mounted in App.tsx and Command Palette (Ctrl+K).
+5. **Guardian SLA & Rule Compliance (SAF-02.1, Rule 8, Rule 11)**:
+   - Universal Guardian kill switch interrupts telemetry sampling and resets throttling tasks in strictly $< 25.0$ ms (benchmarked at .0001$ ms).
+   - Rule 8 anti-checkout screening strictly forbids any payment or checkout identifiers in throttle mode settings.
+   - Rule 11 secret protection: resource metrics contain only numerical percentages and megabytes.
+
+### Test Results
+- services/backend/tests/test_resource_governor.py: **6/6 PASSED in 0.44s**
+- Cumulative Milestone 24 Test Suite (25 tests): **25/25 PASSED in 0.62s (100% green)**
+- Desktop Frontend Build: 
+pm --prefix apps/desktop run build: **PASS (0 errors, 5.90s)**

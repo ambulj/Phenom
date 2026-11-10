@@ -67,6 +67,7 @@ import { PredictiveTaskHubHUD } from './components/CyberHUD/PredictiveTaskHubHUD
 import { SelfHealingKernelHUD } from './components/CyberHUD/SelfHealingKernelHUD';
 import { SandboxExecutionJailHUD } from './components/CyberHUD/SandboxExecutionJailHUD';
 import { SpatialVoiceSynapseHUD } from './components/CyberHUD/SpatialVoiceSynapseHUD';
+import { ResourceGovernorHUD } from './components/CyberHUD/ResourceGovernorHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -228,6 +229,8 @@ export const App: React.FC = () => {
   const [sandboxExecutionJailExternalEvent, setSandboxExecutionJailExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSpatialVoiceSynapse, setShowSpatialVoiceSynapse] = useState<boolean>(false);
   const [spatialVoiceSynapseExternalEvent, setSpatialVoiceSynapseExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showResourceGovernor, setShowResourceGovernor] = useState<boolean>(false);
+  const [resourceGovernorExternalEvent, setResourceGovernorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -459,6 +462,8 @@ export const App: React.FC = () => {
             setSandboxExecutionJailExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('spatial.voice') || mtype.startsWith('deictic.') || mtype.startsWith('cursor.')) {
             setSpatialVoiceSynapseExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('governor.') || mtype.startsWith('resource.')) {
+            setResourceGovernorExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1281,6 +1286,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSpatialVoiceSynapse((prev) => !prev)
     },
     {
+      id: 'cmd-resource-governor-hud',
+      title: 'Toggle Predictive Resource Governor HUD',
+      subtitle: 'Dynamic heterogeneous CUDA/RAM balancing, telemetry monitoring, and emergency throttling',
+      category: 'Assistant',
+      onExecute: () => setShowResourceGovernor((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1629,6 +1641,19 @@ export const App: React.FC = () => {
             }}
           />
         </div>
+      )}
+
+      {/* Predictive Resource Governor HUD (GOV-03, RES-02) */}
+      {showResourceGovernor && (
+        <ResourceGovernorHUD
+          externalEvent={resourceGovernorExternalEvent}
+          onClose={() => setShowResourceGovernor(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
       )}
 
       {/* Dynamic Micro-Sandbox & AST Jail HUD (SEC-04, ENV-02) */}
