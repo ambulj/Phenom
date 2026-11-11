@@ -2608,5 +2608,26 @@ All Phase 4 cognitive load tracking, attentional notification pacing, and queue 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts cognitive load tracking and attentional pacing in strictly $< 25.0$ ms.
 
+## 102. Milestone 27.0 — Phase 1: Local Multi-Agent Mesh Coordinator & Specialist Subagent Registry (MSH-01, AGT-04, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 agent mesh coordination, inter-agent messaging, and topology inspection tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `spawn_mesh_subagent`: **Tier 1** (Spawns an isolated specialist subagent node in the local swarm mesh network; requires confirmation).
+- `send_agent_mesh_message`: **Tier 0** (Routes an in-memory asynchronous message between mesh subagents with zero cloud egress; read-only dispatch in memory).
+- `get_agent_mesh_topology`: **Tier 0** (Retrieves the current local swarm mesh topology, active agent states, and message counters; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Spawning new specialist subagents requires Tier 1 confirmation gating, displaying the requested specialization persona, capability profiles, and optional custom ID.
+- **Rule 4 (Local Offline Mesh & Zero Cloud Telemetry)**: All subagent instances, in-memory mailboxes, peer-to-peer routing tables, and inter-agent messages reside 100% locally on-device. Zero swarm metadata or task payloads are sent to cloud services.
+- **Rule 7 (Reversibility & Isolated Mailbox Queues)**: Halting an agent node or message delivery preserves full message history and mailbox contents for auditing and recovery.
+- **Rule 8 (Payment Prohibitions)**: Specialization roles, agent IDs, message types, and message payloads strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in inter-agent messages or specialist capability profiles.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts agent spawning, message routing, and topology queries in strictly $< 25.0$ ms across all swarm worker nodes.
+
+
 
 

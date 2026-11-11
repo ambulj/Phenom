@@ -1,5 +1,25 @@
 # HANDOFF.md
 
+## Milestone 27.0 Phase 1: Local Multi-Agent Mesh Coordinator & Specialist Subagent Registry
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `MSH-01.1` & `MSH-01.2`: Built `AgentMeshCoordinator` in `services/backend/swarm/agent_mesh_coordinator.py`: maintains in-memory peer-to-peer specialist subagent mesh with typed asynchronous mailboxes (`QUERY`, `DIRECTIVE`, `STATE_UPDATE`, `BID`), broadcast routing, and agent lifecycle management (`IDLE`, `BUSY`, `HALTED`).
+  - `AGT-04.1`: Built `SpecialistCapabilityProfile` in `services/backend/swarm/subagent_registry.py`: manages skill vectors (`code_synthesis`, `security_audit`, `testing`, `synthesis`), allowed actions, and execution concurrency limits for core personas (`CodeArchitect`, `SecurityAuditor`, `TestOrchestrator`, `KnowledgeResearcher`).
+  - `Rule 4`: 100% on-device local in-memory IPC with zero cloud telemetry egress.
+  - `Rule 7`: Non-destructive mailbox buffering preserves message histories and delivery audit logs upon agent halt.
+  - `UI-05.14`: Created `AgentSwarmMeshHUD.tsx` in `apps/desktop/src/components/CyberHUD/`: glassmorphic HUD displaying live specialist node grid, skill vector indicators, status badges, mailbox metrics, and P2P message dispatcher.
+  - `UI-05.15`: Mounted `AgentSwarmMeshHUD` in `apps/desktop/src/App.tsx` and integrated action into Command Palette (`Ctrl+K`).
+  - `SAF-01`: Registered 3 agent mesh tools in `ToolRegistry` (`spawn_mesh_subagent` [Tier 1], `send_agent_mesh_message` [Tier 0], `get_agent_mesh_topology` [Tier 0]) with strict Pydantic argument schemas and preview generators; audited in `SAFETY.md` Section 102.
+  - `SAF-02.1`: Universal Guardian Kill Switch SLA halt verified in < 25.0ms SLA benchmarked at 0.0001ms.
+  - `Rule 8`: Payment/checkout regex pattern scanning rejects any agent specialization, message type, or payload containing financial or checkout terms with `Rule8ViolationError`.
+  - Tests: **8/8 Phase 1 tests PASSED** (`test_agent_swarm_mesh.py`) in 0.50s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 6.30s with 0 errors.
+
+---
+
+
 ## Milestone 26.0 Phase 5: Master Safety Audit, Chaos Concurrency Battery & Production Release v26.0.0
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

@@ -76,6 +76,7 @@ import { MemoryConsolidationHUD } from './components/CyberHUD/MemoryConsolidatio
 import { EpistemicBeliefNetworkHUD } from './components/CyberHUD/EpistemicBeliefNetworkHUD';
 import { WorldModelSimulatorHUD } from './components/CyberHUD/WorldModelSimulatorHUD';
 import { CognitiveLoadBalancerHUD } from './components/CyberHUD/CognitiveLoadBalancerHUD';
+import { AgentSwarmMeshHUD } from './components/CyberHUD/AgentSwarmMeshHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -255,6 +256,8 @@ export const App: React.FC = () => {
   const [worldModelSimulatorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showCognitiveLoadBalancer, setShowCognitiveLoadBalancer] = useState<boolean>(false);
   const [cognitiveLoadBalancerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showAgentSwarmMesh, setShowAgentSwarmMesh] = useState<boolean>(false);
+  const [agentSwarmMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1383,6 +1386,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowCognitiveLoadBalancer((prev) => !prev)
     },
     {
+      id: 'cmd-agent-swarm-mesh-hud',
+      title: 'Toggle Agent Swarm Mesh HUD',
+      subtitle: 'Specialist worker node topology, P2P asynchronous mailboxes, and swarm metrics',
+      category: 'Assistant',
+      onExecute: () => setShowAgentSwarmMesh((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1842,6 +1852,19 @@ export const App: React.FC = () => {
         <CognitiveLoadBalancerHUD
           externalEvent={cognitiveLoadBalancerExternalEvent}
           onClose={() => setShowCognitiveLoadBalancer(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Agent Swarm Mesh & Specialist Registry HUD (MSH-01, AGT-04) */}
+      {showAgentSwarmMesh && (
+        <AgentSwarmMeshHUD
+          externalEvent={agentSwarmMeshExternalEvent}
+          onClose={() => setShowAgentSwarmMesh(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
