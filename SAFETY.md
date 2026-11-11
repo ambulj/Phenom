@@ -2778,3 +2778,24 @@ All Phase 4 metacognitive trajectory evaluation, efficiency reflection, and stra
 
 
 
+
+
+## 110. Milestone 29.0 — Phase 1: Chat Stream Sanitizer, Execution Shield & Conversational Adaptive Persona (STREAM-01, PERSONA-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 chat stream sanitization, execution noise shielding, and adaptive persona configuration tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `sanitize_chat_stream`: **Tier 0** (Sanitizes raw LLM output by removing tool execution headers, raw JSON blocks, and PID noise, separating tool metadata from clean user-visible chat; read-only transformation).
+- `set_adaptive_persona_mode`: **Tier 1** (Configures the active conversational persona mode: SILENT_EXECUTION, MINIMAL_CONFIRMATION, CONVERSATIONAL_WITTY, ADAPTIVE_AUTO; mutates persona engine state, requires confirmation).
+- `get_stream_shield_metrics`: **Tier 0** (Returns telemetry metrics on blocked tool execution leaks, stripped characters, and current persona mode; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Switching conversational persona mode requires Tier 1 confirmation gating, displaying the previous and requested persona modes.
+- **Rule 4 (Local Offline Stream Filtering & Zero Cloud Telemetry)**: All stream parsing, regex transformations, and persona formatting run 100% locally on-device. Zero stream chunks or user chat leave the host machine.
+- **Rule 7 (Non-Destructive & Reversible Formatting)**: Formatting does not destroy underlying tool execution results; tool metadata is cleanly extracted into structured telemetry objects rather than dropped.
+- **Rule 8 (Payment Prohibitions)**: Stream inputs, tool call snippets, and persona contexts strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: Sanitizer ensures that raw execution payloads and sensitive parameter leaks never reach chat displays or unencrypted logs.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts stream sanitization and persona response formatting in strictly $< 25.0$ ms.

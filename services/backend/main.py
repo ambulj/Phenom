@@ -337,6 +337,11 @@ import services.backend.tools.agent_mesh_tools
 import services.backend.tools.task_auction_tools
 import services.backend.tools.swarm_consensus_tools
 import services.backend.tools.swarm_watchdog_tools
+import services.backend.tools.goal_planning_tools
+import services.backend.tools.speculative_planning_tools
+import services.backend.tools.self_healing_tools
+import services.backend.tools.metacognitive_tools
+import services.backend.tools.persona_stream_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus

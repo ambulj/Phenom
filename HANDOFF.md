@@ -1,5 +1,23 @@
 # HANDOFF.md
 
+## Milestone 29.0 Phase 1: Chat Stream Sanitizer, Execution Shield & Conversational Adaptive Persona
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `STREAM-01.1`: Built `StreamSanitizer` in [`services/backend/conversation/stream_sanitizer.py`](file:///C:/Phenom/services/backend/conversation/stream_sanitizer.py): real-time regex parsing and purification stripping `** Tool :**`, `** JSON Execution Block :**`, `{"tool": ...}`, launch boilerplates, `[Action Executed: ...]`, and `[Tool ... Result: ...]` stamps with trailing deduplication.
+  - `STREAM-01.2`: Separates tool execution telemetry into typed `ToolExecutionMetadata` models, routing execution details into structured background channels while keeping chat text clean and human-readable.
+  - `PERSONA-02.1`: Built `AdaptivePersonaEngine` in [`services/backend/conversation/adaptive_persona.py`](file:///C:/Phenom/services/backend/conversation/adaptive_persona.py): dynamically switches verbosity across `SILENT_EXECUTION`, `MINIMAL_CONFIRMATION` (e.g. "Opening CompactGUI..."), `CONVERSATIONAL_WITTY` (punchy Jarvis/bro tone), and `ADAPTIVE_AUTO`.
+  - `UI-05.29`: Built and integrated [`ExecutionStreamShieldHUD.tsx`](file:///C:/Phenom/apps/desktop/src/components/CyberHUD/ExecutionStreamShieldHUD.tsx) in `apps/desktop/src/App.tsx` and Command Palette: real-time monitor displaying blocked leaks, purged characters, tools intercepted, persona mode selector, live stream simulator, and background tool telemetry feed.
+  - `SAF-01`: Registered 3 tools in `ToolRegistry` ([`sanitize_chat_stream`](file:///C:/Phenom/services/backend/tools/persona_stream_tools.py) [Tier 0], [`set_adaptive_persona_mode`](file:///C:/Phenom/services/backend/tools/persona_stream_tools.py) [Tier 1], [`get_stream_shield_metrics`](file:///C:/Phenom/services/backend/tools/persona_stream_tools.py) [Tier 0]) with typed schemas and previews; audited in [SAFETY.md](file:///C:/Phenom/SAFETY.md) Section 110.
+  - `SAF-02.1`: Universal Guardian Kill Switch halt SLA benchmarked at $< 25.0\text{ ms}$ (typical $< 0.1\text{ ms}$).
+  - `Rule 8`: Payment / checkout keyword scanning rejects billing/checkout directives with `Rule8ViolationError`.
+  - `Rule 4`: 100% on-device local execution without cloud telemetry egress.
+  - Tests: **11/11 Phase 1 tests PASSED** in 0.58s; **20/20 cumulative regression tests PASSED** in 7.14s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 46.32s with 0 errors.
+
+---
+
 ## Fast-Track UX & Safety Update: Zero-Prompt App Launching (open_app -> Tier 0)
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

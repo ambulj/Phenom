@@ -83,6 +83,7 @@ import { SwarmWatchdogArbiterHUD } from './components/CyberHUD/SwarmWatchdogArbi
 import { GoalDecompositionTreeHUD } from './components/CyberHUD/GoalDecompositionTreeHUD';
 import { AdaptiveBranchPlannerHUD } from './components/CyberHUD/AdaptiveBranchPlannerHUD';
 import { SelfHealingOrchestratorHUD } from './components/CyberHUD/SelfHealingOrchestratorHUD';
+import { ExecutionStreamShieldHUD } from './components/CyberHUD/ExecutionStreamShieldHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -276,6 +277,8 @@ export const App: React.FC = () => {
   const [adaptiveBranchPlannerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSelfHealingOrchestrator, setShowSelfHealingOrchestrator] = useState<boolean>(false);
   const [selfHealingOrchestratorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showExecutionStreamShield, setShowExecutionStreamShield] = useState<boolean>(false);
+  const [executionStreamShieldExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1453,6 +1456,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSelfHealingOrchestrator((prev) => !prev)
     },
     {
+      id: 'cmd-execution-stream-shield-hud',
+      title: 'Toggle Execution Stream Shield HUD',
+      subtitle: 'Zero-noise chat stream filter, leak purger, and adaptive persona tuner',
+      category: 'Assistant',
+      onExecute: () => setShowExecutionStreamShield((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2003,6 +2013,19 @@ export const App: React.FC = () => {
         <SelfHealingOrchestratorHUD
           externalEvent={selfHealingOrchestratorExternalEvent}
           onClose={() => setShowSelfHealingOrchestrator(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Execution Stream Shield & Adaptive Persona HUD (STREAM-01, PERSONA-02) */}
+      {showExecutionStreamShield && (
+        <ExecutionStreamShieldHUD
+          externalEvent={executionStreamShieldExternalEvent}
+          onClose={() => setShowExecutionStreamShield(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
