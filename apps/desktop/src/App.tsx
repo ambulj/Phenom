@@ -95,6 +95,8 @@ import { VisionActionGroundingHUD } from './components/CyberHUD/VisionActionGrou
 import { ExpressiveVoiceHUD } from './components/CyberHUD/ExpressiveVoiceHUD';
 import { TemporalKnowledgeGraphHUD } from './components/CyberHUD/TemporalKnowledgeGraphHUD';
 import { WorkspaceSelfHealingHUD } from './components/CyberHUD/WorkspaceSelfHealingHUD';
+import { WorkflowOrchestratorHUD } from './components/CyberHUD/WorkflowOrchestratorHUD';
+import { ToolFoundryHUD } from './components/CyberHUD/ToolFoundryHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -304,6 +306,8 @@ export const App: React.FC = () => {
   const [showExpressiveVoice, setShowExpressiveVoice] = useState<boolean>(false);
   const [showTemporalKnowledgeGraph, setShowTemporalKnowledgeGraph] = useState<boolean>(false);
   const [showWorkspaceSelfHealing, setShowWorkspaceSelfHealing] = useState<boolean>(false);
+  const [showWorkflowOrchestrator, setShowWorkflowOrchestrator] = useState<boolean>(false);
+  const [showToolFoundry, setShowToolFoundry] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1562,6 +1566,20 @@ export const App: React.FC = () => {
       onExecute: () => setShowWorkspaceSelfHealing((prev) => !prev)
     },
     {
+      id: 'cmd-workflow-orchestrator-hud',
+      title: 'Toggle Workflow Orchestrator HUD',
+      subtitle: 'Cross-app DAG flow visualizer, state checkpoints, and compensatory rollback',
+      category: 'Assistant',
+      onExecute: () => setShowWorkflowOrchestrator((prev) => !prev)
+    },
+    {
+      id: 'cmd-tool-foundry-hud',
+      title: 'Toggle Dynamic Tool Foundry HUD',
+      subtitle: 'Synthesized micro-tool directory, static AST security inspection, and sandbox verification',
+      category: 'Assistant',
+      onExecute: () => setShowToolFoundry((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2260,6 +2278,30 @@ export const App: React.FC = () => {
       {showWorkspaceSelfHealing && (
         <WorkspaceSelfHealingHUD
           onClose={() => setShowWorkspaceSelfHealing(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Cross-Application Workflow Orchestrator HUD (FLOW-01, CHAIN-02) */}
+      {showWorkflowOrchestrator && (
+        <WorkflowOrchestratorHUD
+          onClose={() => setShowWorkflowOrchestrator(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Dynamic Tool Foundry HUD (TOOL-01, SAND-02) */}
+      {showToolFoundry && (
+        <ToolFoundryHUD
+          onClose={() => setShowToolFoundry(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

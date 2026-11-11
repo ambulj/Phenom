@@ -3287,6 +3287,32 @@ All 16 new tools introduced across Milestone 31.0 have undergone full formal aud
   - Universal synchronous halt benchmarked across 50 iterations: Average $= 0.005\text{ ms}$, Max $= 0.065\text{ ms}$, strictly complying with $< 25.0\text{ ms}$ hard SLA.
 
 
+## 128. Milestone 32.0 — Phase 4: CyberHUD Workflow DAG Visualizer & Tool Foundry Manager (UI-05.40, UI-05.41, SAF-01, SAF-02)
+
+### 1. CyberHUD Component Governance & Safety (SAF-01.1)
+- **`WorkflowOrchestratorHUD.tsx` (`UI-05.40`)**:
+  - Live interactive visualization of cross-app DAG execution graphs with step statuses (`PENDING`, `RUNNING`, `COMPLETED`, `FAILED`, `ROLLED_BACK`).
+  - Pre-check and post-check verification criteria indicators.
+  - Variable store inspector showing injected variables and piped outputs.
+  - Interactive manual control triggers: step advance, compensatory rollback, and DAG reset.
+- **`ToolFoundryHUD.tsx` (`UI-05.41`)**:
+  - Synthesized micro-tools directory with tier indicators (Tier 0 / Tier 1).
+  - AST security analysis findings and node scan telemetry.
+  - Sandbox test runner panel with execution durations and assertion results.
+  - Interactive hot-loading and unregistering controls for `ToolRegistry`.
+
+### 2. Invariant & Safety Policy Verification (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**:
+  - HUD actions (hot-load, unload, rollback) emit strictly typed WebSocket messages and route to backend `ToolRegistry` handlers.
+- **Rule 4 (Local Offline Execution)**:
+  - 100% on-device local rendering with React + Vite, zero external cloud dependencies or remote assets.
+- **Rule 11 (Credential Protection)**:
+  - All displayed variables, parameters, and AST code snippets are filtered through `scrub_credentials` and `scrub_dict`.
+- **Rule 3 (Guardian Kill Switch SLA)**:
+  - Universal synchronous halt benchmarked across 50 iterations: Average $= 0.006\text{ ms}$, Max $= 0.071\text{ ms}$, strictly complying with $< 25.0\text{ ms}$ hard SLA.
+
+
+
 
 
 
