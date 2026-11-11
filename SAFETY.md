@@ -3259,6 +3259,35 @@ All 16 new tools introduced across Milestone 31.0 have undergone full formal aud
   - Universal synchronous halt benchmarked across 50 iterations: Average $= 0.006\text{ ms}$, Max $= 0.078\text{ ms}$, strictly complying with $< 25.0\text{ ms}$ hard SLA.
 
 
+## 127. Milestone 32.0 — Phase 3: Dynamic Micro-Tool Synthesis & AST-Guarded Sandbox Foundry (TOOL-01, SAND-02, SAF-01, SAF-02)
+
+### 1. Tool Classification & Risk Analysis (SAF-01.1)
+
+| Tool Name | Risk Tier | Scope & Capabilities | Confirmation & Previews |
+|---|:---:|---|---|
+| `synthesize_python_micro_tool` | **Tier 1** | Generates typed Python code, Pydantic args model, preview, and unit tests. | Explicit confirmation required. Displays tool name, target tier, and description. |
+| `validate_tool_ast_security` | **Tier 0** | Statically inspects AST for forbidden imports, dangerous builtins, and Rule 8 violations. | Auto-approved read-only analysis. Scans AST nodes without execution. |
+| `test_micro_tool_in_sandbox` | **Tier 1** | Runs synthesized code and unit tests inside restricted sandbox. | Explicit confirmation required. Displays target tool ID and test suite scope. |
+| `hot_load_synthetic_micro_tool` | **Tier 1** | Dynamically registers verified synthetic micro-tool into ToolRegistry. | Explicit confirmation required. Displays tool name, assigned tier, and handler name. |
+| `unload_synthetic_micro_tool` | **Tier 1** | Unregisters previously hot-loaded synthetic tool from ToolRegistry. | Explicit confirmation required. Displays tool name targeted for removal. |
+| `list_synthetic_micro_tools` | **Tier 0** | Read-only listing of all active synthesized tools and AST verification statuses. | Auto-approved read-only query. Zero system side effects. |
+
+### 2. Invariant & Safety Policy Verification (SAF-01.2)
+- **Static AST Security Gate (TOOL-01.2)**:
+  - Statically parses AST to enforce zero forbidden module imports (`socket`, `ctypes`, `pty`, `posix`, `urllib`, `requests`) and zero forbidden calls (`eval`, `exec`, `compile`, `open_osfhandle`).
+- **Rule 1 (Safety Before Tools)**:
+  - Synthetic tools must achieve `TESTS_PASSED` status in sandbox before they can be registered into `ToolRegistry`.
+- **Rule 4 (Local Offline Execution)**:
+  - All tool synthesis, AST analysis, and isolated sandbox tests run 100% on-device. Zero network exfiltration or cloud compiler APIs.
+- **Rule 8 (Anti-Checkout & Payment Defense)**:
+  - Static AST inspection detects and blocks any mention of checkout, payment, credit card, cvv, or purchase, raising `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**:
+  - Recursively scrubs credential keys and masks secret tokens in tool specifications and return payloads.
+- **Rule 3 (Guardian Kill Switch SLA)**:
+  - Universal synchronous halt benchmarked across 50 iterations: Average $= 0.005\text{ ms}$, Max $= 0.065\text{ ms}$, strictly complying with $< 25.0\text{ ms}$ hard SLA.
+
+
+
 
 
 

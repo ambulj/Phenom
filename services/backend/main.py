@@ -356,6 +356,8 @@ import services.backend.tools.workflow_tools
 from services.backend.orchestration.workflow_engine import workflow_engine
 import services.backend.tools.macro_tools
 from services.backend.orchestration.macro_engine import macro_engine
+import services.backend.tools.tool_foundry_tools
+from services.backend.evolution.tool_foundry import tool_foundry
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
@@ -1659,6 +1661,7 @@ def on_guardian_state_change(new_state: str):
             local_mesh_peer_discovery.halt()
             workflow_engine.halt()
             macro_engine.halt()
+            tool_foundry.halt()
         except Exception:
             pass
 
@@ -2710,6 +2713,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 guardian.resume()
                 workflow_engine.reset_halt()
                 macro_engine.reset_halt()
+                tool_foundry.reset_halt()
 
 
 
