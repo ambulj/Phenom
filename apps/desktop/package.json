@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "24.0.0",
-  "description": "Phenom 24.0: Sovereign Autonomous Self-Healing Infrastructure, Real-Time Dynamic AST Sandboxing & Adaptive Kernel Orchestration OS — Neuro-Symbolic Fault Diagnosis, Isolated AST Sandbox Jail, Cross-Modal Spatial Cursor-Voice Interactor, and Predictive Resource Governor",
+  "version": "25.0.0",
+  "description": "Phenom 25.0: Autonomous Multi-Modal Screen Actor, Real-Time GUI Semantic Grounding & Self-Regulating Proactive Desktop Agent OS — Visual Element Segmentation, Declarative GUI Action Synthesis, Cross-App Workflow Orchestration, and Proactive Desktop Watchdog",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
