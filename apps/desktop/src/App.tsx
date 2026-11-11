@@ -74,6 +74,7 @@ import { CrossAppWorkflowHUD } from './components/CyberHUD/CrossAppWorkflowHUD';
 import { DesktopWatchdogHUD } from './components/CyberHUD/DesktopWatchdogHUD';
 import { MemoryConsolidationHUD } from './components/CyberHUD/MemoryConsolidationHUD';
 import { EpistemicBeliefNetworkHUD } from './components/CyberHUD/EpistemicBeliefNetworkHUD';
+import { WorldModelSimulatorHUD } from './components/CyberHUD/WorldModelSimulatorHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -249,6 +250,8 @@ export const App: React.FC = () => {
   const [memoryConsolidationExternalEvent, setMemoryConsolidationExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showEpistemicBeliefNetwork, setShowEpistemicBeliefNetwork] = useState<boolean>(false);
   const [epistemicBeliefNetworkExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showWorldModelSimulator, setShowWorldModelSimulator] = useState<boolean>(false);
+  const [worldModelSimulatorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1363,6 +1366,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowEpistemicBeliefNetwork((prev) => !prev)
     },
     {
+      id: 'cmd-world-model-simulator-hud',
+      title: 'Toggle World-Model Simulator HUD',
+      subtitle: 'Counterfactual plan projection, feasibility scoring, and collateral side-effect forecasting',
+      category: 'Assistant',
+      onExecute: () => setShowWorldModelSimulator((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1796,6 +1806,19 @@ export const App: React.FC = () => {
         <EpistemicBeliefNetworkHUD
           externalEvent={epistemicBeliefNetworkExternalEvent}
           onClose={() => setShowEpistemicBeliefNetwork(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Contextual World-Model Simulator HUD (SIM-01, EVA-02) */}
+      {showWorldModelSimulator && (
+        <WorldModelSimulatorHUD
+          externalEvent={worldModelSimulatorExternalEvent}
+          onClose={() => setShowWorldModelSimulator(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

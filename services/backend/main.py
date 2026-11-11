@@ -331,6 +331,7 @@ import services.backend.tools.cross_app_workflow_tools
 import services.backend.tools.desktop_watchdog_tools
 import services.backend.tools.memory_consolidation_tools
 import services.backend.tools.epistemic_belief_tools
+import services.backend.tools.world_model_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus

@@ -2568,3 +2568,24 @@ All Phase 2 epistemic belief management, contradiction detection, and revision t
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts belief updates and contradiction evaluations in strictly $< 25.0$ ms.
 
+## 100. Milestone 26.0 — Phase 3: Contextual World-Model Simulator & Counterfactual Plan Evaluator (SIM-01, EVA-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 world-model simulation, counterfactual evaluation, and side-effect forecasting tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `simulate_plan_counterfactuals`: **Tier 0** (Simulates nominal and counterfactual execution branches for a plan candidate before real OS dispatch; read-only virtual simulation).
+- `evaluate_world_model_state`: **Tier 0** (Inspects the current symbolic representation of the virtual environment in memory; read-only query).
+- `forecast_side_effects`: **Tier 0** (Analyzes planned operations to project collateral side-effects such as mutations, window shifts, and process lifecycle; read-only forecast).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Counterfactual evaluation assesses safety and feasibility scores before real tool execution, flagging high-risk mutating plans for mandatory Tier 1 confirmations.
+- **Rule 4 (Local Offline Simulation & Zero Cloud Transmission)**: All virtual state models, projected branches, and simulated filesystem snapshots operate 100% locally in-memory. Zero simulation traces are sent to cloud services.
+- **Rule 7 (Reversibility & Non-Destructive Virtual Sandboxing)**: The world-model simulator operates entirely on in-memory mock structures (`VirtualSystemState`) with snapshot/rollback support. No physical files or processes are altered during simulation.
+- **Rule 8 (Payment Prohibitions)**: Plan titles, step actions, targets, payloads, and simulated side-effects strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in simulated world-model states or step payloads.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts world-model simulation runs and counterfactual evaluations in strictly $< 25.0$ ms.
+
+
