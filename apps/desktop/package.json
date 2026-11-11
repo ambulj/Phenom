@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "23.0.0",
-  "description": "Phenom 23.0: Sovereign Neural Evolution, Self-Reflective Metacognitive Auditing & Autonomous Cross-Modal Orchestration OS — Metacognitive Self-Reflection, Autonomous LoRA Adapter Synthesis, Conversational AST Synapse, and Predictive Task Anticipation",
+  "version": "24.0.0",
+  "description": "Phenom 24.0: Sovereign Autonomous Self-Healing Infrastructure, Real-Time Dynamic AST Sandboxing & Adaptive Kernel Orchestration OS — Neuro-Symbolic Fault Diagnosis, Isolated AST Sandbox Jail, Cross-Modal Spatial Cursor-Voice Interactor, and Predictive Resource Governor",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

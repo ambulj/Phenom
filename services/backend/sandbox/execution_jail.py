@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from services.backend.safety.guardian import guardian
-from services.backend.sandbox.ast_security_visitor import code_security_auditor, SecurityAuditVerdict
+from services.backend.sandbox.ast_security_visitor import code_security_auditor, SecurityAuditVerdict, Rule8ViolationError
 
 logger = logging.getLogger("phenom.sandbox.execution_jail")
 
