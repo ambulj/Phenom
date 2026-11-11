@@ -343,6 +343,7 @@ import services.backend.tools.self_healing_tools
 import services.backend.tools.metacognitive_tools
 import services.backend.tools.persona_stream_tools
 import services.backend.tools.safety_matrix_tools
+import services.backend.tools.voice_confirmation_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus

@@ -85,6 +85,7 @@ import { AdaptiveBranchPlannerHUD } from './components/CyberHUD/AdaptiveBranchPl
 import { SelfHealingOrchestratorHUD } from './components/CyberHUD/SelfHealingOrchestratorHUD';
 import { ExecutionStreamShieldHUD } from './components/CyberHUD/ExecutionStreamShieldHUD';
 import { SafetyTierMatrixHUD } from './components/CyberHUD/SafetyTierMatrixHUD';
+import { VoiceConfirmationHUD } from './components/CyberHUD/VoiceConfirmationHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -282,6 +283,8 @@ export const App: React.FC = () => {
   const [executionStreamShieldExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSafetyTierMatrix, setShowSafetyTierMatrix] = useState<boolean>(false);
   const [safetyTierMatrixExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showVoiceConfirmation, setShowVoiceConfirmation] = useState<boolean>(false);
+  const [voiceConfirmationExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1473,6 +1476,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSafetyTierMatrix((prev) => !prev)
     },
     {
+      id: 'cmd-voice-confirmation-hud',
+      title: 'Toggle Voice Confirmation HUD',
+      subtitle: 'Natural spoken confirmation prompts, audio wave visualizer, and 1-click approvals',
+      category: 'Assistant',
+      onExecute: () => setShowVoiceConfirmation((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2049,6 +2059,19 @@ export const App: React.FC = () => {
         <SafetyTierMatrixHUD
           externalEvent={safetyTierMatrixExternalEvent}
           onClose={() => setShowSafetyTierMatrix(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Conversational Voice Confirmation HUD (VOICE-01, CONFIRM-03) */}
+      {showVoiceConfirmation && (
+        <VoiceConfirmationHUD
+          externalEvent={voiceConfirmationExternalEvent}
+          onClose={() => setShowVoiceConfirmation(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

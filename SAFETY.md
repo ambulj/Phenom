@@ -2820,3 +2820,24 @@ All Phase 2 safety tier policy evaluation, dynamic tier reclassification, and ti
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts safety matrix evaluations, policy queries, and tier reclassifications in strictly $< 25.0$ ms.
+
+
+## 112. Milestone 29.0 — Phase 3: Conversational Voice Confirmation & Interactive Approval Dispatcher (VOICE-01, CONFIRM-03, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 conversational voice confirmation dispatch, spoken intent parsing, and confirmation state tracking tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `dispatch_conversational_confirmation`: **Tier 0** (Synthesizes a friendly, spoken conversational confirmation question for a pending high-risk action; read-only dispatch preparation).
+- `process_voice_approval_response`: **Tier 1** (Parses spoken user approval or denial intent and updates pending confirmation state; mutates approval decision state, requires confirmation).
+- `get_active_voice_confirmations`: **Tier 0** (Retrieves active pending conversational voice confirmations and remaining timeout seconds; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Resolving or altering confirmation decisions via voice requires Tier 1 confirmation gating, displaying the prompt ID and user response token.
+- **Rule 4 (Local Offline Voice Confirmation & Zero Cloud Telemetry)**: All spoken question synthesis, intent parsing regexes, and pending confirmation queues reside 100% locally on-device. Zero voice transcripts or confirmation metadata leave the host machine.
+- **Rule 7 (Non-Destructive & Reversible Confirmation)**: Denied or timed-out confirmations safely cancel execution without corrupting underlying system files or states.
+- **Rule 8 (Payment Prohibitions)**: Spoken prompts, user voice inputs, and confirmation details strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in spoken prompts or intent resolution records.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts voice prompt synthesis, intent parsing, and confirmation resolution in strictly $< 25.0$ ms.
