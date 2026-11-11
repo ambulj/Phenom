@@ -2688,6 +2688,27 @@ All Phase 4 swarm health telemetry, Byzantine fault arbitration, and orphaned ta
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts watchdog polling, fault arbitration, and task re-auctioning in strictly $< 25.0$ ms.
 
+## 106. Milestone 28.0 — Phase 1: Autonomous Goal-Decomposition & Hierarchical Plan Tree Engine (GOAL-01, TREE-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 goal decomposition, plan tree node expansion, and active goal graph inspection tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `decompose_hierarchical_goal`: **Tier 0** (Deconstructs a natural language objective into a multi-tier hierarchical plan tree with prerequisite relationships; read-only decomposition query).
+- `expand_plan_tree_node`: **Tier 1** (Expands an existing plan tree subtask node with finer-grained child action steps; mutates plan tree, requires confirmation).
+- `get_active_goal_tree`: **Tier 0** (Retrieves the active hierarchical plan tree graph, nodes, and completion progress; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Mutating and expanding plan trees requires Tier 1 confirmation gating, displaying the parent node ID, target tree ID, and number of child steps to graft.
+- **Rule 4 (Local Offline Planning & Zero Cloud Telemetry)**: All plan trees, goal decompositions, subtask nodes, and progress metrics reside 100% locally in-memory on-device. Zero goals or plan trees are transmitted to cloud endpoints.
+- **Rule 7 (Reversibility & Plan Tree Integrity)**: Plan nodes enforce depth boundaries and DAG prerequisite acyclicity, preserving complete parent-child lineages and execution histories.
+- **Rule 8 (Payment Prohibitions)**: Goal descriptions, subtask titles, node action parameters, and expansion payloads strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in goal trees or node parameters.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts goal decomposition, node expansion, and tree queries in strictly $< 25.0$ ms.
+
+
 
 
 

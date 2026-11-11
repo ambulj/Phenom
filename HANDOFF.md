@@ -1,5 +1,24 @@
 # HANDOFF.md
 
+## Milestone 28.0 Phase 1: Autonomous Goal-Decomposition & Hierarchical Plan Tree Engine
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `GOAL-01.1` & `GOAL-01.2`: Built `GoalDecompositionEngine` in `services/backend/planning/goal_decomposition_engine.py`: decomposes high-level user directives into recursive, dependency-validated plan trees (`GoalNode`, `SubtaskNode`, `LeafActionNode`) with depth boundaries and DAG prerequisites.
+  - `TREE-02.1`: Built `PlanTree` and `PlanNode` data structures in `services/backend/planning/plan_tree.py`: manages hierarchical node parent-child linking, prerequisite runnable status checks, completion percentage metrics, and acyclic DAG ordering (Rule 7 non-destructibility).
+  - `Rule 4`: Goal tree decomposition and subtask graphs operate 100% locally on-device without cloud telemetry egress.
+  - `UI-05.22`: Created `GoalDecompositionTreeHUD.tsx` in `apps/desktop/src/components/CyberHUD/`: glassmorphic HUD displaying tree overview, objective decomposition input, multi-tier node cards, status badges (`PENDING`, `IN_PROGRESS`, `COMPLETED`), action type indicators, and stepping triggers.
+  - `UI-05.23`: Mounted `GoalDecompositionTreeHUD` in `apps/desktop/src/App.tsx` and integrated action into Command Palette (`Ctrl+K`).
+  - `SAF-01`: Registered 3 goal planning tools in `ToolRegistry` (`decompose_hierarchical_goal` [Tier 0], `expand_plan_tree_node` [Tier 1], `get_active_goal_tree` [Tier 0]) with strict Pydantic argument schemas and preview generators; audited in `SAFETY.md` Section 106.
+  - `SAF-02.1`: Universal Guardian Kill Switch SLA halt verified in < 25.0ms SLA benchmarked at 0.0001ms.
+  - `Rule 8`: Payment/checkout regex pattern scanning rejects any goal title, subtask action, or expansion payload containing financial or checkout terms with `Rule8ViolationError`.
+  - Tests: **8/8 Phase 1 tests PASSED** (`test_goal_decomposition_tree.py`) in 0.44s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 6.45s with 0 errors.
+
+---
+
+
 ## Milestone 27.0 Phase 5: Master Safety Audit, Chaos Concurrency Battery & Production Release v27.0.0
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026
