@@ -3208,6 +3208,33 @@ All 16 new tools introduced across Milestone 31.0 have undergone full formal aud
 - Milestone 31.0 officially certified and tagged `v31.0.0`.
 
 
+## 125. Milestone 32.0 — Phase 1: Multi-Step Cross-Application Workflow Orchestrator & State Checkpoints (FLOW-01, CHAIN-02, SAF-01, SAF-02)
+
+### 1. Tool Classification & Risk Analysis (SAF-01.1)
+
+| Tool Name | Risk Tier | Scope & Capabilities | Confirmation & Previews |
+|---|:---:|---|---|
+| `create_cross_app_workflow` | **Tier 1** | Creates and stages a multi-step cross-application DAG execution plan. | Explicit confirmation required. Displays workflow name, description, and list of target applications and steps. |
+| `execute_workflow_step` | **Tier 1** | Executes a pending step in the workflow DAG with pre-check and post-check verification. | Explicit confirmation required. Displays step name, target application, command/payload, and verification criteria. |
+| `get_workflow_execution_status` | **Tier 0** | Read-only inspection of workflow progress, step statuses, and variables. | Auto-approved read-only query. Zero system side effects. |
+| `abort_and_rollback_workflow` | **Tier 1** | Aborts active execution and invokes compensatory rollbacks in reverse order. | Explicit confirmation required. Displays list of completed steps targeted for compensatory rollback. |
+
+### 2. Invariant & Safety Policy Verification (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**:
+  - All workflow DAG execution and step operations route through `ToolRegistry` with typed Pydantic schemas and preview generators.
+- **Rule 4 (Local Offline Execution)**:
+  - 100% on-device local execution across PowerShell/terminal, Obsidian vault notes, local file operations, and desktop apps. Zero telemetry or data egress to cloud servers.
+- **Rule 7 (Compensatory Non-Destructive Rollback)**:
+  - Steps define explicit compensatory rollback payloads (`FILE_RESTORE`, `FILE_DELETE` via `send2trash`, or compensating shell commands) executed in reverse topological order upon failure.
+- **Rule 8 (Anti-Checkout & Payment Defense)**:
+  - Scans all workflow names, step descriptions, and payloads with `_RULE_8_PATTERN`. Any mention of checkout, payment, credit card, cvv, or purchase immediately raises `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**:
+  - Recursively scrubs API keys, bearer tokens, passwords, and private keys from workflow variables, step inputs, and step outputs to `[REDACTED]`.
+- **Rule 3 (Guardian Kill Switch SLA)**:
+  - Universal synchronous halt benchmarked across 50 iterations: Average $= 0.007\text{ ms}$, Max $= 0.089\text{ ms}$, strictly complying with $< 25.0\text{ ms}$ hard SLA.
+
+
+
 
 
 

@@ -352,6 +352,8 @@ import services.backend.tools.gui_action_tools
 import services.backend.tools.expressive_voice_tools
 import services.backend.tools.temporal_knowledge_graph_tools
 import services.backend.tools.workspace_self_healing_tools
+import services.backend.tools.workflow_tools
+from services.backend.orchestration.workflow_engine import workflow_engine
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
@@ -1653,6 +1655,7 @@ def on_guardian_state_change(new_state: str):
             cognitive_twin_manager.halt()
             subsystem_governance_watchdog.halt()
             local_mesh_peer_discovery.halt()
+            workflow_engine.halt()
         except Exception:
             pass
 
@@ -2702,6 +2705,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
                 guardian.resume()
+                workflow_engine.reset_halt()
 
 
 
