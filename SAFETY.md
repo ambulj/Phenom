@@ -2648,6 +2648,27 @@ All Phase 2 task contract auctioning, worker bid evaluation, and DAG inspection 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts task auctions, bid evaluations, and DAG querying in strictly $< 25.0$ ms.
 
+## 104. Milestone 27.0 — Phase 3: Conflict-Free Replicated Data (CRDT) & Distributed State Consensus Engine (CRDT-01, CON-04, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 CRDT delta proposition, state reconciliation, and Lamport vector clock inspection tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `propose_state_crdt_delta`: **Tier 1** (Proposes a state mutation stamped with the agent's vector clock using LWW conflict resolution; requires confirmation).
+- `reconcile_swarm_consensus`: **Tier 0** (Calculates and returns the deterministic converged distributed state across all keys; read-only query).
+- `get_lamport_vector_clocks`: **Tier 0** (Retrieves the current vector clock causality timestamps across all swarm worker nodes; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Proposing state mutations stamped by agent vector clocks requires Tier 1 confirmation gating, displaying previewed author, key, and proposed value.
+- **Rule 4 (Local Offline Consensus & Zero Cloud Telemetry)**: All Lamport vector clocks, state registers, delta journals, and merge operations reside 100% locally in-memory on-device. Zero consensus state is transmitted to cloud endpoints.
+- **Rule 7 (Reversibility & Deterministic Merge Invariants)**: State mutations merge via mathematical CRDT Last-Write-Wins rules with Lamport clock tie-breaking. Reconciler maintains rollback snapshots enabling non-destructive state restoration.
+- **Rule 8 (Payment Prohibitions)**: State keys, proposed values, and vector clock metadata strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in CRDT registers or delta history.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts CRDT delta propositions, state merges, and clock queries in strictly $< 25.0$ ms.
+
+
 
 
 

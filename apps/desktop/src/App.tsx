@@ -78,6 +78,7 @@ import { WorldModelSimulatorHUD } from './components/CyberHUD/WorldModelSimulato
 import { CognitiveLoadBalancerHUD } from './components/CyberHUD/CognitiveLoadBalancerHUD';
 import { AgentSwarmMeshHUD } from './components/CyberHUD/AgentSwarmMeshHUD';
 import { TaskAuctionProtocolHUD } from './components/CyberHUD/TaskAuctionProtocolHUD';
+import { SwarmConsensusCRDTHUD } from './components/CyberHUD/SwarmConsensusCRDTHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -261,6 +262,8 @@ export const App: React.FC = () => {
   const [agentSwarmMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTaskAuctionProtocol, setShowTaskAuctionProtocol] = useState<boolean>(false);
   const [taskAuctionProtocolExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSwarmConsensusCRDT, setShowSwarmConsensusCRDT] = useState<boolean>(false);
+  const [swarmConsensusCRDTExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1403,6 +1406,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowTaskAuctionProtocol((prev) => !prev)
     },
     {
+      id: 'cmd-swarm-consensus-crdt-hud',
+      title: 'Toggle Swarm Consensus CRDT HUD',
+      subtitle: 'Lamport vector clocks, distributed state convergence, and LWW delta resolution',
+      category: 'Assistant',
+      onExecute: () => setShowSwarmConsensusCRDT((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1888,6 +1898,19 @@ export const App: React.FC = () => {
         <TaskAuctionProtocolHUD
           externalEvent={taskAuctionProtocolExternalEvent}
           onClose={() => setShowTaskAuctionProtocol(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Swarm State Consensus & CRDT HUD (CRDT-01, CON-04) */}
+      {showSwarmConsensusCRDT && (
+        <SwarmConsensusCRDTHUD
+          externalEvent={swarmConsensusCRDTExternalEvent}
+          onClose={() => setShowSwarmConsensusCRDT(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
