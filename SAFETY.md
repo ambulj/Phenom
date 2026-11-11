@@ -2507,3 +2507,23 @@ All Phase 3 multi-app data pipelining, window focus coordination, and ambient wo
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously halts cross-application workflow execution and window focus switching in strictly $< 25.0$ ms.
+
+## 97. Milestone 25.0 â Phase 4: Proactive Context-Aware Desktop Watchdog & Autonomous Task Interceptor (DOG-01, INT-03, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 incident tracking, proactive remediation, and sensitivity configuration tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- inspect_desktop_watchdog_events: **Tier 0** (Returns current desktop watchdog incidents, system health rating, and active proactive intervention cards; read-only telemetry query).
+- resolve_proactive_alert: **Tier 1** (Executes a recommended self-healing remediation or soft-dismisses a proactive alert card; requires confirmation).
+- configure_watchdog_policies: **Tier 1** (Adjusts the desktop watchdog event detection threshold and notification policy; requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Proactive intervention cards present recommendations only; mutating remediation actions (e.g. process restart, patch application) require explicit user execution confirmation (1-click card) before execution.
+- **Rule 4 (Local Offline Monitoring & Zero Telemetry Egress)**: All process monitoring, window title observation, and incident logs reside 100% locally on-device. Zero event logs, application crash details, or error dialog texts are sent to cloud services.
+- **Rule 7 (Reversibility & Soft Dismissal)**: Dismissing an intervention card (dismiss_intervention()) hides the proactive suggestion from view while completely preserving the underlying incident audit trail in the watchdog log (all_incidents).
+- **Rule 8 (Payment Prohibitions)**: Incidents, dialog titles, and remediation proposals containing payment, checkout, credit card, or billing keywords are strictly screened and rejected with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No passwords, private credentials, or secrets are captured or logged in watchdog incident details.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts watchdog polling, incident recording, and proactive remediation in strictly $< 25.0$ ms.

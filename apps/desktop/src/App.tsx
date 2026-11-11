@@ -71,6 +71,7 @@ import { ResourceGovernorHUD } from './components/CyberHUD/ResourceGovernorHUD';
 import { ScreenGroundingHUD } from './components/CyberHUD/ScreenGroundingHUD';
 import { GuiActionPlayerHUD } from './components/CyberHUD/GuiActionPlayerHUD';
 import { CrossAppWorkflowHUD } from './components/CyberHUD/CrossAppWorkflowHUD';
+import { DesktopWatchdogHUD } from './components/CyberHUD/DesktopWatchdogHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -240,6 +241,8 @@ export const App: React.FC = () => {
   const [guiActionPlayerExternalEvent, setGuiActionPlayerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showCrossAppWorkflow, setShowCrossAppWorkflow] = useState<boolean>(false);
   const [crossAppWorkflowExternalEvent, setCrossAppWorkflowExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showDesktopWatchdog, setShowDesktopWatchdog] = useState<boolean>(false);
+  const [desktopWatchdogExternalEvent, setDesktopWatchdogExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -479,6 +482,8 @@ export const App: React.FC = () => {
             setGuiActionPlayerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('workflow.') || mtype.startsWith('crossapp.') || mtype.startsWith('window.')) {
             setCrossAppWorkflowExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('watchdog.') || mtype.startsWith('incident.') || mtype.startsWith('alert.')) {
+            setDesktopWatchdogExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1329,6 +1334,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowCrossAppWorkflow((prev) => !prev)
     },
     {
+      id: 'cmd-desktop-watchdog-hud',
+      title: 'Toggle Desktop Watchdog & Interceptor HUD',
+      subtitle: 'Proactive context-aware desktop incident monitoring, stability gauge, and 1-click remediation',
+      category: 'Assistant',
+      onExecute: () => setShowDesktopWatchdog((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1723,6 +1735,19 @@ export const App: React.FC = () => {
         <CrossAppWorkflowHUD
           externalEvent={crossAppWorkflowExternalEvent}
           onClose={() => setShowCrossAppWorkflow(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Desktop Watchdog & Task Interceptor HUD (DOG-01, INT-03) */}
+      {showDesktopWatchdog && (
+        <DesktopWatchdogHUD
+          externalEvent={desktopWatchdogExternalEvent}
+          onClose={() => setShowDesktopWatchdog(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

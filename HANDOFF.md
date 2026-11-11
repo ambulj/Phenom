@@ -3013,3 +3013,32 @@ estore_previous_focus()).
 - Cumulative Milestone 25 Test Suite: **18/18 PASSED in 1.35s (100% green)**
 - Desktop Frontend Build: 
 pm --prefix apps/desktop run build: **PASS (0 errors, 6.20s)**
+
+# Milestone 25.0 Phase 4: Proactive Context-Aware Desktop Watchdog & Autonomous Task Interceptor
+**Status:** Complete & Verified
+**Requirements:** DOG-01.1, DOG-01.2, INT-03.1, SAF-01, SAF-02
+
+### Accomplishments
+1. **Desktop Watchdog Event Monitor (DOG-01.1)**:
+   - services/backend/watchdog/desktop_watchdog.py: Continuous background monitor logging process hangs, crash modals, build errors, and resource thresholds, computing dynamic system health scores (HEALTHY 1.0, DEGRADED 0.7, CRITICAL 0.35).
+2. **Proactive Task Interceptor & Soft Dismissal (DOG-01.2, INT-03.1, Rule 7)**:
+   - services/backend/watchdog/proactive_task_interceptor.py: Formulates non-intrusive 1-click remediation recommendation cards (GRACEFUL_RESTART, APPLY_REPAIR_PATCH, CLEAN_CACHE, DISMISS_ALERT) with soft-dismissal preserving incident history.
+3. **Safety-Wrapped Watchdog Tools (SAF-01)**:
+   - services/backend/tools/desktop_watchdog_tools.py: Registered 3 tools with Pydantic schemas and preview generators:
+     - inspect_desktop_watchdog_events: **Tier 0** (Inspects watchdog incidents and health state).
+     - 
+esolve_proactive_alert: **Tier 1** (Executes recommended remediation or soft-dismisses card).
+     - configure_watchdog_policies: **Tier 1** (Configures incident sensitivity policy: Conservative, Balanced, Aggressive).
+4. **Desktop Cyber HUD (UI-05.12)**:
+   - pps/desktop/src/components/CyberHUD/DesktopWatchdogHUD.tsx: Dynamic host stability meter, active incident feed, 1-click remediation cards, sensitivity mode indicator, and simulation triggers.
+   - Mounted in App.tsx and Command Palette (Ctrl+K).
+5. **Guardian SLA & Rule Compliance (SAF-02.1, Rule 8, Rule 11)**:
+   - Universal Guardian kill switch interrupts watchdog polling and remediation execution in strictly $< 25.0\text{ ms}$ (benchmarked at .0001\text{ ms}$).
+   - Rule 8 anti-checkout screening strictly forbids any payment or checkout identifiers in incident details or recommendation actions.
+   - Rule 11 credential protection: no credentials or secrets captured in incident details.
+
+### Test Results
+- services/backend/tests/test_desktop_watchdog.py: **6/6 PASSED in 0.44s**
+- Cumulative Milestone 25 Test Suite: **24/24 PASSED in 1.79s (100% green)**
+- Desktop Frontend Build: 
+pm --prefix apps/desktop run build: **PASS (0 errors, 6.18s)**
