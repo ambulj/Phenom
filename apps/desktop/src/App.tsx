@@ -68,6 +68,7 @@ import { SelfHealingKernelHUD } from './components/CyberHUD/SelfHealingKernelHUD
 import { SandboxExecutionJailHUD } from './components/CyberHUD/SandboxExecutionJailHUD';
 import { SpatialVoiceSynapseHUD } from './components/CyberHUD/SpatialVoiceSynapseHUD';
 import { ResourceGovernorHUD } from './components/CyberHUD/ResourceGovernorHUD';
+import { ScreenGroundingHUD } from './components/CyberHUD/ScreenGroundingHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -231,6 +232,8 @@ export const App: React.FC = () => {
   const [spatialVoiceSynapseExternalEvent, setSpatialVoiceSynapseExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showResourceGovernor, setShowResourceGovernor] = useState<boolean>(false);
   const [resourceGovernorExternalEvent, setResourceGovernorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showScreenGrounding, setShowScreenGrounding] = useState<boolean>(false);
+  const [screenGroundingExternalEvent, setScreenGroundingExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -464,6 +467,8 @@ export const App: React.FC = () => {
             setSpatialVoiceSynapseExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('governor.') || mtype.startsWith('resource.')) {
             setResourceGovernorExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('grounding.') || mtype.startsWith('visual.')) {
+            setScreenGroundingExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1293,6 +1298,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowResourceGovernor((prev) => !prev)
     },
     {
+      id: 'cmd-screen-grounding-hud',
+      title: 'Toggle GUI Semantic Grounding HUD',
+      subtitle: 'Real-time multi-modal screen element segmentation and natural language coordinate grounding',
+      category: 'Assistant',
+      onExecute: () => setShowScreenGrounding((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1648,6 +1660,19 @@ export const App: React.FC = () => {
         <ResourceGovernorHUD
           externalEvent={resourceGovernorExternalEvent}
           onClose={() => setShowResourceGovernor(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* GUI Semantic Grounding HUD (ACT-01, VIS-04) */}
+      {showScreenGrounding && (
+        <ScreenGroundingHUD
+          externalEvent={screenGroundingExternalEvent}
+          onClose={() => setShowScreenGrounding(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

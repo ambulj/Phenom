@@ -2446,3 +2446,23 @@ All Phase 4 host resource telemetry, throttle mode configuration, and safety hea
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts governor telemetry sampling and resets throttling tasks in strictly $< 25.0$ ms.
+
+## 94. Milestone 25.0 â Phase 1: Real-Time Multi-Modal GUI Semantic Grounding & Visual Element Segmenter (ACT-01, VIS-04, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 screen element segmentation, visual anchor lookups, and semantic coordinate grounding tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- ground_screen_elements: **Tier 0** (Matches a natural language query or spoken directive to concrete on-screen UI coordinates and bounding boxes in < 50ms; read-only intent resolution).
+- locate_gui_visual_anchor: **Tier 0** (Locates a specific named visual GUI anchor or toolbar control on the active screen; read-only anchor query).
+- get_visual_grounding_map: **Tier 0** (Returns the complete list of segmented on-screen elements, bounding boxes, and interactive roles; read-only telemetry query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Semantic grounding resolves element coordinates and bounding boxes only. It does not dispatch simulated clicks or keypresses; actual GUI interaction occurs exclusively via subsequent gated action tools.
+- **Rule 4 (Local Offline Segmentation & Zero Cloud Transmission)**: All visual element contour extraction, bounding box clustering, and natural language matching are executed 100% locally on-device. Zero desktop screen frames, pixel data, or application titles are transmitted to cloud endpoints.
+- **Rule 7 (Non-Destructibility & Read-Only Grounding)**: Element segmentation and coordinate grounding are strictly non-destructive and make zero modifications to files, application state, or OS window hierarchies.
+- **Rule 8 (Payment Prohibitions)**: Both visual segmentation and semantic query resolution strictly reject queries and UI elements involving payments, checkouts, shopping carts, credit card inputs, or billing forms with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No password input fields or credential tokens are stored or exfiltrated during element grounding.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts visual segmentation and semantic grounding in strictly $< 25.0$ ms.
