@@ -88,6 +88,7 @@ import { SafetyTierMatrixHUD } from './components/CyberHUD/SafetyTierMatrixHUD';
 import { VoiceConfirmationHUD } from './components/CyberHUD/VoiceConfirmationHUD';
 import { SilentActivityMonitorHUD } from './components/CyberHUD/SilentActivityMonitorHUD';
 import { ScreenIntelligenceHUD } from './components/CyberHUD/ScreenIntelligenceHUD';
+import { MultiAgentSwarmHUD } from './components/CyberHUD/MultiAgentSwarmHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -290,6 +291,7 @@ export const App: React.FC = () => {
   const [showSilentActivityMonitor, setShowSilentActivityMonitor] = useState<boolean>(false);
   const [silentActivityMonitorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showScreenIntelligence, setShowScreenIntelligence] = useState<boolean>(false);
+  const [showMultiAgentSwarm, setShowMultiAgentSwarm] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1499,6 +1501,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowScreenIntelligence((prev) => !prev)
     },
     {
+      id: 'cmd-multi-agent-swarm-hud',
+      title: 'Toggle Local Multi-Agent Swarm HUD',
+      subtitle: 'Actor-based subagent fleet (Coder, Research, Executive) with live task queue and emergency halt',
+      category: 'Assistant',
+      onExecute: () => setShowMultiAgentSwarm((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2113,6 +2122,18 @@ export const App: React.FC = () => {
       {showScreenIntelligence && (
         <ScreenIntelligenceHUD
           onClose={() => setShowScreenIntelligence(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Autonomous Multi-Agent Local Swarm Engine HUD (SWARM-01, AGENT-02) */}
+      {showMultiAgentSwarm && (
+        <MultiAgentSwarmHUD
+          onClose={() => setShowMultiAgentSwarm(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

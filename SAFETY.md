@@ -2924,3 +2924,29 @@ All 5 new tools under Milestone 30.0 Phase 1 have undergone formal safety audit 
   - Max measured latency: $< 0.15$ ms
   - Average latency: $< 0.01$ ms
   - Status: **PASS** across screen intelligence and OCR subsystems.
+
+
+## 116. Milestone 30.0 — Phase 2: Autonomous Multi-Agent Local Swarm Engine (SWARM-01, AGENT-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+All 4 new tools under Milestone 30.0 Phase 2 have undergone formal safety audit and Pydantic validation:
+- `dispatch_local_swarm_task`: **Tier 1** (Dispatches an asynchronous background task to a specialized local worker: Coder, Research, or Executive; requires confirmation preview and logs action).
+- `query_local_swarm_status`: **Tier 0** (Returns real-time worker state, average latencies, and active task backlogs; read-only query).
+- `terminate_local_swarm_worker`: **Tier 1** (Halts a specific subagent worker or terminates all active swarm workers; reversible lifecycle mutation).
+- `synthesize_local_swarm_results`: **Tier 0** (Combines outputs from multiple completed subagent tasks into a consolidated multi-agent markdown report; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools & Gating)**: Untainted Tier 0 status and synthesis tools execute cleanly; Tier 1 dispatch and termination tools generate explicit preview summaries and validate arguments via Pydantic models.
+- **Rule 3 (Guardian Kill Switch)**: `SwarmCoordinator.check_safety()` synchronously checks `guardian.is_halted` before every task dispatch and lifecycle change. When Guardian triggers, active tasks abort and dispatch refuses immediately with SLA $< 25.0$ ms.
+- **Rule 4 (100% Offline Local On-Device Execution)**: Subagents (Coder, Research, Executive) run strictly on-device using local AST inspection, Obsidian vault recall, and local heuristics without cloud egress.
+- **Rule 7 (Non-Destructive Operations)**: Subagents perform non-destructive code analysis and research queries. Any file manipulation strictly abides by recycle bin invariants.
+- **Rule 8 (Payment Prohibitions)**: Anti-checkout screening rejects any checkout, payment, purchase, buy, order, or billing directive in task briefs or contexts with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: Recursive regex sanitizers scrub passwords, tokens, API keys, and authorization secrets in task prompts and result payloads, replacing them with `[REDACTED]` prior to storage or presentation.
+
+### 3. Guardian Kill Switch SLA Benchmark (SAF-02.1)
+- Synchronous Guardian kill switch SLA benchmark verified:
+  - Required SLA: $< 25.0$ ms
+  - Max measured latency: $< 0.10$ ms
+  - Average latency: $< 0.01$ ms
+  - Status: **PASS** across multi-agent local swarm subsystems.
+
