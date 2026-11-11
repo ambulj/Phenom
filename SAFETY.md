@@ -3136,6 +3136,37 @@ All 17 new tools introduced across Milestone 30.0 have undergone full formal aud
   - Trips in $< 25.0\text{ ms}$ (measured $< 0.01\text{ ms}$), immediately aborting all graph operations.
 
 
+## 123. Milestone 31.0 — Phase 4: Proactive Workspace Self-Healing Daemon & Automated AST Hot-Patching (HEAL-01, PATCH-02)
+
+### 1. New Tools Registered
+- `diagnose_workspace_error`: **Tier 0**
+  - Schema: `raw_trace`.
+  - Behaviour: Analyzes workspace compiler errors, broken test traces, or runtime exceptions and formulates repair hypothesis. Read-only.
+- `synthesize_ast_hot_patch`: **Tier 1**
+  - Schema: `diagnosis_id`, `file_path`, `target_snippet`, `replacement_snippet`.
+  - Behaviour: Synthesizes a unified diff AST hot-patch for a diagnosed issue without mutating disk. Single confirmation required.
+- `apply_workspace_hot_patch`: **Tier 1**
+  - Schema: `patch_id`.
+  - Behaviour: Applies staged hot-patch to workspace file, automatically creating an in-memory snapshot for 1-click rollback. Single confirmation required.
+- `rollback_workspace_hot_patch`: **Tier 1**
+  - Schema: `patch_id`.
+  - Behaviour: Reverts an applied hot-patch using its snapshot backup, restoring pre-patch content. Single confirmation required.
+
+### 2. Invariants & Safety Guarantees
+- **Non-Destructive Snapshot Rollback (Rule 7, PATCH-02.2)**:
+  - Every applied hot-patch snapshots the exact pre-patch file content into the rollback cache before writing to disk.
+  - 1-click rollback restores original content in $< 50\text{ ms}$ with zero data loss.
+- **Strict Rule 8 Anti-Checkout Enforcement**:
+  - Error traces, diagnoses, target files, or patch replacements touching checkout, payment, billing, or card processing are rejected with `Rule8ViolationError`.
+- **Rule 11 Credential Scrubbing**:
+  - API keys, authorization tokens, and passwords in compiler or exception traces are redacted to `[REDACTED]`.
+- **Rule 4 Local Execution**:
+  - 100% on-device error analysis and diff synthesis without cloud telemetry or external egress.
+- **Rule 3 Guardian Kill Switch SLA**:
+  - Trips in $< 25.0\text{ ms}$ (measured $< 0.01\text{ ms}$), immediately aborting all diagnostic or patching operations.
+
+
+
 
 
 

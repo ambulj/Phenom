@@ -94,6 +94,7 @@ import { AmbientCompanionHUD } from './components/CyberHUD/AmbientCompanionHUD';
 import { VisionActionGroundingHUD } from './components/CyberHUD/VisionActionGroundingHUD';
 import { ExpressiveVoiceHUD } from './components/CyberHUD/ExpressiveVoiceHUD';
 import { TemporalKnowledgeGraphHUD } from './components/CyberHUD/TemporalKnowledgeGraphHUD';
+import { WorkspaceSelfHealingHUD } from './components/CyberHUD/WorkspaceSelfHealingHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -302,6 +303,7 @@ export const App: React.FC = () => {
   const [showVisionActionGrounding, setShowVisionActionGrounding] = useState<boolean>(false);
   const [showExpressiveVoice, setShowExpressiveVoice] = useState<boolean>(false);
   const [showTemporalKnowledgeGraph, setShowTemporalKnowledgeGraph] = useState<boolean>(false);
+  const [showWorkspaceSelfHealing, setShowWorkspaceSelfHealing] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1553,6 +1555,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowTemporalKnowledgeGraph((prev) => !prev)
     },
     {
+      id: 'cmd-workspace-self-healing-hud',
+      title: 'Toggle Workspace Self-Healing HUD',
+      subtitle: 'Proactive compiler and test triage, automated AST hot-patching, and 1-click rollback',
+      category: 'Assistant',
+      onExecute: () => setShowWorkspaceSelfHealing((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2239,6 +2248,18 @@ export const App: React.FC = () => {
       {showTemporalKnowledgeGraph && (
         <TemporalKnowledgeGraphHUD
           onClose={() => setShowTemporalKnowledgeGraph(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Proactive Workspace Self-Healing Daemon HUD (HEAL-01, PATCH-02) */}
+      {showWorkspaceSelfHealing && (
+        <WorkspaceSelfHealingHUD
+          onClose={() => setShowWorkspaceSelfHealing(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

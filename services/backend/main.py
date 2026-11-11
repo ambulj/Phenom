@@ -351,6 +351,7 @@ import services.backend.tools.ambient_companion_tools
 import services.backend.tools.gui_action_tools
 import services.backend.tools.expressive_voice_tools
 import services.backend.tools.temporal_knowledge_graph_tools
+import services.backend.tools.workspace_self_healing_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
