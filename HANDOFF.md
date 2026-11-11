@@ -2984,3 +2984,32 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 6.23s)**
 - Cumulative Milestone 25 Test Suite: **13/13 PASSED in 0.85s (100% green)**
 - Desktop Frontend Build: 
 pm --prefix apps/desktop run build: **PASS (0 errors, 6.09s)**
+
+# Milestone 25.0 Phase 3: Ambient Cross-Application Workflow Automator & Window Context Synchronizer
+**Status:** Complete & Verified
+**Requirements:** AUT-05.1, AUT-05.2, WIN-02.1, SAF-01, SAF-02
+
+### Accomplishments
+1. **Cross-App Workflow Orchestrator (AUT-05.1, AUT-05.2)**:
+   - services/backend/orchestrator/cross_app_orchestrator.py: Coordinates multi-step desktop workflows across Edge, VSCode, Windows Terminal, and Obsidian with dynamic variable interpolation (${var}) and shared context propagation.
+2. **Window Focus Synchronizer & LIFO Stack (WIN-02.1, Rule 7)**:
+   - services/backend/orchestrator/window_focus_synchronizer.py: Tracks desktop window hierarchies, coordinates foreground window switching, and reliably restores pre-workflow window focus via LIFO stack (
+estore_previous_focus()).
+3. **Safety-Wrapped Cross-App Tools (SAF-01)**:
+   - services/backend/tools/cross_app_workflow_tools.py: Registered 3 tools with Pydantic schemas and preview generators:
+     - orchestrate_cross_app_workflow: **Tier 1** (Coordinates multi-application data pipelining).
+     - sync_window_workspace_focus: **Tier 0** (Switches or queries foreground window focus).
+     - get_ambient_workflow_status: **Tier 0** (Queries active workflow state and shared context).
+4. **Desktop Cyber HUD (UI-05.11)**:
+   - pps/desktop/src/components/CyberHUD/CrossAppWorkflowHUD.tsx: Workflow pipeline sequence view, application brand tags, window focus switcher buttons, shared variable store inspector, and live execution triggers.
+   - Mounted in App.tsx and Command Palette (Ctrl+K).
+5. **Guardian SLA & Rule Compliance (SAF-02.1, Rule 8, Rule 11)**:
+   - Universal Guardian kill switch interrupts workflow execution and window switching in strictly $< 25.0\text{ ms}$ (benchmarked at .0001\text{ ms}$).
+   - Rule 8 anti-checkout screening strictly forbids any payment or checkout identifiers in workflow titles, app payloads, or window targets.
+   - Rule 11 credential protection: no credentials or secrets stored in shared context.
+
+### Test Results
+- services/backend/tests/test_cross_app_orchestrator.py: **5/5 PASSED in 0.50s**
+- Cumulative Milestone 25 Test Suite: **18/18 PASSED in 1.35s (100% green)**
+- Desktop Frontend Build: 
+pm --prefix apps/desktop run build: **PASS (0 errors, 6.20s)**

@@ -70,6 +70,7 @@ import { SpatialVoiceSynapseHUD } from './components/CyberHUD/SpatialVoiceSynaps
 import { ResourceGovernorHUD } from './components/CyberHUD/ResourceGovernorHUD';
 import { ScreenGroundingHUD } from './components/CyberHUD/ScreenGroundingHUD';
 import { GuiActionPlayerHUD } from './components/CyberHUD/GuiActionPlayerHUD';
+import { CrossAppWorkflowHUD } from './components/CyberHUD/CrossAppWorkflowHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -237,6 +238,8 @@ export const App: React.FC = () => {
   const [screenGroundingExternalEvent, setScreenGroundingExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showGuiActionPlayer, setShowGuiActionPlayer] = useState<boolean>(false);
   const [guiActionPlayerExternalEvent, setGuiActionPlayerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showCrossAppWorkflow, setShowCrossAppWorkflow] = useState<boolean>(false);
+  const [crossAppWorkflowExternalEvent, setCrossAppWorkflowExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -474,6 +477,8 @@ export const App: React.FC = () => {
             setScreenGroundingExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('actor.') || mtype.startsWith('gui.action')) {
             setGuiActionPlayerExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('workflow.') || mtype.startsWith('crossapp.') || mtype.startsWith('window.')) {
+            setCrossAppWorkflowExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1317,6 +1322,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowGuiActionPlayer((prev) => !prev)
     },
     {
+      id: 'cmd-cross-app-workflow-hud',
+      title: 'Toggle Cross-App Workflow Orchestrator HUD',
+      subtitle: 'Ambient multi-application data pipelining, state machines, and window focus synchronization',
+      category: 'Assistant',
+      onExecute: () => setShowCrossAppWorkflow((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1698,6 +1710,19 @@ export const App: React.FC = () => {
         <GuiActionPlayerHUD
           externalEvent={guiActionPlayerExternalEvent}
           onClose={() => setShowGuiActionPlayer(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Cross-App Workflow Orchestrator HUD (AUT-05, WIN-02) */}
+      {showCrossAppWorkflow && (
+        <CrossAppWorkflowHUD
+          externalEvent={crossAppWorkflowExternalEvent}
+          onClose={() => setShowCrossAppWorkflow(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

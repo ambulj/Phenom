@@ -2487,3 +2487,23 @@ All Phase 2 action plan synthesis, step preview generation, and safe virtual GUI
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously terminates action plan synthesis and virtual GUI step execution in strictly $< 25.0$ ms.
+
+## 96. Milestone 25.0 â Phase 3: Ambient Cross-Application Workflow Automator & Window Context Synchronizer (AUT-05, WIN-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 multi-app data pipelining, window focus coordination, and ambient workflow tracking tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- orchestrate_cross_app_workflow: **Tier 1** (Coordinates data extraction, transformation, and execution across multiple desktop applications; requires confirmation).
+- sync_window_workspace_focus: **Tier 0** (Queries desktop window layout or switches foreground focus to a specified application window; read-only focus query / activation).
+- get_ambient_workflow_status: **Tier 0** (Returns the status, step results, and shared pipeline context of the active cross-app workflow; read-only telemetry query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Cross-application workflows route through Tier 1 confirmation gating with human-readable preview before any data handoff or execution begins.
+- **Rule 4 (Local Offline State Machine & Zero Cloud Exfiltration)**: All inter-app variables, clipboard payloads, and window titles remain strictly in RAM on the local host. Zero cross-application data is synced to cloud servers.
+- **Rule 7 (Focus Stack Reversibility & Layout Preservation)**: Window focus switching maintains a LIFO focus restoration stack (restore_previous_focus()), allowing the pre-workflow desktop layout and foreground application to be automatically restored upon completion.
+- **Rule 8 (Payment Prohibitions)**: Workflow definitions, step actions, payloads, and window focus targets are screened against payment and checkout keywords, raising Rule8ViolationError upon detection.
+- **Rule 11 (Credential Protection)**: No passwords, tokens, or credential manager items are stored in shared pipeline context variables.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously halts cross-application workflow execution and window focus switching in strictly $< 25.0$ ms.
