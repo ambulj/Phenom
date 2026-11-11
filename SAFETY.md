@@ -2628,6 +2628,27 @@ All Phase 1 agent mesh coordination, inter-agent messaging, and topology inspect
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts agent spawning, message routing, and topology queries in strictly $< 25.0$ ms across all swarm worker nodes.
 
+## 103. Milestone 27.0 — Phase 2: Decentralized Task Auction & Capability-Based Bidding Protocol (AUC-01, BID-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 task contract auctioning, worker bid evaluation, and DAG inspection tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `auction_task_to_swarm`: **Tier 1** (Conducts a capability-based bidding auction for a task contract and awards it to the optimal subagent; requires confirmation).
+- `evaluate_worker_bids`: **Tier 0** (Calculates suitability scores and latency estimates for all active workers for a task contract; read-only query).
+- `get_swarm_task_dag`: **Tier 0** (Retrieves the full task DAG structure, prerequisite links, and execution states; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Awarding tasks to subagents routes through Tier 1 confirmation gating, displaying the contract title, winning agent ID, suitability rating, and estimated latency.
+- **Rule 4 (Local Offline Auctions & Zero Cloud Telemetry)**: All task contracts, prerequisite DAGs, bidding matrices, and award decisions reside 100% locally on-device. Zero tasks or contracts leave the local machine.
+- **Rule 7 (Reversibility & DAG Preservations)**: Contract statuses transition monotonically (`OPEN` -> `AWARDED` -> `COMPLETED`) with full bid history retained in each `TaskContract` record.
+- **Rule 8 (Payment Prohibitions)**: Objective titles, task descriptions, skill requirements, and bidding arguments strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in task contracts or worker bids.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts task auctions, bid evaluations, and DAG querying in strictly $< 25.0$ ms.
+
+
 
 
 

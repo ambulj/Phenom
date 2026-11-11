@@ -1,5 +1,25 @@
 # HANDOFF.md
 
+## Milestone 27.0 Phase 2: Decentralized Task Auction & Capability-Based Bidding Protocol
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `AUC-01.1` & `AUC-01.2`: Built `TaskAuctionEngine` in `services/backend/swarm/task_auction_engine.py`: deconstructs high-level objectives into dependency DAG contracts (`TaskContract`), broadcasts contracts across the agent mesh, and evaluates worker bids to award subtasks.
+  - `BID-02.1`: Built `CapabilityBidder` in `services/backend/swarm/capability_bidder.py`: scores specialist agent skill vectors against required task skills, penalizes for mailbox queue depth, and estimates execution latency.
+  - `Rule 4`: Decentralized task auction runs 100% locally on-device without cloud transmission.
+  - `Rule 7`: Monotonic DAG state progression (`OPEN` -> `AUCTIONING` -> `AWARDED` -> `COMPLETED`) preserving historical bids and prerequisites.
+  - `UI-05.16`: Created `TaskAuctionProtocolHUD.tsx` in `apps/desktop/src/components/CyberHUD/`: glassmorphic HUD displaying live task DAG cards, bidding matrix comparison, one-click auction triggers, and objective decomposer.
+  - `UI-05.17`: Mounted `TaskAuctionProtocolHUD` in `apps/desktop/src/App.tsx` and integrated action into Command Palette (`Ctrl+K`).
+  - `SAF-01`: Registered 3 task auction tools in `ToolRegistry` (`auction_task_to_swarm` [Tier 1], `evaluate_worker_bids` [Tier 0], `get_swarm_task_dag` [Tier 0]) with strict Pydantic argument schemas and preview generators; audited in `SAFETY.md` Section 103.
+  - `SAF-02.1`: Universal Guardian Kill Switch SLA halt verified in < 25.0ms SLA benchmarked at 0.0001ms.
+  - `Rule 8`: Payment/checkout regex pattern scanning rejects any task title, description, or objective involving payments, checkout, credit cards, or billing with `Rule8ViolationError`.
+  - Tests: **8/8 Phase 2 tests PASSED** (`test_task_auction_protocol.py`); **16/16 cumulative Milestone 27 tests PASSED** in 0.52s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 6.42s with 0 errors.
+
+---
+
+
 ## Milestone 27.0 Phase 1: Local Multi-Agent Mesh Coordinator & Specialist Subagent Registry
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

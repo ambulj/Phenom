@@ -77,6 +77,7 @@ import { EpistemicBeliefNetworkHUD } from './components/CyberHUD/EpistemicBelief
 import { WorldModelSimulatorHUD } from './components/CyberHUD/WorldModelSimulatorHUD';
 import { CognitiveLoadBalancerHUD } from './components/CyberHUD/CognitiveLoadBalancerHUD';
 import { AgentSwarmMeshHUD } from './components/CyberHUD/AgentSwarmMeshHUD';
+import { TaskAuctionProtocolHUD } from './components/CyberHUD/TaskAuctionProtocolHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -258,6 +259,8 @@ export const App: React.FC = () => {
   const [cognitiveLoadBalancerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAgentSwarmMesh, setShowAgentSwarmMesh] = useState<boolean>(false);
   const [agentSwarmMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showTaskAuctionProtocol, setShowTaskAuctionProtocol] = useState<boolean>(false);
+  const [taskAuctionProtocolExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1393,6 +1396,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowAgentSwarmMesh((prev) => !prev)
     },
     {
+      id: 'cmd-task-auction-protocol-hud',
+      title: 'Toggle Task Auction Protocol HUD',
+      subtitle: 'DAG dependency contracts, specialist worker bidding matrix, and contract awards',
+      category: 'Assistant',
+      onExecute: () => setShowTaskAuctionProtocol((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1865,6 +1875,19 @@ export const App: React.FC = () => {
         <AgentSwarmMeshHUD
           externalEvent={agentSwarmMeshExternalEvent}
           onClose={() => setShowAgentSwarmMesh(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Task Auction & Capability Bidding HUD (AUC-01, BID-02) */}
+      {showTaskAuctionProtocol && (
+        <TaskAuctionProtocolHUD
+          externalEvent={taskAuctionProtocolExternalEvent}
+          onClose={() => setShowTaskAuctionProtocol(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

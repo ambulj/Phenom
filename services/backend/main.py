@@ -334,6 +334,7 @@ import services.backend.tools.epistemic_belief_tools
 import services.backend.tools.world_model_tools
 import services.backend.tools.cognitive_pacing_tools
 import services.backend.tools.agent_mesh_tools
+import services.backend.tools.task_auction_tools
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
