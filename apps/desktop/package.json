@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "31.0.0",
-  "description": "Phenom 31.0: Autonomous Neural GUI Actor, Expressive Local Voice & Temporal Knowledge Graph — Autonomous Vision-Action GUI Grounding & OS-World Windows 11 Automation, Local Expressive Neural Voice Synthesis & Offline Zero-Shot Jarvis Voice Engine, Associative Temporal Knowledge Graph & Deep Episodic Memory Matrix, and Proactive Workspace Self-Healing Daemon & Automated AST Hot-Patching",
+  "version": "32.0.0",
+  "description": "Phenom 32.0: Sovereign Cross-App Workflow Orchestrator, Multi-Modal Macro Engine & Dynamic Tool Foundry — Multi-Step Cross-Application Workflow Orchestrator & State Checkpoints, Natural Language Macro Synthesizer & Visual Action Recorder, Dynamic Micro-Tool Synthesis & AST-Guarded Sandbox Foundry, and CyberHUD Visualizers",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
