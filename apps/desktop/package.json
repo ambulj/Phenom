@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "26.0.0",
-  "description": "Phenom 26.0: Sovereign Long-Horizon Memory Consolidation, Autonomous Epistemic Belief Updating & Contextual World-Model Simulation OS — Episodic Memory Consolidation, Bayesian Epistemic Belief Network, World-Model Simulation & Adaptive Attentional Pacing",
+  "version": "27.0.0",
+  "description": "Phenom 27.0: Sovereign Local Agent Swarm Mesh, Autonomous Multi-Worker Task Auction & Conflict-Free Distributed Consensus OS — Specialist Subagent Mesh Coordinator, Capability-Based Task Auction Protocol, CRDT State Consensus Engine & Byzantine Worker Watchdog Arbiter",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
