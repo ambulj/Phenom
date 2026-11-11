@@ -1,5 +1,18 @@
 # HANDOFF.md
 
+## Fast-Track UX & Safety Update: Zero-Prompt App Launching (open_app -> Tier 0)
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - Reclassified [`open_app`](file:///C:/Phenom/services/backend/tools/app_tools.py) to **Tier 0** in `ToolRegistry` and [SAFETY.md](file:///C:/Phenom/SAFETY.md).
+  - Opening applications (e.g. CompactGUI, Chrome, VS Code, Spotify) now launches instantly without any confirmation popup or approval prompt.
+  - Suppressed internal function call scratchpads and raw JSON execution blocks from user-visible chat dialogue.
+  - Verified with 9/9 tests passing in `test_tools.py` and `test_app_tools_desktop.py`.
+
+---
+
+
 ## Milestone 28.0 Phase 5: Master Safety Audit, Chaos Concurrency Battery & Production Release v28.0.0
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026
