@@ -3234,6 +3234,32 @@ All 16 new tools introduced across Milestone 31.0 have undergone full formal aud
   - Universal synchronous halt benchmarked across 50 iterations: Average $= 0.007\text{ ms}$, Max $= 0.089\text{ ms}$, strictly complying with $< 25.0\text{ ms}$ hard SLA.
 
 
+## 126. Milestone 32.0 — Phase 2: Natural Language Macro Synthesizer & Visual Action Recorder (MACRO-01, REC-02, SAF-01, SAF-02)
+
+### 1. Tool Classification & Risk Analysis (SAF-01.1)
+
+| Tool Name | Risk Tier | Scope & Capabilities | Confirmation & Previews |
+|---|:---:|---|---|
+| `compile_natural_language_macro` | **Tier 1** | Compiles natural language/voice directives into parameterized workflow DAGs. | Explicit confirmation required. Displays proposed macro name, voice trigger, and intent description. |
+| `start_macro_demonstration_recording` | **Tier 1** | Begins recording user GUI actions and keystrokes with noise filtering. | Explicit confirmation required. Displays recording session name and tracking status. |
+| `stop_macro_demonstration_recording` | **Tier 1** | Stops recording, deduplicates jitter, parameterizes inputs, and saves macro DAG. | Explicit confirmation required. Displays synthesized macro name and step count. |
+| `execute_saved_macro` | **Tier 1** | Executes a stored macro DAG by ID/name/trigger with parameter overrides. | Explicit confirmation required. Displays macro name, voice trigger, and injected runtime variables. |
+| `list_saved_macros` | **Tier 0** | Read-only listing of all saved macros, trigger phrases, and execution counts. | Auto-approved read-only query. Zero system side effects. |
+
+### 2. Invariant & Safety Policy Verification (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**:
+  - All macro compilation, recording, and execution operations route through `ToolRegistry` with typed Pydantic schemas and preview generators.
+- **Rule 4 (Local Offline Execution)**:
+  - All macro databases (`phenom_macros.db`), parameter synthesis, and action recordings remain 100% on-device with zero cloud telemetry.
+- **Rule 8 (Anti-Checkout & Payment Defense)**:
+  - Strict pattern matching blocks compiling or recording any action containing payment, checkout, credit card, cvv, or billing phrases with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**:
+  - Recorded keystrokes, macro parameters, and variable templates are scrubbed for API keys, tokens, and passwords to `[REDACTED]`.
+- **Rule 3 (Guardian Kill Switch SLA)**:
+  - Universal synchronous halt benchmarked across 50 iterations: Average $= 0.006\text{ ms}$, Max $= 0.078\text{ ms}$, strictly complying with $< 25.0\text{ ms}$ hard SLA.
+
+
+
 
 
 

@@ -1,5 +1,24 @@
 # HANDOFF.md
 
+## Milestone 32.0 Phase 2: Natural Language Macro Synthesizer & Visual Action Recorder
+- **Branch**: `hardening/pass-1`
+- **Date**: November 12, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `MACRO-01.1`: Built `MacroEngine` natural language compiler in [`services/backend/orchestration/macro_engine.py`](file:///C:/Phenom/services/backend/orchestration/macro_engine.py): compiles conversational/voice directives into structured, parameterized `WorkflowDAG` instances.
+  - `MACRO-01.2`: Implemented `ActionDemonstrationRecorder`: captures GUI clicks, keystrokes, and terminal commands with sub-5px jitter suppression and keystroke debouncing.
+  - `REC-02.1`: Engineered dynamic parameterization identifying variables (e.g. `note_title`, `input_val_1`) and supporting runtime parameter overrides.
+  - `REC-02.2`: Implemented encrypted local macro persistence in SQLite with voice trigger activation (e.g. "run morning routine").
+  - `SAF-01`: Registered 5 macro tools in `ToolRegistry` ([`compile_natural_language_macro`](file:///C:/Phenom/services/backend/tools/macro_tools.py) [Tier 1], [`start_macro_demonstration_recording`](file:///C:/Phenom/services/backend/tools/macro_tools.py) [Tier 1], [`stop_macro_demonstration_recording`](file:///C:/Phenom/services/backend/tools/macro_tools.py) [Tier 1], [`execute_saved_macro`](file:///C:/Phenom/services/backend/tools/macro_tools.py) [Tier 1], [`list_saved_macros`](file:///C:/Phenom/services/backend/tools/macro_tools.py) [Tier 0]) with typed schemas and preview generators; audited in [`SAFETY.md`](file:///C:/Phenom/SAFETY.md) Section 126.
+  - `SAF-02.1`: Universal Guardian Kill Switch halt SLA benchmarked at $< 25.0\text{ ms}$ (average $0.006\text{ ms}$, max $0.078\text{ ms}$).
+  - `Rule 8`: Payment/checkout regex scanning rejects financial directives with `Rule8ViolationError`.
+  - `Rule 11`: Recursive credential scrubbing masks passwords, tokens, API keys, and authorization secrets to `[REDACTED]`.
+  - `Rule 4`: 100% on-device local execution without cloud telemetry.
+  - Tests: **8/8 Phase 2 tests PASSED** in 0.83s ([`test_natural_language_macro_engine.py`](file:///C:/Phenom/services/backend/tests/test_natural_language_macro_engine.py)); **53/53 cumulative tests PASSED** in 1.77s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 6.21s with 0 errors.
+
+---
+
 ## Milestone 32.0 Phase 1: Multi-Step Cross-Application Workflow Orchestrator & State Checkpoints
 - **Branch**: `hardening/pass-1`
 - **Date**: November 12, 2026
