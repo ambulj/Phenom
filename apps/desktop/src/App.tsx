@@ -90,6 +90,7 @@ import { SilentActivityMonitorHUD } from './components/CyberHUD/SilentActivityMo
 import { ScreenIntelligenceHUD } from './components/CyberHUD/ScreenIntelligenceHUD';
 import { MultiAgentSwarmHUD } from './components/CyberHUD/MultiAgentSwarmHUD';
 import { FullDuplexVoiceHUD } from './components/CyberHUD/FullDuplexVoiceHUD';
+import { AmbientCompanionHUD } from './components/CyberHUD/AmbientCompanionHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -294,6 +295,7 @@ export const App: React.FC = () => {
   const [showScreenIntelligence, setShowScreenIntelligence] = useState<boolean>(false);
   const [showMultiAgentSwarm, setShowMultiAgentSwarm] = useState<boolean>(false);
   const [showFullDuplexVoice, setShowFullDuplexVoice] = useState<boolean>(false);
+  const [showAmbientCompanion, setShowAmbientCompanion] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1517,6 +1519,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowFullDuplexVoice((prev) => !prev)
     },
     {
+      id: 'cmd-ambient-companion-hud',
+      title: 'Toggle Ambient Watchdog & Telegram Companion HUD',
+      subtitle: 'Context-aware ambient toasts, focus nudges, and remote Telegram companion controls',
+      category: 'Assistant',
+      onExecute: () => setShowAmbientCompanion((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2155,6 +2164,18 @@ export const App: React.FC = () => {
       {showFullDuplexVoice && (
         <FullDuplexVoiceHUD
           onClose={() => setShowFullDuplexVoice(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Ambient Context Watchdog & Telegram Super-Companion v2 HUD (AMB-01, TEL-02) */}
+      {showAmbientCompanion && (
+        <AmbientCompanionHUD
+          onClose={() => setShowAmbientCompanion(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

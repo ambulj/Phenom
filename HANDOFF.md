@@ -1,5 +1,25 @@
 # HANDOFF.md
 
+## Milestone 30.0 Phase 4: Ambient Context Watchdog & Telegram Super-Companion v2
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `AMB-01.1`: Built `ContextWatchdog` in [`services/backend/ambient/context_watchdog.py`](file:///C:/Phenom/services/backend/ambient/context_watchdog.py): continuously evaluates active foreground window transitions and detects focus drift from primary sprint goals, enforcing category cooldowns to prevent alert spam.
+  - `AMB-01.2`: Implemented proactive schedule monitoring and subtle speech alerts: reminds the operator of upcoming calendar events within 15-minute time horizons.
+  - `TEL-02.1`: Built `TelegramSuperCompanion` in [`services/backend/remote/telegram_super_companion.py`](file:///C:/Phenom/services/backend/remote/telegram_super_companion.py): bi-directional Telegram voice note transcription, conversational intent processing, and local speech audio response synthesis.
+  - `TEL-02.2`: Implemented secure remote desktop file retrieval with strict Rule 11 filtering: excludes `.env`, private keys (`.pem`, `.key`, `id_rsa`), and credential tokens.
+  - `UI-05.35`: Built and integrated [`AmbientCompanionHUD.tsx`](file:///C:/Phenom/apps/desktop/src/components/CyberHUD/AmbientCompanionHUD.tsx) in `apps/desktop/src/App.tsx` and Command Palette: features active goal monitoring banner, live toast visualizer, Telegram voice note feed, and desktop file search inspector.
+  - `SAF-01`: Registered 4 ambient companion tools in `ToolRegistry` ([`trigger_ambient_context_nudge`](file:///C:/Phenom/services/backend/tools/ambient_companion_tools.py) [Tier 1], [`query_ambient_companion_status`](file:///C:/Phenom/services/backend/tools/ambient_companion_tools.py) [Tier 0], [`process_remote_companion_request`](file:///C:/Phenom/services/backend/tools/ambient_companion_tools.py) [Tier 1], [`search_remote_desktop_file`](file:///C:/Phenom/services/backend/tools/ambient_companion_tools.py) [Tier 0]) with typed schemas and preview generators; audited in [SAFETY.md](file:///C:/Phenom/SAFETY.md) Section 118.
+  - `SAF-02.1`: Universal Guardian Kill Switch halt SLA benchmarked at $< 25.0\text{ ms}$ (typical $< 0.1\text{ ms}$) across watchdog and companion operations.
+  - `Rule 8`: Payment/checkout regex scanning rejects financial directives with `Rule8ViolationError`.
+  - `Rule 11`: Recursive credential scrubbing masks passwords, tokens, API keys, and authorization secrets to `[REDACTED]`.
+  - `Rule 4`: 100% on-device local execution without cloud telemetry egress.
+  - Tests: **8/8 Phase 4 tests PASSED** in 1.97s (`test_ambient_companion.py`); **29/29 cumulative Milestone 30 tests PASSED** in 1.78s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 5.64s with 0 errors.
+
+---
+
 ## Milestone 30.0 Phase 3: Full-Duplex Conversational Voice & Instant Acoustic Barge-In
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

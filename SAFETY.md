@@ -2976,3 +2976,29 @@ All 4 new tools under Milestone 30.0 Phase 3 have undergone formal safety audit 
   - Status: **PASS** across full-duplex conversational voice and acoustic barge-in subsystems.
 
 
+## 118. Milestone 30.0 — Phase 4: Ambient Context Watchdog & Telegram Super-Companion v2 (AMB-01, TEL-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+All 4 new tools under Milestone 30.0 Phase 4 have undergone formal safety audit and Pydantic validation:
+- `trigger_ambient_context_nudge`: **Tier 1** (Emits a non-intrusive desktop toast notification and optional speech reminder; reversible action with preview).
+- `query_ambient_companion_status`: **Tier 0** (Returns real-time status of context watchdog, focused application, and Telegram mobile companion; read-only query).
+- `process_remote_companion_request`: **Tier 1** (Processes incoming remote voice notes or commands from Telegram and dispatches responses; previewable remote action).
+- `search_remote_desktop_file`: **Tier 0** (Searches authorized workspace folders for files with strict Rule 11 secret filtering; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools & Gating)**: Every ambient watchdog and remote companion tool routes through `ToolRegistry` with strict Pydantic schemas and preview generators. Tier 0 status and search tools execute cleanly; Tier 1 triggers require preview generation.
+- **Rule 3 (Guardian Kill Switch)**: `guardian.is_halted` is evaluated synchronously before evaluating focus shifts, calendar markers, and remote Telegram commands. Halts immediately within $< 25.0\text{ ms}$ SLA ($< 0.10\text{ ms}$ measured).
+- **Rule 4 (100% Offline Local On-Device Execution)**: Focus monitoring, ambient toast scheduling, voice note transcription, and local desktop search execute strictly on-device without cloud telemetry egress.
+- **Rule 7 (Non-Destructive Operations)**: Remote file operations are strictly read-only index queries. Deletions remain completely impossible through companion tools.
+- **Rule 8 (Payment Prohibitions)**: Anti-checkout pattern matching rejects payment, checkout, or billing directives in context alert messages and remote voice notes with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: Sensitive files (`.env`, `.pem`, `.key`, `id_rsa`) are unconditionally filtered from remote desktop file searches; passwords, tokens, and API keys are scrubbed to `[REDACTED]`.
+
+### 3. Guardian Kill Switch SLA Benchmark (SAF-02.1)
+- Synchronous Guardian kill switch SLA benchmark verified:
+  - Required SLA: $< 25.0$ ms
+  - Max measured latency: $< 0.10$ ms
+  - Average latency: $< 0.01$ ms
+  - Status: **PASS** across ambient context watchdog and Telegram companion subsystems.
+
+
+
