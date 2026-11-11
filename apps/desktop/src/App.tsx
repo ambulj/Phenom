@@ -86,6 +86,7 @@ import { SelfHealingOrchestratorHUD } from './components/CyberHUD/SelfHealingOrc
 import { ExecutionStreamShieldHUD } from './components/CyberHUD/ExecutionStreamShieldHUD';
 import { SafetyTierMatrixHUD } from './components/CyberHUD/SafetyTierMatrixHUD';
 import { VoiceConfirmationHUD } from './components/CyberHUD/VoiceConfirmationHUD';
+import { SilentActivityMonitorHUD } from './components/CyberHUD/SilentActivityMonitorHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -285,6 +286,8 @@ export const App: React.FC = () => {
   const [safetyTierMatrixExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showVoiceConfirmation, setShowVoiceConfirmation] = useState<boolean>(false);
   const [voiceConfirmationExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSilentActivityMonitor, setShowSilentActivityMonitor] = useState<boolean>(false);
+  const [silentActivityMonitorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1483,6 +1486,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowVoiceConfirmation((prev) => !prev)
     },
     {
+      id: 'cmd-silent-activity-monitor-hud',
+      title: 'Toggle Silent Activity Monitor HUD',
+      subtitle: 'Real-time background tool execution waterfall, latencies, and parameter inspector',
+      category: 'Assistant',
+      onExecute: () => setShowSilentActivityMonitor((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2072,6 +2082,19 @@ export const App: React.FC = () => {
         <VoiceConfirmationHUD
           externalEvent={voiceConfirmationExternalEvent}
           onClose={() => setShowVoiceConfirmation(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Silent Activity Monitor & Background Telemetry HUD (HUD-01, MON-04) */}
+      {showSilentActivityMonitor && (
+        <SilentActivityMonitorHUD
+          externalEvent={silentActivityMonitorExternalEvent}
+          onClose={() => setShowSilentActivityMonitor(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

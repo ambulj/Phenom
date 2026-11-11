@@ -2841,3 +2841,24 @@ All Phase 3 conversational voice confirmation dispatch, spoken intent parsing, a
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts voice prompt synthesis, intent parsing, and confirmation resolution in strictly $< 25.0$ ms.
+
+
+## 113. Milestone 29.0 — Phase 4: Execution Telemetry HUD & Silent Background Activity Monitor (HUD-01, MON-04, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 execution telemetry event buffering, historical querying, and aggregate bus metrics tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `record_execution_telemetry_event`: **Tier 1** (Buffers a background tool execution telemetry event into the circular in-memory telemetry ring buffer; mutates telemetry event buffer, requires confirmation).
+- `query_execution_telemetry_history`: **Tier 0** (Retrieves buffered background tool execution events, execution latencies, and scrubbed arguments; read-only query).
+- `get_active_telemetry_bus_stats`: **Tier 0** (Returns aggregate execution statistics, average latency, and tool invocation breakdown from the telemetry bus; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Recording arbitrary telemetry events directly requires Tier 1 confirmation gating, displaying the tool name, status, and duration.
+- **Rule 4 (Local Offline Telemetry Bus & Zero Cloud Egress)**: All telemetry events, latency calculations, and ring buffers operate 100% locally on-device. Zero telemetry packets or execution logs are transmitted externally.
+- **Rule 7 (Non-Destructive Buffer Retention)**: Telemetry uses an in-memory bounded ring buffer (200 items FIFO) without file deletion or system mutation.
+- **Rule 8 (Payment Prohibitions)**: Telemetry event arguments, tool names, and synopsis payloads strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: Automatic recursive credential scrubbing automatically masks keys matching password, token, api_key, auth, or secret with `[REDACTED]` prior to buffer ingestion.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts telemetry buffering and historical queries in strictly $< 25.0$ ms.
