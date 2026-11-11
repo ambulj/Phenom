@@ -39,7 +39,7 @@ export const MetacognitiveReflectorHUD: React.FC<MetacognitiveReflectorHUDProps>
   const [recentAudits, setRecentAudits] = useState<TrajectoryAuditHUD[]>([
     {
       audit_id: 'audit_7a9f21',
-      user_intent: 'Decompose and execute billing refactor across topological subagent DAG',
+      user_intent: 'Decompose and execute distributed cache refactor across topological subagent DAG',
       steps_count: 5,
       successful_steps: 5,
       failed_steps: 0,

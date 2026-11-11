@@ -2748,6 +2748,27 @@ All Phase 3 error interception, dynamic sub-plan grafting, and self-healing tele
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts error interception, failure diagnosis, and repair sub-plan grafting in strictly $< 25.0$ ms.
 
+## 109. Milestone 28.0 — Phase 4: Metacognitive Introspection & Autonomous Strategy Reflector (META-01, REFL-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 metacognitive trajectory evaluation, efficiency reflection, and strategic heuristic recording tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `evaluate_metacognitive_drift`: **Tier 0** (Evaluates reasoning trajectory efficiency, semantic drift, and hallucination risk scores for an active plan tree; read-only telemetry query).
+- `reflect_on_plan_efficiency`: **Tier 0** (Synthesizes reflective planning recommendations and retrieves matching strategy heuristics; read-only query).
+- `record_strategy_heuristic`: **Tier 1** (Records a new planning meta-heuristic or reinforces existing heuristic confidence upon repeated observation; mutates heuristic repository, requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Recording or reinforcing strategy heuristics requires Tier 1 confirmation gating, displaying the strategic domain, rule pattern, and initial confidence weight.
+- **Rule 4 (Local Offline Metacognition & Zero Cloud Telemetry)**: All metacognitive evaluation reports, drift scores, strategy heuristics, and confidence weights reside 100% locally on-device. Zero internal cognitive reflections leave the host machine.
+- **Rule 7 (Reversibility & Non-Destructive Heuristic Growth)**: Meta-heuristics evolve monotonically with Bayesian confidence reinforcement without deleting historical rules.
+- **Rule 8 (Payment Prohibitions)**: Target plan IDs, evaluation contexts, domain names, and rule patterns strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in metacognitive reports or heuristic repositories.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts metacognitive evaluation, plan reflection, and heuristic recording in strictly $< 25.0$ ms.
+
+
 
 
 
