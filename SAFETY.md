@@ -2668,6 +2668,27 @@ All Phase 3 CRDT delta proposition, state reconciliation, and Lamport vector clo
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts CRDT delta propositions, state merges, and clock queries in strictly $< 25.0$ ms.
 
+## 105. Milestone 27.0 — Phase 4: Swarm Telemetry, Byzantine Worker Watchdog & Failover Arbiter (BYZ-01, ARB-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 swarm health telemetry, Byzantine fault arbitration, and orphaned task reassignment tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `inspect_swarm_health`: **Tier 0** (Inspects real-time heartbeat latencies, error counts, and anomaly scores across all swarm workers; read-only telemetry query).
+- `arbitrate_byzantine_fault`: **Tier 1** (Quarantines a faulty or erratic worker node, halts it via Guardian isolation, and reclaims assigned tasks; requires confirmation).
+- `reassign_orphaned_tasks`: **Tier 1** (Re-auctions open or orphaned task contracts to remaining healthy worker nodes; requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Quarantining nodes and reassigning orphaned contracts requires Tier 1 confirmation gating, displaying the affected worker ID, failure reason, and reclaimed task count.
+- **Rule 4 (Local Offline Watchdog & Zero Cloud Telemetry)**: All worker heartbeats, anomaly scores, quarantine actions, and failover journals operate 100% locally on-device. Zero telemetry leaves the host machine.
+- **Rule 7 (Reversibility & Zero Task Loss)**: When a worker fails or is quarantined, all its assigned contracts are safely reclaimed to `OPEN` status and re-auctioned with zero work loss.
+- **Rule 8 (Payment Prohibitions)**: Health records, quarantine reasons, and task reassignment payloads strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in watchdog telemetry or failover journals.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts watchdog polling, fault arbitration, and task re-auctioning in strictly $< 25.0$ ms.
+
+
 
 
 

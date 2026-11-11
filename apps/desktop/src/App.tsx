@@ -79,6 +79,7 @@ import { CognitiveLoadBalancerHUD } from './components/CyberHUD/CognitiveLoadBal
 import { AgentSwarmMeshHUD } from './components/CyberHUD/AgentSwarmMeshHUD';
 import { TaskAuctionProtocolHUD } from './components/CyberHUD/TaskAuctionProtocolHUD';
 import { SwarmConsensusCRDTHUD } from './components/CyberHUD/SwarmConsensusCRDTHUD';
+import { SwarmWatchdogArbiterHUD } from './components/CyberHUD/SwarmWatchdogArbiterHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -264,6 +265,8 @@ export const App: React.FC = () => {
   const [taskAuctionProtocolExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSwarmConsensusCRDT, setShowSwarmConsensusCRDT] = useState<boolean>(false);
   const [swarmConsensusCRDTExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSwarmWatchdogArbiter, setShowSwarmWatchdogArbiter] = useState<boolean>(false);
+  const [swarmWatchdogArbiterExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1413,6 +1416,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSwarmConsensusCRDT((prev) => !prev)
     },
     {
+      id: 'cmd-swarm-watchdog-arbiter-hud',
+      title: 'Toggle Swarm Watchdog & Arbiter HUD',
+      subtitle: 'Byzantine worker anomaly radar, node quarantine, and task failover rescue',
+      category: 'Assistant',
+      onExecute: () => setShowSwarmWatchdogArbiter((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1911,6 +1921,19 @@ export const App: React.FC = () => {
         <SwarmConsensusCRDTHUD
           externalEvent={swarmConsensusCRDTExternalEvent}
           onClose={() => setShowSwarmConsensusCRDT(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Byzantine Worker Watchdog & Failover Arbiter HUD (BYZ-01, ARB-02) */}
+      {showSwarmWatchdogArbiter && (
+        <SwarmWatchdogArbiterHUD
+          externalEvent={swarmWatchdogArbiterExternalEvent}
+          onClose={() => setShowSwarmWatchdogArbiter(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
