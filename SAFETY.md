@@ -2527,3 +2527,23 @@ All Phase 4 incident tracking, proactive remediation, and sensitivity configurat
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts watchdog polling, incident recording, and proactive remediation in strictly $< 25.0$ ms.
+
+## 98. Milestone 26.0 â Phase 1: Episodic Long-Horizon Memory Consolidation & Hierarchical Abstractor (MEM-06, ABS-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 1 episodic memory consolidation, hierarchical abstraction graph querying, and soft-pruning tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- consolidate_episodic_memory: **Tier 0** (Compresses unconsolidated episodic interaction traces into structured semantic knowledge nodes; read-only synthesis in memory).
+- query_hierarchical_memory_graph: **Tier 0** (Searches the hierarchical memory graph across micro-heuristics, macro-strategies, and core identity; read-only query).
+- prune_decayed_memory_traces: **Tier 1** (Soft-prunes low-importance, decayed memory traces to cold storage without permanent data loss; requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Memory trace soft-pruning routes through Tier 1 confirmation gating, verifying threshold parameters and affected trace counts prior to cold storage transition.
+- **Rule 4 (Local Offline Memory & Zero Cloud Transmission)**: All episodic session traces, semantic heuristics, and abstraction hierarchies are stored 100% locally on-device. Zero memory traces or user preferences are sent to cloud endpoints.
+- **Rule 7 (Reversibility & Non-Destructive Soft-Pruning)**: Decayed memory traces are soft-pruned (is_pruned=True) and moved to cold storage without permanent deletion. All historical traces remain recoverable.
+- **Rule 8 (Payment Prohibitions)**: Memory trace recording, consolidation clustering, and hierarchical graph queries strictly reject payment, checkout, credit card, and billing keywords with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No passwords, API keys, or private tokens are permitted in episodic memory traces or distilled semantic heuristics.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously interrupts memory consolidation passes and graph queries in strictly $< 25.0$ ms.

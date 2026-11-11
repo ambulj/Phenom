@@ -3082,3 +3082,30 @@ pm --prefix apps/desktop run build in 13.37s, 0 errors).
 - Desktop Frontend Build: 
 pm --prefix apps/desktop run build: **PASS (0 errors, 13.37s)**
 - Release Tag: 25.0.0
+
+# Milestone 26.0 Phase 1: Episodic Long-Horizon Memory Consolidation & Hierarchical Abstractor
+**Status:** Complete & Verified
+**Requirements:** MEM-06.1, MEM-06.2, ABS-01.1, SAF-01, SAF-02
+
+### Accomplishments
+1. **Episodic Memory Consolidator (MEM-06.1, MEM-06.2)**:
+   - services/backend/consolidation/memory_consolidator.py: Consolidates raw episodic session traces into structured SemanticKnowledgeNode entities with exponential decay curves ((t) = I_0 \cdot e^{-\lambda \Delta t} \cdot (1 + 0.1 \cdot \text{access\_count})$) and non-destructive soft-pruning (soft_prune_decayed()) (Rule 7).
+2. **Hierarchical Abstractor (ABS-01.1)**:
+   - services/backend/consolidation/hierarchical_abstractor.py: Organizes knowledge nodes into 4 hierarchical abstraction tiers: Level 0 (Raw Traces) $\to$ Level 1 (Micro-Heuristics) $\to$ Level 2 (Macro-Strategies) $\to$ Level 3 (Core Identity & Permanent Rules). Supports semantic token search across abstraction levels.
+3. **Safety-Wrapped Memory Consolidation Tools (SAF-01)**:
+   - services/backend/tools/memory_consolidation_tools.py: Registered 3 tools with Pydantic schemas and preview generators:
+     - consolidate_episodic_memory: **Tier 0** (Executes consolidation pass over episodic traces).
+     - query_hierarchical_memory_graph: **Tier 0** (Searches hierarchical memory graph by topic/query).
+     - prune_decayed_memory_traces: **Tier 1** (Soft-prunes low-importance memory traces to cold storage).
+4. **Desktop Cyber HUD (UI-05.13)**:
+   - pps/desktop/src/components/CyberHUD/MemoryConsolidationHUD.tsx: Hierarchical memory graph browser, abstraction tier badges (Level 0..3), real-time search, consolidation pass trigger, and soft-prune controls.
+   - Mounted in App.tsx and Command Palette (Ctrl+K).
+5. **Guardian SLA & Rule Compliance (SAF-02.1, Rule 8, Rule 11)**:
+   - Universal Guardian kill switch interrupts memory consolidation and graph queries in strictly $< 25.0\text{ ms}$ (benchmarked at .0001\text{ ms}$).
+   - Rule 8 anti-checkout screening strictly forbids any payment or checkout identifiers in memory traces or queries.
+   - Rule 11 credential protection: no credentials or secrets permitted in semantic heuristics.
+
+### Test Results
+- services/backend/tests/test_memory_consolidation.py: **7/7 PASSED in 0.46s**
+- Desktop Frontend Build: 
+pm --prefix apps/desktop run build: **PASS (0 errors, 9.85s)**

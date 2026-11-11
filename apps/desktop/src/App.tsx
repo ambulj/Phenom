@@ -72,6 +72,7 @@ import { ScreenGroundingHUD } from './components/CyberHUD/ScreenGroundingHUD';
 import { GuiActionPlayerHUD } from './components/CyberHUD/GuiActionPlayerHUD';
 import { CrossAppWorkflowHUD } from './components/CyberHUD/CrossAppWorkflowHUD';
 import { DesktopWatchdogHUD } from './components/CyberHUD/DesktopWatchdogHUD';
+import { MemoryConsolidationHUD } from './components/CyberHUD/MemoryConsolidationHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -243,6 +244,8 @@ export const App: React.FC = () => {
   const [crossAppWorkflowExternalEvent, setCrossAppWorkflowExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showDesktopWatchdog, setShowDesktopWatchdog] = useState<boolean>(false);
   const [desktopWatchdogExternalEvent, setDesktopWatchdogExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showMemoryConsolidation, setShowMemoryConsolidation] = useState<boolean>(false);
+  const [memoryConsolidationExternalEvent, setMemoryConsolidationExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -484,6 +487,8 @@ export const App: React.FC = () => {
             setCrossAppWorkflowExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('watchdog.') || mtype.startsWith('incident.') || mtype.startsWith('alert.')) {
             setDesktopWatchdogExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('consolidation.') || mtype.startsWith('memory.graph')) {
+            setMemoryConsolidationExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1341,6 +1346,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowDesktopWatchdog((prev) => !prev)
     },
     {
+      id: 'cmd-memory-consolidation-hud',
+      title: 'Toggle Memory Consolidation HUD',
+      subtitle: 'Episodic session trace consolidation, hierarchical abstraction levels, and decay soft-pruning',
+      category: 'Assistant',
+      onExecute: () => setShowMemoryConsolidation((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1748,6 +1760,19 @@ export const App: React.FC = () => {
         <DesktopWatchdogHUD
           externalEvent={desktopWatchdogExternalEvent}
           onClose={() => setShowDesktopWatchdog(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Episodic Memory Consolidation HUD (MEM-06, ABS-01) */}
+      {showMemoryConsolidation && (
+        <MemoryConsolidationHUD
+          externalEvent={memoryConsolidationExternalEvent}
+          onClose={() => setShowMemoryConsolidation(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
