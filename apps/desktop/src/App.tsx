@@ -93,6 +93,7 @@ import { FullDuplexVoiceHUD } from './components/CyberHUD/FullDuplexVoiceHUD';
 import { AmbientCompanionHUD } from './components/CyberHUD/AmbientCompanionHUD';
 import { VisionActionGroundingHUD } from './components/CyberHUD/VisionActionGroundingHUD';
 import { ExpressiveVoiceHUD } from './components/CyberHUD/ExpressiveVoiceHUD';
+import { TemporalKnowledgeGraphHUD } from './components/CyberHUD/TemporalKnowledgeGraphHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -300,6 +301,7 @@ export const App: React.FC = () => {
   const [showAmbientCompanion, setShowAmbientCompanion] = useState<boolean>(false);
   const [showVisionActionGrounding, setShowVisionActionGrounding] = useState<boolean>(false);
   const [showExpressiveVoice, setShowExpressiveVoice] = useState<boolean>(false);
+  const [showTemporalKnowledgeGraph, setShowTemporalKnowledgeGraph] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1544,6 +1546,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowExpressiveVoice((prev) => !prev)
     },
     {
+      id: 'cmd-temporal-knowledge-graph-hud',
+      title: 'Toggle Temporal Knowledge Graph HUD',
+      subtitle: 'Associative memory matrix, exponential half-life decay, and cross-session episodic search',
+      category: 'Assistant',
+      onExecute: () => setShowTemporalKnowledgeGraph((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2218,6 +2227,18 @@ export const App: React.FC = () => {
       {showExpressiveVoice && (
         <ExpressiveVoiceHUD
           onClose={() => setShowExpressiveVoice(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Associative Temporal Knowledge Graph HUD (MEM-01, EPISODE-02) */}
+      {showTemporalKnowledgeGraph && (
+        <TemporalKnowledgeGraphHUD
+          onClose={() => setShowTemporalKnowledgeGraph(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

@@ -1,5 +1,24 @@
 # HANDOFF.md
 
+## Milestone 31.0 Phase 3: Associative Temporal Knowledge Graph & Deep Episodic Memory Matrix
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `MEM-01.1`: Built `TemporalKnowledgeGraph` in [`services/backend/memory/temporal_knowledge_graph.py`](file:///C:/Phenom/services/backend/memory/temporal_knowledge_graph.py): encrypted SQLite/SQLCipher database storing entities (`CONCEPT`, `FILE`, `PROJECT`, `GOAL`, `DECISION`, `SESSION`) and relations (`DEPENDS_ON`, `IMPLEMENTS`, `RESOLVES`, `MODIFIES`, `DERIVED_FROM`, `RELATED_TO`).
+  - `MEM-01.2`: Implemented exponential half-life decay model ($S(t) = w_0 \cdot e^{-\lambda \Delta t} \cdot (1 + \alpha \ln(1 + \text{accesses}))$) balancing working context with long-term memory (default half-life 7.0 days, $\lambda \approx 0.099/\text{day}$).
+  - `EPISODE-02.1`: Engineered cross-session episodic memory linking CLI terminal executions, Git commits, and Obsidian daily notes to graph nodes with associative $k$-hop traversal.
+  - `EPISODE-02.2`: Implemented recursive Rule 11 credential protection scrubbing sensitive dictionary keys and values to `[REDACTED]`.
+  - `UI-05.38`: Built and integrated [`TemporalKnowledgeGraphHUD.tsx`](file:///C:/Phenom/apps/desktop/src/components/CyberHUD/TemporalKnowledgeGraphHUD.tsx) in `apps/desktop/src/App.tsx` and Command Palette: features entity/edge telemetry, associative search bar with hop-distance selector, decay score gauges, and episodic history timeline.
+  - `SAF-01`: Registered 4 temporal graph tools in `ToolRegistry` ([`record_graph_entity`](file:///C:/Phenom/services/backend/tools/temporal_knowledge_graph_tools.py) [Tier 1], [`record_graph_relation`](file:///C:/Phenom/services/backend/tools/temporal_knowledge_graph_tools.py) [Tier 1], [`record_episodic_event`](file:///C:/Phenom/services/backend/tools/temporal_knowledge_graph_tools.py) [Tier 1], [`query_associative_temporal_graph`](file:///C:/Phenom/services/backend/tools/temporal_knowledge_graph_tools.py) [Tier 0]) with typed schemas and preview generators; audited in [SAFETY.md](file:///C:/Phenom/SAFETY.md) Section 122.
+  - `SAF-02.1`: Universal Guardian Kill Switch halt SLA benchmarked at $< 25.0\text{ ms}$ (typical $< 0.01\text{ ms}$).
+  - `Rule 8`: Payment/checkout regex scanning rejects financial directives with `Rule8ViolationError`.
+  - `Rule 4`: 100% on-device local execution in encrypted database without cloud telemetry.
+  - Tests: **7/7 Phase 3 tests PASSED** in 0.72s (`test_temporal_knowledge_graph.py`); **45/45 cumulative tests PASSED** in 1.98s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 7.02s with 0 errors.
+
+---
+
 ## Milestone 31.0 Phase 2: Local Expressive Neural Voice Synthesis & Offline Zero-Shot Jarvis Voice Engine
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

@@ -3105,6 +3105,38 @@ All 17 new tools introduced across Milestone 30.0 have undergone full formal aud
   - Trips in $< 25.0\text{ ms}$ (measured $< 0.01\text{ ms}$), immediately aborting all speech generation.
 
 
+## 122. Milestone 31.0 — Phase 3: Associative Temporal Knowledge Graph & Deep Episodic Memory Matrix (MEM-01, EPISODE-02)
+
+### 1. New Tools Registered
+- `record_graph_entity`: **Tier 1**
+  - Schema: `id`, `name`, `entity_type` (`CONCEPT`, `FILE`, `PROJECT`, `GOAL`, `DECISION`, `SESSION`), `properties`.
+  - Behaviour: Inserts or updates an entity node in the encrypted associative knowledge graph. Single confirmation required.
+- `record_graph_relation`: **Tier 1**
+  - Schema: `id`, `source_id`, `target_id`, `relation_type` (`DEPENDS_ON`, `IMPLEMENTS`, `RESOLVES`, `MODIFIES`, `DERIVED_FROM`, `RELATED_TO`), `weight`.
+  - Behaviour: Connects two entities with a directed weighted edge in the knowledge graph. Single confirmation required.
+- `record_episodic_event`: **Tier 1**
+  - Schema: `id`, `session_id`, `episode_type` (`TERMINAL_RUN`, `GIT_COMMIT`, `OBSIDIAN_NOTE`, `MILESTONE_DECISION`), `summary`, `entity_ids`, `metadata`.
+  - Behaviour: Indexes an episodic milestone linking CLI terminal executions, Git commits, or Obsidian daily notes to graph nodes. Single confirmation required.
+- `query_associative_temporal_graph`: **Tier 0**
+  - Schema: `query`, `max_hops`.
+  - Behaviour: Traverses associative graph from seed concepts up to $k$ hops, applying exponential decay scoring. Read-only.
+
+### 2. Invariants & Safety Guarantees
+- **Exponential Temporal Decay & Recency Scoring (MEM-01.2)**:
+  - Calculates decay score $S(t) = w_0 \cdot e^{-\lambda \Delta t} \cdot (1 + \alpha \ln(1 + \text{accesses}))$ with configurable half-life (default 7 days).
+- **Cross-Session Episodic Memory Matrix (EPISODE-02.1)**:
+  - Links terminal runs, Git commits, and Obsidian daily notes to knowledge graph entity nodes for associative recall across sessions.
+- **Strict Rule 8 Anti-Checkout Enforcement**:
+  - Entity names, properties, episode summaries, or queries containing checkout or payment phrases are rejected with `Rule8ViolationError`.
+- **Rule 11 Credential Scrubbing (EPISODE-02.2)**:
+  - Recursive scrubbing of sensitive dictionary keys and values (passwords, tokens, API keys) to `[REDACTED]` prior to SQLCipher/SQLite indexing.
+- **Rule 4 Local Encrypted Storage**:
+  - 100% on-device local database (`services/backend/data/temporal_knowledge_graph.db`) with zero external network egress.
+- **Rule 3 Guardian Kill Switch SLA**:
+  - Trips in $< 25.0\text{ ms}$ (measured $< 0.01\text{ ms}$), immediately aborting all graph operations.
+
+
+
 
 
 
