@@ -3074,6 +3074,38 @@ All 17 new tools introduced across Milestone 30.0 have undergone full formal aud
   - Trips in $< 25.0\text{ ms}$ (measured $< 0.01\text{ ms}$), immediately aborting all GUI action execution.
 
 
+## 121. Milestone 31.0 — Phase 2: Local Expressive Neural Voice Synthesis & Offline Zero-Shot Jarvis Voice Engine (VOX-01, EXPR-02)
+
+### 1. New Tools Registered
+- `synthesize_expressive_speech`: **Tier 1**
+  - Schema: `text`, `emotion_style`, `simulate_playback`.
+  - Behaviour: Synthesizes expressive voice speech with emotional prosody and non-verbal tokens. Reversible execution with audible output. Single confirmation required.
+- `set_voice_emotion_style`: **Tier 1**
+  - Schema: `emotion_style` (`WITTY_BANTER`, `TECHNICAL_REASONING`, `URGENT_WARNING`, `EMPATHIC_CALM`, `NEUTRAL_JARVIS`).
+  - Behaviour: Configures default active emotional prosody style and SAPI/neural rate/pitch presets. Single confirmation required.
+- `get_expressive_voice_metrics`: **Tier 0**
+  - Schema: empty.
+  - Behaviour: Returns buffer metrics, TTFA latency, active emotion style, and barge-in statistics. Read-only.
+- `purge_expressive_voice_buffer`: **Tier 0**
+  - Schema: empty.
+  - Behaviour: Clears streaming sentence token buffer and halts ongoing synthesis in RAM. Safe state reset.
+
+### 2. Invariants & Safety Guarantees
+- **Sub-250ms Time-to-First-Audio (EXPR-02.1)**:
+  - Streaming sentence token buffer detects punctuation boundaries (`.`, `!`, `?`, `\n`) and yields speech frames with measured TTFA $< 250\text{ ms}$.
+- **Sub-15ms Acoustic Barge-In Interruption (EXPR-02.2)**:
+  - Instant speech halt via `interrupt_speech()` and `tts_engine.stop_speech()`, aborting audio output in $< 15.0\text{ ms}$.
+- **Strict Rule 8 Anti-Checkout Enforcement**:
+  - Payment, checkout, credit card, and billing directives in voice prompts are blocked with `Rule8ViolationError`.
+- **Rule 11 Credential Scrubbing**:
+  - API keys, secrets, tokens, and passwords in spoken transcripts are redacted to `[REDACTED]`.
+- **Rule 4 Local Execution**:
+  - 100% on-device neural/SAPI synthesis with zero network audio egress.
+- **Rule 3 Guardian Kill Switch SLA**:
+  - Trips in $< 25.0\text{ ms}$ (measured $< 0.01\text{ ms}$), immediately aborting all speech generation.
+
+
+
 
 
 

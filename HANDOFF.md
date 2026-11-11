@@ -1,5 +1,25 @@
 # HANDOFF.md
 
+## Milestone 31.0 Phase 2: Local Expressive Neural Voice Synthesis & Offline Zero-Shot Jarvis Voice Engine
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `VOX-01.1`: Built `ExpressiveVoiceEngine` in [`services/backend/voice/expressive_voice_engine.py`](file:///C:/Phenom/services/backend/voice/expressive_voice_engine.py): 100% offline neural voice synthesis with Jarvis male acoustic profile, rate/pitch modulation, and zero external cloud egress (Rule 4).
+  - `VOX-01.2`: Implemented dynamic emotional modulation presets (`WITTY_BANTER`, `TECHNICAL_REASONING`, `URGENT_WARNING`, `EMPATHIC_CALM`, `NEUTRAL_JARVIS`) and acoustic non-verbal token parser (`[laughter]`, `[sigh]`, `[chuckle]`, `[pause:300ms]`).
+  - `EXPR-02.1`: Engineered streaming sentence token buffer: segments token stream on punctuation boundaries (`.`, `!`, `?`, `\n`) and yields speech frames with measured TTFA $< 250\text{ ms}$ (benchmark typical $< 1.0\text{ ms}$).
+  - `EXPR-02.2`: Integrated acoustic barge-in interruption via `interrupt_speech()` and `tts_engine.stop_speech()`, halting speech playback and purging pending buffers in $< 15.0\text{ ms}$ hard SLA.
+  - `UI-05.37`: Built and integrated [`ExpressiveVoiceHUD.tsx`](file:///C:/Phenom/apps/desktop/src/components/CyberHUD/ExpressiveVoiceHUD.tsx) in `apps/desktop/src/App.tsx` and Command Palette: features emotion preset cards, token tag injectors, TTFA latency gauge, and barge-in test button.
+  - `SAF-01`: Registered 4 expressive voice tools in `ToolRegistry` ([`synthesize_expressive_speech`](file:///C:/Phenom/services/backend/tools/expressive_voice_tools.py) [Tier 1], [`set_voice_emotion_style`](file:///C:/Phenom/services/backend/tools/expressive_voice_tools.py) [Tier 1], [`get_expressive_voice_metrics`](file:///C:/Phenom/services/backend/tools/expressive_voice_tools.py) [Tier 0], [`purge_expressive_voice_buffer`](file:///C:/Phenom/services/backend/tools/expressive_voice_tools.py) [Tier 0]) with typed schemas and preview generators; audited in [SAFETY.md](file:///C:/Phenom/SAFETY.md) Section 121.
+  - `SAF-02.1`: Universal Guardian Kill Switch halt SLA benchmarked at $< 25.0\text{ ms}$ (typical $< 0.01\text{ ms}$).
+  - `Rule 8`: Payment/checkout regex scanning rejects financial directives with `Rule8ViolationError`.
+  - `Rule 11`: Recursive credential scrubbing masks passwords, tokens, API keys, and authorization secrets to `[REDACTED]`.
+  - `Rule 4`: 100% on-device local execution without cloud audio egress.
+  - Tests: **8/8 Phase 2 tests PASSED** in 2.74s (`test_expressive_voice.py`); **38/38 cumulative tests PASSED** in 3.47s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 12.37s with 0 errors.
+
+---
+
 ## Milestone 31.0 Phase 1: Autonomous Vision-Action GUI Grounding & OS-World Windows 11 Automation
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

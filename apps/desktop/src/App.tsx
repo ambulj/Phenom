@@ -92,6 +92,7 @@ import { MultiAgentSwarmHUD } from './components/CyberHUD/MultiAgentSwarmHUD';
 import { FullDuplexVoiceHUD } from './components/CyberHUD/FullDuplexVoiceHUD';
 import { AmbientCompanionHUD } from './components/CyberHUD/AmbientCompanionHUD';
 import { VisionActionGroundingHUD } from './components/CyberHUD/VisionActionGroundingHUD';
+import { ExpressiveVoiceHUD } from './components/CyberHUD/ExpressiveVoiceHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -298,6 +299,7 @@ export const App: React.FC = () => {
   const [showFullDuplexVoice, setShowFullDuplexVoice] = useState<boolean>(false);
   const [showAmbientCompanion, setShowAmbientCompanion] = useState<boolean>(false);
   const [showVisionActionGrounding, setShowVisionActionGrounding] = useState<boolean>(false);
+  const [showExpressiveVoice, setShowExpressiveVoice] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1535,6 +1537,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowVisionActionGrounding((prev) => !prev)
     },
     {
+      id: 'cmd-expressive-voice-hud',
+      title: 'Toggle Expressive Neural Voice HUD',
+      subtitle: 'Dynamic emotional prosody, Jarvis banter modulation, and sub-250ms TTFA streaming buffer',
+      category: 'Assistant',
+      onExecute: () => setShowExpressiveVoice((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2197,6 +2206,18 @@ export const App: React.FC = () => {
       {showVisionActionGrounding && (
         <VisionActionGroundingHUD
           onClose={() => setShowVisionActionGrounding(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Local Expressive Neural Voice Synthesis HUD (VOX-01, EXPR-02) */}
+      {showExpressiveVoice && (
+        <ExpressiveVoiceHUD
+          onClose={() => setShowExpressiveVoice(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
