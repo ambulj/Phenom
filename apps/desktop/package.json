@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "30.0.0",
-  "description": "Phenom 30.0: Autonomous Multi-Agent Swarm, Real-Time Screen Intelligence & Full-Duplex Voice Companion OS — Real-Time Screen Intelligence & Visual Task Tracker, Autonomous Multi-Agent Local Swarm Engine, Full-Duplex Conversational Voice with Instant Acoustic Barge-In, and Ambient Context Watchdog & Telegram Super-Companion v2",
+  "version": "31.0.0",
+  "description": "Phenom 31.0: Autonomous Neural GUI Actor, Expressive Local Voice & Temporal Knowledge Graph — Autonomous Vision-Action GUI Grounding & OS-World Windows 11 Automation, Local Expressive Neural Voice Synthesis & Offline Zero-Shot Jarvis Voice Engine, Associative Temporal Knowledge Graph & Deep Episodic Memory Matrix, and Proactive Workspace Self-Healing Daemon & Automated AST Hot-Patching",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

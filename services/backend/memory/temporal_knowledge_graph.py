@@ -17,6 +17,7 @@ import math
 import os
 import re
 import sqlite3
+import threading
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 from pydantic import BaseModel, Field
@@ -130,6 +131,7 @@ class TemporalKnowledgeGraph:
         self.half_life_days = half_life_days
         self.access_boost_alpha = access_boost_alpha
         self.decay_lambda = math.log(2.0) / (half_life_days * 86400.0)
+        self._lock = threading.Lock()
 
         if self.db_path != ":memory:":
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
@@ -264,7 +266,7 @@ class TemporalKnowledgeGraph:
         clean_props = self.scrub_dict(properties or {})
 
         now = timestamp if timestamp is not None else time.time()
-        with self._conn:
+        with self._lock, self._conn:
             cursor = self._conn.execute("SELECT access_count FROM graph_entities WHERE id = ?", (id,))
             row = cursor.fetchone()
             if row:
@@ -314,7 +316,7 @@ class TemporalKnowledgeGraph:
         """Links two entities with a directed, weighted relation edge."""
         self.check_safety()
         now = timestamp if timestamp is not None else time.time()
-        with self._conn:
+        with self._lock, self._conn:
             self._conn.execute(
                 """
                 INSERT OR REPLACE INTO graph_relations (id, source_id, target_id, relation_type, weight, created_at)
@@ -348,7 +350,7 @@ class TemporalKnowledgeGraph:
 
         now = timestamp if timestamp is not None else time.time()
         entities = entity_ids or []
-        with self._conn:
+        with self._lock, self._conn:
             self._conn.execute(
                 """
                 INSERT OR REPLACE INTO graph_episodes
@@ -379,124 +381,125 @@ class TemporalKnowledgeGraph:
         self.check_safety(query)
         now = current_time if current_time is not None else time.time()
 
-        # 1. Find seed nodes matching query keywords or entity name
-        query_terms = [q.lower() for q in query.split() if len(q) > 2]
-        matched_entities_dict: Dict[str, Dict[str, Any]] = {}
-        visited_nodes: Set[str] = set()
+        with self._lock:
+            # 1. Find seed nodes matching query keywords or entity name
+            query_terms = [q.lower() for q in query.split() if len(q) > 2]
+            matched_entities_dict: Dict[str, Dict[str, Any]] = {}
+            visited_nodes: Set[str] = set()
 
-        cursor = self._conn.execute(
-            "SELECT id, name, entity_type, properties_json, created_at, updated_at, access_count, last_accessed_at FROM graph_entities"
-        )
-        all_entities = cursor.fetchall()
-
-        seed_ids: List[str] = []
-        for row in all_entities:
-            e_id, name, e_type, props_json, created_at, updated_at, access_count, last_accessed = row
-            text_corpus = f"{name} {props_json}".lower()
-
-            is_match = False
-            if query.lower() in text_corpus:
-                is_match = True
-            elif any(term in text_corpus for term in query_terms):
-                is_match = True
-
-            if is_match:
-                seed_ids.append(e_id)
-                # Compute decayed score
-                score = self.compute_temporal_score(1.0, created_at, access_count, current_time=now)
-                matched_entities_dict[e_id] = {
-                    "id": e_id,
-                    "name": name,
-                    "entity_type": e_type,
-                    "properties": json.loads(props_json),
-                    "decayed_score": score,
-                    "hop_distance": 0,
-                }
-                visited_nodes.add(e_id)
-
-        # 2. Associative k-hop traversal
-        current_frontier = list(seed_ids)
-        collected_relations: List[Dict[str, Any]] = []
-
-        for hop in range(1, max_hops + 1):
-            if not current_frontier:
-                break
-            next_frontier: List[str] = []
-
-            placeholders = ",".join("?" for _ in current_frontier)
-            rel_cursor = self._conn.execute(
-                f"""
-                SELECT id, source_id, target_id, relation_type, weight, created_at
-                FROM graph_relations
-                WHERE source_id IN ({placeholders}) OR target_id IN ({placeholders})
-                """,
-                current_frontier + current_frontier,
+            cursor = self._conn.execute(
+                "SELECT id, name, entity_type, properties_json, created_at, updated_at, access_count, last_accessed_at FROM graph_entities"
             )
-            relations_rows = rel_cursor.fetchall()
+            all_entities = cursor.fetchall()
 
-            for rel_row in relations_rows:
-                r_id, src, tgt, r_type, w, r_created = rel_row
-                neighbor_id = tgt if src in current_frontier else src
+            seed_ids: List[str] = []
+            for row in all_entities:
+                e_id, name, e_type, props_json, created_at, updated_at, access_count, last_accessed = row
+                text_corpus = f"{name} {props_json}".lower()
 
-                collected_relations.append({
-                    "id": r_id,
-                    "source_id": src,
-                    "target_id": tgt,
-                    "relation_type": r_type,
-                    "weight": w,
-                })
+                is_match = False
+                if query.lower() in text_corpus:
+                    is_match = True
+                elif any(term in text_corpus for term in query_terms):
+                    is_match = True
 
-                if neighbor_id not in visited_nodes:
-                    visited_nodes.add(neighbor_id)
-                    next_frontier.append(neighbor_id)
+                if is_match:
+                    seed_ids.append(e_id)
+                    # Compute decayed score
+                    score = self.compute_temporal_score(1.0, created_at, access_count, current_time=now)
+                    matched_entities_dict[e_id] = {
+                        "id": e_id,
+                        "name": name,
+                        "entity_type": e_type,
+                        "properties": json.loads(props_json),
+                        "decayed_score": score,
+                        "hop_distance": 0,
+                    }
+                    visited_nodes.add(e_id)
 
-                    # Lookup neighbor entity
-                    ent_cursor = self._conn.execute(
-                        "SELECT name, entity_type, properties_json, created_at, access_count FROM graph_entities WHERE id = ?",
-                        (neighbor_id,),
-                    )
-                    ent_row = ent_cursor.fetchone()
-                    if ent_row:
-                        n_name, n_type, n_props_json, n_created, n_access = ent_row
-                        base_score = matched_entities_dict.get(src, {}).get("decayed_score", 1.0) * w * 0.8
-                        n_score = self.compute_temporal_score(base_score, n_created, n_access, current_time=now)
-                        matched_entities_dict[neighbor_id] = {
-                            "id": neighbor_id,
-                            "name": n_name,
-                            "entity_type": n_type,
-                            "properties": json.loads(n_props_json),
-                            "decayed_score": n_score,
-                            "hop_distance": hop,
-                        }
+            # 2. Associative k-hop traversal
+            current_frontier = list(seed_ids)
+            collected_relations: List[Dict[str, Any]] = []
 
-            current_frontier = next_frontier
+            for hop in range(1, max_hops + 1):
+                if not current_frontier:
+                    break
+                next_frontier: List[str] = []
 
-        # 3. Retrieve linked episodes for all visited nodes
-        linked_episodes: List[Dict[str, Any]] = []
-        if visited_nodes:
-            ep_cursor = self._conn.execute(
-                "SELECT id, session_id, episode_type, summary, entity_ids_json, metadata_json, timestamp FROM graph_episodes ORDER BY timestamp DESC"
-            )
-            for ep_row in ep_cursor.fetchall():
-                ep_id, sess_id, ep_type, summary, ent_ids_json, meta_json, ep_time = ep_row
-                ep_entities = set(json.loads(ent_ids_json))
-                if ep_entities.intersection(visited_nodes):
-                    linked_episodes.append({
-                        "id": ep_id,
-                        "session_id": sess_id,
-                        "episode_type": ep_type,
-                        "summary": summary,
-                        "entity_ids": list(ep_entities),
-                        "metadata": json.loads(meta_json),
-                        "timestamp": ep_time,
+                placeholders = ",".join("?" for _ in current_frontier)
+                rel_cursor = self._conn.execute(
+                    f"""
+                    SELECT id, source_id, target_id, relation_type, weight, created_at
+                    FROM graph_relations
+                    WHERE source_id IN ({placeholders}) OR target_id IN ({placeholders})
+                    """,
+                    current_frontier + current_frontier,
+                )
+                relations_rows = rel_cursor.fetchall()
+
+                for rel_row in relations_rows:
+                    r_id, src, tgt, r_type, w, r_created = rel_row
+                    neighbor_id = tgt if src in current_frontier else src
+
+                    collected_relations.append({
+                        "id": r_id,
+                        "source_id": src,
+                        "target_id": tgt,
+                        "relation_type": r_type,
+                        "weight": w,
                     })
 
-        # Sort entities by decayed score descending
-        sorted_entities = sorted(
-            matched_entities_dict.values(),
-            key=lambda x: x["decayed_score"],
-            reverse=True,
-        )
+                    if neighbor_id not in visited_nodes:
+                        visited_nodes.add(neighbor_id)
+                        next_frontier.append(neighbor_id)
+
+                        # Lookup neighbor entity
+                        ent_cursor = self._conn.execute(
+                            "SELECT name, entity_type, properties_json, created_at, access_count FROM graph_entities WHERE id = ?",
+                            (neighbor_id,),
+                        )
+                        ent_row = ent_cursor.fetchone()
+                        if ent_row:
+                            n_name, n_type, n_props_json, n_created, n_access = ent_row
+                            base_score = matched_entities_dict.get(src, {}).get("decayed_score", 1.0) * w * 0.8
+                            n_score = self.compute_temporal_score(base_score, n_created, n_access, current_time=now)
+                            matched_entities_dict[neighbor_id] = {
+                                "id": neighbor_id,
+                                "name": n_name,
+                                "entity_type": n_type,
+                                "properties": json.loads(n_props_json),
+                                "decayed_score": n_score,
+                                "hop_distance": hop,
+                            }
+
+                current_frontier = next_frontier
+
+            # 3. Retrieve linked episodes for all visited nodes
+            linked_episodes: List[Dict[str, Any]] = []
+            if visited_nodes:
+                ep_cursor = self._conn.execute(
+                    "SELECT id, session_id, episode_type, summary, entity_ids_json, metadata_json, timestamp FROM graph_episodes ORDER BY timestamp DESC"
+                )
+                for ep_row in ep_cursor.fetchall():
+                    ep_id, sess_id, ep_type, summary, ent_ids_json, meta_json, ep_time = ep_row
+                    ep_entities = set(json.loads(ent_ids_json))
+                    if ep_entities.intersection(visited_nodes):
+                        linked_episodes.append({
+                            "id": ep_id,
+                            "session_id": sess_id,
+                            "episode_type": ep_type,
+                            "summary": summary,
+                            "entity_ids": list(ep_entities),
+                            "metadata": json.loads(meta_json),
+                            "timestamp": ep_time,
+                        })
+
+            # Sort entities by decayed score descending
+            sorted_entities = sorted(
+                matched_entities_dict.values(),
+                key=lambda x: x["decayed_score"],
+                reverse=True,
+            )
 
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         return AssociativeQueryResult(
@@ -512,10 +515,11 @@ class TemporalKnowledgeGraph:
     def get_stats(self) -> Dict[str, Any]:
         """Returns knowledge graph inventory and memory statistics."""
         self.check_safety()
-        cursor = self._conn.cursor()
-        entity_count = cursor.execute("SELECT COUNT(*) FROM graph_entities").fetchone()[0]
-        relation_count = cursor.execute("SELECT COUNT(*) FROM graph_relations").fetchone()[0]
-        episode_count = cursor.execute("SELECT COUNT(*) FROM graph_episodes").fetchone()[0]
+        with self._lock:
+            cursor = self._conn.cursor()
+            entity_count = cursor.execute("SELECT COUNT(*) FROM graph_entities").fetchone()[0]
+            relation_count = cursor.execute("SELECT COUNT(*) FROM graph_relations").fetchone()[0]
+            episode_count = cursor.execute("SELECT COUNT(*) FROM graph_episodes").fetchone()[0]
         return {
             "entity_count": entity_count,
             "relation_count": relation_count,
