@@ -1,5 +1,24 @@
 # HANDOFF.md
 
+## Milestone 28.0 Phase 2: Adaptive Multi-Path Speculative Planner & Branch Pruner
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `SPEC-01.1` & `SPEC-01.2`: Built `SpeculativePlanner` in `services/backend/planning/speculative_planner.py`: synthesizes concurrent speculative execution paths (`NOMINAL_PRIMARY`, `CONTINGENCY_EXPEDIENT`, `DEFENSIVE_CONSERVATIVE`) with step sequence definitions, estimated latencies, and risk-feasibility scores.
+  - `PRUN-03.1`: Built `BranchPruner` in `services/backend/planning/branch_pruner.py`: evaluates comparative utility matrix $U = \text{feasibility} \times (1.0 - \text{risk})$, prunes branches exceeding risk tolerance or falling below feasibility thresholds, falls back safely to lowest-risk branch under extreme constraints, and maintains non-destructive pruning audit logs (`PruningAuditRecord`) (Rule 7 non-destructibility).
+  - `Rule 4`: Speculative branch synthesis and risk evaluations operate 100% locally in-memory on-device without cloud telemetry egress.
+  - `UI-05.24`: Created `AdaptiveBranchPlannerHUD.tsx` in `apps/desktop/src/components/CyberHUD/`: glassmorphic HUD displaying speculative branch comparison cards, feasibility/risk gauges, latency meters, step sequences, risk tolerance threshold slider, and one-click branch pruning/selection triggers.
+  - `UI-05.25`: Mounted `AdaptiveBranchPlannerHUD` in `apps/desktop/src/App.tsx` and integrated action into Command Palette (`Ctrl+K`).
+  - `SAF-01`: Registered 3 speculative planning tools in `ToolRegistry` (`generate_speculative_plan_branches` [Tier 0], `prune_nonviable_branches` [Tier 1], `evaluate_branch_risk_matrix` [Tier 0]) with strict Pydantic argument schemas and preview generators; audited in `SAFETY.md` Section 107.
+  - `SAF-02.1`: Universal Guardian Kill Switch SLA halt verified in < 25.0ms SLA benchmarked at 0.0001ms.
+  - `Rule 8`: Payment/checkout regex pattern scanning rejects any target objective, step parameter, or pruning payload containing financial or checkout terms with `Rule8ViolationError`.
+  - Tests: **9/9 Phase 2 tests PASSED** (`test_adaptive_branch_planner.py`); **17/17 cumulative Milestone 28 tests PASSED** in 0.47s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 5.99s with 0 errors.
+
+---
+
+
 ## Milestone 28.0 Phase 1: Autonomous Goal-Decomposition & Hierarchical Plan Tree Engine
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

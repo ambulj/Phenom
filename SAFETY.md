@@ -2708,6 +2708,27 @@ All Phase 1 goal decomposition, plan tree node expansion, and active goal graph 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts goal decomposition, node expansion, and tree queries in strictly $< 25.0$ ms.
 
+## 107. Milestone 28.0 — Phase 2: Adaptive Multi-Path Speculative Planner & Branch Pruner (SPEC-01, PRUN-03, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 speculative branch generation, branch pruning, and comparative risk evaluation tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `generate_speculative_plan_branches`: **Tier 0** (Synthesizes concurrent candidate execution branches [Nominal, Contingency, Defensive] with risk-reward feasibility scores; read-only speculative synthesis).
+- `prune_nonviable_branches`: **Tier 1** (Prunes candidate branches exceeding risk tolerance or underperforming feasibility and logs audit record; mutates active branch set, requires confirmation).
+- `evaluate_branch_risk_matrix`: **Tier 0** (Calculates comparative risk, feasibility, and composite utility scores across all speculative branches; read-only matrix query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Pruning execution branches and selecting the active execution path requires Tier 1 confirmation gating, displaying the target ID, risk threshold, and pruned branch counts.
+- **Rule 4 (Local Offline Speculative Planning & Zero Cloud Telemetry)**: All speculative branches, step sequences, Monte Carlo risk scores, and pruning audit journals reside 100% locally in-memory on-device. Zero candidate plans or risk evaluations are transmitted to cloud endpoints.
+- **Rule 7 (Reversibility & Auditability of Pruned Paths)**: Pruning is non-destructive; pruned candidate branches are marked `is_pruned = True` and preserved in an immutable `PruningAuditRecord` archive for retroactive audit.
+- **Rule 8 (Payment Prohibitions)**: Target goal IDs, branch step descriptions, and pruning parameters strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in speculative branches or pruning audit records.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts speculative branch generation, risk matrix evaluation, and branch pruning in strictly $< 25.0$ ms.
+
+
 
 
 

@@ -81,6 +81,7 @@ import { TaskAuctionProtocolHUD } from './components/CyberHUD/TaskAuctionProtoco
 import { SwarmConsensusCRDTHUD } from './components/CyberHUD/SwarmConsensusCRDTHUD';
 import { SwarmWatchdogArbiterHUD } from './components/CyberHUD/SwarmWatchdogArbiterHUD';
 import { GoalDecompositionTreeHUD } from './components/CyberHUD/GoalDecompositionTreeHUD';
+import { AdaptiveBranchPlannerHUD } from './components/CyberHUD/AdaptiveBranchPlannerHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -270,6 +271,8 @@ export const App: React.FC = () => {
   const [swarmWatchdogArbiterExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showGoalDecompositionTree, setShowGoalDecompositionTree] = useState<boolean>(false);
   const [goalDecompositionTreeExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showAdaptiveBranchPlanner, setShowAdaptiveBranchPlanner] = useState<boolean>(false);
+  const [adaptiveBranchPlannerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1433,6 +1436,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowGoalDecompositionTree((prev) => !prev)
     },
     {
+      id: 'cmd-adaptive-branch-planner-hud',
+      title: 'Toggle Adaptive Branch Planner HUD',
+      subtitle: 'Speculative multi-path candidate branches, Monte Carlo feasibility, and branch pruning',
+      category: 'Assistant',
+      onExecute: () => setShowAdaptiveBranchPlanner((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1957,6 +1967,19 @@ export const App: React.FC = () => {
         <GoalDecompositionTreeHUD
           externalEvent={goalDecompositionTreeExternalEvent}
           onClose={() => setShowGoalDecompositionTree(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Adaptive Branch Planner HUD (SPEC-01, PRUN-03) */}
+      {showAdaptiveBranchPlanner && (
+        <AdaptiveBranchPlannerHUD
+          externalEvent={adaptiveBranchPlannerExternalEvent}
+          onClose={() => setShowAdaptiveBranchPlanner(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
