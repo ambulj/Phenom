@@ -170,7 +170,7 @@ class OpenAppArgs(BaseModel):
 
 @registry.register(
     name="open_app",
-    tier=1,
+    tier=0,
     description="Launch an application or open a web URL",
     args_schema=OpenAppArgs,
     preview_fn=lambda a: f"Launch application or URL: '{a.get('app_name')}'" + (f" with args '{a.get('url_or_args')}'" if a.get('url_or_args') else ""),
