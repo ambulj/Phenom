@@ -216,3 +216,25 @@ def test_tool_registry_persona_stream_tools():
     res3 = handle_get_stream_shield_metrics()
     assert res3["total_chunks_processed"] >= 1
     assert res3["current_persona_mode"] == "MINIMAL_CONFIRMATION"
+
+
+def test_stream_sanitizer_user_brave_exact_scenario():
+    raw = """Haan Bro! Let's open Brave.
+** Tool :** `open_app(app_name)`
+** JSON Execution Block :**
+json
+{"tool": "open_app", "args": {"app_name": "Brave"}}
+
+This command will launch the Brave browser.
+[Action Executed: Opened Brave browser]
+All set.
+All set."""
+    res = stream_sanitizer.sanitize(raw)
+    assert "** Tool :**" not in res.clean_text
+    assert "JSON Execution Block" not in res.clean_text
+    assert "open_app" not in res.clean_text
+    assert "This command will launch" not in res.clean_text
+    assert "[Action Executed" not in res.clean_text
+    assert res.clean_text.count("All set.") <= 1
+    assert "Haan Bro! Let's open Brave." in res.clean_text
+

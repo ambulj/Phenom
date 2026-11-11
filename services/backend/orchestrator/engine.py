@@ -24,6 +24,8 @@ from services.backend.safety.registry import registry
 from services.backend.memory.db import encrypted_db
 from services.backend.memory.rules import learned_rules
 from services.backend.modes.mode_manager import mode_manager
+from services.backend.conversation.stream_sanitizer import stream_sanitizer
+from services.backend.conversation.adaptive_persona import adaptive_persona_engine
 
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
@@ -52,7 +54,7 @@ Available Tools:
 
 Core Instructions:
 1. Action Execution: When the user requests ANY action, media control, playback change, volume adjustment, app launch, news briefing, weather, calculation, reminder, or system task:
-   - Output ONLY the JSON execution block immediately:
+   - Output a single ```json tool call block:
 ```json
 {{"tool": "open_app", "args": {{"app_name": "brave"}}}}
 ```
@@ -62,7 +64,11 @@ Core Instructions:
        Example for "open brave": {{"tool": "open_app", "args": {{"app_name": "brave"}}}}
        Example for "play Baarishein on YouTube": {{"tool": "open_app", "args": {{"app_name": "https://www.youtube.com/results?search_query=Baarishein"}}}}
        Example for "Spotify kholo": {{"tool": "open_app", "args": {{"app_name": "spotify"}}}}
-   - Do NOT provide conversational preamble, greetings, or meta-explanations before the tool JSON block. Output the JSON execution block immediately.
+   - ABSOLUTE PROHIBITIONS:
+     * NEVER output markdown headers like "** Tool :**", "** JSON Execution Block :**", or "Tool Invocation".
+     * NEVER output meta-commentary like "This command will launch...", "Executing command...", or "[Action Executed: ...]".
+     * NEVER repeat phrases or "All set." multiple times.
+     * Keep your response natural, conversational and crisp (Jarvis/bro style) without technical noise or raw JSON explanations.
 
 2. General Conversation & Interruption:
    - When the user greets you (e.g. "hi", "kya haal hai Bro", "hello") or makes casual conversation, respond in 1-2 natural, punchy Hinglish sentences addressing the user as "Bro". Never mention JSON, tools, or schemas to the user. Never offer canned system status reports unless explicitly asked.
@@ -334,41 +340,51 @@ class Orchestrator:
 
         # Direct YouTube site requests
         if p in ("open youtube", "open yt", "launch youtube", "launch yt", "youtube kholo", "yt kholo", "start youtube", "start yt"):
-            return "open_app", {"app_name": "https://www.youtube.com"}, "Haan Bro! Opening YouTube for you..."
+            return "open_app", {"app_name": "https://www.youtube.com"}, "Opening YouTube Bro!"
 
-        # 2. Website & URL Intent
-        m_web = re.search(r"^(?:ok\s+|please\s+)?(?:open|launch|start|visit|goto)\s+(?:website\s+|site\s+)?([a-zA-Z0-9_\-\.\:\/]+)$", p)
-        if not m_web:
-            m_web = re.search(r"^(?:ok\s+|please\s+)?([a-zA-Z0-9_\-\.\:\/]+)\s+(?:website\s+|site\s+)?(?:kholo|chalao|khol\s*do|start\s*kar\s*do|open\s*karo)$", p)
-        if m_web:
-            target = m_web.group(1).strip()
-            known_sites = {
-                "google": "https://www.google.com",
-                "youtube": "https://www.youtube.com",
-                "yt": "https://www.youtube.com",
-                "gmail": "https://mail.google.com",
-                "amazon": "https://www.amazon.com",
-                "flipkart": "https://www.flipkart.com",
-                "github": "https://www.github.com",
-                "twitter": "https://www.twitter.com",
-                "x": "https://www.x.com",
-                "reddit": "https://www.reddit.com",
-                "chatgpt": "https://chatgpt.com",
-                "netflix": "https://www.netflix.com",
-                "spotify": "https://open.spotify.com"
-            }
-            if target.startswith("http://") or target.startswith("https://"):
-                return "open_app", {"app_name": target}, f"Haan Bro! Opening {target}..."
-            if any(target.endswith(tld) or f"{tld}/" in target for tld in (".com", ".org", ".net", ".in", ".co", ".io", ".app", ".dev", ".ai", ".tv")):
-                full_url = f"https://{target}"
-                return "open_app", {"app_name": full_url}, f"Haan Bro! Opening {target}..."
-            if target in known_sites:
-                return "open_app", {"app_name": known_sites[target]}, f"Haan Bro! Opening {target.title()}..."
-
-            # 3. Application Intent
-            if target not in ("file", "the file", "settings", "url", "browser", "app"):
+        # 2. Comprehensive Application, Website & URL Intent (Fast-Track Zero-Prompt Dispatch)
+        # Matches: "open brave", "launch brave", "open brave browser", "let's open brave", "can you open brave", "bhai brave khol de", "brave kholo", etc.
+        m_app = re.search(
+            r"^(?:ok\s+|please\s+|can\s+you\s+|bhai\s+|bro\s+|let\'?s\s+)?(?:open|launch|start|run|visit|goto)\s+(?:the\s+)?(?:app\s+|application\s+|website\s+|site\s+|browser\s+)?([a-zA-Z0-9_\-\.\:\/ ]+?)(?:\s+(?:app|application|browser|for\s+me|please|bro|karo))?$",
+            p
+        )
+        if not m_app:
+            m_app = re.search(
+                r"^(?:ok\s+|please\s+|can\s+you\s+|bhai\s+|bro\s+)?([a-zA-Z0-9_\-\.\:\/ ]+?)\s+(?:the\s+)?(?:app\s+|application\s+|website\s+|site\s+|browser\s+)?(?:kholo|khol\s*do|khol\s*de|chalao|chala\s*de|start\s*karo|chala\s*do|chalu\s*karo|chalu\s*kar\s*do|open\s*karo|open\s*kar\s*do)$",
+                p
+            )
+        if m_app:
+            raw_target = m_app.group(1).strip()
+            clean_target = re.sub(r"\b(the|browser|app|application|site|website)\b", "", raw_target, flags=re.IGNORECASE).strip()
+            if clean_target and clean_target not in ("file", "the file", "settings", "url", "browser", "app"):
+                target = clean_target
                 clean_disp = target.replace(".exe", "").title()
-                return "open_app", {"app_name": target}, f"Haan Bro! Launching {clean_disp}..."
+                known_sites = {
+                    "google": "https://www.google.com",
+                    "youtube": "https://www.youtube.com",
+                    "yt": "https://www.youtube.com",
+                    "gmail": "https://mail.google.com",
+                    "amazon": "https://www.amazon.com",
+                    "flipkart": "https://www.flipkart.com",
+                    "github": "https://www.github.com",
+                    "twitter": "https://www.twitter.com",
+                    "x": "https://www.x.com",
+                    "reddit": "https://www.reddit.com",
+                    "chatgpt": "https://chatgpt.com",
+                    "netflix": "https://www.netflix.com",
+                    "spotify": "https://open.spotify.com",
+                    "brave": "brave"
+                }
+                t_lower = target.lower()
+                if t_lower in ("brave", "chrome", "firefox", "edge", "spotify", "notepad", "calculator", "calc", "terminal", "cmd", "vscode", "code"):
+                    return "open_app", {"app_name": t_lower}, f"Opening {clean_disp} Bro!"
+                if t_lower in known_sites:
+                    return "open_app", {"app_name": known_sites[t_lower]}, f"Opening {clean_disp} Bro!"
+                if target.startswith("http://") or target.startswith("https://"):
+                    return "open_app", {"app_name": target}, f"Opening {clean_disp} Bro!"
+                if any(target.endswith(tld) or f"{tld}/" in target for tld in (".com", ".org", ".net", ".in", ".co", ".io", ".app", ".dev", ".ai", ".tv")):
+                    return "open_app", {"app_name": f"https://{target}"}, f"Opening {clean_disp} Bro!"
+                return "open_app", {"app_name": target}, f"Opening {clean_disp} Bro!"
 
         # 8. Autonomous Document Synthesis & Obsidian Knowledge Intents (DOC-01, KNG-01)
         if p in (
@@ -531,35 +547,21 @@ class Orchestrator:
         direct_intent = self._detect_direct_intent(prompt)
         if direct_intent:
             tool_name, tool_args, reply_text = direct_intent
-            yield {"type": "state.change", "payload": {"state": "speaking"}}
-            yield {"type": "chat.token", "payload": {"token": reply_text + "\n", "index": 1}}
             yield {"type": "state.change", "payload": {"state": "thinking", "detail": f"Executing {tool_name}"}}
-            yield {"type": "chat.token", "payload": {"token": f"[Phenom Safety Gate: Requesting {tool_name}...\n", "index": 2}}
 
             try:
                 tool_result = await safety_engine.execute_tool(tool_name, tool_args)
-                res_val = tool_result.get("result")
-                if tool_name == "open_app":
-                    app_target = str(tool_args.get("app_name", ""))
-                    if "youtube" in app_target.lower():
-                        res_msg = "Done Bro! Opening YouTube for you. Enjoy the music!"
-                    else:
-                        clean_disp = app_target.split("\\")[-1].replace(".exe", "").title()
-                        res_msg = f"Done Bro! {clean_disp} is now running."
-                elif isinstance(res_val, dict) and "message" in res_val:
-                    res_msg = res_val["message"]
-                else:
-                    res_msg = f"Sab set hai Bro! {tool_name} executed."
-                yield {"type": "chat.token", "payload": {"token": res_msg + "\n", "index": 3}}
+                clean_reply = reply_text
             except Exception as tool_err:
-                res_msg = f"\n[Action Blocked or Failed: {tool_err}]"
-                yield {"type": "chat.token", "payload": {"token": res_msg, "index": 3}}
-            yield {"type": "chat.done", "payload": {"total_tokens": 15, "duration_s": 0.05, "tps": 100.0}}
+                clean_reply = f"[Action Blocked or Failed: {tool_err}]"
+
+            yield {"type": "state.change", "payload": {"state": "speaking"}}
+            yield {"type": "chat.token", "payload": {"token": clean_reply, "index": 1}}
+            yield {"type": "chat.done", "payload": {"total_tokens": 8, "duration_s": 0.05, "tps": 100.0, "full_text": clean_reply}}
             yield {"type": "state.change", "payload": {"state": "idle"}}
 
-            full_reply = f"{reply_text}\n{res_msg}"
             encrypted_db.add_message(os.urandom(8).hex(), "user", prompt, model="direct-intent")
-            encrypted_db.add_message(os.urandom(8).hex(), "assistant", full_reply, model="direct-intent", tokens=15)
+            encrypted_db.add_message(os.urandom(8).hex(), "assistant", clean_reply, model="direct-intent", tokens=8)
             return
 
         yield {"type": "state.change", "payload": {"state": "thinking"}}
@@ -625,6 +627,7 @@ class Orchestrator:
         collected_tokens = []
         is_first_token = True
 
+        suppress_stream = False
         try:
             if backend_type == "local":
                 # Stream from Ollama chat endpoint with native ChatML token separation
@@ -654,12 +657,17 @@ class Orchestrator:
                             chunk = json.loads(line)
                             token = chunk.get("message", {}).get("content", "")
                             if token:
-                                if is_first_token:
-                                    is_first_token = False
-                                    yield {"type": "state.change", "payload": {"state": "speaking"}}
-                                token_index += 1
                                 collected_tokens.append(token)
-                                yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
+                                accumulated = "".join(collected_tokens)
+                                if any(marker in accumulated for marker in ("** Tool", "**Tool", "** JSON", "**JSON", "```json", '{"tool":', '"tool":', 'This command will launch')):
+                                    suppress_stream = True
+
+                                if not suppress_stream:
+                                    if is_first_token:
+                                        is_first_token = False
+                                        yield {"type": "state.change", "payload": {"state": "speaking"}}
+                                    token_index += 1
+                                    yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
 
                             if chunk.get("done"):
                                 break
@@ -680,12 +688,17 @@ class Orchestrator:
                         return
                     if chunk.choices and chunk.choices[0].delta.content:
                         token = chunk.choices[0].delta.content
-                        if is_first_token:
-                            is_first_token = False
-                            yield {"type": "state.change", "payload": {"state": "speaking"}}
-                        token_index += 1
                         collected_tokens.append(token)
-                        yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
+                        accumulated = "".join(collected_tokens)
+                        if any(marker in accumulated for marker in ("** Tool", "**Tool", "** JSON", "**JSON", "```json", '{"tool":', '"tool":', 'This command will launch')):
+                            suppress_stream = True
+
+                        if not suppress_stream:
+                            if is_first_token:
+                                is_first_token = False
+                                yield {"type": "state.change", "payload": {"state": "speaking"}}
+                            token_index += 1
+                            yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
 
         except Exception as e:
             yield {"type": "error", "payload": {"message": f"Inference error: {str(e)}"}}
@@ -694,11 +707,11 @@ class Orchestrator:
 
         elapsed = time.perf_counter() - start_time
         tps = token_index / elapsed if elapsed > 0 else 0.0
-        full_reply = "".join(collected_tokens)
+        raw_llm_reply = "".join(collected_tokens)
 
         # 2. Check for Tool Call in Reply
         call_data = None
-        for m in re.finditer(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", full_reply, re.DOTALL):
+        for m in re.finditer(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", raw_llm_reply, re.DOTALL):
             try:
                 candidate = json.loads(m.group(1))
                 if isinstance(candidate, dict) and ("tool" in candidate or "action" in candidate or "app" in candidate):
@@ -708,7 +721,7 @@ class Orchestrator:
                 continue
 
         if not call_data:
-            for m in re.finditer(r"(\{[\s\S]*?\})", full_reply):
+            for m in re.finditer(r"(\{[\s\S]*?\})", raw_llm_reply):
                 try:
                     candidate = json.loads(m.group(1))
                     if isinstance(candidate, dict) and ("tool" in candidate or "action" in candidate or "app" in candidate):
@@ -718,49 +731,64 @@ class Orchestrator:
                     continue
 
         if not call_data:
-            m_yt = re.search(r"youtube[-_]play\s+[\"']([^\"']+)[\"']", full_reply, re.IGNORECASE)
+            m_yt = re.search(r"youtube[-_]play\s+[\"']([^\"']+)[\"']", raw_llm_reply, re.IGNORECASE)
             if m_yt:
                 call_data = {"tool": "youtube", "args": {"play": m_yt.group(1)}}
             else:
-                m_op = re.search(r"(?:open|launch)[-_]?(?:app)?\s+[\"']([^\"']+)[\"']", full_reply, re.IGNORECASE)
+                m_op = re.search(r"(?:open|launch)[-_]?(?:app)?\s+[\"']([^\"']+)[\"']", raw_llm_reply, re.IGNORECASE)
                 if m_op:
                     call_data = {"tool": "open_app", "args": {"app_name": m_op.group(1)}}
 
-
-
         if call_data:
             try:
-                pass # call_data parsed above
                 tool_name = call_data.get("tool")
                 tool_args = call_data.get("args", {})
                 if tool_name:
                     tool_name, tool_args = self._resolve_tool_alias(tool_name, tool_args)
-                    yield {"type": "state.change", "payload": {"state": "thinking", "detail": f"Executing {tool_name}"}}
-                    yield {"type": "chat.token", "payload": {"token": f"\n\n[Phenom Safety Gate: Requesting {tool_name}...]\n", "index": token_index + 1}}
                     
                     # Execute strictly through Safety Execution Engine
                     tool_result = await safety_engine.execute_tool(tool_name, tool_args)
                     
-                    yield {"type": "state.change", "payload": {"state": "speaking"}}
                     res_val = tool_result.get('result')
-                    if isinstance(res_val, dict) and 'briefing_markdown' in res_val:
-                        result_msg = f"\n{res_val['briefing_markdown']}\n"
-                    elif isinstance(res_val, dict) and 'message' in res_val and len(res_val.keys()) <= 3:
-                        result_msg = f"\n{res_val['message']}\n"
-                    elif tool_name == "open_app":
-                        app_target = str(tool_args.get("app_name", ""))
+                    app_target = str(tool_args.get("app_name", "") or tool_args.get("target", "") or tool_name)
+                    clean_disp = app_target.split("\\")[-1].replace(".exe", "").title()
+                    
+                    if tool_name == "open_app":
                         if "youtube" in app_target.lower():
-                            result_msg = "\nDone Bro! Opening YouTube for you. Enjoy the music!\n"
+                            action_resp = "Done Bro! Opening YouTube for you. Enjoy the music!"
                         else:
-                            clean_disp = app_target.split("\\")[-1].replace(".exe", "").title()
-                            result_msg = f"\nDone Bro! {clean_disp} is now running.\n"
+                            action_resp = f"Opening {clean_disp} Bro!"
+                    elif isinstance(res_val, dict) and 'briefing_markdown' in res_val:
+                        action_resp = res_val['briefing_markdown']
+                    elif isinstance(res_val, dict) and 'message' in res_val and len(res_val.keys()) <= 3:
+                        action_resp = res_val['message']
                     else:
-                        result_msg = f"\nSab set hai Bro! {tool_name} executed successfully.\n"
-                    yield {"type": "chat.token", "payload": {"token": result_msg, "index": token_index + 2}}
-                    full_reply += f"\n{result_msg}"
+                        action_resp = f"Sab set hai Bro! {tool_name} executed."
+
+                    # Sanitize any conversational preamble from LLM text
+                    sanitized_preamble = stream_sanitizer.sanitize(raw_llm_reply).clean_text
+                    if sanitized_preamble and sanitized_preamble.lower() not in action_resp.lower():
+                        full_reply = f"{sanitized_preamble}\n\n{action_resp}"
+                    else:
+                        full_reply = action_resp
+
+                    # If stream was suppressed or empty, yield the clean action message
+                    if suppress_stream or token_index == 0:
+                        yield {"type": "state.change", "payload": {"state": "speaking"}}
+                        token_index += 1
+                        yield {"type": "chat.token", "payload": {"token": full_reply, "index": token_index}}
+                    else:
+                        token_index += 1
+                        yield {"type": "chat.token", "payload": {"token": "\n" + action_resp, "index": token_index}}
             except Exception as tool_err:
-                yield {"type": "chat.token", "payload": {"token": f"\n[Action Blocked or Failed: {tool_err}]", "index": token_index + 1}}
-                full_reply += f"\n[Action Blocked: {tool_err}]"
+                blocked_msg = f"[Action Blocked or Failed: {tool_err}]"
+                token_index += 1
+                yield {"type": "chat.token", "payload": {"token": f"\n{blocked_msg}", "index": token_index}}
+                full_reply = blocked_msg
+        else:
+            # Pure conversational query without tool call: sanitize any noise
+            sanitized = stream_sanitizer.sanitize(raw_llm_reply)
+            full_reply = sanitized.clean_text
 
         # 3. Post-Task Persistence
         encrypted_db.add_message(os.urandom(8).hex(), "user", prompt, model=model_name)

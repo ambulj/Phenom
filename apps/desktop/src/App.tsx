@@ -5,7 +5,7 @@ import { DeveloperWorkspaceState } from './types/workspace';
 
 import { Orb, OrbQualityLevel } from './components/Orb';
 
-import { ChatBox } from './components/ChatBox';
+import { ChatBox, sanitizeChatText } from './components/ChatBox';
 
 import { ConfirmationModal } from './components/ConfirmationModal';
 
@@ -351,19 +351,16 @@ export const App: React.FC = () => {
             setStreamingText((prev) => prev + payload.token);
 
           } else if (mtype === 'chat.done') {
-
             setIsStreaming(false);
-
+            setStreamingText('');
             if (payload.full_text) {
-
-              setHistoryMessages((prev) => [
-
-                ...prev,
-
-                { id: `hist-${Date.now()}`, role: 'assistant', content: payload.full_text }
-
-              ]);
-
+              const cleanFull = sanitizeChatText(payload.full_text);
+              if (cleanFull) {
+                setHistoryMessages((prev) => [
+                  ...prev,
+                  { id: `hist-${Date.now()}`, role: 'assistant', content: cleanFull }
+                ]);
+              }
             }
 
           } else if (mtype === 'chat.cancelled') {
