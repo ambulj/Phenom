@@ -69,6 +69,7 @@ import { SandboxExecutionJailHUD } from './components/CyberHUD/SandboxExecutionJ
 import { SpatialVoiceSynapseHUD } from './components/CyberHUD/SpatialVoiceSynapseHUD';
 import { ResourceGovernorHUD } from './components/CyberHUD/ResourceGovernorHUD';
 import { ScreenGroundingHUD } from './components/CyberHUD/ScreenGroundingHUD';
+import { GuiActionPlayerHUD } from './components/CyberHUD/GuiActionPlayerHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -234,6 +235,8 @@ export const App: React.FC = () => {
   const [resourceGovernorExternalEvent, setResourceGovernorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showScreenGrounding, setShowScreenGrounding] = useState<boolean>(false);
   const [screenGroundingExternalEvent, setScreenGroundingExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showGuiActionPlayer, setShowGuiActionPlayer] = useState<boolean>(false);
+  const [guiActionPlayerExternalEvent, setGuiActionPlayerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -469,6 +472,8 @@ export const App: React.FC = () => {
             setResourceGovernorExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('grounding.') || mtype.startsWith('visual.')) {
             setScreenGroundingExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('actor.') || mtype.startsWith('gui.action')) {
+            setGuiActionPlayerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('scheduler.') || mtype.startsWith('proactive.')) {
             setProactiveSchedulerExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('screen.') || mtype.startsWith('gui.') || mtype.startsWith('SCREEN_VISION_')) {
@@ -1305,6 +1310,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowScreenGrounding((prev) => !prev)
     },
     {
+      id: 'cmd-gui-action-player-hud',
+      title: 'Toggle Declarative GUI Action Player HUD',
+      subtitle: 'Safe multi-step GUI interaction plan executor with human takeover protection',
+      category: 'Assistant',
+      onExecute: () => setShowGuiActionPlayer((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1673,6 +1685,19 @@ export const App: React.FC = () => {
         <ScreenGroundingHUD
           externalEvent={screenGroundingExternalEvent}
           onClose={() => setShowScreenGrounding(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Declarative GUI Action Player HUD (ACT-02, EXEC-03) */}
+      {showGuiActionPlayer && (
+        <GuiActionPlayerHUD
+          externalEvent={guiActionPlayerExternalEvent}
+          onClose={() => setShowGuiActionPlayer(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

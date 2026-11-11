@@ -2466,3 +2466,24 @@ All Phase 1 screen element segmentation, visual anchor lookups, and semantic coo
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts visual segmentation and semantic grounding in strictly $< 25.0$ ms.
+
+## 95. Milestone 25.0 â Phase 2: Intent-Driven Declarative GUI Action Synthesizer & Safe Step Executor (ACT-02, EXEC-03, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 action plan synthesis, step preview generation, and safe virtual GUI step dispatch tools are registered with services.backend.safety.registry.registry with Pydantic argument schemas and preview generators:
+
+- synthesize_gui_action_plan: **Tier 1** (Deconstructs a user goal into a validated sequence of declarative GUI interaction steps; requires confirmation).
+- preview_gui_action_step: **Tier 0** (Inspects and validates an individual GUI action step before execution; read-only preview).
+- execute_gui_action_step: **Tier 1** (Dispatches a single validated virtual GUI interaction step with coordinate bounds verification and human takeover checks; requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Every synthetic action plan routes through Tier 1 confirmation gating. The agent never executes mutating clicks or keystrokes autonomously without user approval.
+- **Rule 3 & Human Takeover (Takeover Abort)**: If the human operator moves the mouse or presses any takeover key during execution, the executor instantly trips ABORTED_BY_HUMAN and halts all queued actions.
+- **Rule 4 (Local Offline Processing)**: Action synthesis and virtual input dispatch occur 100% locally on the Windows host. Zero keystroke logs, cursor coordinates, or task instructions are transmitted to external cloud services.
+- **Rule 7 (Coordinate Bounds & Dry-Run Mode)**: Target coordinates are clamped to physical screen bounds (0..1920, 0..1080). Any out-of-bounds target is rejected with OUT_OF_BOUNDS. Dry-run mode allows full non-destructive step verification.
+- **Rule 8 (Payment Prohibitions)**: Both action plan synthesis and step execution strictly check for payment, checkout, credit card, and billing keywords, instantly aborting with Rule8ViolationError.
+- **Rule 11 (Credential Protection)**: No passwords or secret keys can be typed or logged via GUI action steps.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (emergency_stop()) synchronously terminates action plan synthesis and virtual GUI step execution in strictly $< 25.0$ ms.

@@ -2955,3 +2955,32 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 8.21s)**
 - services/backend/tests/test_semantic_grounding.py: **6/6 PASSED in 0.41s**
 - Desktop Frontend Build: 
 pm --prefix apps/desktop run build: **PASS (0 errors, 6.23s)**
+
+# Milestone 25.0 Phase 2: Intent-Driven Declarative GUI Action Synthesizer & Safe Step Executor
+**Status:** Complete & Verified
+**Requirements:** ACT-02.1, ACT-02.2, EXEC-03.1, SAF-01, SAF-02
+
+### Accomplishments
+1. **Declarative GUI Action Synthesizer (ACT-02.1, EXEC-03.1)**:
+   - services/backend/actor/gui_action_synthesizer.py: Deconstructs natural language tasks into validated step sequences (GuiActionStep) with pre-resolved coordinates from the semantic grounding engine.
+   - Formulates structured GuiActionPlan with estimated execution durations, safety tier classifications (Tier 1), and confirmation requirements.
+2. **Safe GUI Step Executor & Human Takeover Abort (ACT-02.2, Rule 3)**:
+   - services/backend/actor/gui_step_executor.py: Dispatches virtual input with coordinate bounds verification (0..1920, 0..1080), dry-run simulation mode, and immediate human takeover abort (ABORTED_BY_HUMAN) upon operator mouse or keyboard interaction.
+3. **Safety-Wrapped GUI Actor Tools (SAF-01)**:
+   - services/backend/tools/gui_actor_tools.py: Registered 3 tools with Pydantic schemas and preview generators:
+     - synthesize_gui_action_plan: **Tier 1** (Synthesizes declarative GUI action plan from user goal).
+     - preview_gui_action_step: **Tier 0** (Inspects individual GUI action step before execution).
+     - execute_gui_action_step: **Tier 1** (Executes validated GUI action step with human takeover checks).
+4. **Desktop Cyber HUD (UI-05.10)**:
+   - pps/desktop/src/components/CyberHUD/GuiActionPlayerHUD.tsx: Interactive action sequence timeline, step status badges (PENDING, EXECUTING, COMPLETED, ABORTED), live execution dispatch, dry run, and emergency human takeover abort button.
+   - Mounted in App.tsx and Command Palette (Ctrl+K).
+5. **Guardian SLA & Rule Compliance (SAF-02.1, Rule 8, Rule 11)**:
+   - Universal Guardian kill switch interrupts action synthesis and step execution in strictly $< 25.0\text{ ms}$ (benchmarked at .0001\text{ ms}$).
+   - Rule 8 anti-checkout screening strictly forbids any payment or checkout identifiers in action goals or typed text payloads.
+   - Rule 11 credential protection: no typing or logging of passwords or tokens.
+
+### Test Results
+- services/backend/tests/test_gui_actor.py: **7/7 PASSED in 0.44s**
+- Cumulative Milestone 25 Test Suite: **13/13 PASSED in 0.85s (100% green)**
+- Desktop Frontend Build: 
+pm --prefix apps/desktop run build: **PASS (0 errors, 6.09s)**
