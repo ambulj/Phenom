@@ -91,6 +91,7 @@ import { ScreenIntelligenceHUD } from './components/CyberHUD/ScreenIntelligenceH
 import { MultiAgentSwarmHUD } from './components/CyberHUD/MultiAgentSwarmHUD';
 import { FullDuplexVoiceHUD } from './components/CyberHUD/FullDuplexVoiceHUD';
 import { AmbientCompanionHUD } from './components/CyberHUD/AmbientCompanionHUD';
+import { VisionActionGroundingHUD } from './components/CyberHUD/VisionActionGroundingHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -296,6 +297,7 @@ export const App: React.FC = () => {
   const [showMultiAgentSwarm, setShowMultiAgentSwarm] = useState<boolean>(false);
   const [showFullDuplexVoice, setShowFullDuplexVoice] = useState<boolean>(false);
   const [showAmbientCompanion, setShowAmbientCompanion] = useState<boolean>(false);
+  const [showVisionActionGrounding, setShowVisionActionGrounding] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1526,6 +1528,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowAmbientCompanion((prev) => !prev)
     },
     {
+      id: 'cmd-vision-action-grounding-hud',
+      title: 'Toggle Vision-Action Grounding HUD',
+      subtitle: 'Visual coordinate prediction, desktop action primitives, and human takeover watchdog',
+      category: 'Assistant',
+      onExecute: () => setShowVisionActionGrounding((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2176,6 +2185,18 @@ export const App: React.FC = () => {
       {showAmbientCompanion && (
         <AmbientCompanionHUD
           onClose={() => setShowAmbientCompanion(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Vision-Action GUI Grounding & OS-World Windows 11 Automation HUD (ACT-01, GUI-02) */}
+      {showVisionActionGrounding && (
+        <VisionActionGroundingHUD
+          onClose={() => setShowVisionActionGrounding(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

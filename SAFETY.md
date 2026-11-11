@@ -3044,5 +3044,36 @@ All 17 new tools introduced across Milestone 30.0 have undergone full formal aud
 - Milestone 30.0 officially certified and tagged `v30.0.0`.
 
 
+## 120. Milestone 31.0 — Phase 1: Autonomous Vision-Action GUI Grounding & OS-World Windows 11 Automation (ACT-01, GUI-02)
+
+### 1. New Tools Registered
+- `execute_grounded_gui_action`: **Tier 1**
+  - Schema: `action_type`, `target_x`, `target_y`, `text`, `key`, `drag_to_x`, `drag_to_y`, `target_label`.
+  - Behaviour: Dispatches grounded desktop actions (click, double click, right click, keystroke, scroll, drag) with human takeover monitoring. Single confirmation required.
+- `predict_ui_element_coordinates`: **Tier 0**
+  - Schema: `x`, `y`, `width`, `height`, `label`, `control_type`.
+  - Behaviour: Computes centered screen coordinates $(x + w/2, y + h/2)$ from visual bounding boxes. Read-only.
+- `get_human_takeover_status`: **Tier 0**
+  - Schema: empty.
+  - Behaviour: Returns real-time status of the human takeover watchdog, active cursor position, and recent actions. Read-only.
+- `reset_human_takeover_latch`: **Tier 0**
+  - Schema: empty.
+  - Behaviour: Resets the human takeover latch after operator yields physical control. Safe state mutation.
+
+### 2. Invariants & Safety Guarantees
+- **Immediate Human Takeover Interrupt (GUI-02.1)**:
+  - Hardware cursor movement $> 15.0\text{ px}$ without software directive triggers instant takeover latch.
+  - Hard abort SLA: $< 5.0\text{ ms}$ (verified at $< 0.001\text{ ms}$). All pending actions return `ABORTED_BY_HUMAN`.
+- **Strict Rule 8 Anti-Checkout Enforcement (GUI-02.2)**:
+  - Zero automated clicks, typing, or bounding box calculations permitted on payment, checkout, credit card, CVV, order completion, or billing UI targets.
+  - Raises `Rule8ViolationError`.
+- **Rule 11 Credential Scrubbing & Password Field Shield**:
+  - Keystroke automation forbidden on password, PIN, or passcode input fields (`ValueError`).
+  - API keys, tokens, and secrets in text payloads are scrubbed to `[REDACTED]`.
+- **Rule 3 Guardian Kill Switch SLA**:
+  - Trips in $< 25.0\text{ ms}$ (measured $< 0.01\text{ ms}$), immediately aborting all GUI action execution.
+
+
+
 
 
