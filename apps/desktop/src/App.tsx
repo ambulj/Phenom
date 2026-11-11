@@ -84,6 +84,7 @@ import { GoalDecompositionTreeHUD } from './components/CyberHUD/GoalDecompositio
 import { AdaptiveBranchPlannerHUD } from './components/CyberHUD/AdaptiveBranchPlannerHUD';
 import { SelfHealingOrchestratorHUD } from './components/CyberHUD/SelfHealingOrchestratorHUD';
 import { ExecutionStreamShieldHUD } from './components/CyberHUD/ExecutionStreamShieldHUD';
+import { SafetyTierMatrixHUD } from './components/CyberHUD/SafetyTierMatrixHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -279,6 +280,8 @@ export const App: React.FC = () => {
   const [selfHealingOrchestratorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showExecutionStreamShield, setShowExecutionStreamShield] = useState<boolean>(false);
   const [executionStreamShieldExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSafetyTierMatrix, setShowSafetyTierMatrix] = useState<boolean>(false);
+  const [safetyTierMatrixExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1463,6 +1466,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowExecutionStreamShield((prev) => !prev)
     },
     {
+      id: 'cmd-safety-tier-matrix-hud',
+      title: 'Toggle Safety Tier Matrix HUD',
+      subtitle: 'Zero-prompt auto-execution matrix, risk tiers, and high-risk boundary gating',
+      category: 'Assistant',
+      onExecute: () => setShowSafetyTierMatrix((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2026,6 +2036,19 @@ export const App: React.FC = () => {
         <ExecutionStreamShieldHUD
           externalEvent={executionStreamShieldExternalEvent}
           onClose={() => setShowExecutionStreamShield(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Safety Tier Matrix & Pragmatic Auto-Execution HUD (TIER-01, AUTO-02) */}
+      {showSafetyTierMatrix && (
+        <SafetyTierMatrixHUD
+          externalEvent={safetyTierMatrixExternalEvent}
+          onClose={() => setShowSafetyTierMatrix(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

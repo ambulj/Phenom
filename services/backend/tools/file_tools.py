@@ -191,7 +191,7 @@ class RecycleDeleteArgs(BaseModel):
 
 @registry.register(
     name="recycle_delete",
-    tier=2,
+    tier=1,
     description="Move a file or folder safely to the Windows Recycle Bin (Never permanently delete)",
     args_schema=RecycleDeleteArgs,
     preview_fn=lambda a: f"SEND TO RECYCLE BIN: '{a.get('path')}' (Can be restored from Recycle Bin)",

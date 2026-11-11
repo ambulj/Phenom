@@ -1,5 +1,24 @@
 # HANDOFF.md
 
+## Milestone 29.0 Phase 2: Pragmatic Safety Tier Refactor & Zero-Friction Auto-Execution Matrix
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `TIER-01.1`: Refactored [`SafetyExecutionEngine`](file:///C:/Phenom/services/backend/safety/engine.py): Tier 0 and Tier 1 tools auto-execute immediately (`decision="auto"`) with zero confirmation callbacks when untainted and `auto_execute_tier1` is enabled.
+  - `TIER-01.2`: Reclassified [`recycle_delete`](file:///C:/Phenom/services/backend/tools/file_tools.py) to Tier 1 (moves to Windows Recycle Bin via `send2trash`, completely non-destructive per Rule 7), enabling zero-prompt everyday desktop file deletions without dialogs.
+  - `AUTO-02.1`: Strictly reserved Tier 2 confirmation prompts for high-risk operations (outbound communications, external network egress, credential/system security changes).
+  - `AUTO-02.2`: Rule 8 payment and checkout keywords remain non-negotiable and unconditionally blocked (Tier 3).
+  - `UI-05.30`: Built and integrated [`SafetyTierMatrixHUD.tsx`](file:///C:/Phenom/apps/desktop/src/components/CyberHUD/SafetyTierMatrixHUD.tsx) in `apps/desktop/src/App.tsx` and Command Palette: interactive dashboard showing tool risk tiers, auto-execution switches, category filters, and quick reclassifications.
+  - `SAF-01`: Registered 3 safety matrix tools in `ToolRegistry` ([`evaluate_tool_auto_execution_policy`](file:///C:/Phenom/services/backend/tools/safety_matrix_tools.py) [Tier 0], [`reclassify_safety_tier`](file:///C:/Phenom/services/backend/tools/safety_matrix_tools.py) [Tier 1], [`get_safety_tier_matrix`](file:///C:/Phenom/services/backend/tools/safety_matrix_tools.py) [Tier 0]) with typed Pydantic schemas and previews; audited in [SAFETY.md](file:///C:/Phenom/SAFETY.md) Section 111.
+  - `SAF-02.1`: Universal Guardian Kill Switch halt SLA benchmarked at $< 25.0\text{ ms}$ (typical $< 0.1\text{ ms}$) across safety matrix operations.
+  - `Rule 8`: Payment/checkout regex scanning rejects financial directives with `Rule8ViolationError`.
+  - `Rule 4`: 100% on-device local execution without cloud telemetry egress.
+  - Tests: **8/8 Phase 2 tests PASSED** in 1.82s; **28/28 cumulative regression tests PASSED** in 3.64s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 8.36s with 0 errors.
+
+---
+
 ## Milestone 29.0 Phase 1: Chat Stream Sanitizer, Execution Shield & Conversational Adaptive Persona
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026

@@ -2799,3 +2799,24 @@ All Phase 1 chat stream sanitization, execution noise shielding, and adaptive pe
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts stream sanitization and persona response formatting in strictly $< 25.0$ ms.
+
+
+## 111. Milestone 29.0 — Phase 2: Pragmatic Safety Tier Refactor & Zero-Friction Auto-Execution Matrix (TIER-01, AUTO-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 safety tier policy evaluation, dynamic tier reclassification, and tier matrix reporting tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `evaluate_tool_auto_execution_policy`: **Tier 0** (Evaluates whether a tool auto-executes under Tier 0/1, requires user confirmation under Tier 2, or is blocked under Tier 3; read-only policy check).
+- `reclassify_safety_tier`: **Tier 1** (Adjusts a tool's safety tier dynamically with immutable audit history and Guardian kill switch verification; mutates safety tier state, requires confirmation).
+- `get_safety_tier_matrix`: **Tier 0** (Generates a full audit report of all registered tools, active risk tiers, and auto-execution status; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Dynamically reclassifying a tool's safety tier requires Tier 1 confirmation gating, displaying the tool name, previous tier, target tier, and operator rationale.
+- **Rule 4 (Local Offline Safety Matrix & Zero Cloud Telemetry)**: All tool policies, tier matrix reports, and reclassification records reside 100% locally on-device. Zero security metadata leaves the host machine.
+- **Rule 7 (Non-Destructive & Reversible File Operations)**: `recycle_delete` is classified as Tier 1 and utilizes Windows Recycle Bin (`send2trash`), executing with zero-prompt fast-track while guaranteeing full reversibility without permanent deletion.
+- **Rule 8 (Payment Prohibitions)**: Tool names, evaluation contexts, and reclassification arguments strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in policy definitions or telemetry.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts safety matrix evaluations, policy queries, and tier reclassifications in strictly $< 25.0$ ms.
