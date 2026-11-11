@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "28.0.0",
-  "description": "Phenom 28.0: Sovereign Autonomous Goal-Decomposition Tree, Self-Directed Hierarchical Task Planning & Adaptive Multi-Path Execution Engine OS — Recursive Goal Decomposition Trees, Adaptive Speculative Branch Planners, Dynamic Self-Healing Workflow Orchestrator & Metacognitive Reflector",
+  "version": "29.0.0",
+  "description": "Phenom 29.0: Frictionless Natural Execution Engine, Silent Fast-Track Tooling & Voice-First Conversational Safety Guardrails OS — Chat Stream Sanitizer, Pragmatic Safety Tier Matrix, Conversational Spoken Confirmations, and Silent Activity Telemetry HUD",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
