@@ -89,6 +89,7 @@ import { VoiceConfirmationHUD } from './components/CyberHUD/VoiceConfirmationHUD
 import { SilentActivityMonitorHUD } from './components/CyberHUD/SilentActivityMonitorHUD';
 import { ScreenIntelligenceHUD } from './components/CyberHUD/ScreenIntelligenceHUD';
 import { MultiAgentSwarmHUD } from './components/CyberHUD/MultiAgentSwarmHUD';
+import { FullDuplexVoiceHUD } from './components/CyberHUD/FullDuplexVoiceHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -292,6 +293,7 @@ export const App: React.FC = () => {
   const [silentActivityMonitorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showScreenIntelligence, setShowScreenIntelligence] = useState<boolean>(false);
   const [showMultiAgentSwarm, setShowMultiAgentSwarm] = useState<boolean>(false);
+  const [showFullDuplexVoice, setShowFullDuplexVoice] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1508,6 +1510,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowMultiAgentSwarm((prev) => !prev)
     },
     {
+      id: 'cmd-full-duplex-voice-hud',
+      title: 'Toggle Full-Duplex Voice & Barge-In HUD',
+      subtitle: 'Sub-15ms speech interruption with Silero VAD ONNX and natural turn-taking state machine',
+      category: 'Assistant',
+      onExecute: () => setShowFullDuplexVoice((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2134,6 +2143,18 @@ export const App: React.FC = () => {
       {showMultiAgentSwarm && (
         <MultiAgentSwarmHUD
           onClose={() => setShowMultiAgentSwarm(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Full-Duplex Conversational Voice & Acoustic Barge-In HUD (VOICE-01, BARGE-02) */}
+      {showFullDuplexVoice && (
+        <FullDuplexVoiceHUD
+          onClose={() => setShowFullDuplexVoice(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

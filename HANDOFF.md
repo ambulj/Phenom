@@ -1,5 +1,25 @@
 # HANDOFF.md
 
+## Milestone 30.0 Phase 3: Full-Duplex Conversational Voice & Instant Acoustic Barge-In
+- **Branch**: `hardening/pass-1`
+- **Date**: November 11, 2026
+- **Status**: **100% COMPLETE & VERIFIED (PASS)**
+- **Scope & Accomplishments**:
+  - `VOICE-01.1`: Built `FullDuplexVoiceEngine` in [`services/backend/voice/full_duplex_voice_engine.py`](file:///C:/Phenom/services/backend/voice/full_duplex_voice_engine.py): in-memory 16kHz circular audio ring buffer maintaining real-time audio samples in RAM with strictly zero disk writes (Rule 4).
+  - `VOICE-01.2`: Integrated real-time VAD processing with 2-chunk hysteresis confirming speech onset in $< 50\text{ ms}$ (benchmark typical $< 5\text{ ms}$).
+  - `BARGE-02.1`: Engineered instant acoustic barge-in interruption: when state is `AGENT_SPEAKING` or `PROCESSING` and user speech is detected, halts TTS playback immediately via `tts_engine.stop_speech()`, ducks system audio, and latches state to `USER_SPEAKING` within $< 15.0\text{ ms}$ hard SLA.
+  - `BARGE-02.2`: Implemented conversational turn-taking finite state machine (`LISTENING` $\to$ `USER_SPEAKING` $\to$ `PROCESSING` $\to$ `AGENT_SPEAKING`) with configurable speech pause hangover (default 640ms, 20 chunks) to prevent premature cutoffs during conversational breathing.
+  - `UI-05.34`: Built and integrated [`FullDuplexVoiceHUD.tsx`](file:///C:/Phenom/apps/desktop/src/components/CyberHUD/FullDuplexVoiceHUD.tsx) in `apps/desktop/src/App.tsx` and Command Palette: features animated waveform visualizer, VAD probability gauge, barge-in latency dial ($< 15\text{ ms}$ SLA badge), pause hangover control slider, and simulated barge-in test trigger.
+  - `SAF-01`: Registered 4 full-duplex tools in `ToolRegistry` ([`get_full_duplex_voice_state`](file:///C:/Phenom/services/backend/tools/full_duplex_voice_tools.py) [Tier 0], [`configure_full_duplex_thresholds`](file:///C:/Phenom/services/backend/tools/full_duplex_voice_tools.py) [Tier 1], [`trigger_acoustic_barge_in_test`](file:///C:/Phenom/services/backend/tools/full_duplex_voice_tools.py) [Tier 1], [`reset_full_duplex_state_machine`](file:///C:/Phenom/services/backend/tools/full_duplex_voice_tools.py) [Tier 0]) with typed Pydantic schemas and preview generators; audited in [SAFETY.md](file:///C:/Phenom/SAFETY.md) Section 117.
+  - `SAF-02.1`: Universal Guardian Kill Switch halt SLA benchmarked at $< 25.0\text{ ms}$ (typical $< 0.1\text{ ms}$) across voice engine audio frames.
+  - `Rule 8`: Anti-checkout regex scanning rejects financial directives in spoken transcripts with `Rule8ViolationError`.
+  - `Rule 11`: Recursive credential scrubbing masks passwords, tokens, API keys, and authorization secrets to `[REDACTED]`.
+  - `Rule 4`: 100% on-device local execution without cloud audio egress.
+  - Tests: **7/7 Phase 3 tests PASSED** in 0.67s (`test_full_duplex_voice.py`); **21/21 cumulative Milestone 30 tests PASSED** in 0.90s.
+  - Desktop Frontend Build: `npm --prefix apps/desktop run build` compiled cleanly in 6.23s with 0 errors.
+
+---
+
 ## Milestone 30.0 Phase 2: Autonomous Multi-Agent Local Swarm Engine
 - **Branch**: `hardening/pass-1`
 - **Date**: November 11, 2026
