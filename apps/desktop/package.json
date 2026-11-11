@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "29.0.0",
-  "description": "Phenom 29.0: Frictionless Natural Execution Engine, Silent Fast-Track Tooling & Voice-First Conversational Safety Guardrails OS — Chat Stream Sanitizer, Pragmatic Safety Tier Matrix, Conversational Spoken Confirmations, and Silent Activity Telemetry HUD",
+  "version": "30.0.0",
+  "description": "Phenom 30.0: Autonomous Multi-Agent Swarm, Real-Time Screen Intelligence & Full-Duplex Voice Companion OS — Real-Time Screen Intelligence & Visual Task Tracker, Autonomous Multi-Agent Local Swarm Engine, Full-Duplex Conversational Voice with Instant Acoustic Barge-In, and Ambient Context Watchdog & Telegram Super-Companion v2",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
