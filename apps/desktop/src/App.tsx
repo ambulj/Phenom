@@ -87,6 +87,7 @@ import { ExecutionStreamShieldHUD } from './components/CyberHUD/ExecutionStreamS
 import { SafetyTierMatrixHUD } from './components/CyberHUD/SafetyTierMatrixHUD';
 import { VoiceConfirmationHUD } from './components/CyberHUD/VoiceConfirmationHUD';
 import { SilentActivityMonitorHUD } from './components/CyberHUD/SilentActivityMonitorHUD';
+import { ScreenIntelligenceHUD } from './components/CyberHUD/ScreenIntelligenceHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -288,6 +289,7 @@ export const App: React.FC = () => {
   const [voiceConfirmationExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showSilentActivityMonitor, setShowSilentActivityMonitor] = useState<boolean>(false);
   const [silentActivityMonitorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showScreenIntelligence, setShowScreenIntelligence] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1490,6 +1492,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSilentActivityMonitor((prev) => !prev)
     },
     {
+      id: 'cmd-screen-intelligence-hud',
+      title: 'Toggle Screen Intelligence HUD',
+      subtitle: 'Real-time offline VLM task tracker, visual UI bounding boxes, and screen-region OCR',
+      category: 'Assistant',
+      onExecute: () => setShowScreenIntelligence((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2092,6 +2101,18 @@ export const App: React.FC = () => {
         <SilentActivityMonitorHUD
           externalEvent={silentActivityMonitorExternalEvent}
           onClose={() => setShowSilentActivityMonitor(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Real-Time Screen Intelligence & Visual Task Tracker HUD (VIS-01, OCR-02) */}
+      {showScreenIntelligence && (
+        <ScreenIntelligenceHUD
+          onClose={() => setShowScreenIntelligence(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

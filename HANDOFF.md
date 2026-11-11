@@ -3499,3 +3499,32 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 9.85s)**
 - `services/backend/tests/test_milestone_29_safety_chaos_release.py`: **4/4 PASSED in 0.65s**
 - Total Milestone 29 Tests: **39/39 PASSED in 2.05s**
 - Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 10.89s)**
+
+
+# Milestone 30.0 Phase 1: Real-Time Screen Intelligence & Visual Task Tracker (`VIS-01`, `OCR-02`)
+
+## Accomplishments
+1. **Core Screen Intelligence Tracker (`services/backend/vision/screen_intelligence_tracker.py`)**:
+   - Built `ScreenIntelligenceTracker` supporting in-RAM visual frame buffers, foreground window spatial detection, and Moondream/VLM UI bounding box layout mapping in $< 350\text{ ms}$ (Rule 4 local on-device).
+   - Fast local screen-region OCR extraction with automatic Rule 11 credential scrubbing masking tokens, passwords, and API keys with `[REDACTED]`.
+   - On-screen error & crash diagnosis scanning for unhandled exceptions, fatal error dialogs, and application hangs with actionable remediation advice.
+   - Enforced Rule 8 anti-checkout rejection with `Rule8ViolationError` and Guardian kill switch SLA $< 25.0\text{ ms}$.
+2. **Safety-Wrapped Tool Definitions (`services/backend/tools/screen_intelligence_tools.py`)**:
+   - `capture_screen_intelligence_context`: **Tier 0** (Active foreground visual context and bounding boxes).
+   - `extract_screen_region_ocr`: **Tier 0** (Screen-region OCR text extraction with credential masking).
+   - `diagnose_on_screen_errors`: **Tier 0** (On-screen crash dialog and exception scanning).
+   - `set_screen_intelligence_tracking_mode`: **Tier 1** (Configures OFF, ACTIVE, and LOW_POWER tracking).
+   - `get_screen_intelligence_metrics`: **Tier 0** (Telemetry query for captures, OCR word count, and error count).
+3. **Desktop Cyber HUD (`ScreenIntelligenceHUD.tsx`)**:
+   - Built interactive `ScreenIntelligenceHUD.tsx` in `apps/desktop/src/components/CyberHUD/` providing visual element list, interactive OCR text inspector with 1-click copy, and on-screen error diagnosis alerts.
+   - Mounted in `App.tsx` and Command Palette (`Ctrl+K`).
+4. **Safety & Test Verification**:
+   - Documented Section 115 in `SAFETY.md`.
+   - Built `services/backend/tests/test_screen_intelligence_tracker.py`: **7/7 PASSED in 0.52s**.
+   - Cumulative 47/47 tests passed.
+   - Production Vite frontend build: **0 errors in 8.22s**.
+
+## Test Results
+- `services/backend/tests/test_screen_intelligence_tracker.py`: **7/7 PASSED in 0.52s**
+- Cumulative Test Suite: **47/47 PASSED in 1.68s**
+- Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 8.22s)**
