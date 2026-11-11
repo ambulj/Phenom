@@ -73,6 +73,7 @@ import { GuiActionPlayerHUD } from './components/CyberHUD/GuiActionPlayerHUD';
 import { CrossAppWorkflowHUD } from './components/CyberHUD/CrossAppWorkflowHUD';
 import { DesktopWatchdogHUD } from './components/CyberHUD/DesktopWatchdogHUD';
 import { MemoryConsolidationHUD } from './components/CyberHUD/MemoryConsolidationHUD';
+import { EpistemicBeliefNetworkHUD } from './components/CyberHUD/EpistemicBeliefNetworkHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -246,6 +247,8 @@ export const App: React.FC = () => {
   const [desktopWatchdogExternalEvent, setDesktopWatchdogExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showMemoryConsolidation, setShowMemoryConsolidation] = useState<boolean>(false);
   const [memoryConsolidationExternalEvent, setMemoryConsolidationExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showEpistemicBeliefNetwork, setShowEpistemicBeliefNetwork] = useState<boolean>(false);
+  const [epistemicBeliefNetworkExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1353,6 +1356,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowMemoryConsolidation((prev) => !prev)
     },
     {
+      id: 'cmd-epistemic-belief-hud',
+      title: 'Toggle Epistemic Belief Network HUD',
+      subtitle: 'Bayesian proposition weights, contradiction detection, and revision audit history',
+      category: 'Assistant',
+      onExecute: () => setShowEpistemicBeliefNetwork((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1773,6 +1783,19 @@ export const App: React.FC = () => {
         <MemoryConsolidationHUD
           externalEvent={memoryConsolidationExternalEvent}
           onClose={() => setShowMemoryConsolidation(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Epistemic Belief Network HUD (EPI-01, RES-03) */}
+      {showEpistemicBeliefNetwork && (
+        <EpistemicBeliefNetworkHUD
+          externalEvent={epistemicBeliefNetworkExternalEvent}
+          onClose={() => setShowEpistemicBeliefNetwork(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

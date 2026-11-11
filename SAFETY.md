@@ -2547,3 +2547,24 @@ All Phase 1 episodic memory consolidation, hierarchical abstraction graph queryi
 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (emergency_stop()) synchronously interrupts memory consolidation passes and graph queries in strictly $< 25.0$ ms.
+
+## 99. Milestone 26.0 — Phase 2: Autonomous Epistemic Belief Updating & Contradiction Resolver (EPI-01, RES-03, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 2 epistemic belief management, contradiction detection, and revision tracking tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `update_epistemic_belief`: **Tier 1** (Updates or asserts an epistemic belief proposition with Bayesian confidence tracking and revision logging; requires confirmation).
+- `resolve_belief_contradiction`: **Tier 0** (Evaluates whether a new proposition contradicts current beliefs and calculates the rational resolution strategy; read-only analysis).
+- `get_active_belief_network`: **Tier 0** (Retrieves the full epistemic belief network including propositions, confidence scores, and revision history; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Asserting and updating belief propositions requires Tier 1 confirmation gating, displaying previewed subject, predicate, value, and confidence shift.
+- **Rule 4 (Local Offline Belief Network & Zero Cloud Egress)**: All epistemic propositions, Bayesian confidence priors, and contradiction resolutions reside 100% locally on-device. Zero beliefs or revision logs are sent to cloud services.
+- **Rule 7 (Reversibility & Bayesian Revision Audit Log)**: Every belief proposition update preserves full revision history (`BeliefRevisionRecord`) capturing prior values, confidence deltas, and explanatory rationale. Reverting or restoring prior beliefs is fully supported.
+- **Rule 8 (Payment Prohibitions)**: Epistemic belief propositions, predicates, values, and contradiction analyses strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private credentials, or secrets are accepted or logged in epistemic belief propositions or revision records.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts belief updates and contradiction evaluations in strictly $< 25.0$ ms.
+
