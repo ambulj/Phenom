@@ -2728,6 +2728,27 @@ All Phase 2 speculative branch generation, branch pruning, and comparative risk 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts speculative branch generation, risk matrix evaluation, and branch pruning in strictly $< 25.0$ ms.
 
+## 108. Milestone 28.0 — Phase 3: Self-Healing Dynamic Workflow Orchestrator & Error Interceptor (HEAL-01, ORCH-04, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 3 error interception, dynamic sub-plan grafting, and self-healing telemetry inspection tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `intercept_and_heal_failure`: **Tier 1** (Diagnoses execution failure, classifies fault taxonomy, and dynamically grafts compensatory sub-plans into the active plan tree; mutates plan tree, requires confirmation).
+- `diagnose_execution_error`: **Tier 0** (Classifies a raw execution error into standard fault taxonomies and recommends recovery strategies; read-only diagnosis).
+- `get_active_healing_journal`: **Tier 0** (Retrieves the persistent self-healing audit journal, diagnosed root causes, and resolution telemetry; read-only query).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Grafting compensatory repair sub-plans into the live plan tree requires Tier 1 confirmation gating, displaying the failing node ID, error taxonomy, and recommended strategy.
+- **Rule 4 (Local Offline Self-Healing & Zero Cloud Telemetry)**: All error tracebacks, symptom signatures, taxonomy classifications, and healing journals reside 100% locally on-device. Zero error dumps or telemetry leave the local environment.
+- **Rule 7 (Reversibility & Non-Destructive Plan Mutation)**: Self-healing does not delete or overwrite failing nodes. The failing node is marked `BLOCKED` and compensatory nodes are grafted beneath it, maintaining complete traceability and parent-child integrity.
+- **Rule 8 (Payment Prohibitions)**: Raw error messages, failing node IDs, and repair parameters strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or secrets are accepted or logged in error diagnostics or healing journal records.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts error interception, failure diagnosis, and repair sub-plan grafting in strictly $< 25.0$ ms.
+
+
 
 
 

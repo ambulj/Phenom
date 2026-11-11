@@ -82,6 +82,7 @@ import { SwarmConsensusCRDTHUD } from './components/CyberHUD/SwarmConsensusCRDTH
 import { SwarmWatchdogArbiterHUD } from './components/CyberHUD/SwarmWatchdogArbiterHUD';
 import { GoalDecompositionTreeHUD } from './components/CyberHUD/GoalDecompositionTreeHUD';
 import { AdaptiveBranchPlannerHUD } from './components/CyberHUD/AdaptiveBranchPlannerHUD';
+import { SelfHealingOrchestratorHUD } from './components/CyberHUD/SelfHealingOrchestratorHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -273,6 +274,8 @@ export const App: React.FC = () => {
   const [goalDecompositionTreeExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAdaptiveBranchPlanner, setShowAdaptiveBranchPlanner] = useState<boolean>(false);
   const [adaptiveBranchPlannerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showSelfHealingOrchestrator, setShowSelfHealingOrchestrator] = useState<boolean>(false);
+  const [selfHealingOrchestratorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1443,6 +1446,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowAdaptiveBranchPlanner((prev) => !prev)
     },
     {
+      id: 'cmd-self-healing-orchestrator-hud',
+      title: 'Toggle Self-Healing Orchestrator HUD',
+      subtitle: 'Dynamic failure interception, error taxonomy classification, and compensatory plan grafting',
+      category: 'Assistant',
+      onExecute: () => setShowSelfHealingOrchestrator((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1980,6 +1990,19 @@ export const App: React.FC = () => {
         <AdaptiveBranchPlannerHUD
           externalEvent={adaptiveBranchPlannerExternalEvent}
           onClose={() => setShowAdaptiveBranchPlanner(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Self-Healing Dynamic Workflow Orchestrator HUD (HEAL-01, ORCH-04) */}
+      {showSelfHealingOrchestrator && (
+        <SelfHealingOrchestratorHUD
+          externalEvent={selfHealingOrchestratorExternalEvent}
+          onClose={() => setShowSelfHealingOrchestrator(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
