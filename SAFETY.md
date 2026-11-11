@@ -2588,4 +2588,25 @@ All Phase 3 world-model simulation, counterfactual evaluation, and side-effect f
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts world-model simulation runs and counterfactual evaluations in strictly $< 25.0$ ms.
 
+## 101. Milestone 26.0 — Phase 4: Adaptive Cognitive Load Balancer & Ambient Attentional Pacing (COG-03, PAC-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+
+All Phase 4 cognitive load tracking, attentional notification pacing, and queue flushing tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+
+- `get_cognitive_load_state`: **Tier 0** (Inspects real-time cognitive load score, attentional state, and deferred notification queue; read-only telemetry query).
+- `pace_notification_dispatch`: **Tier 0** (Evaluates cognitive load to determine whether to deliver notification immediately or queue it; read-only pacing decision).
+- `flush_deferred_notifications`: **Tier 1** (Flushes and delivers all pending notifications deferred during deep flow states; requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 & Rule 3 (Safety Priority Punch-Through)**: While standard proactive suggestions are paced or queued during `DEEP_FLOW` states, critical safety notifications (`CRITICAL_SAFETY`) and kill-switch alerts ALWAYS immediately punch through regardless of cognitive load.
+- **Rule 4 (Local Offline Pacing & Zero Telemetry Egress)**: Keystroke/click velocity calculations, window dwell timers, and attentional focus scores are processed 100% locally on-device. Zero telemetry or user activity habits leave the local machine.
+- **Rule 7 (Reversibility & Zero Notification Loss)**: Non-critical notifications suppressed during deep flow are never discarded; they are buffered in an in-memory queue (`PacedNotification`) and delivered automatically or on-demand via `flush_deferred_notifications`.
+- **Rule 8 (Payment Prohibitions)**: Notification titles, bodies, priorities, event types, and window titles strictly screen and reject payment, checkout, credit card, and billing keywords with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No passwords, private tokens, or keystroke contents are ever captured or logged by the cognitive load tracker (timing and frequency only).
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.trigger()`) synchronously interrupts cognitive load tracking and attentional pacing in strictly $< 25.0$ ms.
+
+
 

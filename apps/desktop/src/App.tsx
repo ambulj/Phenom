@@ -75,6 +75,7 @@ import { DesktopWatchdogHUD } from './components/CyberHUD/DesktopWatchdogHUD';
 import { MemoryConsolidationHUD } from './components/CyberHUD/MemoryConsolidationHUD';
 import { EpistemicBeliefNetworkHUD } from './components/CyberHUD/EpistemicBeliefNetworkHUD';
 import { WorldModelSimulatorHUD } from './components/CyberHUD/WorldModelSimulatorHUD';
+import { CognitiveLoadBalancerHUD } from './components/CyberHUD/CognitiveLoadBalancerHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -252,6 +253,8 @@ export const App: React.FC = () => {
   const [epistemicBeliefNetworkExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showWorldModelSimulator, setShowWorldModelSimulator] = useState<boolean>(false);
   const [worldModelSimulatorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showCognitiveLoadBalancer, setShowCognitiveLoadBalancer] = useState<boolean>(false);
+  const [cognitiveLoadBalancerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1373,6 +1376,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowWorldModelSimulator((prev) => !prev)
     },
     {
+      id: 'cmd-cognitive-load-balancer-hud',
+      title: 'Toggle Cognitive Load Balancer HUD',
+      subtitle: 'Attentional focus pacing, interaction velocity meters, and deferred notification queue',
+      category: 'Assistant',
+      onExecute: () => setShowCognitiveLoadBalancer((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -1819,6 +1829,19 @@ export const App: React.FC = () => {
         <WorldModelSimulatorHUD
           externalEvent={worldModelSimulatorExternalEvent}
           onClose={() => setShowWorldModelSimulator(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* Cognitive Load Balancer & Attentional Pacing HUD (COG-03, PAC-01) */}
+      {showCognitiveLoadBalancer && (
+        <CognitiveLoadBalancerHUD
+          externalEvent={cognitiveLoadBalancerExternalEvent}
+          onClose={() => setShowCognitiveLoadBalancer(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
