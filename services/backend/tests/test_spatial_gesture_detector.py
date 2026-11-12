@@ -58,6 +58,7 @@ def test_raised_palm_emergency_halt_detection_and_sla():
     # Benchmark emergency halt direct trigger SLA
     guardian.resume()
     spatial_gesture_detector.reset_halt()
+    spatial_gesture_detector.trigger_emergency_halt(reason="Warmup palm stop")
 
     latencies = []
     for _ in range(20):

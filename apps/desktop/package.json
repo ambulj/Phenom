@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "32.0.0",
-  "description": "Phenom 32.0: Sovereign Cross-App Workflow Orchestrator, Multi-Modal Macro Engine & Dynamic Tool Foundry — Multi-Step Cross-Application Workflow Orchestrator & State Checkpoints, Natural Language Macro Synthesizer & Visual Action Recorder, Dynamic Micro-Tool Synthesis & AST-Guarded Sandbox Foundry, and CyberHUD Visualizers",
+  "version": "33.0.0",
+  "description": "Phenom 33.0: Jarvis Ambient Physical Presence & Multi-Modal Sensory Awareness OS — Attentive Gaze & User Engagement Tracker, Touchless Spatial Gesture Control & Hand-Tracked Safety Halt, Spatial Acoustic Dynamics, Proximity Adaptation & Privacy Shutter, and CyberHUD Sensory Presence Dashboard",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
