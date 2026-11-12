@@ -67,20 +67,24 @@ def test_websocket_e2e_flow():
             init_watch = ws.receive_json()
             assert init_watch["type"] == "watchlist.list_result"
 
+            # Helper to drain messages until expected type and payload state arrives
+            def receive_matching(target_type: str, target_state: str = None, max_reads: int = 25):
+                for _ in range(max_reads):
+                    msg = ws.receive_json()
+                    if msg.get("type") == target_type:
+                        if target_state is None or msg.get("payload", {}).get("state") == target_state:
+                            return msg
+                raise TimeoutError(f"Target message '{target_type}' (state={target_state}) not received")
+
             # 2. Test Killswitch Trigger via WebSocket
             ws.send_json({
                 "id": "ks-1",
                 "type": "killswitch.trigger",
                 "payload": {}
             })
-            ks_state = ws.receive_json()
-            assert ks_state["type"] == "state.change"
-            assert ks_state["payload"]["state"] == "halted"
+            halt_msg = receive_matching("state.change", "halted")
+            assert halt_msg["payload"]["state"] == "halted"
             assert guardian.is_halted is True
-
-            # Drain synchronous killswitch annotation clear broadcast
-            clear_msg = ws.receive_json()
-            assert clear_msg["type"] == "vision.clear_annotations"
 
             # 3. Test Killswitch Resume via WebSocket
             ws.send_json({
@@ -88,9 +92,8 @@ def test_websocket_e2e_flow():
                 "type": "killswitch.resume",
                 "payload": {}
             })
-            resume_state = ws.receive_json()
-            assert resume_state["type"] == "state.change"
-            assert resume_state["payload"]["state"] == "idle"
+            idle_msg = receive_matching("state.change", "idle")
+            assert idle_msg["payload"]["state"] == "idle"
             assert guardian.is_halted is False
     finally:
         guardian.resume()

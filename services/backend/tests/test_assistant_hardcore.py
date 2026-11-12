@@ -257,32 +257,42 @@ async def test_hardcore_unregistered_tool_blocked_tier3():
 @pytest.mark.asyncio
 async def test_hardcore_tier2_confirmation_denial_and_approval(tmp_path):
     """Verify Tier 2 confirmation workflow: user denial cancels, user approval executes."""
+    from services.backend.safety.tier_matrix import safety_tier_matrix_manager
     test_file = tmp_path / "hardcore_delete_test.txt"
     test_file.write_text("Phenom Hardcore Test Payload", encoding="utf-8")
     assert test_file.exists()
 
-    # Case A: User Denies Confirmation
-    async def mock_user_denial(*args, **kwargs):
-        return ("denied", False)
+    old_auto = safety_engine.auto_execute_tier1
+    old_matrix_auto = safety_tier_matrix_manager.auto_execute_tier1
+    safety_engine.auto_execute_tier1 = False
+    safety_tier_matrix_manager.auto_execute_tier1 = False
 
-    safety_engine.set_confirmation_handler(mock_user_denial)
+    try:
+        # Case A: User Denies Confirmation
+        async def mock_user_denial(*args, **kwargs):
+            return ("denied", False)
 
-    with pytest.raises(PermissionError) as exc_info:
-        await safety_engine.execute_tool("recycle_delete", {"path": str(test_file)})
-    assert "denied" in str(exc_info.value).lower()
-    # File must still exist!
-    assert test_file.exists()
+        safety_engine.set_confirmation_handler(mock_user_denial)
 
-    # Case B: User Approves Confirmation
-    async def mock_user_approval(*args, **kwargs):
-        return ("approved", False)
+        with pytest.raises(PermissionError) as exc_info:
+            await safety_engine.execute_tool("recycle_delete", {"path": str(test_file)})
+        assert "denied" in str(exc_info.value).lower()
+        # File must still exist!
+        assert test_file.exists()
 
-    safety_engine.set_confirmation_handler(mock_user_approval)
+        # Case B: User Approves Confirmation
+        async def mock_user_approval(*args, **kwargs):
+            return ("approved", False)
 
-    res = await safety_engine.execute_tool("recycle_delete", {"path": str(test_file)})
-    assert res.get("status") == "success"
-    # File safely moved to recycle bin
-    assert not test_file.exists()
+        safety_engine.set_confirmation_handler(mock_user_approval)
+
+        res = await safety_engine.execute_tool("recycle_delete", {"path": str(test_file)})
+        assert res.get("status") == "success"
+        # File safely moved to recycle bin
+        assert not test_file.exists()
+    finally:
+        safety_engine.auto_execute_tier1 = old_auto
+        safety_tier_matrix_manager.auto_execute_tier1 = old_matrix_auto
 
 
 # =========================================================================

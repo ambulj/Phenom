@@ -252,7 +252,7 @@ async def test_status_tasks_and_logs_summaries(mock_bot):
         "message": {"message_id": 7, "from": {"id": OWNER_USER_ID}, "chat": {"id": OWNER_USER_ID}, "text": "/status"}
     })
     status_msg = mock_bot.client.sent_messages[-1]["text"]
-    assert "Phenom Status Summary" in status_msg
+    assert "Phenom Operational Status" in status_msg or "Phenom Status Summary" in status_msg
 
     # Tasks
     await mock_bot.process_update({

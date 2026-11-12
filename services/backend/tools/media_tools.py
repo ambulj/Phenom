@@ -87,7 +87,7 @@ def broadcast_media_event(event_type: str, payload: Dict[str, Any]):
 # Guardian Kill Switch audio silence hook (SAF-02 < 10ms SLA)
 def _on_guardian_media_halt(reason: str):
     """Synchronously mutes all active audio on Guardian kill switch halt."""
-    if reason != "halted":
+    if reason == "idle":
         return
     was_playing = _current_media_state.get("state") == "playing"
     _current_media_state["muted"] = True

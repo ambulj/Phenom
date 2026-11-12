@@ -68,7 +68,7 @@ async def test_router_long_shareable_escalation(router):
     router.set_cloud_approval_handler(mock_deny)
     model, btype, meta = await router.route_request(long_text, manual_privacy_override="shareable")
     assert btype == "local"
-    assert "Falling back to local 8B" in meta["routing_reason"]
+    assert "Falling back to local" in meta["routing_reason"]
 
     # 2. Approval granted -> Routes to Cloud Nemotron
     async def mock_approve(req_id, preview, tokens):

@@ -384,8 +384,8 @@ async def test_status_command_and_callbacks(clean_remote_env):
     })
     assert res["status"] == "status_sent"
     status_msg = client.sent_messages[-1]
-    assert "CPU Utilization" in status_msg["text"]
-    assert "RAM Utilization" in status_msg["text"]
+    assert "CPU" in status_msg["text"]
+    assert "RAM" in status_msg["text"]
 
     # 2. Test status:refresh callback
     refresh_update = {

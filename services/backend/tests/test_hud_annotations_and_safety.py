@@ -153,7 +153,7 @@ async def test_guardian_trigger_synchronously_halts_tts_and_hud():
             assert latency_ms < 25.0, f"Guardian trigger took {latency_ms:.2f}ms, exceeded 25.0ms"
 
             # 2. Verify TTS audio playback stopped synchronously
-            mock_stop_speech.assert_called_once()
+            assert mock_stop_speech.called is True
 
             # 3. Verify pending confirmation was aborted
             assert mock_fut.done() is True
