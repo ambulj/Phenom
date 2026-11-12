@@ -192,7 +192,8 @@ class SafetyExecutionEngine:
 
         if tier == 1 and not taint_tracker.is_tainted:
             from services.backend.safety.tier_matrix import safety_tier_matrix_manager
-            if safety_tier_matrix_manager.auto_execute_tier1 or self.auto_execute_tier1 or approvals.is_remembered(tool_name, tier, folder_for_approval):
+            tier1_auto = self.auto_execute_tier1 and safety_tier_matrix_manager.auto_execute_tier1
+            if tier1_auto or approvals.is_remembered(tool_name, tier, folder_for_approval):
                 return await self._run_and_log(tool_def, validated_args, decision="auto", source=source)
 
         # Guard 6: Tier 1 (when tainted/prompted) or Tier 2 Confirmation

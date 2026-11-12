@@ -188,7 +188,19 @@ class SafetyTierMatrixManager:
         blocked_count = 0
 
         for name in sorted(registry._tools.keys()):
-            policy = self.evaluate_tool_policy(name)
+            try:
+                policy = self.evaluate_tool_policy(name)
+            except Rule8ViolationError:
+                # Rule 8 payment tools are inherently blocked Tier 3 tools
+                policy = ToolPolicyDefinition(
+                    tool_name=name,
+                    tier=3,
+                    auto_executable=False,
+                    requires_confirmation=False,
+                    is_blocked=True,
+                    category="FINANCE",
+                    description="Blocked: Rule 8 anti-checkout violation",
+                )
             tool_policies.append(policy)
             tier_counts[policy.tier] = tier_counts.get(policy.tier, 0) + 1
             if policy.auto_executable:
