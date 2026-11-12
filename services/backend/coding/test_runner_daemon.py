@@ -23,6 +23,7 @@ logger = logging.getLogger("phenom.coding.test_runner")
 
 
 class TestRunResult(BaseModel):
+    __test__ = False
     runner: str = Field(..., description="Test or build runner: pytest, vitest, tsc, generic")
     status: str = Field(..., description="Run outcome: passed, failed, error, timeout, aborted")
     total_tests: int = Field(default=0, description="Total number of tests discovered/run")
@@ -35,6 +36,7 @@ class TestRunResult(BaseModel):
 
 
 class TestRunnerDaemon:
+    __test__ = False
     """
     Executes and parses test/compiler runs inside workspace or isolated worktrees.
     """

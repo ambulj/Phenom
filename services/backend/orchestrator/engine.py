@@ -28,6 +28,7 @@ from services.backend.conversation.stream_sanitizer import stream_sanitizer
 from services.backend.conversation.adaptive_persona import adaptive_persona_engine
 
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
+OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
 SYSTEM_PROMPT_TEMPLATE = """You are Phenom, a personal Windows 11 AI desktop assistant and lab partner to Abhi.
