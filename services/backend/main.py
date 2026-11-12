@@ -366,6 +366,8 @@ import services.backend.tools.sensory_proximity_tools
 from services.backend.ambient.sensory_proximity_manager import sensory_proximity_manager
 import services.backend.tools.voice_cloning_tools
 from services.backend.voice.neural_voice_cloner import neural_voice_cloner
+import services.backend.tools.prosodic_acting_tools
+from services.backend.voice.prosodic_acting_engine import prosodic_acting_engine
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
@@ -1674,6 +1676,7 @@ def on_guardian_state_change(new_state: str):
             spatial_gesture_detector.halt()
             sensory_proximity_manager.halt()
             neural_voice_cloner.halt()
+            prosodic_acting_engine.halt()
         except Exception:
             pass
 
@@ -2730,6 +2733,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 spatial_gesture_detector.reset_halt()
                 sensory_proximity_manager.reset_halt()
                 neural_voice_cloner.reset_halt()
+                prosodic_acting_engine.reset_halt()
 
 
 

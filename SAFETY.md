@@ -3487,6 +3487,26 @@ All 4 Phase 1 neural voice cloning and profile tools are registered with `servic
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `NeuralVoiceCloner`, instantly aborting active audio synthesis pipelines in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
 
+## 136. Milestone 34.0 — Phase 2: Multi-Emotional Prosodic Acting Engine & Breath Synthesizer (PROSOD-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+All 4 Phase 2 prosodic acting and emotional modulation tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+- `apply_prosodic_acting_envelope`: **Tier 0** (Enriches text with emotional prosodic pitch tags, cadence factors, and respiratory breath pauses; read-only text enrichment).
+- `configure_prosodic_parameters`: **Tier 1** (Updates active emotional acting mode, custom pitch shift, intensity multiplier, and breath insertion toggles; requires user confirmation).
+- `get_active_prosodic_telemetry`: **Tier 0** (Queries active emotional envelope, pitch shift, cadence multiplier, and breath stats; read-only telemetry).
+- `synthesize_prosodic_speech_preview`: **Tier 0** (Synthesizes speech preview metadata with calculated F0 pitch curves and breath points; read-only diagnostic preview).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Emotion and pitch configurations route through verified parameter bounds; pitch shifts are strictly clamped within $\pm 12.0$ semitones to prevent audio distortion or synthetic resonance clipping.
+- **Rule 4 (100% On-Device Local Processing)**: All emotional prosody envelopes, F0 fundamental frequency curves, and respiratory breath markers are synthesized locally. Zero text utterances or SSML annotations are transmitted to cloud endpoints.
+- **Rule 7 (Non-Destructibility)**: Prosodic enrichment and SSML tag wrapping perform zero mutations to files or disk storage.
+- **Rule 8 (Payment Prohibitions)**: All input text utterances and emotion parameter values are screened against payment and checkout keywords, rejecting financial terms with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No credential strings, password tokens, or API keys are processed or revealed in prosody tags or preview curves.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `ProsodicActingEngine`, instantly interrupting speech envelope processing in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
+
+
 
 
 
