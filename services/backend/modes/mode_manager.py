@@ -13,6 +13,7 @@ class AssistantMode(str, Enum):
     WORK = "work"
     STUDY = "study"
     CHILL = "chill"
+    DEEP_FOCUS = "deep_focus"
 
 MODE_PROFILES: Dict[AssistantMode, Dict[str, Any]] = {
     AssistantMode.WORK: {
@@ -25,6 +26,7 @@ MODE_PROFILES: Dict[AssistantMode, Dict[str, Any]] = {
         ),
         "notification_policy": "standard",  # Normal alerts
         "resource_profile": "normal",
+        "audio_volume_scale": 1.0,
         "prioritized_tool_categories": ["workspace", "documents", "files", "apps"],
     },
     AssistantMode.STUDY: {
@@ -37,6 +39,7 @@ MODE_PROFILES: Dict[AssistantMode, Dict[str, Any]] = {
         ),
         "notification_policy": "quiet",  # Do not disturb; suppress non-critical alerts
         "resource_profile": "normal",
+        "audio_volume_scale": 0.35,
         "prioritized_tool_categories": ["research", "summaries", "vault", "memory"],
     },
     AssistantMode.CHILL: {
@@ -49,7 +52,21 @@ MODE_PROFILES: Dict[AssistantMode, Dict[str, Any]] = {
         ),
         "notification_policy": "minimal",  # Subtle notifications; never steal focus
         "resource_profile": "low",  # Throttled background heavy tasks
+        "audio_volume_scale": 0.65,
         "prioritized_tool_categories": ["entertainment", "news", "casual"],
+    },
+    AssistantMode.DEEP_FOCUS: {
+        "name": "Deep Focus",
+        "description": "Absolute concentration: Total silence, all non-critical notifications blocked, max compute.",
+        "tone_prompt": (
+            "OPERATING MODE: DEEP FOCUS.\n"
+            "Tone: Ultra-terse, precise, zero conversational filler. "
+            "Deliver exact solutions immediately."
+        ),
+        "notification_policy": "silent",  # Strictly zero toasts except Guardian halt
+        "resource_profile": "high",
+        "audio_volume_scale": 0.0,
+        "prioritized_tool_categories": ["code", "terminal", "vault", "system"],
     },
 }
 
@@ -80,14 +97,16 @@ class ModeManager:
 
     def set_mode(self, new_mode: str) -> Dict[str, Any]:
         normalized = new_mode.strip().lower()
-        if "work" in normalized:
+        if "deep" in normalized or "silent" in normalized:
+            mode = AssistantMode.DEEP_FOCUS
+        elif "work" in normalized:
             mode = AssistantMode.WORK
-        elif "study" in normalized or "focus" in normalized:
+        elif "study" in normalized or "research" in normalized or "focus" in normalized:
             mode = AssistantMode.STUDY
         elif "chill" in normalized or "game" in normalized or "gaming" in normalized:
             mode = AssistantMode.CHILL
         else:
-            raise ValueError(f"Unknown mode '{new_mode}'. Allowed modes: work, study, chill.")
+            raise ValueError(f"Unknown mode '{new_mode}'. Allowed modes: work, study, chill, deep_focus.")
 
         self._current_mode = mode
 
@@ -114,7 +133,7 @@ class ModeManager:
 
     def cycle_mode(self) -> Dict[str, Any]:
         """Cycles through Work -> Study -> Chill -> Work for hotkey toggle."""
-        order = [AssistantMode.WORK, AssistantMode.STUDY, AssistantMode.CHILL]
+        order = [AssistantMode.WORK, AssistantMode.STUDY, AssistantMode.CHILL, AssistantMode.DEEP_FOCUS]
         idx = order.index(self._current_mode)
         next_mode = order[(idx + 1) % len(order)]
         return self.set_mode(next_mode.value)
@@ -124,13 +143,17 @@ class ModeManager:
 
     def is_notification_allowed(self, priority: str = "normal") -> bool:
         policy = MODE_PROFILES[self._current_mode]["notification_policy"]
-        if policy == "standard":
-            return True
+        if policy == "silent":
+            return priority in ["critical", "kill_switch"]
         elif policy == "quiet":
             return priority in ["urgent", "critical", "kill_switch"]
         elif policy == "minimal":
             return priority in ["high", "urgent", "critical", "kill_switch"]
         return True
+
+    def get_volume_scale(self, mode: Optional[AssistantMode] = None) -> float:
+        target = mode or self._current_mode
+        return float(MODE_PROFILES.get(target, {}).get("audio_volume_scale", 1.0))
 
 # Singleton instance
 mode_manager = ModeManager()

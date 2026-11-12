@@ -77,6 +77,17 @@ class VoiceCoordinator:
         clean_text = transcript.strip()
         lower_t = clean_text.lower()
 
+        # Silence / Interrupt Fast-Path ("shut up", "stop", "chup", "quiet", "shaant")
+        if re.search(r"\b(shut\s*up|stop|chup|shaant|quiet|silence|halt|bas|band\s*kar)\b", lower_t):
+            tts_engine.stop_speech()
+            reply = "Got it Bro, standing by. Sab shaant."
+            return {
+                "status": "silence_triggered",
+                "message": reply,
+                "transcript": transcript,
+                "interrupted": True
+            }
+
         # 1. Hard Voice Security Boundary Check
         security_refusal = self.check_security_override_attempt(lower_t)
         if security_refusal:

@@ -3,7 +3,7 @@ Phenom Text-To-Speech (TTS) Engine
 Uses Windows SAPI5 local male voice (Microsoft David Desktop) as default,
 with seamless cloud escalation to Sarvam AI Bulbul for non-private Hindi/Hinglish speech.
 Streams speech sentence-by-sentence so audio playback begins while subsequent tokens are generating.
-Supports instantaneous barge-in interruption.
+Supports instantaneous barge-in interruption and dynamic contextual volume/rate modulation.
 """
 
 import threading
@@ -33,6 +33,8 @@ class TTSEngine:
         self._worker_thread: Optional[threading.Thread] = None
         self._speaker = None
         self._amplitude_callback: Optional[Callable[[float], None]] = None
+        self._volume: float = 1.0  # 0.0 to 1.0
+        self._rate: int = 0        # -10 to +10
         self._lock = threading.Lock()
         self._start_worker()
 
@@ -42,6 +44,34 @@ class TTSEngine:
     @property
     def is_speaking(self) -> bool:
         return self._is_speaking
+
+    def set_volume(self, volume: float):
+        """Sets the master TTS speech volume scale [0.0, 1.0]."""
+        with self._lock:
+            self._volume = max(0.0, min(1.0, float(volume)))
+        if self._speaker:
+            try:
+                self._speaker.Volume = int(self._volume * 100)
+            except Exception:
+                pass
+
+    def get_volume(self) -> float:
+        with self._lock:
+            return self._volume
+
+    def set_rate(self, rate: int):
+        """Sets the master TTS speech cadence rate [-10, 10]."""
+        with self._lock:
+            self._rate = max(-10, min(10, int(rate)))
+        if self._speaker:
+            try:
+                self._speaker.Rate = self._rate
+            except Exception:
+                pass
+
+    def get_rate(self) -> int:
+        with self._lock:
+            return self._rate
 
     def _start_worker(self):
         self._worker_thread = threading.Thread(target=self._speech_worker, daemon=True)
@@ -55,6 +85,12 @@ class TTSEngine:
             import soundfile as sf
             import sounddevice as sd
             data, samplerate = sf.read(io.BytesIO(wav_bytes))
+            # Apply volume scaling to float samples
+            with self._lock:
+                vol = self._volume
+            if vol <= 0.0:
+                return True
+            data = data * vol
             sd.play(data, samplerate=samplerate, blocking=False)
             duration = len(data) / float(samplerate)
             start_t = time.time()
@@ -86,6 +122,10 @@ class TTSEngine:
                 speaker.Voice = voices.Item(i)
                 break
                 
+        # Initialize volume and rate
+        with self._lock:
+            speaker.Volume = int(self._volume * 100)
+            speaker.Rate = self._rate
         self._speaker = speaker
 
         while True:
@@ -188,7 +228,11 @@ class TTSEngine:
             self.speak(remaining)
 
     def speak(self, sentence: str):
-        """Enqueues a sentence to be spoken."""
+        """Enqueues a sentence to be spoken, honoring mute status."""
+        with self._lock:
+            if self._volume <= 0.0:
+                # Muted (e.g. Deep Focus mode)
+                return
         clean_text = sentence.strip()
         if not clean_text:
             return
@@ -229,5 +273,8 @@ class TTSEngine:
                     pass
 
         threading.Thread(target=_purge_hardware, daemon=True).start()
+
+    # Alias for consistency
+    stop = stop_speech
 
 tts_engine = TTSEngine()

@@ -236,3 +236,191 @@ def handle_resolve_port_conflict(port: int, terminate: bool = False) -> Dict[str
                 "previous_process": info.get("process_name")
             }
     return info
+
+
+# ==========================================
+# Developer Workspace State (Tier 0 - Read Only)
+# ==========================================
+
+from services.backend.coding.workspace_sentinel import workspace_sentinel
+
+class GetWorkspaceStateArgs(BaseModel):
+    workspace_path: Optional[str] = Field(default=None, description="Optional path of workspace to inspect. If omitted, uses active foreground IDE workspace.")
+
+@registry.register(
+    name="coding_get_workspace_state",
+    tier=0,
+    description="Inspects active developer workspace, git branch, dirty status, and lines added/deleted with microsecond stat caching.",
+    args_schema=GetWorkspaceStateArgs,
+    preview_fn=lambda a: f"Inspect developer workspace state{' for ' + a.get('workspace_path') if a.get('workspace_path') else ''}"
+)
+def handle_get_workspace_state(workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    if workspace_path:
+        state = workspace_sentinel.inspect_workspace(workspace_path)
+    else:
+        state = workspace_sentinel.poll_once() or workspace_sentinel.get_current_state()
+        if not state:
+            state = workspace_sentinel.inspect_workspace("C:\\Phenom")
+    return state.model_dump()
+
+
+# ==========================================
+# Proactive Dev Build Sentinel Tools (DEV-02)
+# ==========================================
+
+from services.backend.coding.build_sentinel import build_sentinel
+
+class DiagnoseBuildFailureArgs(BaseModel):
+    log_output: str = Field(..., description="Raw build, test, or compiler log output.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+
+@registry.register(
+    name="coding_diagnose_build_failure",
+    tier=0,
+    description="Parses build or test failure output and extracts structured diagnostics (pytest, vitest, tsc, cargo, python).",
+    args_schema=DiagnoseBuildFailureArgs,
+    preview_fn=lambda a: "Diagnose build or test failure from log output"
+)
+def handle_diagnose_build_failure(log_output: str, workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    diag = build_sentinel.diagnose_output(log_output, workspace_path=workspace_path)
+    if not diag:
+        return {"status": "unrecognized", "message": "No recognized build failure detected in log output."}
+    return {"status": "diagnosed", "diagnostic": diag.model_dump()}
+
+
+class DraftPatchArgs(BaseModel):
+    failing_file: str = Field(..., description="Path of file to fix.")
+    replacement_code: str = Field(..., description="Full corrected content of the file.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+
+@registry.register(
+    name="coding_draft_patch",
+    tier=0,
+    description="Synthesizes a minimal unified git diff patch for a target file.",
+    args_schema=DraftPatchArgs,
+    preview_fn=lambda a: f"Draft minimal unified diff patch for {a.get('failing_file')}"
+)
+def handle_draft_patch(failing_file: str, replacement_code: str, workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    diff = build_sentinel.draft_patch(failing_file, replacement_code, workspace_path=workspace_path)
+    if not diff:
+        return {"status": "error", "message": f"Could not generate diff for {failing_file}."}
+    return {"status": "drafted", "patch_diff": diff}
+
+
+class ApplyPatchArgs(BaseModel):
+    patch_diff: str = Field(..., description="Unified git diff to apply.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+    resolution_notes: Optional[str] = Field(default=None, description="Optional resolution note for Obsidian debug log.")
+
+@registry.register(
+    name="coding_apply_patch",
+    tier=1,
+    description="Applies a unified git diff patch to the workspace after creating a non-destructive rollback snapshot.",
+    args_schema=ApplyPatchArgs,
+    preview_fn=lambda a: "Apply unified git diff patch with pre-patch working tree snapshot"
+)
+def handle_apply_patch(patch_diff: str, workspace_path: Optional[str] = None, resolution_notes: Optional[str] = None) -> Dict[str, Any]:
+    success, token, err = build_sentinel.apply_patch_fix(
+        patch_diff,
+        workspace_path=workspace_path,
+        resolution_notes=resolution_notes,
+    )
+    if not success:
+        return {"status": "failed", "error": err}
+    return {"status": "applied", "rollback_token": token}
+
+
+class RevertPatchArgs(BaseModel):
+    rollback_token: str = Field(..., description="Rollback token SHA returned during patch application.")
+    workspace_path: Optional[str] = Field(default=None, description="Optional target workspace path.")
+
+@registry.register(
+    name="coding_revert_patch",
+    tier=1,
+    description="Reverts the workspace to the exact working tree state prior to patch application.",
+    args_schema=RevertPatchArgs,
+    preview_fn=lambda a: f"Revert workspace to pre-patch snapshot {a.get('rollback_token')}"
+)
+def handle_revert_patch(rollback_token: str, workspace_path: Optional[str] = None) -> Dict[str, Any]:
+    success = build_sentinel.revert_patch_fix(rollback_token, workspace_path=workspace_path)
+    if not success:
+        return {"status": "failed", "message": f"Failed to revert using rollback token {rollback_token}."}
+    return {"status": "reverted", "rollback_token": rollback_token}
+
+
+
+
+# ==========================================
+# Project Knowledge Crystallization (Phase 4 RES-01 / SAF-01)
+# ==========================================
+
+from services.backend.coding.project_crystallizer import project_crystallizer
+
+class CrystallizeKnowledgeArgs(BaseModel):
+    project_name: str = Field(..., description="Name of the project to document.")
+    root_path: str = Field(..., description="Repository root path.")
+    title: str = Field(..., description="Title of architectural decision or finding.")
+    decision: str = Field(..., description="Content of decision or finding.")
+    rationale: Optional[str] = Field(default=None, description="Optional architectural rationale or trade-offs.")
+    stack_summary: Optional[str] = Field(default=None, description="Optional tech stack summary.")
+
+@registry.register(
+    name="coding_crystallize_project_knowledge",
+    tier=1,
+    description="Crystallizes architectural decisions and findings into vault/Projects/{ProjectName}.md with bidirectional wikilinks.",
+    args_schema=CrystallizeKnowledgeArgs,
+    preview_fn=lambda a: f"Crystallize architectural decision '{a.get('title')}' into Obsidian vault/Projects/{a.get('project_name')}.md"
+)
+def handle_crystallize_knowledge(
+    project_name: str,
+    root_path: str,
+    title: str,
+    decision: str,
+    rationale: Optional[str] = None,
+    stack_summary: Optional[str] = None
+) -> Dict[str, Any]:
+    return project_crystallizer.crystallize_decision(
+        project_name=project_name,
+        root_path=root_path,
+        title=title,
+        decision=decision,
+        rationale=rationale,
+        stack_summary=stack_summary
+    )
+
+
+class RollbackKnowledgeArgs(BaseModel):
+    project_name: str = Field(..., description="Target project name.")
+    rollback_token: str = Field(..., description="Rollback token returned during crystallization.")
+
+@registry.register(
+    name="coding_rollback_crystallized_note",
+    tier=1,
+    description="Reverts vault/Projects/{ProjectName}.md to prior snapshot state using a rollback token.",
+    args_schema=RollbackKnowledgeArgs,
+    preview_fn=lambda a: f"Revert Obsidian project note {a.get('project_name')}.md using rollback token {a.get('rollback_token')}"
+)
+def handle_rollback_knowledge(project_name: str, rollback_token: str) -> Dict[str, Any]:
+    restored = project_crystallizer.rollback_note(project_name, rollback_token)
+    return {
+        "status": "reverted" if restored else "failed",
+        "project_name": project_name,
+        "rollback_token": rollback_token
+    }
+
+
+class QueryKnowledgeArgs(BaseModel):
+    project_name: str = Field(..., description="Target project name to query.")
+
+@registry.register(
+    name="coding_query_project_knowledge",
+    tier=0,
+    description="Reads crystallized architectural knowledge and decision history for a project from Obsidian.",
+    args_schema=QueryKnowledgeArgs,
+    preview_fn=lambda a: f"Query Obsidian project documentation for {a.get('project_name')}"
+)
+def handle_query_knowledge(project_name: str) -> Dict[str, Any]:
+    content = project_crystallizer.read_project_knowledge(project_name)
+    if content is None:
+        return {"status": "not_found", "message": f"No project note found for {project_name}."}
+    return {"status": "found", "project_name": project_name, "content": content}

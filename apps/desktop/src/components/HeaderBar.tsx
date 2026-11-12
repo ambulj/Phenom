@@ -20,6 +20,8 @@ import {
   CodeRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
+import { DeveloperWorkspaceState } from '../types/workspace';
+import { WorkspaceStatusPill } from './CyberHUD/WorkspaceStatusPill';
 
 interface HeaderBarProps {
   orbState: OrbState;
@@ -36,6 +38,7 @@ interface HeaderBarProps {
   onToggleMiniOverlay?: () => void;
   onOpenPalette?: () => void;
   onToggleConsole?: () => void;
+  workspaceState?: DeveloperWorkspaceState | null;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -52,7 +55,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   showMiniOverlay = false,
   onToggleMiniOverlay,
   onOpenPalette,
-  onToggleConsole
+  onToggleConsole,
+  workspaceState
 }) => {
   const isHalted = orbState === 'halted';
 
@@ -136,6 +140,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         >
           CUDA • 8B VRAM
         </span>
+        <WorkspaceStatusPill workspace={workspaceState || null} />
+
         {isHalted && (
           <Badge appearance="filled" color="danger" size="medium">
             GUARDIAN HALTED

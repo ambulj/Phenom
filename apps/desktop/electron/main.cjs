@@ -9,6 +9,9 @@ const { detectPythonCommand } = require('./pythonVersion.cjs');
 // Disable GPU hardware acceleration to avoid driver crashes (exit_code=-1073741819)
 app.disableHardwareAcceleration();
 
+// Autoplay policy for embedded media playback (MED-01)
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
 // Generate or read persistent session token
 let sessionToken = process.env.PHENOM_SESSION_TOKEN;
 const candidateTokenFiles = [
@@ -355,6 +358,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webviewTag: true,
       preload: path.join(__dirname, 'preload.cjs')
     }
   });
@@ -435,18 +439,52 @@ app.whenReady().then(() => {
   createWindow();
   checkPrerequisites();
 
+  // Register IPC handler for webview media muting
+  ipcMain.handle('media:mute-all', (event, muted) => {
+    const { webContents } = require('electron');
+    if (webContents) {
+      webContents.getAllWebContents().forEach(wc => {
+        try { wc.setAudioMuted(Boolean(muted)); } catch (e) {}
+      });
+    }
+    return true;
+  });
+
   // Register global Guardian Kill Switch hotkey (Ctrl+Alt+P and Ctrl+Alt+Escape)
   const registerKillHotkey = (shortcut) => {
     try {
       globalShortcut.register(shortcut, () => {
+        // Synchronous audio mute across all active webContents (< 1ms SLA)
+        const { webContents } = require('electron');
+        if (webContents) {
+          webContents.getAllWebContents().forEach(wc => {
+            try { wc.setAudioMuted(true); } catch (e) {}
+          });
+        }
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send('guardian:hotkey');
+          mainWindow.webContents.send('media:guardian-mute');
         }
       });
     } catch (err) {
       console.warn(`Could not register ${shortcut}:`, err);
     }
   };
+
+  // Register OS Media Keys (MED-01)
+  const registerMediaKey = (key, action) => {
+    try {
+      globalShortcut.register(key, () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('media:transport-key', action);
+        }
+      });
+    } catch (e) {}
+  };
+  registerMediaKey('MediaPlayPause', 'play_pause');
+  registerMediaKey('MediaNextTrack', 'next');
+  registerMediaKey('MediaPreviousTrack', 'prev');
+  registerMediaKey('MediaStop', 'stop');
 
   registerKillHotkey('CommandOrControl+Alt+P');
   registerKillHotkey('CommandOrControl+Alt+Escape');

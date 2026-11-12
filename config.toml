@@ -415,7 +415,7 @@ scheduled_pushes = false               # No scheduled pushes (Telegram used only
 command_mode = "conversational_with_slash_shortcuts" # Natural conversation by default, with optional power shortcuts (/status, /test, /git, /halt)
 
 [models]
-local_model = "llama3.1:8b"
+local_model = "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
 local_runtime = "ollama"               # 4-bit quantized, ~5.5 GB VRAM, balanced speed & quality
 local_profile = "fast_responsive_35tps"   # Fast 35+ tps generation optimized for RTX 3050
 cloud_model = "meta/llama-3.1-405b-instruct"
@@ -426,3 +426,4 @@ sampling_banter_temp = 0.7             # 0.7 for witty banter
 sub_50ms_stream_cancellation = true    # Terminate token generation immediately on Escape/PTT
 lora_adapters_enabled = true           # Support dynamic LoRA adapter loading on 8B model
 lora_directory = "%USERPROFILE%\\Documents\\Phenom\\lora"
+fallback_local_model = "phenom-jarvis:latest"

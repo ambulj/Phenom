@@ -1,6 +1,8 @@
 {
   "name": "phenom-desktop",
-  "version": "0.1.0",
+  "version": "34.0.0",
+  "description": "Phenom 34.0: Sovereign Contextual Voice Cloning, Prosodic Emotional Acting & Neural Voice Morphing OS — Autonomous Zero-Shot Local Voice Cloning, Multi-Emotional Prosodic Acting Engine & Breath Synthesizer, Cross-Identity Voice Morphing Matrix & Biometric Consent Enclave, and CyberHUD Voice Acting & Studio Control Room",
+  "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
   "scripts": {
@@ -14,6 +16,7 @@
   "build": {
     "appId": "com.phenom.assistant",
     "productName": "Phenom",
+    "npmRebuild": false,
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "win": {
       "target": [

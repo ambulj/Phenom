@@ -78,6 +78,10 @@ def test_websocket_e2e_flow():
             assert ks_state["payload"]["state"] == "halted"
             assert guardian.is_halted is True
 
+            # Drain synchronous killswitch annotation clear broadcast
+            clear_msg = ws.receive_json()
+            assert clear_msg["type"] == "vision.clear_annotations"
+
             # 3. Test Killswitch Resume via WebSocket
             ws.send_json({
                 "id": "ks-2",

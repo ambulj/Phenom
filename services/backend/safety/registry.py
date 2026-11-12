@@ -81,6 +81,14 @@ class ToolRegistry:
             return handler_fn
         return decorator
 
+    def register_tool_def(self, tool_def: ToolDefinition):
+        """Register an existing ToolDefinition instance directly."""
+        self._tools[tool_def.name] = tool_def
+
+    def unregister(self, name: str) -> bool:
+        """Unregister/revoke a tool from the registry. Returns True if removed."""
+        return self._tools.pop(name, None) is not None
+
     def get(self, name: str) -> Optional[ToolDefinition]:
         return self._tools.get(name)
 

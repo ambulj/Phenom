@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
 from services.backend.memory.vector_store import vector_store
 from services.backend.memory.vault import vault_manager
+from services.backend.memory.crystallizer import session_crystallizer
+
 from services.backend.memory.photo_indexer import photo_indexer
 from services.backend.memory.cleanup_organizer import cleanup_organizer
 from services.backend.memory.doc_reader import doc_reader
@@ -173,6 +175,50 @@ class UndoCleanupArgs(BaseModel):
 )
 def undo_cleanup(undo_token: str) -> Dict[str, Any]:
     return cleanup_organizer.undo_cleanup(undo_token)
+
+
+# ==========================================
+# Second Brain & Crystallization Tools (Tier 1)
+# ==========================================
+
+class CrystallizeSessionNotesArgs(BaseModel):
+    session_text: str = Field(description="Conversation text, action summary, or notes to extract insights from")
+    session_id: Optional[str] = Field(default=None, description="Optional session or task identifier")
+    update_daily_log: bool = Field(default=True, description="Whether to append a session summary to today's Daily Log")
+
+def preview_crystallize_notes(args: Dict[str, Any]) -> str:
+    text = args.get("session_text", "")
+    sid = args.get("session_id", "ambient")
+    return f"Crystallize session insights into Obsidian notes (Session: {sid}, length: {len(text)} chars)"
+
+@registry.register(
+    name="crystallize_session_notes",
+    tier=1,
+    description="Analyzes dialogue or execution logs to extract structured decisions, tasks, and research notes into the Obsidian vault",
+    args_schema=CrystallizeSessionNotesArgs,
+    preview_fn=preview_crystallize_notes,
+    can_remember_per_folder=True
+)
+def crystallize_session_notes(session_text: str, session_id: Optional[str] = None, update_daily_log: bool = True) -> Dict[str, Any]:
+    items = session_crystallizer.extract_from_text(session_text, session_id=session_id)
+    res = session_crystallizer.crystallize_session(items, session_id=session_id, update_daily_log=update_daily_log)
+    return res.model_dump()
+
+class RollbackVaultNoteArgs(BaseModel):
+    undo_token: str = Field(description="Undo token returned by a previous vault note crystallization or modification")
+
+def preview_rollback_vault_note(args: Dict[str, Any]) -> str:
+    return f"Rollback Obsidian vault note mutation: token '{args.get('undo_token')}'"
+
+@registry.register(
+    name="rollback_vault_note",
+    tier=1,
+    description="Reverts a previously crystallized note or daily log append using its undo token",
+    args_schema=RollbackVaultNoteArgs,
+    preview_fn=preview_rollback_vault_note
+)
+def rollback_vault_note(undo_token: str) -> Dict[str, Any]:
+    return session_crystallizer.rollback_vault_mutation(undo_token)
 
 # ==========================================
 # Tier 3 Tools (Permanently Blocked on Photos)

@@ -227,6 +227,9 @@ class BrowserFrameMsg(BaseMessage):
 
 class AutomationTakeoverPromptPayload(BaseModel):
     reason: str
+    session_id: Optional[str] = None
+    app_name: Optional[str] = None
+    timestamp: Optional[str] = None
 
 class AutomationTakeoverPromptMsg(BaseMessage):
     type: Literal["automation.takeover_prompt"] = "automation.takeover_prompt"
@@ -234,9 +237,55 @@ class AutomationTakeoverPromptMsg(BaseMessage):
 
 class AutomationTakeoverReplyPayload(BaseModel):
     decision: Literal["continue", "stop"]
+    session_id: Optional[str] = None
 
 class AutomationTakeoverReplyMsg(BaseMessage):
     type: Literal["automation.takeover_reply"] = "automation.takeover_reply"
     payload: AutomationTakeoverReplyPayload
+
+# ==========================================
+# Overnight Missions & Debrief Protocol Payloads (Milestone 9.0 Phase 4)
+# ==========================================
+
+class MissionMorningDebriefPayload(BaseModel):
+    summary: Dict[str, Any]
+    celebrate: bool = True
+    timestamp: str = Field(default_factory=current_iso_time)
+
+class MissionMorningDebriefMsg(BaseMessage):
+    type: Literal["mission.morning_debrief"] = "mission.morning_debrief"
+    payload: MissionMorningDebriefPayload
+
+# ==========================================
+# Swarm Debate Protocol Payloads (Milestone 10.0 Phase 1)
+# ==========================================
+
+class SwarmDebateEscalationPayload(BaseModel):
+    debate_id: str
+    proposal_title: str
+    proposal_description: str
+    proposal_diff: Optional[str] = None
+    risk_tier: RiskTier = 1
+    final_score: float
+    verdict: str
+    gating_reasons: List[str] = Field(default_factory=list)
+    specialist_breakdown: Dict[str, float] = Field(default_factory=dict)
+    turns_count: int = 1
+    last_turn_critiques: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: str = Field(default_factory=current_iso_time)
+
+class SwarmDebateEscalationMsg(BaseMessage):
+    type: Literal["swarm.debate.escalation"] = "swarm.debate.escalation"
+    payload: SwarmDebateEscalationPayload
+
+class SwarmDebateDecisionPayload(BaseModel):
+    debate_id: str
+    decision: Literal["approve", "reject"]
+    reason: Optional[str] = None
+
+class SwarmDebateDecisionMsg(BaseMessage):
+    type: Literal["swarm.debate.decision"] = "swarm.debate.decision"
+    payload: SwarmDebateDecisionPayload
+
 
 

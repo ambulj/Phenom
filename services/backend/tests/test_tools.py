@@ -23,9 +23,9 @@ def test_tool_declarations_complete():
         ("create_folder", 1),
         ("move_file", 1),
         ("copy_file", 1),
-        ("recycle_delete", 2),
+        ("recycle_delete", 1),
         ("list_apps", 0),
-        ("open_app", 1),
+        ("open_app", 0),
         ("close_app", 1)
     ]
     for name, tier in expected_tools:

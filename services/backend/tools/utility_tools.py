@@ -218,3 +218,52 @@ def get_current_time() -> Dict[str, Any]:
         "iso": now.isoformat(),
         "message": f"It is currently {now.strftime('%I:%M %p on %A, %B %d, %Y')}."
     }
+
+# ==========================================
+# 3. Ambient Intelligence & Mode Tools
+# ==========================================
+
+class GetAmbientStatusArgs(BaseModel):
+    pass
+
+@registry.register(
+    name="get_ambient_status",
+    tier=0,
+    description="Inspects active operating mode, hardware resource telemetry, and ambient monitor status",
+    args_schema=GetAmbientStatusArgs,
+    preview_fn=lambda a: "Inspect ambient operating mode and hardware telemetry"
+)
+def get_ambient_status() -> Dict[str, Any]:
+    from services.backend.modes.mode_manager import mode_manager
+    from services.backend.ambient.context_detector import context_detector
+    import psutil
+
+    current_mode = mode_manager.get_current_mode()
+    profile = mode_manager.get_mode_profile(current_mode)
+    cpu = psutil.cpu_percent(interval=None)
+    ram = psutil.virtual_memory().percent
+
+    return {
+        "status": "success",
+        "active_mode": current_mode.value,
+        "mode_name": profile["name"],
+        "notification_policy": profile["notification_policy"],
+        "cpu_percent": cpu,
+        "ram_percent": ram,
+        "last_detected_process": context_detector._last_detected_proc,
+        "auto_switch_enabled": context_detector.is_auto_switch_enabled
+    }
+
+class SetAssistantModeArgs(BaseModel):
+    mode: str = Field(description="Target operating mode: work, study, chill, or deep_focus")
+
+@registry.register(
+    name="set_assistant_mode",
+    tier=0,
+    description="Switches the assistant operating mode between Work, Study, Chill, and Deep Focus",
+    args_schema=SetAssistantModeArgs,
+    preview_fn=lambda a: f"Switch assistant operating mode to '{a.get('mode')}'"
+)
+def set_assistant_mode(mode: str) -> Dict[str, Any]:
+    from services.backend.modes.mode_manager import mode_manager
+    return mode_manager.set_mode(mode)

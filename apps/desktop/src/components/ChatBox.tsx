@@ -32,6 +32,39 @@ interface ChatBoxProps {
   messages?: ChatMessage[];
 }
 
+export function sanitizeChatText(rawText: string): string {
+  if (!rawText) return '';
+  let cleaned = rawText;
+  // 1. Strip Tool header lines like ** Tool :** `open_app(app_name)`
+  cleaned = cleaned.replace(/\*{1,2}\s*Tool\s*:\s*\*{1,2}\s*[`'"]?[a-zA-Z0-9_\-\.]+(?:\([^\)]*\))?[`'"]?/gi, '');
+  // 2. Strip JSON execution block header lines like ** JSON Execution Block :**
+  cleaned = cleaned.replace(/\*{1,2}\s*JSON\s+Execution\s+Block\s*:\s*\*{1,2}/gi, '');
+  // 3. Strip fenced json code blocks containing "tool"
+  cleaned = cleaned.replace(/```(?:json)?\s*\{\s*["']tool["']\s*:[\s\S]*?\}\s*```/gi, '');
+  // 4. Strip raw tool JSON objects
+  cleaned = cleaned.replace(/\{\s*["']tool["']\s*:\s*["'][a-zA-Z0-9_\-\.]+["']\s*,\s*["']args["']\s*:[\s\S]*?\}/gi, '');
+  // 5. Strip launch explanation boilerplates like "This command will launch the..."
+  cleaned = cleaned.replace(/This command will launch (?:the )?[^\n\.]+\.?/gi, '');
+  // 6. Strip [Action Executed: ...] stamps
+  cleaned = cleaned.replace(/\[Action\s+Executed\s*:\s*[^\]]+\]/gi, '');
+  // 7. Strip [Phenom Safety Gate: Requesting (open_app|close_app|...)] for Tier 0/1 tools
+  cleaned = cleaned.replace(/\[Phenom Safety Gate:\s*Requesting\s+(?:open_app|close_app|set_volume|pause_media|resume_media|next_track|apply_window_layout|snap_window|recycle_delete)[^\]]*\]/gi, '');
+  // 8. Clean up stray markdown code fences or orphaned "json" labels
+  cleaned = cleaned.replace(/^\s*```(?:json)?\s*$/gm, '');
+  cleaned = cleaned.replace(/^\s*json\s*$/gm, '');
+  // 9. Clean up multiple blank lines
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+  // 10. Deduplicate consecutive identical lines (e.g. repeated "All set.")
+  const lines = cleaned.split('\n').map((l) => l.trim()).filter(Boolean);
+  const deduped: string[] = [];
+  for (const line of lines) {
+    if (deduped.length === 0 || deduped[deduped.length - 1] !== line) {
+      deduped.push(line);
+    }
+  }
+  return deduped.join('\n\n');
+}
+
 export const ChatBox: React.FC<ChatBoxProps> = ({
   orbState,
   onSendMessage,
@@ -63,7 +96,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   };
 
   const renderContentFormatted = (content: string) => {
-    const lines = content.split('\n');
+    const cleaned = sanitizeChatText(content);
+    if (!cleaned) return null;
+    const lines = cleaned.split('\n');
     return lines.map((line, idx) => {
       if (line.startsWith('[Phenom Safety Gate:') || line.startsWith('[Action Blocked:')) {
         return (

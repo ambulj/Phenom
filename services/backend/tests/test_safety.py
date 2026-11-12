@@ -97,6 +97,7 @@ async def test_tier0_auto_execution(tmp_path):
 @pytest.mark.asyncio
 async def test_tier1_confirmation_and_remembered_folder(tmp_path):
     engine = SafetyExecutionEngine()
+    engine.auto_execute_tier1 = False
     db_file = str(tmp_path / "test_t1.db")
     test_approvals = ApprovalManager(db_file)
     test_log = ActionLogManager(db_file)

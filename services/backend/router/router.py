@@ -1,11 +1,11 @@
 """
 Phenom Model Router
 Implements the model routing policy from ARCHITECTURE.md Section 3:
-- Default: Local 8B (Llama 3 Q4_0 on Ollama)
-- Anything labelled 'private' stays Local 8B, unconditionally.
+- Default: Local model (configured in config.toml or PHENOM_LOCAL_MODEL)
+- Anything labelled 'private' stays Local, unconditionally.
 - Cloud Nemotron via NVIDIA API is used ONLY for long shareable inputs,
   after an explicit confirmation previewing exactly what leaves the machine.
-- Cloud failure or user denial falls back to Local 8B with chunking.
+- Cloud failure or user denial falls back to Local with chunking.
 - Logs every decision with its reason.
 """
 
@@ -19,9 +19,42 @@ CloudApprovalHandler = Callable[[str, str, int], Awaitable[bool]] # (request_id,
 
 class ModelRouter:
     def __init__(self, ollama_model: Optional[str] = None, cloud_model: str = "nvidia/llama-3.1-nemotron-70b-instruct"):
-        self.ollama_model = ollama_model or os.environ.get("PHENOM_LOCAL_MODEL", "phenom-jarvis:latest")
+        self._explicit_ollama_model = ollama_model
         self.cloud_model = cloud_model
         self._cloud_approval_handler: Optional[CloudApprovalHandler] = None
+
+    @property
+    def ollama_model(self) -> str:
+        if self._explicit_ollama_model:
+            return self._explicit_ollama_model
+        env_m = os.environ.get("PHENOM_LOCAL_MODEL")
+        if env_m:
+            return env_m
+        try:
+            from services.backend.memory.vault import load_config
+            cfg = load_config()
+            cfg_m = cfg.get("models", {}).get("local_model")
+            if cfg_m:
+                return cfg_m
+        except Exception:
+            pass
+        return "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
+
+    @ollama_model.setter
+    def ollama_model(self, val: Optional[str]):
+        self._explicit_ollama_model = val
+
+    @property
+    def fallback_local_model(self) -> str:
+        try:
+            from services.backend.memory.vault import load_config
+            cfg = load_config()
+            cfg_m = cfg.get("models", {}).get("fallback_local_model")
+            if cfg_m:
+                return cfg_m
+        except Exception:
+            pass
+        return "phenom-jarvis:latest"
 
     def set_cloud_approval_handler(self, handler: CloudApprovalHandler):
         self._cloud_approval_handler = handler
@@ -50,12 +83,25 @@ class ModelRouter:
             "estimated_tokens": est_tokens
         }
 
+        # Resolve specialized local model
+        target_local_model = self.ollama_model
+        if not self._explicit_ollama_model:
+            try:
+                from services.backend.router.dynamic_model_router import dynamic_model_router
+                resolved, task_type, vram_mb, dispatch_reason = dynamic_model_router.resolve_target_model(prompt)
+                target_local_model = resolved
+                metadata["task_type"] = task_type
+                metadata["vram_estimated_mb"] = vram_mb
+                metadata["dispatch_reason"] = dispatch_reason
+            except Exception:
+                target_local_model = self.ollama_model
+
         # Rule 1: Private always stays Local
         if privacy_label == "private":
-            reason = f"Input labelled private ({privacy_reason}). Kept local."
-            self._log_decision("local", self.ollama_model, reason, metadata)
+            reason = f"Input labelled private ({privacy_reason}). Kept local on {target_local_model}."
+            self._log_decision("local", target_local_model, reason, metadata)
             metadata["routing_reason"] = reason
-            return self.ollama_model, "local", metadata
+            return target_local_model, "local", metadata
 
         # Rule 2: Short shareable inputs stay Local (faster, zero network overhead)
         # Exception: When gaming mode is active, VRAM is freed (<100MB) and shareable tasks can escalate to Cloud
@@ -72,17 +118,17 @@ class ModelRouter:
 
         # Threshold: 3,000 words (~4,000 tokens)
         if word_count <= 3000:
-            reason = f"Shareable input is within local context capacity ({word_count} words <= 3,000). Handled locally."
-            self._log_decision("local", self.ollama_model, reason, metadata)
+            reason = f"Shareable input is within local context capacity ({word_count} words <= 3,000). Handled locally on {target_local_model}."
+            self._log_decision("local", target_local_model, reason, metadata)
             metadata["routing_reason"] = reason
-            return self.ollama_model, "local", metadata
+            return target_local_model, "local", metadata
 
         # Rule 3: Long shareable input -> Requires Cloud Escalation Approval
         if not self._cloud_approval_handler:
-            reason = "Long shareable input eligible for cloud Nemotron, but approval handler unavailable. Falling back to local 8B."
-            self._log_decision("local", self.ollama_model, reason, metadata)
+            reason = f"Long shareable input eligible for cloud Nemotron, but approval handler unavailable. Falling back to local model {target_local_model}."
+            self._log_decision("local", target_local_model, reason, metadata)
             metadata["routing_reason"] = reason
-            return self.ollama_model, "local", metadata
+            return target_local_model, "local", metadata
 
         # Generate exact text preview
         preview_text = prompt[:500] + (f"\n... [TRUNCATED {len(prompt)-500} chars]" if len(prompt) > 500 else "")
@@ -90,10 +136,10 @@ class ModelRouter:
 
         user_approved = await self._cloud_approval_handler(req_id, preview_text, est_tokens)
         if not user_approved:
-            reason = "User denied cloud escalation preview. Falling back to local 8B."
-            self._log_decision("local", self.ollama_model, reason, metadata)
+            reason = f"User denied cloud escalation preview. Falling back to local model {target_local_model}."
+            self._log_decision("local", target_local_model, reason, metadata)
             metadata["routing_reason"] = reason
-            return self.ollama_model, "local", metadata
+            return target_local_model, "local", metadata
 
         # User approved cloud escalation
         reason = f"Long shareable input ({word_count} words). User approved cloud escalation to Nemotron."

@@ -113,45 +113,15 @@ async def summarize_youtube(url: str) -> Dict[str, Any]:
 # Tier 2 Tools (Interactive / Destructive)
 # ==========================================
 
-class BrowserNavigateArgs(BaseModel):
-    url: str = Field(description="URL to navigate to")
-
-@registry.register(
-    name="browser_navigate",
-    tier=2,
-    description="Opens or navigates the persistent browser to a URL",
-    args_schema=BrowserNavigateArgs,
-    preview_fn=lambda a: f"Navigate browser to: '{a.get('url')}'"
+# Milestone 18: Browser actions upgraded to services.backend.tools.browser_operator_tools
+from services.backend.tools.browser_operator_tools import (
+    browser_navigate,
+    browser_click,
+    browser_type,
+    BrowserNavigateArgs,
+    BrowserClickArgs,
+    BrowserTypeArgs
 )
-async def browser_navigate(url: str) -> str:
-    return await browser_controller.navigate(url)
-
-class BrowserClickArgs(BaseModel):
-    selector: str = Field(description="CSS or text selector to click")
-
-@registry.register(
-    name="browser_click",
-    tier=2,
-    description="Clicks an element in the active browser page",
-    args_schema=BrowserClickArgs,
-    preview_fn=lambda a: f"Click browser element: '{a.get('selector')}'"
-)
-async def browser_click(selector: str) -> str:
-    return await browser_controller.click(selector)
-
-class BrowserTypeArgs(BaseModel):
-    selector: str = Field(description="Selector of input field")
-    text: str = Field(description="Text to type")
-
-@registry.register(
-    name="browser_type",
-    tier=2,
-    description="Types text into an input field in the browser",
-    args_schema=BrowserTypeArgs,
-    preview_fn=lambda a: f"Type text into '{a.get('selector')}'"
-)
-async def browser_type(selector: str, text: str) -> str:
-    return await browser_controller.type_text(selector, text)
 
 class DesktopExecutePlanArgs(BaseModel):
     steps: List[Dict[str, Any]] = Field(description="Ordered list of action steps")
@@ -209,3 +179,36 @@ class EnterPaymentInfoArgs(BaseModel):
 )
 def enter_payment_info(card_details: str):
     raise PermissionError("Entering card details or credentials is strictly prohibited by SAFETY.md.")
+
+
+# ==========================================
+# Autonomous Execution Tool (Tier 2)
+# ==========================================
+
+class ExecuteAutonomousTaskArgs(BaseModel):
+    goal: str = Field(description="High-level goal or multi-step workflow intent")
+
+
+def _preview_autonomous_task(args: Dict[str, Any]) -> str:
+    goal = args.get("goal", "Autonomous workflow")
+    try:
+        from services.backend.automation.goal_planner import goal_planner
+        plan = goal_planner.plan_goal(goal)
+        steps_preview = "\n".join([f"  {s.step_number}. {s.description}" for s in plan.steps])
+        return f"Autonomous Task Preview for '{goal}':\n{steps_preview}\n(Supervised execution with sub-second takeover pause)"
+    except Exception as e:
+        return f"Autonomous Task: '{goal}' (Error generating step preview: {e})"
+
+
+@registry.register(
+    name="execute_autonomous_task",
+    tier=2,
+    description="Decomposes a high-level goal into a multi-step GUI and browser workflow, executes steps continuously with live HUD telemetry and sub-second takeover pauses. Requires Tier 2 confirmation.",
+    args_schema=ExecuteAutonomousTaskArgs,
+    preview_fn=_preview_autonomous_task
+)
+async def execute_autonomous_task(goal: str) -> Dict[str, Any]:
+    from services.backend.automation.goal_planner import goal_planner
+    from services.backend.automation.autonomous_engine import autonomous_engine
+    plan = goal_planner.plan_goal(goal)
+    return await autonomous_engine.execute_plan(plan)

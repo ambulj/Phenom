@@ -2,6 +2,7 @@
 Phenom Conversational Barge-In Controller
 Detects user voice activity while the assistant is speaking and triggers
 instantaneous audio cancellation (< 50ms stop latency) and state transition.
+Uses Silero VAD + adaptive noise-floor RMS energy tracking.
 """
 
 import time
@@ -9,6 +10,7 @@ import threading
 from typing import Optional, Callable
 import numpy as np
 from services.backend.voice.tts import tts_engine
+from services.backend.voice.vad import silero_vad
 from services.backend.tools.media_tools import duck_system_audio
 
 
@@ -29,7 +31,7 @@ class BargeInController:
     def process_audio_chunk(self, audio_chunk: np.ndarray) -> bool:
         """
         Processes an incoming microphone audio chunk (16kHz).
-        If TTS is currently speaking and user voice energy is detected,
+        If TTS is currently speaking and user voice is detected (via Silero VAD or RMS energy),
         immediately interrupts speech playback (< 50ms).
         Returns True if a barge-in interruption was triggered, False otherwise.
         """
@@ -49,8 +51,9 @@ class BargeInController:
                 self._consecutive_speech_chunks = 0
                 return False
 
-            # Assistant IS speaking: check for user voice interruption
-            is_speech = (rms > self.energy_threshold) and (rms > self._noise_floor_ema * 2.2)
+            # Assistant IS speaking: check for user voice interruption using Silero VAD + RMS
+            vad_prob = silero_vad.process_chunk(audio_chunk) if silero_vad.is_available else 0.0
+            is_speech = (vad_prob >= 0.50) or ((rms > self.energy_threshold) and (rms > self._noise_floor_ema * 2.2))
 
             if is_speech:
                 self._consecutive_speech_chunks += 1

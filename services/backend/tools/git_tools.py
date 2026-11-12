@@ -97,17 +97,17 @@ def run_pre_push_gate(repo_path: str, target_branch: str = "main") -> Dict[str, 
     if not os.path.exists(os.path.join(resolved, ".git")):
         raise ValueError(f"Path '{resolved}' is not a valid git repository.")
 
-    branch_res = subprocess.run(["git", "branch", "--show-current"], cwd=resolved, capture_output=True, text=True, check=False)
+    branch_res = subprocess.run(["git", "branch", "--show-current"], cwd=resolved, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
     current_branch = branch_res.stdout.strip() or "HEAD"
 
-    status_res = subprocess.run(["git", "status", "--porcelain"], cwd=resolved, capture_output=True, text=True, check=False)
+    status_res = subprocess.run(["git", "status", "--porcelain"], cwd=resolved, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
     uncommitted = [line for line in status_res.stdout.splitlines() if line.strip()]
 
-    log_res = subprocess.run(["git", "log", "-n", "5", "--oneline"], cwd=resolved, capture_output=True, text=True, check=False)
+    log_res = subprocess.run(["git", "log", "-n", "5", "--oneline"], cwd=resolved, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
     commits = [c.strip() for c in log_res.stdout.splitlines() if c.strip()]
 
-    diff_res = subprocess.run(["git", "diff", f"{target_branch}...HEAD"], cwd=resolved, capture_output=True, text=True, check=False)
-    diff_text = diff_res.stdout if diff_res.returncode == 0 else ""
+    diff_res = subprocess.run(["git", "diff", f"{target_branch}...HEAD"], cwd=resolved, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+    diff_text = diff_res.stdout if (diff_res.returncode == 0 and diff_res.stdout is not None) else ""
     
     secret_findings = []
     suspicious_patterns = [

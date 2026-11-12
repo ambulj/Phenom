@@ -112,6 +112,78 @@ class TelegramClient:
             raise RuntimeError(f"Telegram sendPhoto failed: {result.get('description')}")
         return result.get("result", {})
 
+    async def send_voice(
+        self,
+        chat_id: int,
+        voice_bytes: bytes,
+        caption: Optional[str] = None,
+        reply_markup: Optional[Dict[str, Any]] = None,
+        parse_mode: Optional[str] = "Markdown"
+    ) -> Dict[str, Any]:
+        """
+        Sends an in-memory voice message (.ogg/.mp3) via multipart upload.
+        Never touches the disk (Rule 4 strict RAM-only compliance).
+        """
+        url = self._get_url("sendVoice")
+        data: Dict[str, Any] = {"chat_id": str(chat_id)}
+        if caption:
+            data["caption"] = caption
+        if parse_mode:
+            data["parse_mode"] = parse_mode
+        if reply_markup:
+            data["reply_markup"] = json.dumps(reply_markup)
+
+        files = {"voice": ("voice.ogg", voice_bytes, "audio/ogg")}
+
+        if self._custom_client:
+            resp = await self._custom_client.post(url, data=data, files=files, timeout=20.0)
+        else:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                resp = await client.post(url, data=data, files=files, timeout=20.0)
+
+        if resp.status_code != 200:
+            raise RuntimeError(f"Telegram API sendVoice error ({resp.status_code}): {resp.text}")
+        result = resp.json()
+        if not result.get("ok"):
+            raise RuntimeError(f"Telegram sendVoice failed: {result.get('description')}")
+        return result.get("result", {})
+
+    async def send_document(
+        self,
+        chat_id: int,
+        document_bytes: bytes,
+        filename: str,
+        caption: Optional[str] = None,
+        reply_markup: Optional[Dict[str, Any]] = None,
+        parse_mode: Optional[str] = "Markdown"
+    ) -> Dict[str, Any]:
+        """
+        Sends an in-memory document file via multipart upload.
+        """
+        url = self._get_url("sendDocument")
+        data: Dict[str, Any] = {"chat_id": str(chat_id)}
+        if caption:
+            data["caption"] = caption
+        if parse_mode:
+            data["parse_mode"] = parse_mode
+        if reply_markup:
+            data["reply_markup"] = json.dumps(reply_markup)
+
+        files = {"document": (filename, document_bytes, "application/octet-stream")}
+
+        if self._custom_client:
+            resp = await self._custom_client.post(url, data=data, files=files, timeout=25.0)
+        else:
+            async with httpx.AsyncClient(timeout=25.0) as client:
+                resp = await client.post(url, data=data, files=files, timeout=25.0)
+
+        if resp.status_code != 200:
+            raise RuntimeError(f"Telegram API sendDocument error ({resp.status_code}): {resp.text}")
+        result = resp.json()
+        if not result.get("ok"):
+            raise RuntimeError(f"Telegram sendDocument failed: {result.get('description')}")
+        return result.get("result", {})
+
     async def delete_message(self, chat_id: int, message_id: int) -> Dict[str, Any]:
         """
         Deletes a message from chat.
@@ -179,7 +251,8 @@ class TelegramClient:
         tool: str,
         tier: int,
         preview: str,
-        args: Dict[str, Any]
+        args: Dict[str, Any],
+        has_diff: bool = False
     ) -> Dict[str, Any]:
         """
         Sends an approval request message with inline buttons.
@@ -206,12 +279,15 @@ class TelegramClient:
 
         text = "\n".join(msg_lines)
 
+        buttons = [
+            {"text": "✅ Approve", "callback_data": f"approve:{request_id}"},
+            {"text": "❌ Deny", "callback_data": f"deny:{request_id}"}
+        ]
+        inline_keyboard = [buttons]
+        if has_diff:
+            inline_keyboard.append([{"text": "🔍 View Diff", "callback_data": f"diff:{request_id}"}])
+
         reply_markup = {
-            "inline_keyboard": [
-                [
-                    {"text": "✅ Approve", "callback_data": f"approve:{request_id}"},
-                    {"text": "❌ Deny", "callback_data": f"deny:{request_id}"}
-                ]
-            ]
+            "inline_keyboard": inline_keyboard
         }
         return await self.send_message(chat_id, text, reply_markup=reply_markup)

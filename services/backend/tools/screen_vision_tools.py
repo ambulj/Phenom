@@ -7,12 +7,16 @@ Strictly respects SAFETY.md:
 - ask_screen_vision_cloud (Tier 2): Cloud vision escalation requiring preview approval.
 """
 
+import time
+import asyncio
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
 from services.backend.automation.desktop_controller import DesktopController
 from services.backend.vision.moondream_client import moondream_client
 from services.backend.vision.ocr_engine import ocr_engine
+from services.backend.vision.multimodal_coordinator import multimodal_coordinator
+from services.backend.vision.annotation_streamer import annotation_streamer, HudAnnotation
 
 _desktop_controller = DesktopController()
 
@@ -58,6 +62,19 @@ async def inspect_screen(query: str = "Describe what is on the screen and highli
         all_uia = ocr_engine.extract_elements_from_uia(max_depth=3)
         # Limit to 10 prominent elements
         elements = all_uia[:10]
+        if elements:
+            hud_annos = [
+                HudAnnotation(
+                    id=f"elem-{idx}",
+                    name=e.get("name", "Element"),
+                    control_type=e.get("control_type", "element"),
+                    bbox=e.get("bbox", [e.get("x", 0) - 20, e.get("y", 0) - 10, 40, 20]),
+                    confidence=0.95,
+                    color="#0052FF"
+                )
+                for idx, e in enumerate(elements)
+            ]
+            asyncio.create_task(annotation_streamer.broadcast_annotations(hud_annos, duration_ms=4000))
 
     return {
         "status": "success",
@@ -85,6 +102,16 @@ async def find_on_screen(element_name: str) -> Dict[str, Any]:
     match = ocr_engine.find_element_coordinates(element_name, img)
 
     if match:
+        anno = HudAnnotation(
+            id=f"find-{int(time.time() * 1000)}",
+            name=element_name,
+            control_type=match.get("method", "element"),
+            bbox=match.get("bbox", [match["x"] - 20, match["y"] - 10, 40, 20]),
+            confidence=1.0,
+            color="#CCFF00"  # Acid Lime highlight for located target
+        )
+        asyncio.create_task(annotation_streamer.broadcast_annotations([anno], duration_ms=3000))
+
         return {
             "status": "success",
             "found": True,
@@ -113,11 +140,45 @@ async def find_on_screen(element_name: str) -> Dict[str, Any]:
 )
 async def ask_screen_vision_cloud(question: str) -> Dict[str, Any]:
     """Cloud vision escalation gated strictly behind Tier 2 preview and approval."""
-    # Screen is captured in RAM
-    img = _desktop_controller.capture_screen_ram()
+    res = await multimodal_coordinator.execute_screen_query(prompt=question, prefer_cloud=True)
+    return {
+        "status": res.get("status", "success"),
+        "question": question,
+        "source": res.get("source", "cloud_nemotron"),
+        "model": res.get("model", "nemotron"),
+        "description": res.get("description", ""),
+        "fallback_engaged": res.get("fallback_engaged", False),
+        "privacy_masked_windows": res.get("privacy_masked_windows", 0),
+        "message": res.get("message", "Cloud vision analysis complete.")
+    }
+
+
+
+class SearchVisualMemoryArgs(BaseModel):
+    query: str = Field(
+        description="Natural language question or search query for what was seen on screen (e.g. 'error in terminal 15 mins ago', 'CUDA chart')"
+    )
+    limit: int = Field(
+        default=5,
+        description="Maximum number of historical matching text occurrences to return"
+    )
+
+
+@registry.register(
+    name="search_visual_memory",
+    tier=0,
+    description="Searches continuous desktop visual memory for text, windows, or commands seen on screen with temporal natural language recall. Read-only.",
+    args_schema=SearchVisualMemoryArgs,
+    preview_fn=lambda a: f"Search visual memory (Read-only): query='{a.get('query')}' (limit={a.get('limit', 5)})"
+)
+async def search_visual_memory(query: str, limit: int = 5) -> Dict[str, Any]:
+    """Queries local encrypted visual memory using hybrid temporal parsing and vector similarity."""
+    from services.backend.vision.temporal_recall import temporal_recall_engine
+    matches = temporal_recall_engine.recall(query=query, limit=limit)
     return {
         "status": "success",
-        "question": question,
-        "source": "cloud_vlm",
-        "message": f"Cloud VLM analyzed screen for: '{question}'."
+        "query": query,
+        "matches_count": len(matches),
+        "matches": matches,
+        "message": f"Found {len(matches)} matching visual memory records." if matches else "No matching visual history found."
     }

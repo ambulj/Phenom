@@ -109,6 +109,49 @@ def compute_file_sha256(filepath: str) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+
+class VaultSandboxViolation(PermissionError):
+    """Raised when an operation attempts to access or mutate files outside the vault sandbox."""
+    pass
+
+def resolve_and_sandbox_vault_path(relative_subpath: str, vault_root: Optional[str] = None) -> str:
+    """
+    Validates that a relative path stays strictly inside the configured vault directory.
+    Canonicalizes path and rejects path traversal, drive switching, and repository collision.
+    Raises VaultSandboxViolation on any boundary escape.
+    """
+    if not relative_subpath or not relative_subpath.strip():
+        raise VaultSandboxViolation("Cannot resolve an empty vault subpath.")
+
+    root = os.path.realpath(os.path.abspath(vault_root or get_configured_vault_path()))
+    
+    # Handle absolute vs relative
+    if os.path.isabs(relative_subpath):
+        target = os.path.realpath(os.path.abspath(relative_subpath))
+    else:
+        # Strip leading slashes to prevent root-relative escape on Windows
+        clean_sub = relative_subpath.lstrip("/\\")
+        target = os.path.realpath(os.path.abspath(os.path.join(root, clean_sub)))
+
+    # 1. Boundary check: target must be inside or equal to root
+    try:
+        common = os.path.commonpath([root, target])
+        if common != root:
+            raise VaultSandboxViolation(f"Vault Sandbox Violation: target '{relative_subpath}' escapes vault root '{root}'.")
+    except ValueError:
+        raise VaultSandboxViolation(f"Vault Sandbox Violation: cross-drive path access forbidden: '{relative_subpath}'.")
+
+    # 2. Collision check: target must NOT be inside the Phenom code repository
+    repo_root = os.path.realpath(os.path.abspath(find_repo_root()))
+    try:
+        common_repo = os.path.commonpath([repo_root, target])
+        if common_repo == repo_root:
+            raise VaultSandboxViolation(f"Vault Sandbox Violation: collision refusal: cannot write inside code repository '{repo_root}'.")
+    except ValueError:
+        pass
+
+    return target
+
 def get_legacy_vault_path() -> str:
     """Returns absolute path to legacy in-repo vault folder."""
     return os.path.abspath(os.path.join(find_repo_root(), "vault"))
@@ -495,9 +538,9 @@ class ObsidianVaultManager:
         if not clean_title.endswith(".md"):
             clean_title += ".md"
 
-        target_dir = os.path.join(self.vault_path, subfolder)
-        os.makedirs(target_dir, exist_ok=True)
-        target_file = os.path.join(target_dir, clean_title)
+        target_rel = os.path.join(subfolder, clean_title)
+        target_file = resolve_and_sandbox_vault_path(target_rel, self.vault_path)
+        os.makedirs(os.path.dirname(target_file), exist_ok=True)
 
         # Prepend YAML frontmatter if not present
         if not content.startswith("---"):
@@ -516,7 +559,7 @@ class ObsidianVaultManager:
         date_str = now.strftime("%Y-%m-%d")
         time_str = now.strftime("%H:%M:%S")
 
-        daily_file = os.path.join(self.vault_path, "Daily Logs", f"{date_str}.md")
+        daily_file = resolve_and_sandbox_vault_path(os.path.join("Daily Logs", f"{date_str}.md"), self.vault_path)
         
         # If new file, initialize header
         if not os.path.exists(daily_file):
@@ -563,6 +606,19 @@ class ObsidianVaultManager:
                         "mtime": os.path.getmtime(full_p)
                     })
         return notes
+
+    def commit_changes(self, message: str) -> bool:
+        """Helper to stage and commit vault changes to local git."""
+        try:
+            self.ensure_git_repo()
+            subprocess.run(["git", "add", "-A"], cwd=self.vault_path, capture_output=True, check=True)
+            status_res = subprocess.run(["git", "status", "--porcelain"], cwd=self.vault_path, capture_output=True, text=True, check=True)
+            if status_res.stdout.strip():
+                res = subprocess.run(["git", "commit", "-m", message], cwd=self.vault_path, capture_output=True, text=True, check=False)
+                return res.returncode == 0
+            return True
+        except Exception:
+            return False
 
 # Default vault path constant (evaluated at import time without cwd)
 DEFAULT_VAULT_PATH = get_configured_vault_path()

@@ -27,6 +27,7 @@ class SafetyExecutionEngine:
         self._confirmation_handler: Optional[ConfirmationHandler] = None
         self._remote_confirmation_handler: Optional[ConfirmationHandler] = None
         self._tier3_allowlist: set[str] = set() # Empty by default per SAFETY.md section 6
+        self.auto_execute_tier1: bool = True # Zero-prompt auto-execution for Tier 1 per Milestone 29
 
     def set_confirmation_handler(self, handler: ConfirmationHandler):
         self._confirmation_handler = handler
@@ -184,16 +185,18 @@ class SafetyExecutionEngine:
         if tier == 0:
             return await self._run_and_log(tool_def, validated_args, decision="auto", source=source)
 
-        # Guard 5: Tier 1 (Reversible) -> Check Remembered Approvals
-        # Determine target folder if applicable
+        # Guard 5: Tier 1 (Safe & Reversible) -> Auto-run when untainted if auto_execute_tier1 is enabled
         folder_for_approval = target_folder or validated_args.get("path") or validated_args.get("dest") or validated_args.get("src")
         if folder_for_approval and os.path.isfile(folder_for_approval):
             folder_for_approval = os.path.dirname(folder_for_approval)
 
-        if tier == 1 and not taint_tracker.is_tainted and approvals.is_remembered(tool_name, tier, folder_for_approval):
-            return await self._run_and_log(tool_def, validated_args, decision="auto", source=source)
+        if tier == 1 and not taint_tracker.is_tainted:
+            from services.backend.safety.tier_matrix import safety_tier_matrix_manager
+            tier1_auto = self.auto_execute_tier1 and safety_tier_matrix_manager.auto_execute_tier1
+            if tier1_auto or approvals.is_remembered(tool_name, tier, folder_for_approval):
+                return await self._run_and_log(tool_def, validated_args, decision="auto", source=source)
 
-        # Guard 6: Tier 1 or Tier 2 Confirmation
+        # Guard 6: Tier 1 (when tainted/prompted) or Tier 2 Confirmation
         preview_text = tool_def.generate_preview(validated_args)
         if taint_warning:
             preview_text = f"[{taint_warning}]\n{preview_text}"
