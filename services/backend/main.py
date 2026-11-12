@@ -1770,13 +1770,21 @@ guardian.add_state_callback(on_guardian_state_change)
 
 
 
+def safe_sync_broadcast(msg: Dict[str, Any]):
+    try:
+        loop = asyncio.get_running_loop()
+        if loop and loop.is_running():
+            loop.create_task(broadcast_message(msg))
+    except (RuntimeError, Exception):
+        pass
+
 annotation_streamer.register_broadcaster(broadcast_message)
 ambient_copilot.register_broadcaster(broadcast_message)
 morning_debrief_synthesizer.register_broadcaster(broadcast_message)
 specialist_swarm_orchestrator.register_broadcaster(broadcast_message)
 visual_gui_controller.register_broadcaster(broadcast_message)
 companion_camera_streamer.register_broadcaster(broadcast_message)
-dream_engine.register_broadcaster(broadcast_message)
+dream_engine.register_broadcaster(safe_sync_broadcast)
 spatial_canvas_manager.register_broadcaster(broadcast_message)
 proactive_event_bus.register_broadcaster(broadcast_message)
 ambient_feedback_synthesizer.register_broadcaster(broadcast_message)
@@ -1785,10 +1793,10 @@ local_adapter_manager.register_broadcaster(broadcast_message)
 volumetric_canvas_manager.register_broadcaster(broadcast_message)
 swarm_workload_scheduler.register_broadcaster(broadcast_message)
 kernel_telemetry_fabric.register_broadcaster(broadcast_message)
-streaming_av_pipeline.register_change_callback(lambda s: asyncio.create_task(broadcast_message({"type": "telepresence.update", "payload": s.model_dump()})))
-biometric_enclave_manager.register_change_callback(lambda s: asyncio.create_task(broadcast_message({"type": "enclave.update", "payload": s.model_dump()})))
-deep_uia_engine.register_change_callback(lambda msg: asyncio.create_task(broadcast_message({"type": "uia.update", "payload": msg})))
-dynamic_extension_manager.register_change_callback(lambda s: asyncio.create_task(broadcast_message({"type": "extension.update", "payload": s.model_dump()})))
+streaming_av_pipeline.register_change_callback(lambda s: safe_sync_broadcast({"type": "telepresence.update", "payload": s.model_dump()}))
+biometric_enclave_manager.register_change_callback(lambda s: safe_sync_broadcast({"type": "enclave.update", "payload": s.model_dump()}))
+deep_uia_engine.register_change_callback(lambda msg: safe_sync_broadcast({"type": "uia.update", "payload": msg}))
+dynamic_extension_manager.register_change_callback(lambda s: safe_sync_broadcast({"type": "extension.update", "payload": s.model_dump()}))
 resource_governor.register_pause_callback(ambient_copilot.pause)
 resource_governor.register_resume_callback(ambient_copilot.resume)
 services.backend.tools.media_tools.register_broadcaster(broadcast_message)

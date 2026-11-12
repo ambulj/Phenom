@@ -17,6 +17,7 @@ import stat
 import subprocess
 import threading
 import time
+import psutil
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -75,22 +76,8 @@ class UnattendedMissionRunner:
             for mid, proc in list(self._active_processes.items()):
                 try:
                     proc.kill()
-                    pids_to_kill.append(proc.pid)
                 except Exception as e:
                     logger.warning(f"Error killing mission process {mid}: {e}")
-
-            for pid in pids_to_kill:
-                if os.name == "nt":
-                    try:
-                        # Process tree force kill
-                        subprocess.Popen(
-                            ["taskkill", "/F", "/T", "/PID", str(pid)],
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL,
-                            creationflags=subprocess.CREATE_NO_WINDOW,
-                        )
-                    except Exception:
-                        pass
 
             self._active_processes.clear()
 

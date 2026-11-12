@@ -161,12 +161,12 @@ async def test_telegram_status_command(mock_bot):
     assert len(client.sent_messages) == 1
     msg = client.sent_messages[0]
     assert msg["chat_id"] == OWNER_ID
-    assert "Phenom Status Summary" in msg["text"]
-    assert "CPU Utilization" in msg["text"]
-    assert "RAM Utilization" in msg["text"]
-    assert "Guardian State" in msg["text"]
-    assert "Active Mode" in msg["text"]
-    assert "Remote Lock" in msg["text"]
+    assert "Phenom Operational Status" in msg["text"]
+    assert "CPU:" in msg["text"]
+    assert "RAM:" in msg["text"]
+    assert "Guardian:" in msg["text"]
+    assert "Mode:" in msg["text"]
+    assert "Remote:" in msg["text"]
     assert "reply_markup" in msg
 
 
