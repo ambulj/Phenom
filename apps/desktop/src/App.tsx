@@ -97,6 +97,7 @@ import { TemporalKnowledgeGraphHUD } from './components/CyberHUD/TemporalKnowled
 import { WorkspaceSelfHealingHUD } from './components/CyberHUD/WorkspaceSelfHealingHUD';
 import { WorkflowOrchestratorHUD } from './components/CyberHUD/WorkflowOrchestratorHUD';
 import { ToolFoundryHUD } from './components/CyberHUD/ToolFoundryHUD';
+import { SensoryPresenceHUD } from './components/CyberHUD/SensoryPresenceHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -308,6 +309,7 @@ export const App: React.FC = () => {
   const [showWorkspaceSelfHealing, setShowWorkspaceSelfHealing] = useState<boolean>(false);
   const [showWorkflowOrchestrator, setShowWorkflowOrchestrator] = useState<boolean>(false);
   const [showToolFoundry, setShowToolFoundry] = useState<boolean>(false);
+  const [showSensoryPresence, setShowSensoryPresence] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1580,6 +1582,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowToolFoundry((prev) => !prev)
     },
     {
+      id: 'cmd-sensory-presence-hud',
+      title: 'Toggle CyberHUD Sensory Presence Dashboard',
+      subtitle: 'Attentive gaze tracking, spatial hand gestures, acoustic proximity, and privacy shutter',
+      category: 'Assistant',
+      onExecute: () => setShowSensoryPresence((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2302,6 +2311,18 @@ export const App: React.FC = () => {
       {showToolFoundry && (
         <ToolFoundryHUD
           onClose={() => setShowToolFoundry(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* CyberHUD Sensory Presence Dashboard (SENSE-01, GEST-02, PROX-01, UI-05.42) */}
+      {showSensoryPresence && (
+        <SensoryPresenceHUD
+          onClose={() => setShowSensoryPresence(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));

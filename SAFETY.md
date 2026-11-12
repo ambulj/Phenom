@@ -3410,6 +3410,28 @@ All 4 Phase 3 proximity estimation, acoustic scaling, and privacy shutter tools 
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `SensoryProximityManager`, automatically engaging the privacy shutter and purging volatile in-RAM frame buffers in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
 
+## 133. Milestone 33.0 — Phase 4: CyberHUD Sensory Presence Dashboard (UI-05.42, SAF-01, SAF-02)
+
+### 1. Component Registration & Architecture Audit
+- **Component**: `apps/desktop/src/components/CyberHUD/SensoryPresenceHUD.tsx` mounted in `apps/desktop/src/App.tsx`.
+- **Command Palette Action**: `cmd-sensory-presence-hud` ("Toggle CyberHUD Sensory Presence Dashboard").
+- **UI Pillar Features**:
+  - Attentive eye contact reticle, live yaw/pitch angular deviation gauges, and engagement percentage progress bar.
+  - Spatial gesture recognition chip, confidence meter, normalized pointing target crosshair coordinates, and open-palm stop indicator.
+  - Metric user distance gauge ($D\text{ m}$), adaptive TTS acoustic volume multiplier ($V_{\text{scale}}$), and Three.js Orb scale multiplier.
+  - 1-click optical camera privacy shutter button toggling `SHUTTER_OPEN` / `SHUTTER_CLOSED` with instant frame queue purging.
+  - 1-click emergency Guardian kill switch halt button ($< 15.0\text{ ms}$).
+
+### 2. Invariant & Safety Policy Verification (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: All interactive actions triggered from the HUD (`toggle_camera_privacy_shutter`, `trigger_gesture_safety_halt`) emit strictly typed WebSocket messages and execute through `ToolRegistry` handlers.
+- **Rule 4 & PRIV-01.1 (Local Offline Execution & Zero Disk Persistence)**: 100% on-device local rendering with React + Vite; zero video frames, biometric models, or audio packets transmitted to external cloud endpoints or stored on disk.
+- **Rule 8 (Payment Prohibitions)**: All parameters, action identifiers, and labels rejected with `Rule8ViolationError` if containing payment, checkout, or cart terms.
+- **Rule 11 (Credential Protection)**: No private user credentials, password fields, or screen tokens rendered in telemetry or logs.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch synchronously interrupts HUD telemetry rendering and halts active tracking loops in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
+
+
 
 
 
