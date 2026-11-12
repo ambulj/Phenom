@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "33.0.0",
-  "description": "Phenom 33.0: Jarvis Ambient Physical Presence & Multi-Modal Sensory Awareness OS — Attentive Gaze & User Engagement Tracker, Touchless Spatial Gesture Control & Hand-Tracked Safety Halt, Spatial Acoustic Dynamics, Proximity Adaptation & Privacy Shutter, and CyberHUD Sensory Presence Dashboard",
+  "version": "34.0.0",
+  "description": "Phenom 34.0: Sovereign Contextual Voice Cloning, Prosodic Emotional Acting & Neural Voice Morphing OS — Autonomous Zero-Shot Local Voice Cloning, Multi-Emotional Prosodic Acting Engine & Breath Synthesizer, Cross-Identity Voice Morphing Matrix & Biometric Consent Enclave, and CyberHUD Voice Acting & Studio Control Room",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
