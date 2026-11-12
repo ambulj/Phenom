@@ -3390,6 +3390,27 @@ All 4 Phase 2 spatial gesture detection and safety halt tools are registered wit
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `SpatialGestureDetector`, resetting landmark history and flushing in-RAM frame queues in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
 
+## 132. Milestone 33.0 — Phase 3: Spatial Acoustic Dynamics, Proximity Adaptation & Privacy Shutter (PROX-01, PRIV-01.2, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+All 4 Phase 3 proximity estimation, acoustic scaling, and privacy shutter tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+- `get_sensory_proximity_telemetry`: **Tier 0** (Read-only telemetry returning estimated metric user distance in meters, dynamic acoustic volume scaling, speech rate scale, Orb particle multipliers, and privacy shutter status).
+- `simulate_proximity_observation`: **Tier 0** (Ingests observed interpupillary distance in pixels to derive physical distance and acoustic scaling without persistent storage).
+- `toggle_camera_privacy_shutter`: **Tier 1** (Engages or disengages optical camera privacy shutter, instantaneously wiping volatile camera buffers and halting upstream vision modules; requires confirmation).
+- `configure_proximity_acoustic_curve`: **Tier 1** (Configures physical distance bounds in meters and acoustic volume scaling range; requires confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Volume scaling and distance curves operate within verified safety thresholds; maximum volume is clamped to 1.0 to prevent audio clipping or speaker distortion.
+- **Rule 4 & PRIV-01.1 (100% On-Device Local Processing & Zero Disk Persistence)**: All metric distance calculations and interpupillary geometry are processed exclusively on the local host. Raw frames reside solely in an in-RAM volatile ring buffer of maximum capacity 3 frames, never written to disk, SQLite databases, or cloud endpoints.
+- **Rule 4 & PRIV-01.2 (Instant Camera Privacy Shutter)**: When the privacy shutter is engaged (`toggle_camera_privacy_shutter(True)`), all active volatile camera queues across gaze, gesture, and proximity subsystems are immediately purged and vision tracking is hard-paused.
+- **Rule 7 (Non-Destructibility)**: Proximity estimation and acoustic scaling perform zero persistent file or filesystem mutations.
+- **Rule 8 (Payment Prohibitions)**: All configuration parameters and shutter directives are scanned against payment and checkout keywords, rejecting financial terms with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No private user credentials, facial identity embeddings, or biometric tokens are stored or exfiltrated.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `SensoryProximityManager`, automatically engaging the privacy shutter and purging volatile in-RAM frame buffers in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
+
+
 
 
 

@@ -112,6 +112,10 @@ class GazeTracker:
     def reset_halt(self) -> None:
         """Resets gaze tracker halt state."""
         self._is_halted = False
+
+    @property
+    def is_halted(self) -> bool:
+        return self._is_halted
         self._conversational_paused = False
 
     def check_safety(self, text: Optional[str] = None) -> None:

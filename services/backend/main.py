@@ -362,6 +362,8 @@ import services.backend.tools.gaze_tracking_tools
 from services.backend.vision.gaze_tracker import gaze_tracker
 import services.backend.tools.spatial_gesture_tools
 from services.backend.vision.spatial_gesture_detector import spatial_gesture_detector
+import services.backend.tools.sensory_proximity_tools
+from services.backend.ambient.sensory_proximity_manager import sensory_proximity_manager
 from services.backend.memory.dream_engine import dream_engine
 from services.backend.spatial.canvas_manager import spatial_canvas_manager
 from services.backend.proactive.event_bus import proactive_event_bus
@@ -1668,6 +1670,7 @@ def on_guardian_state_change(new_state: str):
             tool_foundry.halt()
             gaze_tracker.halt()
             spatial_gesture_detector.halt()
+            sensory_proximity_manager.halt()
         except Exception:
             pass
 
@@ -2722,6 +2725,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 tool_foundry.reset_halt()
                 gaze_tracker.reset_halt()
                 spatial_gesture_detector.reset_halt()
+                sensory_proximity_manager.reset_halt()
 
 
 
