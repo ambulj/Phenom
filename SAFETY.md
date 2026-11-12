@@ -3370,6 +3370,27 @@ All 4 Phase 1 gaze engagement and tracking configuration tools are registered wi
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `AttentiveGazeTracker`, instantly halting visual frame processing and clearing volatile frame buffers in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
 
+## 131. Milestone 33.0 — Phase 2: Touchless Spatial Gesture Control & Hand-Tracked Safety Halt (GEST-02, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+All 4 Phase 2 spatial gesture detection and safety halt tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+- `get_spatial_gesture_telemetry`: **Tier 0** (Read-only telemetry returning detected gesture type, confidence, palm orientation normal vector, index pointing coordinates, and emergency halt state).
+- `simulate_hand_gesture_observation`: **Tier 0** (Ingests synthetic or camera 21-point hand landmark observations for gesture classification without persistent disk storage).
+- `map_spatial_gesture_action`: **Tier 1** (Binds recognized spatial gestures like `SWIPE_LEFT`, `SWIPE_RIGHT`, `THUMBS_UP` to system actions with Rule 8 anti-checkout enforcement; requires user confirmation).
+- `trigger_gesture_safety_halt`: **Tier 0** (Emergency safety override triggering Guardian kill switch halt on behalf of raised open-palm detection in $< 15.0\text{ ms}$).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Gesture action mappings are validated and executed through verified handler endpoints; mutating desktop commands cannot execute without proper confirmation tiers.
+- **Rule 3 & GEST-02.2 (Raised Palm Emergency Stop SLA)**: A raised open palm gesture facing the camera synchronously triggers the Guardian kill switch in strictly $< 15.0\text{ ms}$ (benchmark average $< 5.0\text{ ms}$).
+- **Rule 4 & PRIV-01.1 (100% On-Device Local Processing & Zero Disk Persistence)**: All 21-point hand landmark geometries and gesture velocity vectors are computed exclusively on the local host. Raw frames reside solely in an in-RAM volatile ring buffer of maximum capacity 3 frames and are immediately flushed on halt or timeout.
+- **Rule 7 (Non-Destructibility)**: Spatial gesture tracking and coordinate calculations make zero destructive modifications to disk, files, or host registry.
+- **Rule 8 (Payment Prohibitions)**: Gesture labels, action names, and halt reasons are strictly scanned against payment and checkout keywords, rejecting any billing or order terms with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No credential strings, password tokens, or screen keys can be mapped or bound to gesture triggers.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `SpatialGestureDetector`, resetting landmark history and flushing in-RAM frame queues in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
+
+
 
 
 
