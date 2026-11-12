@@ -38,7 +38,7 @@ async def test_scripted_browser_task_with_live_view():
     try:
         # Run simple scripted navigation
         nav_res = await browser_controller.navigate("https://example.com")
-        assert "example" in nav_res.lower()
+        assert "example" in str(nav_res).lower()
         
         # Wait briefly for frame capture loop
         await asyncio.sleep(0.8)

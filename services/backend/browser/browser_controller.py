@@ -479,6 +479,16 @@ class BrowserController:
             "provenance": "verified_dom_snapshot"
         }
 
+    async def get_page_text(self) -> str:
+        """Extracts visible innerText from the active page body for semantic evaluation."""
+        if guardian.is_halted:
+            raise RuntimeError("Browser operation halted by Guardian Kill Switch")
+        page = await self.ensure_page()
+        try:
+            return await page.evaluate("() => document.body ? document.body.innerText : ''")
+        except Exception:
+            return ""
+
     # ---------------- LIFECYCLE & CLEANUP ----------------
 
     async def close(self):
