@@ -3525,6 +3525,24 @@ All 4 Phase 3 acoustic voice morphing and biometric consent enclave tools are re
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously calls `voice_morphing_matrix.halt()`, instantly zeroing morphing states and falling back to base voice in $< 0.05\text{ ms}$, comfortably within the $< 25.0\text{ ms}$ hard SLA.
 
+## 138. Milestone 34.0 — Phase 4: CyberHUD Voice Acting & Studio Control Room (UI-05.43, SAF-01, SAF-02)
+
+### 1. CyberHUD Interface Architecture & Dispatch Audit (SAF-01.1)
+The `VoiceStudioHUD` (`apps/desktop/src/components/CyberHUD/VoiceStudioHUD.tsx`) introduces glassmorphic controls for real-time acoustic spectrogram canvas rendering, prosodic acting envelope selection, timbre morphing matrix cross-fader, and biometric consent enclave management:
+- Actions dispatched over WebSocket strictly route to registered `ToolRegistry` endpoints (`configure_prosodic_parameters`, `morph_voice_identity`, `revoke_biometric_voiceprint`, `synthesize_prosodic_speech_preview`, `trigger_gesture_safety_halt`).
+- Client-side validation ensures parameter clamping (pitch within $\pm 12.0\text{ st}$, energy within $[0.1, 2.0]$, morph ratio within $[0.0, 1.0]$).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Dispatched HUD actions validate argument bounds through Pydantic schemas before execution.
+- **Rule 4 & VOICE-PRIV-01**: Audio waveform visualizers and spectrogram curves are computed client-side using Web Audio Canvas API; raw voiceprints and audio vectors never egress the local machine.
+- **Rule 7 & VOICE-PRIV-01.2 (1-Click Instant Biometric Revocation)**: Operator can immediately click `REVOKE & PURGE` to purge target voiceprints from memory and disk and reset morphing to pure Jarvis base ($0.0$).
+- **Rule 8 (Payment Prohibitions)**: All HUD utterance test inputs and identity labels are scanned against payment and checkout keywords, rejecting financial terms with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No cryptographic secrets, tokens, or private identity data are exposed in plain text within HUD logs or audio headers.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- Dedicated 1-click `GUARDIAN HALT` button on HUD dispatches emergency stop, synchronously halting `neural_voice_cloner`, `prosodic_acting_engine`, and `voice_morphing_matrix` within $< 0.05\text{ ms}$, comfortably within the $< 25.0\text{ ms}$ hard SLA.
+
+
 
 
 

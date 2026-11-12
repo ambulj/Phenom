@@ -147,7 +147,7 @@ class VoiceMorphingMatrix:
 
             # Purge matching profiles in neural_voice_cloner
             for p in list(neural_voice_cloner.list_profiles()):
-                if p["name"] == record.target_identity_name:
+                if p["name"] == record.target_identity_name or p["profile_id"] == record.target_identity_name:
                     neural_voice_cloner.delete_profile(p["profile_id"])
 
             return True

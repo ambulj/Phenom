@@ -98,6 +98,7 @@ import { WorkspaceSelfHealingHUD } from './components/CyberHUD/WorkspaceSelfHeal
 import { WorkflowOrchestratorHUD } from './components/CyberHUD/WorkflowOrchestratorHUD';
 import { ToolFoundryHUD } from './components/CyberHUD/ToolFoundryHUD';
 import { SensoryPresenceHUD } from './components/CyberHUD/SensoryPresenceHUD';
+import { VoiceStudioHUD } from './components/CyberHUD/VoiceStudioHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -310,6 +311,7 @@ export const App: React.FC = () => {
   const [showWorkflowOrchestrator, setShowWorkflowOrchestrator] = useState<boolean>(false);
   const [showToolFoundry, setShowToolFoundry] = useState<boolean>(false);
   const [showSensoryPresence, setShowSensoryPresence] = useState<boolean>(false);
+  const [showVoiceStudio, setShowVoiceStudio] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1589,6 +1591,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowSensoryPresence((prev) => !prev)
     },
     {
+      id: 'cmd-voice-studio-hud',
+      title: 'Toggle CyberHUD Voice Acting & Studio Control Room',
+      subtitle: 'Zero-shot voice cloning, emotional prosodic envelopes, timbre morphing, and biometric consent enclave',
+      category: 'Assistant',
+      onExecute: () => setShowVoiceStudio((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2323,6 +2332,18 @@ export const App: React.FC = () => {
       {showSensoryPresence && (
         <SensoryPresenceHUD
           onClose={() => setShowSensoryPresence(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
+      )}
+
+      {/* CyberHUD Voice Acting & Studio Control Room (UI-05.43, CLONE-01, PROSOD-02, MORPH-03) */}
+      {showVoiceStudio && (
+        <VoiceStudioHUD
+          onClose={() => setShowVoiceStudio(false)}
           sendMessage={(msg) => {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
               wsRef.current.send(JSON.stringify(msg));
