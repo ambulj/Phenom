@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
 from services.backend.memory.vault import vault_manager
@@ -103,6 +103,20 @@ class MorningDebriefSynthesizer:
                 f"Full diagnostics and worktree snapshots await your perusal."
             )
 
+    @staticmethod
+    def _matches_date(started_at: Optional[str], target_date: str) -> bool:
+        if not started_at:
+            return False
+        if started_at.startswith(target_date):
+            return True
+        try:
+            dt = datetime.fromisoformat(started_at)
+            local_date = dt.astimezone().strftime("%Y-%m-%d")
+            utc_date = dt.astimezone(timezone.utc).strftime("%Y-%m-%d")
+            return local_date == target_date or utc_date == target_date
+        except Exception:
+            return False
+
     def aggregate_debrief(self, date_str: Optional[str] = None) -> MorningDebriefSummary:
         """
         Collects all missions completed or attempted overnight and compiles aggregated metrics.
@@ -110,10 +124,10 @@ class MorningDebriefSynthesizer:
         target_date = date_str or datetime.now().strftime("%Y-%m-%d")
         all_missions = self._runner.list_missions()
 
-        # Filter missions for target date or take all if date matches prefix
+        # Filter missions for target date (checking both UTC and local calendar days) or take all if no date specified
         filtered = [
             m for m in all_missions
-            if (m.started_at and m.started_at.startswith(target_date)) or not date_str
+            if not date_str or self._matches_date(m.started_at, target_date)
         ]
 
         total_missions = len(filtered)

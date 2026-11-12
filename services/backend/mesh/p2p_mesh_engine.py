@@ -163,7 +163,7 @@ class P2PMeshEngine:
         # Stop discovery beacon thread and invalidate pairing tokens
         self.discovery.stop()
         self.pairing.invalidate_all()
-        logger.warning("P2P Mesh Engine synchronously HALTED by Guardian Kill Switch.")
+        logger.info("P2P Mesh Engine synchronously HALTED by Guardian Kill Switch.")
 
     def reset(self) -> None:
         """Resume P2P mesh operations after Guardian release."""

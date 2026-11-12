@@ -120,7 +120,7 @@ class HybridGraphRAGEngine:
     def halt(self) -> None:
         """Halts the search engine synchronously."""
         self._halted = True
-        logger.warning("HybridGraphRAGEngine halted by Guardian kill switch.")
+        logger.info("HybridGraphRAGEngine halted by Guardian kill switch.")
 
     def reset(self) -> None:
         """Resets halted status."""

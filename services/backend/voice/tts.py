@@ -246,6 +246,7 @@ class TTSEngine:
         self._stop_event.set()
         
         # Clear in-memory queue immediately
+        had_queued = not self._speech_queue.empty()
         while not self._speech_queue.empty():
             try:
                 self._speech_queue.get_nowait()
@@ -254,25 +255,27 @@ class TTSEngine:
                 break
 
         with self._lock:
+            was_speaking = self._is_speaking
             self._is_speaking = False
 
         if self._amplitude_callback:
             self._amplitude_callback(0.0)
 
-        # Dispatch device driver purges (sounddevice & SAPI) in background daemon thread
-        def _purge_hardware():
-            try:
-                import sounddevice as sd
-                sd.stop()
-            except Exception:
-                pass
-            if self._speaker:
+        # Dispatch device driver purges (sounddevice & SAPI) only if speech was actually active
+        if was_speaking or had_queued:
+            def _purge_hardware():
                 try:
-                    self._speaker.Speak("", SVSFPurgeBeforeSpeak | SVSFlagsAsync)
+                    import sounddevice as sd
+                    sd.stop()
                 except Exception:
                     pass
+                if self._speaker:
+                    try:
+                        self._speaker.Speak("", SVSFPurgeBeforeSpeak | SVSFlagsAsync)
+                    except Exception:
+                        pass
 
-        threading.Thread(target=_purge_hardware, daemon=True).start()
+            threading.Thread(target=_purge_hardware, daemon=True).start()
 
     # Alias for consistency
     stop = stop_speech

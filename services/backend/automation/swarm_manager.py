@@ -328,7 +328,7 @@ class WorkerSwarmManager:
             except Exception:
                 pass
 
-        logger.warning(f"SwarmManager: Aborted {aborted_count} active workers ({reason}).")
+        logger.info(f"SwarmManager: Aborted {aborted_count} active workers ({reason}).")
         return aborted_count
 
 

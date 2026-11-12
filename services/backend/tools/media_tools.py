@@ -48,7 +48,6 @@ def _send_virtual_key(vk_code: int):
     try:
         user32 = ctypes.windll.user32
         user32.keybd_event(vk_code, 0, KEYEVENTF_EXTENDEDKEY, 0)
-        time.sleep(0.01)
         user32.keybd_event(vk_code, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0)
     except Exception as e:
         print(f"[Phenom Media] Virtual key error: {e}")
@@ -65,8 +64,12 @@ def broadcast_media_event(event_type: str, payload: Dict[str, Any]):
     broadcaster = _broadcaster
     if not broadcaster:
         main_mod = sys.modules.get("services.backend.main")
-        if main_mod and hasattr(main_mod, "broadcast_message"):
-            broadcaster = main_mod.broadcast_message
+        if main_mod:
+            active_ws = getattr(main_mod, "active_websockets", None)
+            if active_ws is not None and not active_ws:
+                return
+            if hasattr(main_mod, "broadcast_message"):
+                broadcaster = main_mod.broadcast_message
     if not broadcaster:
         return
     msg = {
@@ -84,9 +87,13 @@ def broadcast_media_event(event_type: str, payload: Dict[str, Any]):
 # Guardian Kill Switch audio silence hook (SAF-02 < 10ms SLA)
 def _on_guardian_media_halt(reason: str):
     """Synchronously mutes all active audio on Guardian kill switch halt."""
+    if reason != "halted":
+        return
+    was_playing = _current_media_state.get("state") == "playing"
     _current_media_state["muted"] = True
     _current_media_state["state"] = "paused"
-    _send_virtual_key(VK_VOLUME_MUTE)
+    if was_playing:
+        _send_virtual_key(VK_VOLUME_MUTE)
     broadcast_media_event("MEDIA_MUTE", {"muted": True, "reason": reason})
 
 guardian.add_state_callback(_on_guardian_media_halt)

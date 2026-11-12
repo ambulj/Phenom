@@ -112,8 +112,12 @@ def broadcast_persona_event(event_type: str, payload: Dict[str, Any]):
     broadcaster = _broadcaster
     if not broadcaster:
         main_mod = sys.modules.get("services.backend.main")
-        if main_mod and hasattr(main_mod, "broadcast_message"):
-            broadcaster = main_mod.broadcast_message
+        if main_mod:
+            active_ws = getattr(main_mod, "active_websockets", None)
+            if active_ws is not None and not active_ws:
+                return
+            if hasattr(main_mod, "broadcast_message"):
+                broadcaster = main_mod.broadcast_message
     if not broadcaster:
         return
     msg = {

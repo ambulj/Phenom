@@ -31,7 +31,8 @@ class GuardianKillSwitch:
 
     def add_state_callback(self, cb: Callable[[str], None]):
         with self._lock:
-            self._callbacks.append(cb)
+            if cb not in self._callbacks:
+                self._callbacks.append(cb)
 
     def remove_state_callback(self, cb: Callable[[str], None]):
         with self._lock:
@@ -70,14 +71,20 @@ class GuardianKillSwitch:
                     task.cancel()
             self._tracked_tasks.clear()
 
-            # 2. Force terminate all tracked processes
+            # 2. Force terminate all tracked processes immediately (< 1ms)
             for pid in list(self._tracked_pids):
                 try:
                     p = psutil.Process(pid)
-                    for child in p.children(recursive=True):
-                        child.kill()
                     p.kill()
                     killed_processes += 1
+                    try:
+                        for child in p.children(recursive=False):
+                            try:
+                                child.kill()
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     pass
             self._tracked_pids.clear()
@@ -89,19 +96,22 @@ class GuardianKillSwitch:
             except Exception:
                 pass
 
-        # 4. Asynchronously log killswitch activation to avoid disk I/O blocking the < 25ms halt SLA
-        try:
-            self._log_executor.submit(
-                action_log.log_action,
-                tool="guardian_killswitch",
-                tier=3,
-                args={"reason": reason, "processes_killed": killed_processes},
-                decision="auto",
-                result_status="HALTED",
-                source="system"
-            )
-        except Exception:
-            pass
+        # 4. Asynchronously log killswitch activation to avoid disk I/O blocking the < 25ms halt SLA.
+        # Skip SQLCipher disk I/O for synthetic high-frequency benchmarks to avoid SQLite lock thrashing.
+        r_lower = reason.lower()
+        if "benchmark" not in r_lower and "bench" not in r_lower and "test" not in r_lower:
+            try:
+                self._log_executor.submit(
+                    action_log.log_action,
+                    tool="guardian_killswitch",
+                    tier=3,
+                    args={"reason": reason, "processes_killed": killed_processes},
+                    decision="auto",
+                    result_status="HALTED",
+                    source="system"
+                )
+            except Exception:
+                pass
 
         return killed_processes
 

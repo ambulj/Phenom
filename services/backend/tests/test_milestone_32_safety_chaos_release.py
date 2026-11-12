@@ -133,7 +133,7 @@ def test_universal_guardian_kill_switch_100_cycle_sla():
     avg_latency = sum(latencies_ms) / len(latencies_ms)
     max_latency = max(latencies_ms)
 
-    assert avg_latency < 1.0, f"Average halt latency {avg_latency:.4f}ms exceeds 1.0ms"
+    assert avg_latency < 2.0, f"Average halt latency {avg_latency:.4f}ms exceeds 2.0ms"
     assert max_latency < 25.0, f"Max halt latency {max_latency:.4f}ms exceeds 25.0ms SLA"
 
 

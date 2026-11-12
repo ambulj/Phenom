@@ -69,7 +69,7 @@ class MultiSourceKnowledgeGraph:
         """Synchronously halts all graph indexing and traversal immediately (< 1ms)."""
         self._is_halted = True
         self._is_indexing = False
-        logger.warning("MultiSourceKnowledgeGraph halted by Guardian kill switch.")
+        logger.info("MultiSourceKnowledgeGraph halted by Guardian kill switch.")
 
     def reset(self) -> None:
         """Resets halted state when Guardian transitions back to idle."""

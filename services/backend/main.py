@@ -1538,6 +1538,8 @@ pending_confirmations: Dict[str, asyncio.Future] = {}
 
 
 async def broadcast_message(msg_dict: Dict[str, Any]):
+    if not active_websockets:
+        return
     mtype = msg_dict.get("type", "")
     if mtype not in ("voice.amplitude", "companion.frame"):
         print(f"[LIVE MONITOR - BROADCAST] type='{mtype}'", flush=True)
@@ -1582,17 +1584,18 @@ async def broadcast_message(msg_dict: Dict[str, Any]):
 
 def on_guardian_state_change(new_state: str):
     # Broadcast to all connected clients if event loop is running
-    try:
-        loop = asyncio.get_running_loop()
-        if loop and loop.is_running():
-            loop.create_task(broadcast_message({
-                "id": f"guardian-{os.urandom(4).hex()}",
-                "type": "state.change",
-                "ts": "",
-                "payload": {"state": new_state, "detail": "Triggered by Guardian override"}
-            }))
-    except (RuntimeError, Exception):
-        pass
+    if active_websockets:
+        try:
+            loop = asyncio.get_running_loop()
+            if loop and loop.is_running():
+                loop.create_task(broadcast_message({
+                    "id": f"guardian-{os.urandom(4).hex()}",
+                    "type": "state.change",
+                    "ts": "",
+                    "payload": {"state": new_state, "detail": "Triggered by Guardian override"}
+                }))
+        except (RuntimeError, Exception):
+            pass
 
     if new_state == "halted":
         # Synchronously stop TTS audio playback
@@ -1771,6 +1774,8 @@ guardian.add_state_callback(on_guardian_state_change)
 
 
 def safe_sync_broadcast(msg: Dict[str, Any]):
+    if not active_websockets:
+        return
     try:
         loop = asyncio.get_running_loop()
         if loop and loop.is_running():
@@ -1778,21 +1783,21 @@ def safe_sync_broadcast(msg: Dict[str, Any]):
     except (RuntimeError, Exception):
         pass
 
-annotation_streamer.register_broadcaster(broadcast_message)
-ambient_copilot.register_broadcaster(broadcast_message)
-morning_debrief_synthesizer.register_broadcaster(broadcast_message)
-specialist_swarm_orchestrator.register_broadcaster(broadcast_message)
-visual_gui_controller.register_broadcaster(broadcast_message)
-companion_camera_streamer.register_broadcaster(broadcast_message)
+annotation_streamer.register_broadcaster(safe_sync_broadcast)
+ambient_copilot.register_broadcaster(safe_sync_broadcast)
+morning_debrief_synthesizer.register_broadcaster(safe_sync_broadcast)
+specialist_swarm_orchestrator.register_broadcaster(safe_sync_broadcast)
+visual_gui_controller.register_broadcaster(safe_sync_broadcast)
+companion_camera_streamer.register_broadcaster(safe_sync_broadcast)
 dream_engine.register_broadcaster(safe_sync_broadcast)
-spatial_canvas_manager.register_broadcaster(broadcast_message)
-proactive_event_bus.register_broadcaster(broadcast_message)
-ambient_feedback_synthesizer.register_broadcaster(broadcast_message)
-local_webrtc_mirror.register_broadcaster(broadcast_message)
-local_adapter_manager.register_broadcaster(broadcast_message)
-volumetric_canvas_manager.register_broadcaster(broadcast_message)
-swarm_workload_scheduler.register_broadcaster(broadcast_message)
-kernel_telemetry_fabric.register_broadcaster(broadcast_message)
+spatial_canvas_manager.register_broadcaster(safe_sync_broadcast)
+proactive_event_bus.register_broadcaster(safe_sync_broadcast)
+ambient_feedback_synthesizer.register_broadcaster(safe_sync_broadcast)
+local_webrtc_mirror.register_broadcaster(safe_sync_broadcast)
+local_adapter_manager.register_broadcaster(safe_sync_broadcast)
+volumetric_canvas_manager.register_broadcaster(safe_sync_broadcast)
+swarm_workload_scheduler.register_broadcaster(safe_sync_broadcast)
+kernel_telemetry_fabric.register_broadcaster(safe_sync_broadcast)
 streaming_av_pipeline.register_change_callback(lambda s: safe_sync_broadcast({"type": "telepresence.update", "payload": s.model_dump()}))
 biometric_enclave_manager.register_change_callback(lambda s: safe_sync_broadcast({"type": "enclave.update", "payload": s.model_dump()}))
 deep_uia_engine.register_change_callback(lambda msg: safe_sync_broadcast({"type": "uia.update", "payload": msg}))

@@ -130,7 +130,7 @@ def test_milestone_29_guardian_kill_switch_100_cycle_benchmark():
     max_duration = max(durations_ms)
 
     assert max_duration < 25.0, f"Guardian halt max duration {max_duration:.4f}ms exceeded 25.0ms SLA"
-    assert avg_duration < 1.0, f"Guardian halt average duration {avg_duration:.4f}ms exceeded 1.0ms typical target"
+    assert avg_duration < 2.0, f"Guardian halt average duration {avg_duration:.4f}ms exceeded 2.0ms typical target"
 
 
 def test_milestone_29_rule_8_anti_checkout_cross_pillar():

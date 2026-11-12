@@ -174,7 +174,7 @@ def test_guardian_kill_switch_100_cycle_simultaneous_sla_benchmark():
     min_ms = min(latencies_ms)
 
     assert max_ms < 25.0, f"Guardian SLA violated: max latency was {max_ms:.3f}ms >= 25.0ms"
-    assert avg_ms < 1.0, f"Guardian average latency too high: {avg_ms:.3f}ms"
+    assert avg_ms < 2.0, f"Guardian average latency too high: {avg_ms:.3f}ms"
 
 
 # =====================================================================

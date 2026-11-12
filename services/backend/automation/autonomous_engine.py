@@ -213,7 +213,7 @@ class AutonomousExecutionEngine:
         self._resume_event.set()
         if self.current_checkpoint:
             self.current_checkpoint.state = "aborted"
-        logger.warning(f"[AutonomousEngine] Execution aborted immediately: {reason}")
+        logger.info(f"[AutonomousEngine] Execution aborted immediately: {reason}")
 
     async def resume_from_checkpoint(
         self,
