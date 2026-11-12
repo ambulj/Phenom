@@ -285,21 +285,26 @@ async def test_headless_safety_engine_confirmation_gate(tmp_path):
         approved_actions.append(tool_name)
         return "approved", False
 
+    orig_auto_exec = safety_engine.auto_execute_tier1
+    safety_engine.auto_execute_tier1 = False
     safety_engine.set_confirmation_handler(test_confirmation_handler)
 
-    target_file = os.path.join(str(tmp_path), "Headless_Safety_Test.docx")
-    args = {
-        "filename": target_file,
-        "format": "docx",
-        "title": "Headless Test",
-        "sections": [{"heading": "Sec1", "content": "Text"}],
-        "folder": str(tmp_path)
-    }
+    try:
+        target_file = os.path.join(str(tmp_path), "Headless_Safety_Test.docx")
+        args = {
+            "filename": target_file,
+            "format": "docx",
+            "title": "Headless Test",
+            "sections": [{"heading": "Sec1", "content": "Text"}],
+            "folder": str(tmp_path)
+        }
 
-    # Execute through safety_engine
-    result = await safety_engine.execute_tool("generate_document", args)
-    assert result["status"] == "success"
-    assert "generate_document" in approved_actions
+        # Execute through safety_engine
+        result = await safety_engine.execute_tool("generate_document", args)
+        assert result["status"] == "success"
+        assert "generate_document" in approved_actions
+    finally:
+        safety_engine.auto_execute_tier1 = orig_auto_exec
 
 
 # ---------------- 4. DOC-01.4: DIRECT VOICE & CHAT INTENTS ----------------
