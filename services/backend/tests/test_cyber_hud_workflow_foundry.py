@@ -72,6 +72,12 @@ def test_universal_guardian_kill_switch_sla():
     workflow_engine.reset_halt()
     tool_foundry.reset_halt()
 
+    # Warmup 1 cycle
+    workflow_engine.halt()
+    tool_foundry.halt()
+    workflow_engine.reset_halt()
+    tool_foundry.reset_halt()
+
     latencies_ms = []
     for _ in range(50):
         t0 = time.perf_counter()

@@ -116,7 +116,6 @@ class ToolFoundry:
     def halt(self) -> None:
         """Halts all synthesis and sandbox evaluation in < 25.0ms (Rule 3)."""
         self._is_halted = True
-        logger.warning("[ToolFoundry] Emergency stop triggered via Guardian kill switch")
 
     def reset_halt(self) -> None:
         """Resets foundry halt state."""

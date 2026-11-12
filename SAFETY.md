@@ -3351,6 +3351,26 @@ All 15 new tools introduced across Milestone 32.0 have undergone full formal aud
 - Production Vite desktop frontend compiled cleanly in 5.85s with 0 errors.
 - Milestone 32.0 officially certified and tagged `v32.0.0`.
 
+## 130. Milestone 33.0 — Phase 1: Attentive Gaze & User Engagement Tracker (SENSE-01, PRIV-01.1, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+All 4 Phase 1 gaze engagement and tracking configuration tools are registered with `services.backend.safety.registry.registry` with Pydantic argument schemas and preview generators:
+- `get_gaze_engagement_telemetry`: **Tier 0** (Read-only telemetry returning direct eye contact state, attention score, head pose angles, and touchless listening trigger).
+- `simulate_gaze_observation`: **Tier 0** (Ingests synthetic or sensor gaze frames with yaw/pitch angles and confidence score for evaluation without persistent storage).
+- `configure_gaze_thresholds`: **Tier 1** (Adjusts sustained direct gaze trigger milliseconds and yaw/pitch tolerance bounding thresholds; requires user confirmation).
+- `reset_gaze_tracker_state`: **Tier 0** (Flushes active volatile in-RAM frame buffer and resets engagement telemetry metrics).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Gaze tracking provides observational engagement signals only; any resulting conversational triggers route to verified interaction loops without bypassing tool confirmation gates.
+- **Rule 4 & PRIV-01.1 (100% On-Device Local Processing & Zero Disk Persistence)**: All optical gaze vector estimation and facial landmark geometry are processed exclusively on the local host. Raw frames reside solely in a ring buffer in volatile RAM with maximum depth of 3 frames, never written to persistent disk storage, SQLite databases, action logs, or cloud endpoints.
+- **Rule 7 (Non-Destructibility)**: Gaze telemetry collection performs zero mutations to user files, OS settings, or disk state.
+- **Rule 8 (Payment Prohibitions)**: Threshold parameters and simulated observation tags are screened against payment/checkout keywords, rejecting any financial terms with `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: No visual credentials, screen buffers, or password strings are ever processed or retained in gaze engagement state.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `AttentiveGazeTracker`, instantly halting visual frame processing and clearing volatile frame buffers in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
+
+
 
 
 

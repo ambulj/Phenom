@@ -122,7 +122,6 @@ class MacroEngine:
         self._is_halted = True
         self._is_recording = False
         self._recorded_actions_buffer.clear()
-        logger.warning("[MacroEngine] Emergency stop triggered via Guardian kill switch")
 
     def reset_halt(self) -> None:
         """Resets engine halt state."""

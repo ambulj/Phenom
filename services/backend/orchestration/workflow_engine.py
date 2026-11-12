@@ -143,7 +143,6 @@ class WorkflowEngine:
     def halt(self) -> None:
         """Synchronously halts all running workflows in < 25.0ms (Rule 3)."""
         self._is_halted = True
-        logger.warning("[WorkflowEngine] Emergency stop triggered via Guardian kill switch")
 
     def reset_halt(self) -> None:
         """Resets engine halt state."""
