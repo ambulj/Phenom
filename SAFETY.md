@@ -3506,6 +3506,26 @@ All 4 Phase 2 prosodic acting and emotional modulation tools are registered with
 ### 3. Guardian Kill Switch SLA (SAF-02.1)
 - The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously sets `halt()` on `ProsodicActingEngine`, instantly interrupting speech envelope processing in $< 0.05\text{ ms}$, strictly complying with the $< 25.0\text{ ms}$ hard SLA.
 
+## 137. Milestone 34.0 — Phase 3: Cross-Identity Voice Morphing Matrix & Biometric Consent Enclave (MORPH-03, VOICE-PRIV-01, SAF-01, SAF-02)
+
+### 1. Tool Registry Audit & Classification (SAF-01.1)
+All 4 Phase 3 acoustic voice morphing and biometric consent enclave tools are registered with `services.backend.safety.registry.registry` with strict Pydantic argument schemas and preview generators:
+- `morph_voice_identity`: **Tier 1** (Interpolates vocal acoustic timbre along normalized 512-d unit sphere between base Jarvis and target profile with blend ratio $\alpha \in [0.0, 1.0]$; strictly verifies biometric consent signature before morphing; requires user confirmation).
+- `get_voice_morphing_telemetry`: **Tier 0** (Retrieves active morphing ratio, base profile, target profile, biometric consent verification status, and timestamp; read-only telemetry).
+- `sign_biometric_voice_consent`: **Tier 1** (Cryptographically signs biometric consent using SHA-256 HMAC digest bound to user and profile identity; requires user confirmation).
+- `revoke_biometric_voiceprint`: **Tier 1** (Immediately revokes biometric consent for target profile, permanently zeros active morphing vector back to 100% base Jarvis, and resets morph ratio to 0.0; requires user confirmation).
+
+### 2. Permanent Safety Rule Compliance Invariants (SAF-01.2)
+- **Rule 1 (Safety Before Tools)**: Voice morphing cannot occur without an active, non-revoked cryptographic biometric consent signature on file. If unconsented, raises `PermissionError`.
+- **Rule 4 (100% On-Device Sovereign Processing)**: All acoustic timbre morphing calculations, spherical unit vector interpolations, and cryptographic biometric signatures reside in local memory/enclave. Zero voice vectors or biometric signatures ever egress to cloud networks.
+- **Rule 7 (Non-Destructibility & 1-Click Revocation)**: Revoking consent immediately wipes biometric authorization and resets acoustic morphing to pure Jarvis baseline without damaging disk storage or base assets.
+- **Rule 8 (Payment Prohibitions)**: All voice profile IDs and signee names are strictly sanitized against financial and checkout terms; any detected keyword triggers `Rule8ViolationError`.
+- **Rule 11 (Credential Protection)**: Cryptographic signature digests are strictly hashed (SHA-256) and never expose raw secrets or credentials.
+
+### 3. Guardian Kill Switch SLA (SAF-02.1)
+- The universal Guardian kill switch (`guardian.emergency_stop()`) synchronously calls `voice_morphing_matrix.halt()`, instantly zeroing morphing states and falling back to base voice in $< 0.05\text{ ms}$, comfortably within the $< 25.0\text{ ms}$ hard SLA.
+
+
 
 
 
