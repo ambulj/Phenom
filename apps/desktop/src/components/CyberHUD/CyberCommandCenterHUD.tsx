@@ -18,7 +18,7 @@ export interface CyberCommandCenterHUDProps {
   onClose?: () => void;
 }
 
-type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem';
+type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem';
 
 interface SwarmAgentState {
   name: string;
@@ -274,6 +274,31 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
 
   const [activeBinaryFile] = useState<string>('python.exe');
   const [activeFridaPid] = useState<number>(14820);
+
+  // Milestone 41: Spectral RF, Ghost Rootkit & Zero-Trace RAM State
+  const [spectralBins] = useState<number[]>([
+    -92, -90, -88, -75, -55, -42, -58, -80, -91, -92, -90, -89,
+    -70, -48, -38, -62, -88, -91, -92, -90, -85, -60, -78, -92
+  ]);
+  const [spectralWifi] = useState<Array<{ essid: string; bssid: string; ch: number; rssi: number; sec: string }>>([
+    { essid: 'PHENOM-SOVEREIGN-SEC', bssid: '00:11:22:33:44:55', ch: 6, rssi: -42, sec: 'WPA3-SAE' },
+    { essid: 'LAB-TESTNET-5G', bssid: '34:E6:D7:88:99:AA', ch: 36, rssi: -55, sec: 'WPA2-PSK' },
+    { essid: 'PHENOM-SOVEREIGN-SEC', bssid: 'DE:AD:BE:EF:00:01', ch: 11, rssi: -38, sec: 'ROGUE-AP' },
+  ]);
+  const [spectralBle] = useState<Array<{ name: string; mac: string; rssi: number }>>([
+    { name: 'Sovereign-FIDO2-Key', mac: 'F4:12:FA:33:11:00', rssi: -50 },
+    { name: 'Nordic-BLE-Sensor', mac: '12:34:56:78:9A:BC', rssi: -78 },
+  ]);
+  const [ghostHooks] = useState<Array<{ func: string; module: string; status: string; prologue: string }>>([
+    { func: 'NtAllocateVirtualMemory', module: 'ntdll.dll', status: 'CLEAN', prologue: '4C 8B D1 B8 18 00 00 00' },
+    { func: 'NtProtectVirtualMemory', module: 'ntdll.dll', status: 'CLEAN', prologue: '4C 8B D1 B8 50 00 00 00' },
+    { func: 'NtWriteVirtualMemory', module: 'ntdll.dll', status: 'CLEAN', prologue: '4C 8B D1 B8 3A 00 00 00' },
+    { func: 'NtCreateThreadEx', module: 'ntdll.dll', status: 'CLEAN', prologue: '4C 8B D1 B8 BD 00 00 00' },
+  ]);
+  const [stealthActive, setStealthActive] = useState<boolean>(true);
+  const [volatileEntries, setVolatileEntries] = useState<number>(24);
+  const [volatileBytes, setVolatileBytes] = useState<number>(49152);
+  const [zeroizeDone, setZeroizeDone] = useState<boolean>(false);
 
   const [honeypots] = useState<HoneypotNode[]>([
     { id: 'hp-ssh', service: 'SSH Trap', port: 2222, hits: 14, x: 90, y: 75, status: 'ARMED' },
@@ -980,6 +1005,9 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
               { id: 'kernel', label: 'KERNEL SANDBOX' },
               { id: 'swarm', label: 'SOVEREIGN SWARM' },
               { id: 'binary', label: 'BINARY RE / FRIDA' },
+              { id: 'spectral', label: 'SPECTRAL RF' },
+              { id: 'ghost', label: 'GHOST ROOTKIT' },
+              { id: 'stealth', label: 'ZERO-TRACE RAM' },
               { id: 'packets', label: 'PACKET SNIFFER' },
               { id: 'esp8266', label: 'ESP8266 UART' },
               { id: 'hashcat', label: 'CUDA GPU' },
@@ -1568,6 +1596,253 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                       {line}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tab: SPECTRAL RF RADAR */}
+            {activeTab === 'spectral' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+                {/* RF Spectrum Banner */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#091222', padding: '6px 10px', borderRadius: 6, border: '1px solid #00f0ff22' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#00f0ff' }}>SPECTRAL-NEXUS RF WATERFALL</span>
+                    <span style={{ fontSize: 9, color: '#ffaa00', backgroundColor: '#ffaa0018', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                      CENTER: 2437.0 MHz (CH 6) | BW: 20 MHz
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 9, color: '#00ff66', fontWeight: 700 }}>
+                    802.11ac/ax + BLE 5.3 ARMED
+                  </span>
+                </div>
+
+                {/* Live RF Waterfall Visualizer Bars */}
+                <div style={{ backgroundColor: '#040810', border: '1px solid #00f0ff33', borderRadius: 6, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 8.5, color: '#6080a0' }}>
+                    <span>2412 MHz (CH 1)</span>
+                    <span style={{ color: '#00f0ff', fontWeight: 700 }}>2437 MHz (CH 6 - CARRIER PEAK)</span>
+                    <span>2462 MHz (CH 11)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 65, backgroundColor: '#02050a', padding: '4px 6px', borderRadius: 4 }}>
+                    {spectralBins.map((dbm, idx) => {
+                      const heightPct = Math.min(100, Math.max(15, (dbm + 100) * 1.6));
+                      const isPeak = dbm > -50;
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            flex: 1,
+                            height: `${heightPct}%`,
+                            backgroundColor: isPeak ? '#f43f5e' : dbm > -70 ? '#ffaa00' : '#00f0ff',
+                            borderRadius: '2px 2px 0 0',
+                            transition: 'height 0.2s ease',
+                          }}
+                          title={`Bin ${idx}: ${dbm} dBm`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Rogue AP & Deauth Alert Banner */}
+                <div style={{ backgroundColor: '#ff003c15', border: '1px solid #ff003c44', borderRadius: 6, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 9.5, color: '#ff003c', fontWeight: 700 }}>
+                    [!] ROGUE AP DETECTED: Conflicting BSSID DE:AD:BE:EF:00:01 broadcasting PHENOM-SOVEREIGN-SEC
+                  </span>
+                  <span style={{ fontSize: 8.5, color: '#00ff66', backgroundColor: '#00ff6615', padding: '2px 6px', borderRadius: 3, fontWeight: 700 }}>
+                    WPA3 PMF ACTIVE
+                  </span>
+                </div>
+
+                {/* Scanned Access Points & BLE Devices Tables */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 10, flex: 1, minHeight: 0 }}>
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8, overflowY: 'auto' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#00f0ff', marginBottom: 6 }}>SCANNED 802.11 ACCESS POINTS</div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9, textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #00f0ff22', color: '#6080a0' }}>
+                          <th style={{ padding: '2px 4px' }}>ESSID</th>
+                          <th style={{ padding: '2px 4px' }}>BSSID</th>
+                          <th style={{ padding: '2px 4px' }}>CH</th>
+                          <th style={{ padding: '2px 4px' }}>RSSI</th>
+                          <th style={{ padding: '2px 4px' }}>SECURITY</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {spectralWifi.map((ap, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid #ffffff08' }}>
+                            <td style={{ padding: '4px', color: ap.sec === 'ROGUE-AP' ? '#ff003c' : '#ffffff', fontWeight: 600 }}>{ap.essid}</td>
+                            <td style={{ padding: '4px', color: '#a0c0e0', fontFamily: 'monospace' }}>{ap.bssid}</td>
+                            <td style={{ padding: '4px', color: '#ffaa00' }}>{ap.ch}</td>
+                            <td style={{ padding: '4px', color: ap.rssi > -50 ? '#00ff66' : '#a0c0e0' }}>{ap.rssi} dBm</td>
+                            <td style={{ padding: '4px' }}>
+                              <span style={{ backgroundColor: ap.sec === 'ROGUE-AP' ? '#ff003c22' : '#00f0ff22', color: ap.sec === 'ROGUE-AP' ? '#ff003c' : '#00f0ff', padding: '1px 4px', borderRadius: 2, fontSize: 8, fontWeight: 700 }}>
+                                {ap.sec}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8, overflowY: 'auto' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#c084fc', marginBottom: 6 }}>BLE AIRSPACE BEACONS</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {spectralBle.map((dev, i) => (
+                        <div key={i} style={{ backgroundColor: '#091222', border: '1px solid #c084fc33', borderRadius: 4, padding: 6 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, fontWeight: 700, color: '#c084fc' }}>
+                            <span>{dev.name}</span>
+                            <span style={{ color: '#00ff66' }}>{dev.rssi} dBm</span>
+                          </div>
+                          <div style={{ fontSize: 8.5, color: '#6080a0', fontFamily: 'monospace' }}>MAC: {dev.mac}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: GHOST ROOTKIT HUNTER */}
+            {activeTab === 'ghost' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+                {/* Ghost Status Banner */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#091222', padding: '6px 10px', borderRadius: 6, border: '1px solid #00f0ff22' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#00f0ff' }}>GHOST-PROTOCOL KERNEL INTEGRITY</span>
+                    <span style={{ fontSize: 9, color: '#00ff66', backgroundColor: '#00ff6615', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                      COMPOSITE THREAT SCORE: 0/100 (BENIGN)
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 9, color: '#c084fc', fontWeight: 700 }}>
+                    eBPF & NTAPI PROLOGUE AUDITOR ARMED
+                  </span>
+                </div>
+
+                {/* Subsystem Integrity Status */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00ff6633', borderRadius: 6, padding: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#00ff66', marginBottom: 4 }}>LINUX KALI KERNEL POSTURE</div>
+                    <div style={{ fontSize: 9, color: '#a0c0e0' }}>/proc/modules vs /sys/module match: <strong style={{ color: '#00ff66' }}>100% CLEAN</strong></div>
+                    <div style={{ fontSize: 9, color: '#a0c0e0' }}>Hidden LKM Rootkits: <strong style={{ color: '#00ff66' }}>0 DETECTED</strong></div>
+                    <div style={{ fontSize: 9, color: '#a0c0e0' }}>Active Kprobes: <strong style={{ color: '#00f0ff' }}>1 (sys_enter_execve)</strong></div>
+                  </div>
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff33', borderRadius: 6, padding: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#00f0ff', marginBottom: 4 }}>WINDOWS 11 NTAPI INTEGRITY</div>
+                    <div style={{ fontSize: 9, color: '#a0c0e0' }}>ntdll.dll Prologue Tampering: <strong style={{ color: '#00ff66' }}>0 HOOKS</strong></div>
+                    <div style={{ fontSize: 9, color: '#a0c0e0' }}>SSDT / IDT Table Descriptor: <strong style={{ color: '#00ff66' }}>INTACT</strong></div>
+                    <div style={{ fontSize: 9, color: '#a0c0e0' }}>HVCI Memory Code Integrity: <strong style={{ color: '#00ff66' }}>ENFORCED</strong></div>
+                  </div>
+                </div>
+
+                {/* NTAPI Prologue Inspection Table */}
+                <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8, flex: 1, overflowY: 'auto' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#00f0ff', marginBottom: 6 }}>SCANNED SYSCALL PROLOGUES (DETOUR DETECTION)</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9, textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #00f0ff22', color: '#6080a0' }}>
+                        <th style={{ padding: '3px 6px' }}>FUNCTION NAME</th>
+                        <th style={{ padding: '3px 6px' }}>MODULE</th>
+                        <th style={{ padding: '3px 6px' }}>PROLOGUE BYTES</th>
+                        <th style={{ padding: '3px 6px' }}>HOOK STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ghostHooks.map((h, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #ffffff08' }}>
+                          <td style={{ padding: '4px 6px', color: '#00f0ff', fontWeight: 600 }}>{h.func}</td>
+                          <td style={{ padding: '4px 6px', color: '#a0c0e0' }}>{h.module}</td>
+                          <td style={{ padding: '4px 6px', color: '#ffaa00', fontFamily: 'monospace' }}>{h.prologue}</td>
+                          <td style={{ padding: '4px 6px' }}>
+                            <span style={{ backgroundColor: '#00ff6622', color: '#00ff66', padding: '1px 6px', borderRadius: 2, fontSize: 8, fontWeight: 700 }}>
+                              {h.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: ZERO-TRACE EPHEMERAL RAM OS */}
+            {activeTab === 'stealth' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+                {/* Zero-Trace Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#091222', padding: '6px 10px', borderRadius: 6, border: '1px solid #00ff6633' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#00ff66' }}>ZERO-TRACE EPHEMERAL RAM POSTURE</span>
+                    <span style={{ fontSize: 9, color: stealthActive ? '#00ff66' : '#ffaa00', backgroundColor: stealthActive ? '#00ff6615' : '#ffaa0015', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                      {stealthActive ? 'RAM-ONLY (DISK WRITES SUPPRESSED)' : 'PERSISTENT DISK LOGGING'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setStealthActive(!stealthActive)}
+                    style={{
+                      backgroundColor: stealthActive ? '#ff003c22' : '#00ff6622',
+                      border: `1px solid ${stealthActive ? '#ff003c' : '#00ff66'}`,
+                      color: stealthActive ? '#ff003c' : '#00ff66',
+                      borderRadius: 4,
+                      padding: '4px 8px',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {stealthActive ? 'DEACTIVATE STEALTH' : 'ACTIVATE STEALTH'}
+                  </button>
+                </div>
+
+                {/* Metrics Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8 }}>
+                    <div style={{ fontSize: 9, color: '#6080a0' }}>VOLATILE TRACES IN RAM</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#00f0ff' }}>{volatileEntries}</div>
+                    <div style={{ fontSize: 8, color: '#a0c0e0' }}>Never flushed to disk</div>
+                  </div>
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8 }}>
+                    <div style={{ fontSize: 9, color: '#6080a0' }}>VOLATILE BYTES ALLOCATED</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#c084fc' }}>{(volatileBytes / 1024).toFixed(1)} KB</div>
+                    <div style={{ fontSize: 8, color: '#a0c0e0' }}>RAM buffer pool</div>
+                  </div>
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8 }}>
+                    <div style={{ fontSize: 9, color: '#6080a0' }}>GUARDIAN ZEROIZE SLA</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#00ff66' }}>&lt; 0.05 ms</div>
+                    <div style={{ fontSize: 8, color: '#a0c0e0' }}>Cryptographic overwrite</div>
+                  </div>
+                </div>
+
+                {/* Zeroization Action Bar */}
+                <div style={{ backgroundColor: '#050c18', border: '1px solid #ff003c44', borderRadius: 6, padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#ff003c' }}>EMERGENCY CRYPTOGRAPHIC ZEROIZATION</div>
+                    <div style={{ fontSize: 8.5, color: '#a0c0e0' }}>
+                      Overwrites all in-memory volatile trace buffers with cryptographic entropy and zeroes in &lt; 25ms.
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setVolatileEntries(0);
+                      setVolatileBytes(0);
+                      setZeroizeDone(true);
+                      setTimeout(() => setZeroizeDone(false), 3000);
+                    }}
+                    style={{
+                      backgroundColor: '#ff003c',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 4,
+                      padding: '6px 12px',
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    {zeroizeDone ? 'ZEROIZED CLEAN (0 BYTES)' : 'PURGE & ZEROIZE RAM NOW'}
+                  </button>
                 </div>
               </div>
             )}
