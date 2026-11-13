@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "39.0.0",
-  "description": "Phenom 39.0: Autonomous Kernel Behavioral Sandbox & Memory Integrity Guard OS — Real-Time ETW/Sysmon Anomaly Correlator, User-Mode VirtualQueryEx RWX Page Scanner, In-Memory PE Header Integrity Guard, CyberHUD Kernel Sandbox Matrix, and Non-Destructive RAM Quarantine OS",
+  "version": "40.0.0",
+  "description": "Phenom 40.0: Project OMNI-SINGULARITY — Sovereign Cross-Platform (Windows 11 & Native Kali Linux Dual-Boot) Multi-Agent Warfare, Headless Binary Reverse-Engineering (Ghidra/Rizin), Dynamic Frida DBI Engine, and 3D CyberHUD War-Room OS",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
