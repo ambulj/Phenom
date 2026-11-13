@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "40.0.0",
-  "description": "Phenom 40.0: Project OMNI-SINGULARITY — Sovereign Cross-Platform (Windows 11 & Native Kali Linux Dual-Boot) Multi-Agent Warfare, Headless Binary Reverse-Engineering (Ghidra/Rizin), Dynamic Frida DBI Engine, and 3D CyberHUD War-Room OS",
+  "version": "41.0.0",
+  "description": "Phenom 41.0: Project APEX-SOVEREIGN — The Universal Cyber Warfare, Over-The-Air RF Signal Interception, Deep Rootkit Hunter, Autonomous Exploit Engine & Zero-Trace RAM OS",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
