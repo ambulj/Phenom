@@ -26,6 +26,7 @@ from services.backend.cyber.multiband_sigint import MultiBandSIGINTReceiver, mul
 from services.backend.cyber.cyber_wargame import CyberWarGameEngine, cyber_wargame
 from services.backend.cyber.tactical_dag_orchestrator import TacticalDAGOrchestrator, tactical_dag
 from services.backend.cyber.kali_bridge import KaliSecurityBridge, kali_bridge
+from services.backend.cyber.red_team_pipeline import AutonomousRedTeamPipeline, red_team_pipeline
 
 __all__ = [
     "ESP8266Controller",
@@ -62,4 +63,6 @@ __all__ = [
     "tactical_dag",
     "KaliSecurityBridge",
     "kali_bridge",
+    "AutonomousRedTeamPipeline",
+    "red_team_pipeline",
 ]
