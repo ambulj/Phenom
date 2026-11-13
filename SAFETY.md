@@ -3606,3 +3606,23 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 
 
 
+
+
+## Section 35: Cyber Warfare, Hardware Interfacing & Autonomous Pentest Governance
+### 1. Risk Tier Taxonomy for Cyber & Hardware Operations
+- **Tier 0 (Passive & Read-Only Auditing)**:
+  - `stop_packet_sniffing`: Halts passive frame capture.
+  - `analyze_binary_security`: Static disassembly, compiler mitigation inspection (ASLR, DEP, Canaries), unsafe C primitive scanning.
+  - `connect_esp8266`: Discovers and opens USB-UART COM port with connected microcontroller.
+  - `audit_etw_kernel_telemetry`: Read-only queries of Windows Event Tracing & Sysmon (IDs 1, 8, 10, 4104) for Process Hollowing and LOLBin exploitation.
+  - `run_cuda_hash_audit`: GPU-accelerated hash entropy auditing and candidate cryptanalysis with thermal throttle guards (<85°C).
+- **Tier 1 (Targeted Reconnaissance & RF Command Execution)**:
+  - `execute_red_team_mission`: Autonomous 4-stage penetration test workflow (Recon -> Enumeration -> Vulnerability Check -> Obsidian Debrief).
+  - `start_packet_sniffing`: Live BPF packet capture and cleartext credential leak alerting.
+  - `send_esp8266_command`: Dispatches 802.11 monitor / RF / deauth directives over USB UART to microcontroller.
+
+### 2. Guardrails & Strict Invariants
+- **Guardian Kill-Switch (<25ms SLA)**: All background packet sniffing threads, serial telemetry loops, and red-team DAG steps actively monitor `guardian.is_halted`. Triggering the kill-switch aborts all active operations instantaneously.
+- **Rule 4 & Sovereign Privacy**: All packet captures, disassembly bytes, and telemetry remain 100% strictly local in memory and the local Obsidian vault.
+- **Rule 5, 8, 11 (Credential & Financial Defense)**: Disassembly and packet sniffing tools actively scrub detected credentials with `[REDACTED]` and strictly prohibit financial/checkout automation.
+- **Thermal Safety Safeguard**: CUDA cryptanalysis pipeline monitors GPU temperature via `nvidia-smi` and throttles execution if temperature reaches 85°C.

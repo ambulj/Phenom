@@ -99,6 +99,7 @@ import { WorkflowOrchestratorHUD } from './components/CyberHUD/WorkflowOrchestra
 import { ToolFoundryHUD } from './components/CyberHUD/ToolFoundryHUD';
 import { SensoryPresenceHUD } from './components/CyberHUD/SensoryPresenceHUD';
 import { VoiceStudioHUD } from './components/CyberHUD/VoiceStudioHUD';
+import { CyberCommandCenterHUD } from './components/CyberHUD/CyberCommandCenterHUD';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -312,6 +313,7 @@ export const App: React.FC = () => {
   const [showToolFoundry, setShowToolFoundry] = useState<boolean>(false);
   const [showSensoryPresence, setShowSensoryPresence] = useState<boolean>(false);
   const [showVoiceStudio, setShowVoiceStudio] = useState<boolean>(false);
+  const [showCyberCommandCenter, setShowCyberCommandCenter] = useState<boolean>(false);
   const [associativeMemoryExternalEvent, setAssociativeMemoryExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
 
 
@@ -1598,6 +1600,13 @@ export const App: React.FC = () => {
       onExecute: () => setShowVoiceStudio((prev) => !prev)
     },
     {
+      id: 'cmd-cyber-command-center-hud',
+      title: 'Toggle Cyber Command Center HUD',
+      subtitle: 'Autonomous red-team DAG, live packet sniffer, ESP8266 serial bridge, RTX CUDA cryptanalysis',
+      category: 'Assistant',
+      onExecute: () => setShowCyberCommandCenter((prev) => !prev)
+    },
+    {
       id: 'cmd-proactive-scheduler',
       title: 'Toggle Proactive Scheduler HUD',
       subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
@@ -2350,6 +2359,20 @@ export const App: React.FC = () => {
             }
           }}
         />
+      )}
+
+      {/* Cyber Command Center HUD (Red-Team DAG, Live Packet Interceptor, ESP8266 UART, RTX CUDA Hashcat) */}
+      {showCyberCommandCenter && (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999 }}>
+          <CyberCommandCenterHUD
+            onClose={() => setShowCyberCommandCenter(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
       )}
 
       {/* Dynamic Micro-Sandbox & AST Jail HUD (SEC-04, ENV-02) */}
