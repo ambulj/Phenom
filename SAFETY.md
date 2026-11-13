@@ -3641,3 +3641,19 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - **100% Passive Reception Only**: Radio frequency tools operate exclusively in receive-only mode. Radio transmission is strictly prohibited.
 - **Guardian Kill-Switch (<25ms SLA)**: Active radio listening and DNS queries monitor `guardian.is_halted` and abort immediately upon trigger.
 - **Rule 4 & Rule 11**: Discovered subdomains and transponder telemetry are processed locally in RAM and stored in the Obsidian vault with sensitive strings masked.
+
+
+## Section 37: Sigma SIEM, IoT Firmware Triage & P2P Mesh Governance
+### 1. Risk Tier Taxonomy
+- **Tier 0 (Read-Only SIEM & Firmware Inspection)**:
+  - `evaluate_sigma_telemetry`: In-memory pattern matching of telemetry events against Sigma detection rules.
+  - `triage_iot_firmware`: Non-destructive header and credential parsing over firmware binary images.
+  - `start_p2p_mesh_node`: Starts local UDP broadcast node discovery (port 53530).
+  - `list_p2p_mesh_peers`: Read-only mesh peer table query.
+- **Tier 1 (Mesh Directives)**:
+  - `broadcast_p2p_directive`: Authenticated HMAC-signed directive broadcast across discovered local mesh peer nodes.
+
+### 2. Invariants & Guardrails
+- **Guardian Kill-Switch (<25ms SLA)**: SIEM sweeps and P2P mesh broadcasting monitor `guardian.is_halted` and abort immediately upon trigger.
+- **Rule 4 & Sovereign Zero Cloud Egress**: P2P mesh operates strictly peer-to-peer over local UDP multicast/broadcast and RF serial bridges with zero cloud server dependencies.
+- **Rule 11 Credential Defense**: Embedded private keys and shadow hashes uncovered during firmware triage are reported in the Obsidian vault with sensitive strings masked.

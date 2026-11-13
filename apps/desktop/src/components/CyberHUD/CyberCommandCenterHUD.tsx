@@ -16,7 +16,25 @@ export interface CyberCommandCenterHUDProps {
   onClose?: () => void;
 }
 
-type CyberTab = 'recon' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets';
+type CyberTab = 'recon' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem';
+
+interface AircraftBlip {
+  icao: string;
+  callsign: string;
+  altitude_ft: number;
+  speed_kts: number;
+  heading: number;
+  x: number;
+  y: number;
+}
+
+interface SigmaAlertUI {
+  ruleId: string;
+  title: string;
+  technique: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  status: 'ACTIVE' | 'CONTAINED';
+}
 
 interface SocketEntry {
   proto: 'TCP' | 'UDP';
@@ -94,6 +112,20 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
     { proto: 'TCP', local: '0.0.0.0:445', remote: '*:*', state: 'LISTENING', pid: 4, process: 'System (SMB)', threatLevel: 'SUSPICIOUS' },
     { proto: 'UDP', local: '0.0.0.0:5353', remote: '*:*', state: 'LISTENING', pid: 2110, process: 'mDNSResponder', threatLevel: 'CLEAN' },
     { proto: 'TCP', local: '127.0.0.1:8080', remote: '*:*', state: 'LISTENING', pid: 25410, process: 'burpsuite.jar (WSL)', threatLevel: 'CLEAN' },
+  ]);
+
+  const [radarAircraft] = useState<AircraftBlip[]>([
+    { icao: 'A4C981', callsign: 'AI-102', altitude_ft: 32000, speed_kts: 460, heading: 270, x: 230, y: 90 },
+    { icao: 'C0842F', callsign: '6E-542', altitude_ft: 18500, speed_kts: 320, heading: 135, x: 140, y: 200 },
+    { icao: '4008BD', callsign: 'BA-143', altitude_ft: 36000, speed_kts: 490, heading: 90, x: 310, y: 160 },
+  ]);
+
+  const [sigmaRules] = useState<SigmaAlertUI[]>([
+    { ruleId: 'SIGMA-WIN-001', title: 'Suspicious PowerShell Download Cradle', technique: 'T1059.001', severity: 'HIGH', status: 'ACTIVE' },
+    { ruleId: 'SIGMA-WIN-002', title: 'Remote Thread Injection into svchost', technique: 'T1055', severity: 'CRITICAL', status: 'CONTAINED' },
+    { ruleId: 'SIGMA-WIN-003', title: 'Direct Memory Access to lsass.exe', technique: 'T1003.001', severity: 'CRITICAL', status: 'CONTAINED' },
+    { ruleId: 'SIGMA-WIN-004', title: 'LOLBin Proxy Execution via CertUtil', technique: 'T1218', severity: 'HIGH', status: 'ACTIVE' },
+    { ruleId: 'SIGMA-WIN-005', title: 'Persistence via CurrentVersion Run Key', technique: 'T1547.001', severity: 'MEDIUM', status: 'ACTIVE' },
   ]);
 
   const topologyNodes: TopologyNode[] = [
@@ -465,6 +497,8 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
               { id: 'hashcat', label: 'CUDA GPU' },
               { id: 'etw', label: 'KERNEL ETW' },
               { id: 'sockets', label: 'SOCKET MATRIX' },
+              { id: 'radar', label: 'ADS-B RADAR' },
+              { id: 'siem', label: 'SIGMA SIEM' },
             ].map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -576,6 +610,93 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                             {s.threatLevel}
                           </span>
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeTab === 'radar' && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 440, height: 260, position: 'relative', backgroundColor: '#040810', borderRadius: 8, border: '1px solid #00ff6633' }}>
+                  <svg width="100%" height="100%" viewBox="0 0 440 260">
+                    {/* Range Rings */}
+                    <circle cx="220" cy="130" r="100" fill="none" stroke="#00ff6622" strokeWidth="1" />
+                    <circle cx="220" cy="130" r="66" fill="none" stroke="#00ff6622" strokeWidth="1" />
+                    <circle cx="220" cy="130" r="33" fill="none" stroke="#00ff6622" strokeWidth="1" />
+                    {/* Crosshairs */}
+                    <line x1="220" y1="10" x2="220" y2="250" stroke="#00ff6622" strokeWidth="1" strokeDasharray="3 3" />
+                    <line x1="20" y1="130" x2="420" y2="130" stroke="#00ff6622" strokeWidth="1" strokeDasharray="3 3" />
+                    {/* Center Ground Station */}
+                    <circle cx="220" cy="130" r="4" fill="#00ff66" />
+                    <text x="220" y="145" fill="#00ff66" fontSize="9" textAnchor="middle">RTL-SDR 1090MHz</text>
+
+                    {/* Aircraft Blips */}
+                    {radarAircraft.map((plane) => (
+                      <g key={plane.icao}>
+                        <circle cx={plane.x} cy={plane.y} r="5" fill="#00f0ff" />
+                        <circle cx={plane.x} cy={plane.y} r="9" fill="none" stroke="#00f0ff" strokeWidth="1" opacity="0.6">
+                          <animate attributeName="r" values="6;12;6" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                        <text x={plane.x + 10} y={plane.y - 2} fill="#00f0ff" fontSize="10" fontWeight="bold">
+                          {plane.callsign}
+                        </text>
+                        <text x={plane.x + 10} y={plane.y + 10} fill="#80c0ff" fontSize="8">
+                          {plane.altitude_ft}ft • {plane.speed_kts}kts
+                        </text>
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+                <div style={{ fontSize: 10, color: '#00ff66', display: 'flex', gap: 16 }}>
+                  <span>MODE-S / ADS-B: ONLINE</span>
+                  <span>ANTENNA: 1090 MHz DIPOLE</span>
+                  <span>RANGE: 50 NM</span>
+                  <span>ACTIVE TARGETS: {radarAircraft.length}</span>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'siem' && (
+              <div>
+                <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, fontWeight: 'bold', color: '#00f0ff' }}>REAL-TIME SIGMA THREAT RULES (MITRE ATT&CK)</span>
+                  <span style={{ fontSize: 10, color: '#00ff66', backgroundColor: '#00ff6615', padding: '2px 8px', borderRadius: 4 }}>
+                    {sigmaRules.length} RULES ACTIVE
+                  </span>
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #00f0ff33', color: '#00f0ff' }}>
+                      <th style={{ padding: '4px 6px' }}>RULE ID</th>
+                      <th style={{ padding: '4px 6px' }}>TITLE</th>
+                      <th style={{ padding: '4px 6px' }}>MITRE ATT&CK</th>
+                      <th style={{ padding: '4px 6px' }}>SEVERITY</th>
+                      <th style={{ padding: '4px 6px' }}>DEFENSE STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sigmaRules.map((r) => (
+                      <tr key={r.ruleId} style={{ borderBottom: '1px solid #00f0ff15' }}>
+                        <td style={{ padding: '6px 6px', color: '#00f0ff' }}>{r.ruleId}</td>
+                        <td style={{ padding: '6px 6px' }}>{r.title}</td>
+                        <td style={{ padding: '6px 6px', color: '#a855f7' }}>{r.technique}</td>
+                        <td style={{ padding: '6px 6px' }}>
+                          <span
+                            style={{
+                              backgroundColor: r.severity === 'CRITICAL' ? '#ff003c22' : '#ffaa0022',
+                              color: r.severity === 'CRITICAL' ? '#ff003c' : '#ffaa00',
+                              padding: '2px 6px',
+                              borderRadius: 3,
+                              fontSize: 9,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {r.severity}
+                          </span>
+                        </td>
+                        <td style={{ padding: '6px 6px', color: '#00ff66' }}>{r.status}</td>
                       </tr>
                     ))}
                   </tbody>

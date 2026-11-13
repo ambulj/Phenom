@@ -235,6 +235,7 @@ import services.backend.tools.app_tools
 import services.backend.tools.kali_tools
 import services.backend.tools.cyber_power_tools
 import services.backend.tools.osint_sdr_tools
+import services.backend.tools.advanced_cyber_tools
 
 
 
