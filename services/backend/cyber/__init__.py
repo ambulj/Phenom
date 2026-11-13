@@ -5,7 +5,7 @@ ESP8266 hardware interfacing, kernel ETW sensors, CUDA-accelerated cryptanalysis
 OSINT attack surface discovery, SDR radio telemetry, binary entropy triage,
 Sigma SIEM real-time correlation, IoT firmware triage, P2P encrypted mesh networking,
 Active Cyber Deception Enclave, Tactical Incident Response, Multi-Band Radio SIGINT,
-and Autonomous Red-vs-Blue Cyber War Game & Hardening Engines.
+Autonomous Red-vs-Blue War Games, and Cross-Subsystem Tactical DAGs.
 """
 
 from services.backend.cyber.esp8266_controller import ESP8266Controller
@@ -24,6 +24,7 @@ from services.backend.cyber.deception_enclave import CyberDeceptionEnclave, dece
 from services.backend.cyber.incident_responder import TacticalIncidentResponder, incident_responder
 from services.backend.cyber.multiband_sigint import MultiBandSIGINTReceiver, multiband_sigint
 from services.backend.cyber.cyber_wargame import CyberWarGameEngine, cyber_wargame
+from services.backend.cyber.tactical_dag_orchestrator import TacticalDAGOrchestrator, tactical_dag
 
 __all__ = [
     "ESP8266Controller",
@@ -56,4 +57,6 @@ __all__ = [
     "multiband_sigint",
     "CyberWarGameEngine",
     "cyber_wargame",
+    "TacticalDAGOrchestrator",
+    "tactical_dag",
 ]
