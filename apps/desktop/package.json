@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "37.0.0",
-  "description": "Phenom 37.0: Autonomous Cross-Subsystem Workflows, Speculative LLM Acceleration, and Sovereign Tactical Control OS — Neural Speculative Decoding Engine, Cross-Subsystem 5-Stage Perimeter DAG Sweeps, Unified Airspace & Mesh CyberHUD Radar, and Sovereign Tactical Defense Operating System",
+  "version": "38.0.0",
+  "description": "Phenom 38.0: Autonomous Red-Team Operations & Kali Linux Security Tool Orchestration OS — Headless WSL2 Kali Tool Bridge, Autonomous 4-Vector Campaign Orchestrator, CyberHUD Kali Terminal & Red-Team Control Room, and Autonomous Lab Safe-Mode OS",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
