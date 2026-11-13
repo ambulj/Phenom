@@ -3703,3 +3703,17 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - **100% Receive-Only Operation**: Radio operations function strictly in passive listening mode; RF transmission is prohibited.
 - **Guardian Kill-Switch (<25ms SLA)**: Active radio demodulation loops continuously verify `guardian.is_halted` and abort immediately upon trigger.
 - **Privacy & Safety Protection**: Private passenger information or cleartext identifiers received via airwaves are kept in local volatile memory and masked before export.
+
+
+## Section 41: Autonomous Red-vs-Blue Cyber War Game & Hardening Governance
+### 1. Risk Tier Taxonomy
+- **Tier 0 (Hardening Script Synthesis & Simulation Queries)**:
+  - `generate_firewall_hardening_script`: Generates copyable non-destructive firewall script definitions (`netsh`, `iptables`).
+  - `get_wargame_history`: Read-only query of completed war game simulations and AAR debriefs.
+- **Tier 1 (War Game Execution)**:
+  - `execute_cyber_wargame`: Orchestrates a simulated 3-round duel against a local target to generate defensive countermeasures.
+
+### 2. Invariants & Guardrails
+- **Isolated Local Scopes Only**: Cyber war games operate exclusively against authorized local loopback addresses (`127.0.0.1` / localhost / isolated lab containers).
+- **Non-Destructive Defense Synthesis (Rule 7)**: Countermeasures generate defensive blocking and lockout rules without mutating external systems or deleting data.
+- **Guardian Kill-Switch (<25ms SLA)**: War game cycles check `guardian.is_halted` at every round boundary and abort immediately upon trigger.

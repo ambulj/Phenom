@@ -4183,3 +4183,24 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 9.85s)**
    - `services/backend/tests/test_sigint_suite.py`: **5/5 PASSED in 0.60s**.
    - Cumulative cyber test suite: **38/38 PASSED in 6.13s**.
    - Production Vite frontend build: **PASS (0 errors, 4.25s)**.
+
+
+# Milestone 36.0 Phase 4: Autonomous Red-vs-Blue Cyber War Game & Target Hardening
+
+## Accomplishments
+1. **Autonomous Dual-Agent Cyber War Game Engine (`services/backend/cyber/cyber_wargame.py`)**:
+   - Executes multi-round turn-based duels between a Red Auditor and Blue Defender across 3 security domains:
+     - Round 1: Perimeter Exposure & Unused Port Discovery (Telnet 2323, HTTP 8088).
+     - Round 2: Cryptographic Protocol & TLS Ciphers (deprecating TLS 1.0/3DES, enforcing TLS 1.3).
+     - Round 3: Account Lockout Policies & Authentication Hardening.
+2. **Defensive Policy & Firewall Script Synthesizer**:
+   - Automatically generates valid Windows Advanced Firewall (`netsh advfirewall`) and Linux `iptables` drop commands.
+   - Evaluates residual risk from CRITICAL down to LOW_HARDENED.
+3. **Obsidian After-Action Report (AAR) Compiler**:
+   - Automatically formats full round-by-round engagement debriefs with remediation command blocks directly into the Obsidian vault.
+4. **Tool Registry Integration (`services/backend/tools/wargame_tools.py`)**:
+   - Registered 3 safety-wrapped tools: `execute_cyber_wargame`, `generate_firewall_hardening_script`, `get_wargame_history`.
+5. **Testing & Verification**:
+   - `services/backend/tests/test_wargame_suite.py`: **4/4 PASSED in 0.60s**.
+   - Cumulative cyber test suite across all 8 modules: **42/42 PASSED in 6.79s**.
+   - Production Vite frontend build: **PASS (0 errors, 5.48s)**.
