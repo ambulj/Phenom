@@ -250,6 +250,7 @@ import services.backend.tools.binary_re_tools
 import services.backend.tools.sovereign_swarm_tools
 import services.backend.tools.kali_native_tools
 import services.backend.tools.spectral_ghost_tools
+import services.backend.tools.neural_zero_tools
 
 
 
