@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "41.0.0",
-  "description": "Phenom 41.0: Project APEX-SOVEREIGN — The Universal Cyber Warfare, Over-The-Air RF Signal Interception, Deep Rootkit Hunter, Autonomous Exploit Engine & Zero-Trace RAM OS",
+  "version": "42.0.0",
+  "description": "Phenom 42.0: Project CHRONO-CYBER & DARK-WEBINT — Autonomous Red-Team Campaign DAG, Sovereign Threat Intelligence & Dual-Boot Encrypted Shared Vault OS",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
