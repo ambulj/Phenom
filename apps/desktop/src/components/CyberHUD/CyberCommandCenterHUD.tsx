@@ -8,6 +8,8 @@ import {
   PulseRegular,
   BroadActivityFeedRegular,
   FlashRegular,
+  ArrowSyncRegular,
+  LockClosedRegular,
 } from '@fluentui/react-icons';
 
 export interface CyberCommandCenterHUDProps {
@@ -34,6 +36,25 @@ interface SigmaAlertUI {
   technique: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM';
   status: 'ACTIVE' | 'CONTAINED';
+}
+
+interface HoneypotNode {
+  id: string;
+  service: string;
+  port: number;
+  hits: number;
+  x: number;
+  y: number;
+  status: 'ARMED' | 'PROBING';
+}
+
+interface MeshPeerNode {
+  id: string;
+  callsign: string;
+  ip: string;
+  latencyMs: number;
+  x: number;
+  y: number;
 }
 
 interface SocketEntry {
@@ -120,6 +141,22 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
     { icao: '4008BD', callsign: 'BA-143', altitude_ft: 36000, speed_kts: 490, heading: 90, x: 310, y: 160 },
   ]);
 
+  const [radarFilter, setRadarFilter] = useState<'ALL' | 'ADSB' | 'HONEYPOT' | 'MESH'>('ALL');
+  const [isolatedPids, setIsolatedPids] = useState<number[]>([]);
+  const [sweepRunning, setSweepRunning] = useState<boolean>(false);
+
+  const [honeypots] = useState<HoneypotNode[]>([
+    { id: 'hp-ssh', service: 'SSH Trap', port: 2222, hits: 14, x: 90, y: 75, status: 'ARMED' },
+    { id: 'hp-telnet', service: 'Telnet Decoy', port: 2323, hits: 39, x: 345, y: 70, status: 'ARMED' },
+    { id: 'hp-http', service: 'HTTP Lure', port: 8088, hits: 3, x: 105, y: 195, status: 'ARMED' },
+  ]);
+
+  const [meshPeers] = useState<MeshPeerNode[]>([
+    { id: 'mesh-1', callsign: 'NODE-ALPHA', ip: '10.248.0.2', latencyMs: 6, x: 155, y: 165 },
+    { id: 'mesh-2', callsign: 'NODE-BRAVO', ip: '10.248.0.3', latencyMs: 12, x: 275, y: 205 },
+    { id: 'mesh-3', callsign: 'NODE-CHARLIE', ip: '10.248.0.4', latencyMs: 9, x: 335, y: 145 },
+  ]);
+
   const [sigmaRules] = useState<SigmaAlertUI[]>([
     { ruleId: 'SIGMA-WIN-001', title: 'Suspicious PowerShell Download Cradle', technique: 'T1059.001', severity: 'HIGH', status: 'ACTIVE' },
     { ruleId: 'SIGMA-WIN-002', title: 'Remote Thread Injection into svchost', technique: 'T1055', severity: 'CRITICAL', status: 'CONTAINED' },
@@ -150,8 +187,66 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
       setHashcatLogs((prev) => [...prev, `[CUDA] ${externalEvent.payload}`]);
     } else if (externalEvent.type === 'ETW_TELEMETRY_ALERT') {
       setEtwLogs((prev) => [...prev, `[ETW ALERT] ${externalEvent.payload}`]);
+    } else if (externalEvent.type === 'TACTICAL_SWEEP_UPDATE') {
+      const p = externalEvent.payload || {};
+      setReconLogs((prev) => [...prev, `[TACTICAL DAG] Stage: ${p.stage || 'SWEEP'} | ${p.message || ''}`]);
+    } else if (externalEvent.type === 'HONEYPOT_ALERT') {
+      setReconLogs((prev) => [...prev, `[HONEYPOT ALERT] ${JSON.stringify(externalEvent.payload)}`]);
+    } else if (externalEvent.type === 'ISOLATION_EVENT') {
+      const pid = externalEvent.payload?.pid;
+      if (pid && !isolatedPids.includes(pid)) {
+        setIsolatedPids((prev) => [...prev, pid]);
+      }
     }
-  }, [externalEvent]);
+  }, [externalEvent, isolatedPids]);
+
+  const handleIsolatePid = (pid: number) => {
+    if (!isolatedPids.includes(pid)) {
+      setIsolatedPids((prev) => [...prev, pid]);
+    }
+    if (sendMessage) {
+      sendMessage({
+        type: 'TOOL_EXECUTE',
+        tool: 'isolate_pid_network_egress',
+        args: { pid },
+      });
+    }
+    setReconLogs((prev) => [
+      ...prev,
+      `[SHIELD] Netsh outbound egress block enforced on PID ${pid}. Threat isolated!`,
+    ]);
+  };
+
+  const handleTriggerPerimeterSweep = () => {
+    setSweepRunning(true);
+    if (sendMessage) {
+      sendMessage({
+        type: 'TOOL_EXECUTE',
+        tool: 'execute_perimeter_sweep',
+        args: {},
+      });
+    }
+    setReconLogs((prev) => [
+      ...prev,
+      `[>] Initiating Autonomous 5-Stage Cross-Subsystem Perimeter Security Sweep...`,
+      `[*] Stage 1: RF SIGINT Spectrum sweep (ADS-B + ACARS 131.55MHz + APRS 144.39MHz)...`,
+    ]);
+    setTimeout(() => {
+      setReconLogs((prev) => [
+        ...prev,
+        `[+] Stage 1 Complete: 0 emergency squawks, RF spectrum clear.`,
+        `[*] Stage 2: Inbound perimeter socket audit (psutil net_connections)...`,
+        `[+] Stage 2 Complete: 6 active listening sockets mapped.`,
+        `[*] Stage 3: Sigma SIEM rule evaluation across live telemetry...`,
+        `[+] Stage 3 Complete: Zero active CRITICAL uncontained threats.`,
+        `[*] Stage 4: Canary token & in-RAM honeypot audit (SSH/2222, Telnet/2323)...`,
+        `[+] Stage 4 Complete: Canary tokens intact, zero exfiltration indicators.`,
+        `[*] Stage 5: Compiling Tactical Security Debrief to Obsidian vault...`,
+        `[+] Perimeter Sweep Completed with Zero Breaches! Voice summary generated.`,
+      ]);
+      setSweepRunning(false);
+    }, 1800);
+  };
 
   const handleRunMission = () => {
     setMissionRunning(true);
@@ -472,6 +567,29 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                 <FlashRegular />
                 {isEspConnected ? 'ESP8266 COM3' : 'ESP8266 OFF'}
               </button>
+
+              <button
+                onClick={handleTriggerPerimeterSweep}
+                disabled={sweepRunning}
+                style={{
+                  gridColumn: 'span 2',
+                  backgroundColor: sweepRunning ? '#00f0ff22' : '#00ff661a',
+                  border: sweepRunning ? '1px solid #00f0ff' : '1px solid #00ff6644',
+                  color: sweepRunning ? '#00f0ff' : '#00ff66',
+                  borderRadius: 4,
+                  padding: '6px 8px',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  cursor: sweepRunning ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                <ArrowSyncRegular style={{ animation: sweepRunning ? 'spin 1s linear infinite' : 'none' }} />
+                {sweepRunning ? 'EXECUTING PERIMETER SWEEP...' : 'TRIGGER PERIMETER SWEEP (DAG)'}
+              </button>
             </div>
           </div>
         </div>
@@ -586,6 +704,7 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                       <th style={{ padding: '4px 6px' }}>STATE</th>
                       <th style={{ padding: '4px 6px' }}>PID / PROCESS</th>
                       <th style={{ padding: '4px 6px' }}>RISK</th>
+                      <th style={{ padding: '4px 6px' }}>CONTAINMENT</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -610,6 +729,44 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                             {s.threatLevel}
                           </span>
                         </td>
+                        <td style={{ padding: '6px 6px' }}>
+                          {isolatedPids.includes(s.pid) ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                backgroundColor: '#ff003c22',
+                                border: '1px solid #ff003c66',
+                                color: '#ff003c',
+                                padding: '2px 6px',
+                                borderRadius: 3,
+                                fontSize: 9,
+                                fontWeight: 700,
+                              }}
+                            >
+                              <LockClosedRegular />
+                              EGRESS BLOCKED
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleIsolatePid(s.pid)}
+                              style={{
+                                backgroundColor: '#ffaa0015',
+                                border: '1px solid #ffaa0055',
+                                color: '#ffaa00',
+                                borderRadius: 3,
+                                padding: '2px 6px',
+                                fontSize: 9,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                              title="Netsh firewall outbound egress block"
+                            >
+                              ISOLATE EGRESS
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -618,42 +775,131 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
             )}
 
             {activeTab === 'radar' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 440, height: 260, position: 'relative', backgroundColor: '#040810', borderRadius: 8, border: '1px solid #00ff6633' }}>
-                  <svg width="100%" height="100%" viewBox="0 0 440 260">
-                    {/* Range Rings */}
-                    <circle cx="220" cy="130" r="100" fill="none" stroke="#00ff6622" strokeWidth="1" />
-                    <circle cx="220" cy="130" r="66" fill="none" stroke="#00ff6622" strokeWidth="1" />
-                    <circle cx="220" cy="130" r="33" fill="none" stroke="#00ff6622" strokeWidth="1" />
-                    {/* Crosshairs */}
-                    <line x1="220" y1="10" x2="220" y2="250" stroke="#00ff6622" strokeWidth="1" strokeDasharray="3 3" />
-                    <line x1="20" y1="130" x2="420" y2="130" stroke="#00ff6622" strokeWidth="1" strokeDasharray="3 3" />
-                    {/* Center Ground Station */}
-                    <circle cx="220" cy="130" r="4" fill="#00ff66" />
-                    <text x="220" y="145" fill="#00ff66" fontSize="9" textAnchor="middle">RTL-SDR 1090MHz</text>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                {/* Domain Selector Filter */}
+                <div style={{ display: 'flex', gap: 6, alignSelf: 'flex-start' }}>
+                  {(['ALL', 'ADSB', 'HONEYPOT', 'MESH'] as const).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setRadarFilter(filter)}
+                      style={{
+                        backgroundColor: radarFilter === filter ? '#00f0ff22' : '#081220',
+                        border: radarFilter === filter ? '1px solid #00f0ff' : '1px solid #00f0ff22',
+                        color: radarFilter === filter ? '#00f0ff' : '#6080a0',
+                        padding: '3px 8px',
+                        borderRadius: 4,
+                        fontSize: 9,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      {filter === 'ALL'
+                        ? 'UNIFIED AIR & MESH RADAR'
+                        : filter === 'ADSB'
+                        ? 'ADS-B AIRSPACE'
+                        : filter === 'HONEYPOT'
+                        ? 'DECEPTION TRAPS'
+                        : 'P2P ENCRYPTED MESH'}
+                    </button>
+                  ))}
+                </div>
 
-                    {/* Aircraft Blips */}
-                    {radarAircraft.map((plane) => (
-                      <g key={plane.icao}>
-                        <circle cx={plane.x} cy={plane.y} r="5" fill="#00f0ff" />
-                        <circle cx={plane.x} cy={plane.y} r="9" fill="none" stroke="#00f0ff" strokeWidth="1" opacity="0.6">
-                          <animate attributeName="r" values="6;12;6" dur="2s" repeatCount="indefinite" />
-                        </circle>
-                        <text x={plane.x + 10} y={plane.y - 2} fill="#00f0ff" fontSize="10" fontWeight="bold">
-                          {plane.callsign}
-                        </text>
-                        <text x={plane.x + 10} y={plane.y + 10} fill="#80c0ff" fontSize="8">
-                          {plane.altitude_ft}ft • {plane.speed_kts}kts
-                        </text>
+                <div style={{ width: 450, height: 260, position: 'relative', backgroundColor: '#040810', borderRadius: 8, border: '1px solid #00ff6633' }}>
+                  <svg width="100%" height="100%" viewBox="0 0 450 260">
+                    {/* Range Rings */}
+                    <circle cx="225" cy="130" r="110" fill="none" stroke="#00ff6622" strokeWidth="1" />
+                    <circle cx="225" cy="130" r="75" fill="none" stroke="#00ff6622" strokeWidth="1" />
+                    <circle cx="225" cy="130" r="40" fill="none" stroke="#00ff6622" strokeWidth="1" />
+
+                    {/* Crosshairs */}
+                    <line x1="225" y1="10" x2="225" y2="250" stroke="#00ff6622" strokeWidth="1" strokeDasharray="3 3" />
+                    <line x1="15" y1="130" x2="435" y2="130" stroke="#00ff6622" strokeWidth="1" strokeDasharray="3 3" />
+
+                    {/* Center Ground Station */}
+                    <circle cx="225" cy="130" r="4" fill="#00ff66" />
+                    <text x="225" y="145" fill="#00ff66" fontSize="9" textAnchor="middle">PHENOM TACTICAL RADAR</text>
+
+                    {/* P2P Mesh Interconnect Topology Lines */}
+                    {(radarFilter === 'ALL' || radarFilter === 'MESH') && (
+                      <g>
+                        {meshPeers.map((peer, i) => {
+                          const nextPeer = meshPeers[(i + 1) % meshPeers.length];
+                          return (
+                            <line
+                              key={`link-${peer.id}`}
+                              x1={peer.x}
+                              y1={peer.y}
+                              x2={nextPeer.x}
+                              y2={nextPeer.y}
+                              stroke="#c084fc"
+                              strokeWidth="1"
+                              strokeDasharray="4 3"
+                              opacity="0.4"
+                            />
+                          );
+                        })}
                       </g>
-                    ))}
+                    )}
+
+                    {/* P2P Mesh Peer Nodes */}
+                    {(radarFilter === 'ALL' || radarFilter === 'MESH') &&
+                      meshPeers.map((peer) => (
+                        <g key={peer.id}>
+                          <rect x={peer.x - 4} y={peer.y - 4} width="8" height="8" fill="#c084fc" transform={`rotate(45 ${peer.x} ${peer.y})`} />
+                          <circle cx={peer.x} cy={peer.y} r="10" fill="none" stroke="#c084fc" strokeWidth="1" opacity="0.5">
+                            <animate attributeName="r" values="7;13;7" dur="3s" repeatCount="indefinite" />
+                          </circle>
+                          <text x={peer.x + 8} y={peer.y - 3} fill="#c084fc" fontSize="9" fontWeight="bold">
+                            {peer.callsign}
+                          </text>
+                          <text x={peer.x + 8} y={peer.y + 8} fill="#a855f7" fontSize="8">
+                            {peer.ip} • {peer.latencyMs}ms
+                          </text>
+                        </g>
+                      ))}
+
+                    {/* Deception Honeypot Traps */}
+                    {(radarFilter === 'ALL' || radarFilter === 'HONEYPOT') &&
+                      honeypots.map((hp) => (
+                        <g key={hp.id}>
+                          <circle cx={hp.x} cy={hp.y} r="6" fill="#f97316" />
+                          <circle cx={hp.x} cy={hp.y} r="11" fill="none" stroke="#f97316" strokeWidth="1" opacity="0.6">
+                            <animate attributeName="r" values="6;14;6" dur="2.5s" repeatCount="indefinite" />
+                          </circle>
+                          <text x={hp.x + 10} y={hp.y - 3} fill="#f97316" fontSize="9" fontWeight="bold">
+                            {hp.service} ({hp.port})
+                          </text>
+                          <text x={hp.x + 10} y={hp.y + 8} fill="#fdba74" fontSize="8">
+                            {hp.status} • {hp.hits} PROBES
+                          </text>
+                        </g>
+                      ))}
+
+                    {/* ADS-B Aircraft Blips */}
+                    {(radarFilter === 'ALL' || radarFilter === 'ADSB') &&
+                      radarAircraft.map((plane) => (
+                        <g key={plane.icao}>
+                          <circle cx={plane.x} cy={plane.y} r="5" fill="#00f0ff" />
+                          <circle cx={plane.x} cy={plane.y} r="9" fill="none" stroke="#00f0ff" strokeWidth="1" opacity="0.6">
+                            <animate attributeName="r" values="6;12;6" dur="2s" repeatCount="indefinite" />
+                          </circle>
+                          <text x={plane.x + 10} y={plane.y - 2} fill="#00f0ff" fontSize="10" fontWeight="bold">
+                            {plane.callsign}
+                          </text>
+                          <text x={plane.x + 10} y={plane.y + 10} fill="#80c0ff" fontSize="8">
+                            {plane.altitude_ft}ft • {plane.speed_kts}kts
+                          </text>
+                        </g>
+                      ))}
                   </svg>
                 </div>
-                <div style={{ fontSize: 10, color: '#00ff66', display: 'flex', gap: 16 }}>
-                  <span>MODE-S / ADS-B: ONLINE</span>
-                  <span>ANTENNA: 1090 MHz DIPOLE</span>
+
+                <div style={{ fontSize: 10, color: '#00ff66', display: 'flex', gap: 14 }}>
+                  <span>ADS-B: {radarAircraft.length} CRAFT</span>
+                  <span style={{ color: '#f97316' }}>HONEYPOTS: {honeypots.length} TRAPS ARMED</span>
+                  <span style={{ color: '#c084fc' }}>P2P MESH: {meshPeers.length} PEERS (8ms)</span>
                   <span>RANGE: 50 NM</span>
-                  <span>ACTIVE TARGETS: {radarAircraft.length}</span>
                 </div>
               </div>
             )}
