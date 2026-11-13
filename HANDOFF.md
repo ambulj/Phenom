@@ -4084,3 +4084,25 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 9.85s)**
 - `services/backend/tests/test_kali_tools.py`: **6/6 PASSED in 0.47s**
 - Combined Suite: **13/13 PASSED in 5.33s**
 - Desktop Frontend Build: `npm --prefix apps/desktop run build`: **PASS (0 errors, 5.88s)**
+
+
+# Milestone Cyber Warfare & Intelligence Suite: OSINT, SDR Radio & Binary Triage
+
+## Accomplishments
+1. **OSINT Discovery Engine (`services/backend/cyber/osint_engine.py`)**:
+   - Built passive DNS interrogator (A, AAAA, MX, NS, TXT) and public Certificate Transparency log parser via `crt.sh`.
+   - Generates associative attack surface graphs with structured Obsidian markdown debriefs.
+2. **Software-Defined Radio (SDR) Receiver (`services/backend/cyber/sdr_interceptor.py`)**:
+   - Integrates RTL-SDR / HackRF USB peripherals with receive-only radio pipelines.
+   - Decodes 1090 MHz Mode-S / ADS-B overhead flight tracking frames (callsigns, altitudes, coordinates, speed).
+   - Demodulates 433.92 MHz ambient IoT environmental sensor packets.
+   - Synchronous Guardian kill-switch halt supported with sub-25ms SLA.
+3. **Static Binary Entropy & Triage Analyzer (`services/backend/cyber/binary_triage.py`)**:
+   - Calculates byte-level Shannon entropy across executable files to detect packed (UPX), compressed, or encrypted sections.
+   - Extracts compiler watermarks (MSVC Rich Header, GCC).
+4. **Tool Registry Integration (`services/backend/tools/osint_sdr_tools.py`)**:
+   - Registered 5 safety-wrapped Tier 0 tools: `gather_domain_osint`, `generate_attack_surface_graph`, `start_adsb_flight_tracker`, `decode_rf_sensor_stream`, `triage_binary_sections`.
+5. **Testing & Verification**:
+   - `services/backend/tests/test_osint_sdr_suite.py`: **6/6 PASSED in 8.66s**.
+   - Cumulative cyber test suite: **19/19 PASSED in 14.10s**.
+   - Production Vite frontend build: **PASS (0 errors, 4.41s)**.

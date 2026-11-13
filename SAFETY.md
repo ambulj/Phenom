@@ -3626,3 +3626,18 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - **Rule 4 & Sovereign Privacy**: All packet captures, disassembly bytes, and telemetry remain 100% strictly local in memory and the local Obsidian vault.
 - **Rule 5, 8, 11 (Credential & Financial Defense)**: Disassembly and packet sniffing tools actively scrub detected credentials with `[REDACTED]` and strictly prohibit financial/checkout automation.
 - **Thermal Safety Safeguard**: CUDA cryptanalysis pipeline monitors GPU temperature via `nvidia-smi` and throttles execution if temperature reaches 85°C.
+
+
+## Section 36: OSINT, Software-Defined Radio & Binary Entropy Triage Governance
+### 1. Risk Tier Taxonomy
+- **Tier 0 (Passive Intelligence & Signal Reception)**:
+  - `gather_domain_osint`: Read-only public DNS and Certificate Transparency log lookups.
+  - `generate_attack_surface_graph`: Local graph generation and Markdown reporting.
+  - `start_adsb_flight_tracker`: Passive 1090 MHz Mode-S broadcast radio reception.
+  - `decode_rf_sensor_stream`: Passive 433 MHz ambient sensor telemetry demodulation.
+  - `triage_binary_sections`: Non-destructive Shannon entropy analysis over compiled files.
+
+### 2. Invariants & Guardrails
+- **100% Passive Reception Only**: Radio frequency tools operate exclusively in receive-only mode. Radio transmission is strictly prohibited.
+- **Guardian Kill-Switch (<25ms SLA)**: Active radio listening and DNS queries monitor `guardian.is_halted` and abort immediately upon trigger.
+- **Rule 4 & Rule 11**: Discovered subdomains and transponder telemetry are processed locally in RAM and stored in the Obsidian vault with sensitive strings masked.
