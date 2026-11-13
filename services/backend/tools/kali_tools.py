@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
 from services.backend.safety.guardian import guardian
 from services.backend.tools.app_tools import _launch_on_default_desktop
+from services.backend.cyber.kali_bridge import kali_bridge
 
 # Standard Kali Linux Toolkit Taxonomy
 KALI_TOOL_CATALOG: Dict[str, Dict[str, Any]] = {
@@ -284,3 +285,78 @@ def audit_kali_toolkit(distro: Optional[str] = None) -> Dict[str, Any]:
         "quick_install_command": "sudo apt update && sudo apt install -y kali-linux-default",
         "status": "ready" if len(installed) > 0 else "distro_needs_packages"
     }
+
+
+# ==========================================
+# 4. Safe-Mode Headless Kali Recon Tool
+# ==========================================
+
+class ExecuteKaliReconArgs(BaseModel):
+    tool: str = Field(..., description="Security tool to execute (e.g. 'nmap', 'whatweb', 'nikto', 'masscan', 'tshark')")
+    target: str = Field(default="127.0.0.1", description="Target host or IP address (must be in authorized lab/local subnet)")
+    arguments: str = Field(default="", description="Command-line arguments (e.g. '-sV -T4 --top-ports 50')")
+    distro: Optional[str] = Field(default=None, description="WSL distro name (defaults to 'kali-linux')")
+    timeout_seconds: Optional[int] = Field(default=60, description="Execution timeout in seconds")
+
+@registry.register(
+    name="execute_kali_recon",
+    tier=1,
+    description="Executes a security tool inside Kali Linux WSL2 with Safe-Mode target validation, Guardian PID tracking, and returns structured telemetry.",
+    args_schema=ExecuteKaliReconArgs,
+    preview_fn=lambda a: f"Execute Safe-Mode Kali tool `{a.get('tool')}` against `{a.get('target', '127.0.0.1')}`",
+    can_remember_per_folder=False
+)
+def execute_kali_recon(
+    tool: str,
+    target: str = "127.0.0.1",
+    arguments: str = "",
+    distro: Optional[str] = None,
+    timeout_seconds: int = 60
+) -> Dict[str, Any]:
+    return kali_bridge.run_tool(
+        tool=tool,
+        arguments=arguments,
+        target=target,
+        distro=distro,
+        timeout=timeout_seconds
+    )
+
+
+# ==========================================
+# 5. Kali WSL Status & Safe-Mode Telemetry
+# ==========================================
+
+class GetKaliStatusArgs(BaseModel):
+    pass
+
+@registry.register(
+    name="get_kali_status",
+    tier=0,
+    description="Queries the health of the Kali Linux WSL2 bridge, default distribution, and active safe-mode target boundaries.",
+    args_schema=GetKaliStatusArgs,
+    preview_fn=lambda a: "Query Kali Linux WSL2 bridge status and safe-mode bounds",
+    can_remember_per_folder=False
+)
+def get_kali_status() -> Dict[str, Any]:
+    return kali_bridge.get_status()
+
+
+# ==========================================
+# 6. Parse Raw Kali Tool Output
+# ==========================================
+
+class ParseKaliOutputArgs(BaseModel):
+    tool: str = Field(..., description="Name of the tool ('nmap', 'whatweb', 'nikto', 'masscan', 'tshark', 'hashcat')")
+    raw_output: str = Field(..., description="Raw console stdout to parse into structured JSON")
+
+@registry.register(
+    name="parse_kali_output",
+    tier=0,
+    description="Parses raw CLI security tool output (Nmap, WhatWeb, Nikto, Masscan, etc.) into typed structured telemetry.",
+    args_schema=ParseKaliOutputArgs,
+    preview_fn=lambda a: f"Parse raw console output for tool `{a.get('tool')}`",
+    can_remember_per_folder=False
+)
+def parse_kali_output(tool: str, raw_output: str) -> Dict[str, Any]:
+    return kali_bridge._parse_output(tool.lower().strip(), raw_output)
+
