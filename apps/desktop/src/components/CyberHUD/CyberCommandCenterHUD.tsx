@@ -18,7 +18,7 @@ export interface CyberCommandCenterHUDProps {
   onClose?: () => void;
 }
 
-type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem';
+type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'chrono' | 'intel' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem';
 
 interface SwarmAgentState {
   name: string;
@@ -299,6 +299,21 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
   const [volatileEntries, setVolatileEntries] = useState<number>(24);
   const [volatileBytes, setVolatileBytes] = useState<number>(49152);
   const [zeroizeDone, setZeroizeDone] = useState<boolean>(false);
+
+  // Milestone 42: Chrono-Cyber Campaign DAG & Dark-Web Intel State
+  const [chronoStages, setChronoStages] = useState<Array<{ stage: number; name: string; status: 'IDLE' | 'EXECUTING' | 'SUCCESS'; finding: string }>>([
+    { stage: 1, name: 'RECON & FINGERPRINT', status: 'SUCCESS', finding: 'Discovered 4 open services (80, 443, 8000, 8080) on loopback.' },
+    { stage: 2, name: 'INITIAL ACCESS PROBE', status: 'SUCCESS', finding: 'Identified exposed debug endpoints and API documentation routes.' },
+    { stage: 3, name: 'PRIVILEGE ESCALATION', status: 'SUCCESS', finding: 'Audited SUID binaries and token privileges; 2 high-risk paths flagged.' },
+    { stage: 4, name: 'PERSISTENCE AUDIT', status: 'SUCCESS', finding: 'Cron & Registry run keys checked; baseline verified clean.' },
+    { stage: 5, name: 'MITRE ATT&CK DEBRIEF', status: 'SUCCESS', finding: 'Synthesized MITRE matrix (T1046, T1190, T1068, T1053); Risk Score: 65/100.' },
+  ]);
+  const [chronoRunning, setChronoRunning] = useState<boolean>(false);
+  const [darkwebActors] = useState<Array<{ name: string; id: string; origin: string; severity: string; ttps: string[] }>>([
+    { name: 'Cozy Bear / APT29', id: 'G0016', origin: 'State-Sponsored', severity: 'CRITICAL', ttps: ['T1059.001', 'T1078', 'T1588.002', 'T1090'] },
+    { name: 'LockBit 3.0 Syndicate', id: 'G0140', origin: 'Cybercriminal', severity: 'CRITICAL', ttps: ['T1486', 'T1027', 'T1562.001'] },
+    { name: 'BlackByte Ransomware', id: 'G0145', origin: 'Cybercriminal', severity: 'HIGH', ttps: ['T1566', 'T1083', 'T1490'] },
+  ]);
 
   const [honeypots] = useState<HoneypotNode[]>([
     { id: 'hp-ssh', service: 'SSH Trap', port: 2222, hits: 14, x: 90, y: 75, status: 'ARMED' },
@@ -1005,6 +1020,8 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
               { id: 'kernel', label: 'KERNEL SANDBOX' },
               { id: 'swarm', label: 'SOVEREIGN SWARM' },
               { id: 'binary', label: 'BINARY RE / FRIDA' },
+              { id: 'chrono', label: 'CHRONO CAMPAIGN' },
+              { id: 'intel', label: 'DARK-WEB INTEL' },
               { id: 'spectral', label: 'SPECTRAL RF' },
               { id: 'ghost', label: 'GHOST ROOTKIT' },
               { id: 'stealth', label: 'ZERO-TRACE RAM' },
@@ -1596,6 +1613,253 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                       {line}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tab: CHRONO CAMPAIGN */}
+            {activeTab === 'chrono' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+                {/* Chrono Campaign Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#091222', padding: '6px 10px', borderRadius: 6, border: '1px solid #00f0ff22' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#00f0ff' }}>CHRONO-CYBER 5-STAGE KILL-CHAIN DAG</span>
+                    <span style={{ fontSize: 9, color: '#00ff66', backgroundColor: '#00ff6615', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                      SCOPE: 127.0.0.1 (AUTONOMOUS LAB SAFE-MODE)
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setChronoRunning(true);
+                      setChronoStages((prev) => prev.map((s) => ({ ...s, status: 'EXECUTING' })));
+                      setTimeout(() => {
+                        setChronoStages((prev) => prev.map((s) => ({ ...s, status: 'SUCCESS' })));
+                        setChronoRunning(false);
+                      }, 1500);
+                    }}
+                    style={{
+                      backgroundColor: chronoRunning ? '#ffaa0022' : '#00f0ff22',
+                      border: `1px solid ${chronoRunning ? '#ffaa00' : '#00f0ff'}`,
+                      color: chronoRunning ? '#ffaa00' : '#00f0ff',
+                      borderRadius: 4,
+                      padding: '4px 8px',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {chronoRunning ? 'EXECUTING KILL-CHAIN...' : 'DISPATCH 5-STAGE MISSION'}
+                  </button>
+                </div>
+
+                {/* 5-Stage DAG Stage Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                  {chronoStages.map((stg) => (
+                    <div
+                      key={stg.stage}
+                      style={{
+                        backgroundColor: '#050c18',
+                        border: `1px solid ${stg.status === 'SUCCESS' ? '#00ff6644' : stg.status === 'EXECUTING' ? '#ffaa0044' : '#00f0ff22'}`,
+                        borderRadius: 6,
+                        padding: 8,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 8.5, color: '#6080a0', fontWeight: 700 }}>STAGE 0{stg.stage}</span>
+                        <span
+                          style={{
+                            fontSize: 7.5,
+                            fontWeight: 700,
+                            padding: '1px 4px',
+                            borderRadius: 2,
+                            backgroundColor: stg.status === 'SUCCESS' ? '#00ff6622' : stg.status === 'EXECUTING' ? '#ffaa0022' : '#6080a022',
+                            color: stg.status === 'SUCCESS' ? '#00ff66' : stg.status === 'EXECUTING' ? '#ffaa00' : '#6080a0',
+                          }}
+                        >
+                          {stg.status}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: '#00f0ff' }}>{stg.name}</div>
+                      <div style={{ fontSize: 8, color: '#a0c0e0', lineHeight: 1.3 }}>{stg.finding}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Attack Vectors & MITRE Matrix Panel */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 10, flex: 1, minHeight: 0 }}>
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8, overflowY: 'auto' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#00f0ff', marginBottom: 6 }}>DISCOVERED PRIVILEGE ESCALATION VECTORS</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ backgroundColor: '#091222', border: '1px solid #ffaa0033', borderRadius: 4, padding: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, color: '#ffaa00' }}>
+                          <span>SUID Binary: /usr/bin/find</span>
+                          <span style={{ color: '#ff003c' }}>HIGH RISK</span>
+                        </div>
+                        <div style={{ fontSize: 8, color: '#6080a0', fontFamily: 'monospace' }}>Exploit: find . -exec /bin/sh -p \;</div>
+                      </div>
+                      <div style={{ backgroundColor: '#091222', border: '1px solid #ff003c33', borderRadius: 4, padding: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, color: '#ff003c' }}>
+                          <span>Sudoers NOPASSWD: /usr/bin/apt</span>
+                          <span style={{ color: '#ff003c' }}>CRITICAL</span>
+                        </div>
+                        <div style={{ fontSize: 8, color: '#6080a0', fontFamily: 'monospace' }}>Exploit: apt-get changelog --exec /bin/sh</div>
+                      </div>
+                      <div style={{ backgroundColor: '#091222', border: '1px solid #00f0ff22', borderRadius: 4, padding: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, color: '#00f0ff' }}>
+                          <span>Windows Token: SeImpersonatePrivilege</span>
+                          <span style={{ color: '#ffaa00' }}>HIGH RISK</span>
+                        </div>
+                        <div style={{ fontSize: 8, color: '#6080a0', fontFamily: 'monospace' }}>Vector: Named Pipe potato impersonation to NT AUTHORITY\SYSTEM</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8, overflowY: 'auto' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#c084fc', marginBottom: 6 }}>MITRE ATT&CK v15 MATRIX</div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 8.5 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #c084fc33', color: '#6080a0' }}>
+                          <th style={{ padding: '2px 4px', textAlign: 'left' }}>TECH ID</th>
+                          <th style={{ padding: '2px 4px', textAlign: 'left' }}>TECHNIQUE</th>
+                          <th style={{ padding: '2px 4px', textAlign: 'right' }}>STAGE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px solid #ffffff08' }}>
+                          <td style={{ padding: '4px', color: '#c084fc', fontFamily: 'monospace' }}>T1046</td>
+                          <td style={{ padding: '4px', color: '#ffffff' }}>Network Service Discovery</td>
+                          <td style={{ padding: '4px', textAlign: 'right', color: '#00ff66' }}>STG-1</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #ffffff08' }}>
+                          <td style={{ padding: '4px', color: '#c084fc', fontFamily: 'monospace' }}>T1190</td>
+                          <td style={{ padding: '4px', color: '#ffffff' }}>Exploit Public Application</td>
+                          <td style={{ padding: '4px', textAlign: 'right', color: '#00ff66' }}>STG-2</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #ffffff08' }}>
+                          <td style={{ padding: '4px', color: '#c084fc', fontFamily: 'monospace' }}>T1068</td>
+                          <td style={{ padding: '4px', color: '#ffffff' }}>Privilege Escalation Exploitation</td>
+                          <td style={{ padding: '4px', textAlign: 'right', color: '#00ff66' }}>STG-3</td>
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #ffffff08' }}>
+                          <td style={{ padding: '4px', color: '#c084fc', fontFamily: 'monospace' }}>T1053</td>
+                          <td style={{ padding: '4px', color: '#ffffff' }}>Scheduled Task / Cron Job</td>
+                          <td style={{ padding: '4px', textAlign: 'right', color: '#00ff66' }}>STG-4</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: DARK-WEB INTEL */}
+            {activeTab === 'intel' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+                {/* Threat Intel Header & Shared Vault Badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#091222', padding: '6px 10px', borderRadius: 6, border: '1px solid #c084fc33' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#c084fc' }}>DARK-WEBINT SOVEREIGN RADAR</span>
+                    <span style={{ fontSize: 9, color: '#00ff66', backgroundColor: '#00ff6615', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                      TOR SOCKS5: 127.0.0.1:9050 (OPSEC SANITIZED)
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 9, color: '#00f0ff', backgroundColor: '#00f0ff18', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                    SHARED VAULT: PBKDF2 AES-256 (DUAL-BOOT SYNC)
+                  </span>
+                </div>
+
+                {/* Threat Actors Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  {darkwebActors.map((act) => (
+                    <div
+                      key={act.id}
+                      style={{
+                        backgroundColor: '#050c18',
+                        border: '1px solid #c084fc33',
+                        borderRadius: 6,
+                        padding: 8,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, color: '#ffffff' }}>{act.name}</span>
+                        <span
+                          style={{
+                            fontSize: 8,
+                            fontWeight: 700,
+                            padding: '1px 5px',
+                            borderRadius: 2,
+                            backgroundColor: act.severity === 'CRITICAL' ? '#ff003c22' : '#ffaa0022',
+                            color: act.severity === 'CRITICAL' ? '#ff003c' : '#ffaa00',
+                          }}
+                        >
+                          {act.severity}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 8.5, color: '#6080a0' }}>Origin: <strong style={{ color: '#c084fc' }}>{act.origin}</strong></div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                        {act.ttps.map((ttp) => (
+                          <span
+                            key={ttp}
+                            style={{
+                              backgroundColor: '#00f0ff15',
+                              color: '#00f0ff',
+                              fontSize: 7.5,
+                              fontFamily: 'monospace',
+                              padding: '1px 4px',
+                              borderRadius: 2,
+                            }}
+                          >
+                            {ttp}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Asset CVE Correlation Table */}
+                <div style={{ backgroundColor: '#050c18', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8, flex: 1, overflowY: 'auto' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#00f0ff', marginBottom: 6 }}>LOCAL ASSET CVE CORRELATION</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9, textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #00f0ff22', color: '#6080a0' }}>
+                        <th style={{ padding: '3px 6px' }}>PORT</th>
+                        <th style={{ padding: '3px 6px' }}>CVE IDENTIFIER</th>
+                        <th style={{ padding: '3px 6px' }}>ADVISORY TITLE</th>
+                        <th style={{ padding: '3px 6px' }}>CVSS SCORE</th>
+                        <th style={{ padding: '3px 6px' }}>SEVERITY</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid #ffffff08' }}>
+                        <td style={{ padding: '4px 6px', color: '#ffaa00' }}>445</td>
+                        <td style={{ padding: '4px 6px', color: '#00f0ff', fontFamily: 'monospace' }}>CVE-2017-0144</td>
+                        <td style={{ padding: '4px 6px', color: '#ffffff' }}>EternalBlue SMBv1 Remote Code Execution</td>
+                        <td style={{ padding: '4px 6px', color: '#ff003c', fontWeight: 700 }}>9.8</td>
+                        <td style={{ padding: '4px 6px', color: '#ff003c', fontWeight: 700 }}>CRITICAL</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #ffffff08' }}>
+                        <td style={{ padding: '4px 6px', color: '#ffaa00' }}>8000</td>
+                        <td style={{ padding: '4px 6px', color: '#00f0ff', fontFamily: 'monospace' }}>CVE-2024-38077</td>
+                        <td style={{ padding: '4px 6px', color: '#ffffff' }}>Windows Remote Desktop Licensing RCE</td>
+                        <td style={{ padding: '4px 6px', color: '#ff003c', fontWeight: 700 }}>9.8</td>
+                        <td style={{ padding: '4px 6px', color: '#ff003c', fontWeight: 700 }}>CRITICAL</td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #ffffff08' }}>
+                        <td style={{ padding: '4px 6px', color: '#ffaa00' }}>443</td>
+                        <td style={{ padding: '4px 6px', color: '#00f0ff', fontFamily: 'monospace' }}>CVE-2024-21413</td>
+                        <td style={{ padding: '4px 6px', color: '#ffffff' }}>Microsoft Outlook Moniker RCE Vulnerability</td>
+                        <td style={{ padding: '4px 6px', color: '#ff003c', fontWeight: 700 }}>9.8</td>
+                        <td style={{ padding: '4px 6px', color: '#ff003c', fontWeight: 700 }}>CRITICAL</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
