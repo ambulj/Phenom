@@ -3689,3 +3689,17 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - **Non-Destructive Process Containment (Rule 7)**: Network Egress Shield isolates socket handles without terminating the process itself, preserving process memory for forensic triage.
 - **Guardian Kill-Switch (<25ms SLA)**: PCAP dumps and memory sampling loops actively check `guardian.is_halted` and abort immediately upon trigger.
 - **Rule 11 Credential Masking**: Real secrets or passwords discovered in process RAM string triage are masked with `[REDACTED]`.
+
+
+## Section 40: Multi-Band Radio SIGINT Governance
+### 1. Risk Tier Taxonomy
+- **Tier 0 (Receive-Only Radio Demodulation)**:
+  - `decode_acars_messages`: Passive demodulation of VHF 131.55 MHz ACARS aircraft text messages.
+  - `decode_aprs_packets`: Passive demodulation of VHF 144.39 MHz APRS amateur radio frames.
+  - `evaluate_emergency_squawks`: In-memory evaluation of transponder squawk codes for emergency indicators.
+  - `get_multiband_sigint_telemetry`: Read-only chronological query of decoded radio intelligence.
+
+### 2. Invariants & Guardrails
+- **100% Receive-Only Operation**: Radio operations function strictly in passive listening mode; RF transmission is prohibited.
+- **Guardian Kill-Switch (<25ms SLA)**: Active radio demodulation loops continuously verify `guardian.is_halted` and abort immediately upon trigger.
+- **Privacy & Safety Protection**: Private passenger information or cleartext identifiers received via airwaves are kept in local volatile memory and masked before export.

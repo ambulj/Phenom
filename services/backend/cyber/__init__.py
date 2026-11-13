@@ -4,7 +4,7 @@ Provides autonomous red-teaming, live packet sniffing, binary reverse engineerin
 ESP8266 hardware interfacing, kernel ETW sensors, CUDA-accelerated cryptanalysis,
 OSINT attack surface discovery, SDR radio telemetry, binary entropy triage,
 Sigma SIEM real-time correlation, IoT firmware triage, P2P encrypted mesh networking,
-Active Cyber Deception Enclave, and Tactical Incident Response & RAM Forensics.
+Active Cyber Deception Enclave, Tactical Incident Response, and Multi-Band Radio SIGINT.
 """
 
 from services.backend.cyber.esp8266_controller import ESP8266Controller
@@ -21,6 +21,7 @@ from services.backend.cyber.firmware_triage import FirmwareTriageEngine, firmwar
 from services.backend.cyber.p2p_mesh import P2PEncryptedMeshBridge, p2p_mesh
 from services.backend.cyber.deception_enclave import CyberDeceptionEnclave, deception_enclave
 from services.backend.cyber.incident_responder import TacticalIncidentResponder, incident_responder
+from services.backend.cyber.multiband_sigint import MultiBandSIGINTReceiver, multiband_sigint
 
 __all__ = [
     "ESP8266Controller",
@@ -49,4 +50,6 @@ __all__ = [
     "deception_enclave",
     "TacticalIncidentResponder",
     "incident_responder",
+    "MultiBandSIGINTReceiver",
+    "multiband_sigint",
 ]

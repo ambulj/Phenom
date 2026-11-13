@@ -4164,3 +4164,22 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 9.85s)**
    - `services/backend/tests/test_incident_response_suite.py`: **5/5 PASSED in 0.56s**.
    - Cumulative cyber test suite: **33/33 PASSED in 13.02s**.
    - Production Vite frontend build: **PASS (0 errors, 5.56s)**.
+
+
+# Milestone 36.0 Phase 3: Multi-Band Radio SIGINT Suite
+
+## Accomplishments
+1. **ACARS VHF Aeronautical Messaging Decoder (`services/backend/cyber/multiband_sigint.py`)**:
+   - Demodulates and decodes 131.55 MHz VHF aircraft communications addressing and reporting system text messages.
+   - Extracts flight IDs, tail numbers, position reports, and ETA/weather advisories.
+2. **APRS AX.25 Ham Radio Telemetry Decoder**:
+   - Demodulates 144.39 MHz packet radio signals.
+   - Decodes amateur radio GPS coordinates, station callsigns, and ambient meteorological telemetry.
+3. **ADS-B Emergency Squawk Monitor**:
+   - Evaluates Mode-S transponder streams, firing immediate tactical alarms for emergency squawks: 7700 (General Emergency / Mayday), 7600 (Radio Communications Failure), and 7500 (Unlawful Interference).
+4. **Tool Registry Integration (`services/backend/tools/sigint_tools.py`)**:
+   - Registered 4 safety-wrapped tools: `decode_acars_messages`, `decode_aprs_packets`, `evaluate_emergency_squawks`, `get_multiband_sigint_telemetry`.
+5. **Testing & Verification**:
+   - `services/backend/tests/test_sigint_suite.py`: **5/5 PASSED in 0.60s**.
+   - Cumulative cyber test suite: **38/38 PASSED in 6.13s**.
+   - Production Vite frontend build: **PASS (0 errors, 4.25s)**.
