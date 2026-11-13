@@ -243,6 +243,7 @@ import services.backend.tools.wargame_tools
 import services.backend.tools.speculative_tools
 import services.backend.tools.tactical_dag_tools
 import services.backend.tools.red_team_pipeline_tools
+import services.backend.tools.kernel_behavior_tools
 
 
 

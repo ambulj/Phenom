@@ -27,6 +27,7 @@ from services.backend.cyber.cyber_wargame import CyberWarGameEngine, cyber_warga
 from services.backend.cyber.tactical_dag_orchestrator import TacticalDAGOrchestrator, tactical_dag
 from services.backend.cyber.kali_bridge import KaliSecurityBridge, kali_bridge
 from services.backend.cyber.red_team_pipeline import AutonomousRedTeamPipeline, red_team_pipeline
+from services.backend.cyber.kernel_behavior_correlator import KernelBehaviorCorrelator, kernel_behavior_correlator
 
 __all__ = [
     "ESP8266Controller",
@@ -65,4 +66,6 @@ __all__ = [
     "kali_bridge",
     "AutonomousRedTeamPipeline",
     "red_team_pipeline",
+    "KernelBehaviorCorrelator",
+    "kernel_behavior_correlator",
 ]
