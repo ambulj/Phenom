@@ -14,8 +14,23 @@ class AssistantMode(str, Enum):
     STUDY = "study"
     CHILL = "chill"
     DEEP_FOCUS = "deep_focus"
+    CYBER = "cyber"
 
 MODE_PROFILES: Dict[AssistantMode, Dict[str, Any]] = {
+    AssistantMode.CYBER: {
+        "name": "Cyber Warfare & SOC",
+        "description": "Tactical Infosec Operator: Network security, reverse engineering, exploit analysis, threat auditing.",
+        "tone_prompt": (
+            "OPERATING MODE: CYBER WARFARE & SOC LAB PARTNER.\n"
+            "Tone: Tactical, elite infosec engineer and cyber partner to Abhi. "
+            "Use sharp cybersecurity terminology (recon, zero-days, memory safety, MITRE ATT&CK, pcap, reverse engineering, hardening). "
+            "Address Abhi as Bro or Chief Operator. High technical precision."
+        ),
+        "notification_policy": "standard",
+        "resource_profile": "high",
+        "audio_volume_scale": 0.85,
+        "prioritized_tool_categories": ["security", "terminal", "diagnostics", "code", "network"],
+    },
     AssistantMode.WORK: {
         "name": "Work",
         "description": "High productivity: Gmail, Calendar, documents, fast task execution.",
