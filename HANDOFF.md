@@ -4127,3 +4127,20 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 9.85s)**
    - `services/backend/tests/test_advanced_cyber_suite.py`: **5/5 PASSED in 0.64s**.
    - Cumulative cyber test suite: **24/24 PASSED in 8.58s**.
    - Production Vite frontend build: **PASS (0 errors, 3.85s)**.
+
+
+# Milestone 36.0 Phase 1: Active Cyber Deception Enclave & Canary Token Factory
+
+## Accomplishments
+1. **Multi-Port In-RAM Honeypot Daemon (`services/backend/cyber/deception_enclave.py`)**:
+   - Deploys ephemeral decoy listening sockets: SSH (port 2222), Telnet (port 2323), and HTTP Admin portal (port 8088).
+   - Captures connecting IP addresses, probe payloads, and logs intrusion attempts chronologically.
+2. **Canary Token Factory & Access Tripwires**:
+   - Generates uniquely traceable decoy credential files (`.env.canary`, `credentials_canary.json`) with embedded tracking IDs.
+   - Audits file modification and deletion events, flagging unauthorized access with CRITICAL severity.
+3. **Safety Registry Integration (`services/backend/tools/deception_tools.py`)**:
+   - Registered 5 safety-wrapped tools: `start_cyber_honeypots`, `stop_cyber_honeypots`, `generate_canary_token_file`, `audit_canary_tripwires`, `get_deception_intruder_logs`.
+4. **Testing & Verification**:
+   - `services/backend/tests/test_deception_suite.py`: **4/4 PASSED in 0.89s**.
+   - Cumulative cyber test suite: **28/28 PASSED in 6.66s**.
+   - Production Vite frontend build: **PASS (0 errors, 4.62s)**.

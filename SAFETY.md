@@ -3657,3 +3657,19 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - **Guardian Kill-Switch (<25ms SLA)**: SIEM sweeps and P2P mesh broadcasting monitor `guardian.is_halted` and abort immediately upon trigger.
 - **Rule 4 & Sovereign Zero Cloud Egress**: P2P mesh operates strictly peer-to-peer over local UDP multicast/broadcast and RF serial bridges with zero cloud server dependencies.
 - **Rule 11 Credential Defense**: Embedded private keys and shadow hashes uncovered during firmware triage are reported in the Obsidian vault with sensitive strings masked.
+
+
+## Section 38: Active Cyber Deception & Canary Token Enclave Governance
+### 1. Risk Tier Taxonomy
+- **Tier 0 (Read-Only Deception & Tripwire Auditing)**:
+  - `stop_cyber_honeypots`: Closes active honeypot sockets.
+  - `audit_canary_tripwires`: Audits planted canary token files for tampering or deletions.
+  - `get_deception_intruder_logs`: Retrieves probe history and intruder records.
+- **Tier 1 (Honeypot Arming & Canary Token Planting)**:
+  - `start_cyber_honeypots`: Binds in-RAM decoy listening sockets (ports 2222, 2323, 8088).
+  - `generate_canary_token_file`: Plants a uniquely trackable decoy credential file in the workspace.
+
+### 2. Invariants & Guardrails
+- **User-Space & In-RAM Only**: Honeypot sockets bind user-mode unprivileged ports ($>1024$) with zero kernel modifications.
+- **Canary Hash Tracking**: Decoy tokens contain synthetic non-functional credentials (e.g., `AKIA...`) tracked by SHA-256 hash digests to identify unauthorized reading.
+- **Guardian Kill-Switch (<25ms SLA)**: Activating the Guardian immediately halts all honeypot listening sockets and cancels all probe workers.

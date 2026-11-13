@@ -3,7 +3,8 @@ Phenom Cyber Warfare & Infosec Operations Core Package.
 Provides autonomous red-teaming, live packet sniffing, binary reverse engineering,
 ESP8266 hardware interfacing, kernel ETW sensors, CUDA-accelerated cryptanalysis,
 OSINT attack surface discovery, SDR radio telemetry, binary entropy triage,
-Sigma SIEM real-time correlation, IoT firmware triage, and P2P encrypted mesh networking.
+Sigma SIEM real-time correlation, IoT firmware triage, P2P encrypted mesh networking,
+and Active Cyber Deception & Canary Token Enclaves.
 """
 
 from services.backend.cyber.esp8266_controller import ESP8266Controller
@@ -18,6 +19,7 @@ from services.backend.cyber.binary_triage import BinaryTriageAnalyzer, binary_tr
 from services.backend.cyber.sigma_siem import SigmaSIEMEngine, sigma_siem
 from services.backend.cyber.firmware_triage import FirmwareTriageEngine, firmware_triage
 from services.backend.cyber.p2p_mesh import P2PEncryptedMeshBridge, p2p_mesh
+from services.backend.cyber.deception_enclave import CyberDeceptionEnclave, deception_enclave
 
 __all__ = [
     "ESP8266Controller",
@@ -42,4 +44,6 @@ __all__ = [
     "firmware_triage",
     "P2PEncryptedMeshBridge",
     "p2p_mesh",
+    "CyberDeceptionEnclave",
+    "deception_enclave",
 ]
