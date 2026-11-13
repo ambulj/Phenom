@@ -29,6 +29,8 @@ from services.backend.cyber.kali_bridge import KaliSecurityBridge, kali_bridge
 from services.backend.cyber.red_team_pipeline import AutonomousRedTeamPipeline, red_team_pipeline
 from services.backend.cyber.kernel_behavior_correlator import KernelBehaviorCorrelator, kernel_behavior_correlator
 from services.backend.cyber.memory_integrity_guard import MemoryIntegrityGuard, memory_integrity_guard
+from services.backend.cyber.binary_analyzer import BinaryAnalyzer, binary_analyzer
+from services.backend.cyber.frida_instrumentation import FridaInstrumentationEngine, frida_engine
 
 __all__ = [
     "ESP8266Controller",
@@ -71,4 +73,8 @@ __all__ = [
     "kernel_behavior_correlator",
     "MemoryIntegrityGuard",
     "memory_integrity_guard",
+    "BinaryAnalyzer",
+    "binary_analyzer",
+    "FridaInstrumentationEngine",
+    "frida_engine",
 ]
