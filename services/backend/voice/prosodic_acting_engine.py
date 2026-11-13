@@ -128,9 +128,17 @@ class ProsodicActingEngine:
             self._halted = True
 
     def reset_halt(self) -> None:
-        """Reset halted state."""
+        """Reset halted state and clear overrides."""
         with self._lock:
             self._halted = False
+            self._custom_pitch_shift = None
+            self._custom_intensity = None
+
+    def reset_custom_overrides(self) -> None:
+        """Reset custom pitch shift and intensity to emotion defaults."""
+        with self._lock:
+            self._custom_pitch_shift = None
+            self._custom_intensity = None
 
     @property
     def is_halted(self) -> bool:
@@ -201,7 +209,7 @@ class ProsodicActingEngine:
         enforce_anti_checkout(text)
 
         with self._lock:
-            if self._halted:
+            if guardian.is_halted or self._halted:
                 raise RuntimeError("Prosodic acting engine is currently halted by Guardian kill switch")
 
             target_emotion = emotion if emotion is not None else self._active_emotion

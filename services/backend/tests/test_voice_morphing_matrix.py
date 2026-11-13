@@ -26,10 +26,12 @@ import services.backend.tools.voice_morphing_tools  # Registers tools
 @pytest.fixture(autouse=True)
 def reset_morphing_environment():
     guardian.resume()
+    neural_voice_cloner.reset_halt()
     voice_morphing_matrix.reset_halt()
     voice_morphing_matrix.set_morphing_target("jarvis_base", blend_ratio=0.0)
     yield
     guardian.resume()
+    neural_voice_cloner.reset_halt()
     voice_morphing_matrix.reset_halt()
     voice_morphing_matrix.set_morphing_target("jarvis_base", blend_ratio=0.0)
 

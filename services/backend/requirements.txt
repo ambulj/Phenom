@@ -37,5 +37,6 @@ onnxruntime==1.30.0
 pyyaml==6.0.3
 cryptography==43.0.3
 qrcode==8.0
+pyserial==3.5
 
 

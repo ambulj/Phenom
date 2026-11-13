@@ -7,10 +7,6 @@ Compiles executive markdown debriefs into Obsidian vault.
 
 import time
 from typing import Dict, Any, List, Optional
-from services.backend.tools.kali_tools import execute_kali_tool
-from services.backend.safety.guardian import guardian
-
-
 class AutonomousRedTeamAgent:
     """Orchestrates end-to-end security audits and penetration tests autonomously."""
 
@@ -18,6 +14,8 @@ class AutonomousRedTeamAgent:
         """Runs a complete 4-stage automated audit workflow against the target."""
         if guardian.is_halted:
             raise PermissionError("Guardian kill switch active. Aborting red-team mission.")
+
+        from services.backend.tools.kali_tools import execute_kali_tool
 
         mission_id = f"mission-{int(time.time())}"
         stages_executed = []

@@ -31,6 +31,7 @@ IMPORT_TO_PYPI: Dict[str, str] = {
     "nest_asyncio": "nest-asyncio",
     "starlette": "fastapi",  # starlette is bundled/required by fastapi
     "yaml": "pyyaml",
+    "serial": "pyserial",
 }
 
 def get_stdlib_modules() -> Set[str]:
