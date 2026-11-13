@@ -46,3 +46,30 @@ def test_open_app_generic_executable():
         assert res["launched"] is True
         assert res["launcher_pid"] == 99999
         mock_launch.assert_called_once()
+
+
+def test_run_wsl_command_mocked():
+    from services.backend.tools.app_tools import run_wsl_command
+    with patch("subprocess.run") as mock_run:
+        mock_proc = MagicMock()
+        mock_proc.returncode = 0
+        mock_proc.stdout = "Linux kali 6.18.58-microsoft-standard-WSL2 x86_64\n"
+        mock_proc.stderr = ""
+        mock_run.return_value = mock_proc
+
+        result = run_wsl_command("uname -a", distro="kali-linux")
+        assert result["success"] is True
+        assert result["returncode"] == 0
+        assert "kali" in result["stdout"]
+        mock_run.assert_called_once()
+        cmd_called = mock_run.call_args[0][0]
+        assert cmd_called == ["wsl", "-d", "kali-linux", "bash", "-c", "uname -a"]
+
+
+def test_run_wsl_command_timeout():
+    from services.backend.tools.app_tools import run_wsl_command
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="sleep 10", timeout=2)):
+        result = run_wsl_command("sleep 10", timeout_seconds=2)
+        assert result["success"] is False
+        assert result["returncode"] == -1
+        assert "timed out after 2 seconds" in result["stderr"]

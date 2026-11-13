@@ -312,3 +312,61 @@ def close_app(app_name: str) -> Dict[str, Any]:
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
     return {"app_name": app_name, "terminated_processes": terminated}
+
+
+# ==========================================
+# WSL / Kali Linux Execution Tools
+# ==========================================
+
+class RunWslCommandArgs(BaseModel):
+    command: str = Field(..., description="Linux/Kali command to execute in WSL (e.g. 'uname -a', 'nmap 127.0.0.1', 'which sqlmap')")
+    distro: Optional[str] = Field(default=None, description="Target WSL distribution name (e.g. 'kali-linux', 'Ubuntu'). Defaults to default distribution.")
+    timeout_seconds: Optional[int] = Field(default=30, description="Execution timeout in seconds.")
+
+def run_wsl_command_preview(args: Dict[str, Any]) -> str:
+    cmd = args.get("command", "")
+    distro = args.get("distro", "default")
+    return f"Execute Linux/Kali command in WSL ({distro}): {cmd}"
+
+@registry.register(
+    name="run_wsl_command",
+    tier=1,
+    description="Executes a Linux or Kali Linux command inside Windows Subsystem for Linux (WSL/WSL2) and returns output.",
+    args_schema=RunWslCommandArgs,
+    preview_fn=run_wsl_command_preview,
+    can_remember_per_folder=False
+)
+def run_wsl_command(command: str, distro: Optional[str] = None, timeout_seconds: int = 30) -> Dict[str, Any]:
+    cmd_args = ["wsl"]
+    if distro:
+        cmd_args.extend(["-d", distro])
+    cmd_args.extend(["bash", "-c", command])
+
+    try:
+        proc = subprocess.run(cmd_args, capture_output=True, text=True, timeout=timeout_seconds)
+        return {
+            "command": command,
+            "distro": distro or "default",
+            "returncode": proc.returncode,
+            "stdout": proc.stdout.strip(),
+            "stderr": proc.stderr.strip(),
+            "success": proc.returncode == 0
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "command": command,
+            "distro": distro or "default",
+            "returncode": -1,
+            "stdout": "",
+            "stderr": f"Command timed out after {timeout_seconds} seconds",
+            "success": False
+        }
+    except Exception as exc:
+        return {
+            "command": command,
+            "distro": distro or "default",
+            "returncode": -1,
+            "stdout": "",
+            "stderr": str(exc),
+            "success": False
+        }
