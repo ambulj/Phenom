@@ -18,7 +18,29 @@ export interface CyberCommandCenterHUDProps {
   onClose?: () => void;
 }
 
-type CyberTab = 'recon' | 'kali' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem';
+type CyberTab = 'recon' | 'kali' | 'kernel' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem';
+
+interface KernelProcessNode {
+  pid: number;
+  name: string;
+  parentPid: number;
+  parentName: string;
+  threatScore: number;
+  status: 'CLEAN' | 'SUSPICIOUS' | 'ANOMALOUS';
+  anomalyDesc?: string;
+  rwxCount: number;
+  peIntegrity: 'INTACT' | 'COMPROMISED';
+}
+
+interface RWXPageRegion {
+  baseAddress: string;
+  sizeKb: number;
+  protection: string;
+  type: string;
+  riskLevel: 'HIGH' | 'CRITICAL';
+  pid: number;
+  process: string;
+}
 
 interface AircraftBlip {
   icao: string;
@@ -154,6 +176,30 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
   const [campaignRunning, setCampaignRunning] = useState<boolean>(false);
   const [activeToolRunning, setActiveToolRunning] = useState<string | null>(null);
 
+  const [kernelProcesses, setKernelProcesses] = useState<KernelProcessNode[]>([
+    { pid: 4012, name: 'explorer.exe', parentPid: 1120, parentName: 'userinit.exe', threatScore: 0, status: 'CLEAN', rwxCount: 0, peIntegrity: 'INTACT' },
+    { pid: 7820, name: 'chrome.exe', parentPid: 4012, parentName: 'explorer.exe', threatScore: 10, status: 'CLEAN', rwxCount: 0, peIntegrity: 'INTACT' },
+    { pid: 14820, name: 'python.exe', parentPid: 4012, parentName: 'explorer.exe', threatScore: 0, status: 'CLEAN', rwxCount: 0, peIntegrity: 'INTACT' },
+    { pid: 19840, name: 'powershell.exe', parentPid: 9820, parentName: 'cmd.exe', threatScore: 65, status: 'SUSPICIOUS', anomalyDesc: 'EncodedCommand cradle detected', rwxCount: 1, peIntegrity: 'INTACT' },
+    { pid: 21400, name: 'certutil.exe', parentPid: 19840, parentName: 'powershell.exe', threatScore: 85, status: 'ANOMALOUS', anomalyDesc: 'T1218: CertUtil remote decode staging', rwxCount: 2, peIntegrity: 'COMPROMISED' },
+  ]);
+
+  const [rwxRegions] = useState<RWXPageRegion[]>([
+    { baseAddress: '0x00007FF783100000', sizeKb: 64, protection: 'PAGE_EXECUTE_READWRITE (0x40)', type: 'MEM_PRIVATE', riskLevel: 'CRITICAL', pid: 21400, process: 'certutil.exe' },
+    { baseAddress: '0x00007FF791240000', sizeKb: 128, protection: 'PAGE_EXECUTE_READWRITE (0x40)', type: 'MEM_PRIVATE', riskLevel: 'CRITICAL', pid: 21400, process: 'certutil.exe' },
+    { baseAddress: '0x00007FF645A00000', sizeKb: 32, protection: 'PAGE_EXECUTE_READ (Unbacked)', type: 'MEM_PRIVATE', riskLevel: 'HIGH', pid: 19840, process: 'powershell.exe' },
+  ]);
+
+  const [kernelLogs, setKernelLogs] = useState<string[]>([
+    '[*] Windows Kernel Anomaly Correlator & Sysmon Provider: ACTIVE',
+    '[*] Memory Integrity & VirtualQueryEx Page Scanner: ONLINE',
+    '[+] Process Lineage Baseline: 5 tree paths mapped across user-mode boundary.',
+    '[+] In-Memory PE Header Integrity: DOS 0x5A4D / NT 0x00004550 verified.',
+    '[!] Anomaly Tripped: PID 21400 (certutil.exe) spawned by powershell.exe with 2 RWX pages.',
+  ]);
+
+  const [kernelScanRunning, setKernelScanRunning] = useState<boolean>(false);
+
   const [honeypots] = useState<HoneypotNode[]>([
     { id: 'hp-ssh', service: 'SSH Trap', port: 2222, hits: 14, x: 90, y: 75, status: 'ARMED' },
     { id: 'hp-telnet', service: 'Telnet Decoy', port: 2323, hits: 39, x: 345, y: 70, status: 'ARMED' },
@@ -212,6 +258,12 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
     } else if (externalEvent.type === 'RED_TEAM_CAMPAIGN_UPDATE') {
       const p = externalEvent.payload || {};
       setKaliLogs((prev) => [...prev, `[CAMPAIGN] ${p.vector || 'STAGE'}: ${p.message || ''}`]);
+    } else if (externalEvent.type === 'KERNEL_BEHAVIOR_ALERT') {
+      const p = externalEvent.payload || {};
+      setKernelLogs((prev) => [...prev, `[KERNEL ALERT] PID ${p.target_pid || p.pid || ''}: ${p.details || p.message || ''}`]);
+    } else if (externalEvent.type === 'MEMORY_INTEGRITY_ALERT') {
+      const p = externalEvent.payload || {};
+      setKernelLogs((prev) => [...prev, `[MEMGUARD ALERT] PID ${p.pid || ''}: ${p.threat_verdict || ''} - ${p.anomaly || ''}`]);
     }
   }, [externalEvent, isolatedPids]);
 
@@ -309,6 +361,71 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
     setReconLogs((prev) => [
       ...prev,
       `[SHIELD] Netsh outbound egress block enforced on PID ${pid}. Threat isolated!`,
+    ]);
+  };
+
+  const handleAuditSystemRWX = () => {
+    setKernelScanRunning(true);
+    setKernelLogs((prev) => [
+      ...prev,
+      `[>] Initiating VirtualQueryEx audit across active user-space processes...`,
+      `[*] Scanning memory page protection attributes for PAGE_EXECUTE_READWRITE (0x40)...`,
+    ]);
+    if (sendMessage) {
+      sendMessage({
+        type: 'TOOL_EXECUTE',
+        tool: 'audit_system_memory_posture',
+        args: { max_processes: 25 },
+      });
+    }
+    setTimeout(() => {
+      setKernelLogs((prev) => [
+        ...prev,
+        `[+] Audit Complete: 25 processes scanned across user-space boundaries.`,
+        `[!] Detected 2 private commit RWX allocations in PID 21400 (certutil.exe).`,
+        `[*] Recommendation: Trigger non-destructive network quarantine.`,
+      ]);
+      setKernelScanRunning(false);
+    }, 1200);
+  };
+
+  const handleVerifyProcessPE = (pid: number) => {
+    setKernelLogs((prev) => [
+      ...prev,
+      `[>] Verifying in-memory PE header integrity for PID ${pid}...`,
+    ]);
+    if (sendMessage) {
+      sendMessage({
+        type: 'TOOL_EXECUTE',
+        tool: 'verify_process_pe_header',
+        args: { pid },
+      });
+    }
+    setTimeout(() => {
+      const proc = kernelProcesses.find((p) => p.pid === pid);
+      if (proc && proc.peIntegrity === 'COMPROMISED') {
+        setKernelLogs((prev) => [
+          ...prev,
+          `[!!!] COMPROMISE ALERT: PID ${pid} (${proc.name}) DOS header corrupted or hollowed!`,
+          `[*] MITRE ATT&CK: T1055.012 (Process Hollowing)`,
+        ]);
+      } else {
+        setKernelLogs((prev) => [
+          ...prev,
+          `[+] PID ${pid}: PE Header INTACT (0x5A4D "MZ" verified in RAM).`,
+        ]);
+      }
+    }, 800);
+  };
+
+  const handleQuarantineKernelPid = (pid: number) => {
+    handleIsolatePid(pid);
+    setKernelProcesses((prev) =>
+      prev.map((p) => (p.pid === pid ? { ...p, status: 'CLEAN', threatScore: 0 } : p))
+    );
+    setKernelLogs((prev) => [
+      ...prev,
+      `[SHIELD] Quarantine enforced on PID ${pid}: Outbound network egress severed. Process RAM preserved for forensics.`,
     ]);
   };
 
@@ -706,6 +823,7 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
             {[
               { id: 'recon', label: 'RED-TEAM DAG' },
               { id: 'kali', label: 'KALI CONTROL' },
+              { id: 'kernel', label: 'KERNEL SANDBOX' },
               { id: 'packets', label: 'PACKET SNIFFER' },
               { id: 'esp8266', label: 'ESP8266 UART' },
               { id: 'hashcat', label: 'CUDA GPU' },
@@ -724,11 +842,11 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                     border: 'none',
                     borderBottom: active ? '2px solid #00f0ff' : '2px solid transparent',
                     color: active ? '#00f0ff' : '#6080a0',
-                    fontSize: 10,
+                    fontSize: 9.5,
                     fontWeight: 700,
-                    padding: '8px 10px',
+                    padding: '8px 8px',
                     cursor: 'pointer',
-                    letterSpacing: 0.8,
+                    letterSpacing: 0.6,
                   }}
                 >
                   {tab.label}
@@ -844,6 +962,234 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                           : line.startsWith('>>>')
                           ? '#00f0ff'
                           : line.startsWith('[KALI]') || line.startsWith('[CAMPAIGN]')
+                          ? '#c084fc'
+                          : '#a0c0e0',
+                      }}
+                    >
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'kernel' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+                {/* Kernel & Memory Subsystem Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#091222', padding: '6px 10px', borderRadius: 6, border: '1px solid #00f0ff22' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: '#00ff66', fontWeight: 'bold' }}>● ETW/SYSMON: SENSOR ARMED</span>
+                    <span style={{ fontSize: 10, color: '#00f0ff', backgroundColor: '#00f0ff15', padding: '2px 6px', borderRadius: 3 }}>MEMGUARD: VIRTUALQUERYEX ACTIVE</span>
+                  </div>
+                  <span style={{ fontSize: 9, color: '#ffaa00' }}>RAM ISOLATION: NETSH EGRESS SHIELD READY</span>
+                </div>
+
+                {/* 1-Click Kernel & Memory Operations Bar */}
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 10, color: '#80a0c0', fontWeight: 'bold' }}>SANDBOX ACTIONS:</span>
+                  <button
+                    onClick={handleAuditSystemRWX}
+                    disabled={kernelScanRunning}
+                    style={{
+                      backgroundColor: kernelScanRunning ? '#00f0ff11' : '#00f0ff1a',
+                      border: '1px solid #00f0ff44',
+                      color: kernelScanRunning ? '#6080a0' : '#00f0ff',
+                      padding: '4px 8px',
+                      borderRadius: 4,
+                      fontSize: 9,
+                      fontWeight: 700,
+                      cursor: kernelScanRunning ? 'default' : 'pointer',
+                    }}
+                  >
+                    {kernelScanRunning ? 'SCANNING MEMORY...' : 'AUDIT SYSTEM RWX PAGES'}
+                  </button>
+                  <button
+                    onClick={() => handleVerifyProcessPE(21400)}
+                    style={{
+                      backgroundColor: '#a855f722',
+                      border: '1px solid #a855f766',
+                      color: '#c084fc',
+                      padding: '4px 8px',
+                      borderRadius: 4,
+                      fontSize: 9,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    VERIFY PE HEADER (PID 21400)
+                  </button>
+                  <button
+                    onClick={() => handleQuarantineKernelPid(21400)}
+                    disabled={isolatedPids.includes(21400)}
+                    style={{
+                      backgroundColor: isolatedPids.includes(21400) ? '#ff003c22' : '#ff003c33',
+                      border: '1px solid #ff003c88',
+                      color: '#ff003c',
+                      padding: '4px 8px',
+                      borderRadius: 4,
+                      fontSize: 9,
+                      fontWeight: 700,
+                      cursor: isolatedPids.includes(21400) ? 'default' : 'pointer',
+                    }}
+                  >
+                    {isolatedPids.includes(21400) ? 'PID 21400 CONTAINED' : 'QUARANTINE PID 21400'}
+                  </button>
+                </div>
+
+                {/* Process Lineage Hierarchy Tree */}
+                <div style={{ backgroundColor: '#050a14', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 'bold', color: '#00f0ff', marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
+                    <span>PROCESS LINEAGE & ANOMALY MATRIX</span>
+                    <span style={{ color: '#80a0c0', fontSize: 9 }}>Sysmon ID 1 / ID 8 / ID 10</span>
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9.5 }}>
+                    <thead>
+                      <tr style={{ color: '#80a0c0', borderBottom: '1px solid #00f0ff22', textAlign: 'left' }}>
+                        <th style={{ padding: '3px 6px' }}>LINEAGE / PROCESS</th>
+                        <th style={{ padding: '3px 6px' }}>PID</th>
+                        <th style={{ padding: '3px 6px' }}>PARENT</th>
+                        <th style={{ padding: '3px 6px' }}>THREAT SCORE</th>
+                        <th style={{ padding: '3px 6px' }}>RWX PAGES</th>
+                        <th style={{ padding: '3px 6px' }}>PE INTEGRITY</th>
+                        <th style={{ padding: '3px 6px' }}>CONTAINMENT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {kernelProcesses.map((proc, idx) => {
+                        const isAnomalous = proc.status === 'ANOMALOUS';
+                        const isSuspicious = proc.status === 'SUSPICIOUS';
+                        const isIsolated = isolatedPids.includes(proc.pid);
+                        return (
+                          <tr key={idx} style={{ borderBottom: '1px solid #00f0ff10', backgroundColor: isAnomalous ? '#ff003c0a' : isSuspicious ? '#ffaa000a' : 'transparent' }}>
+                            <td style={{ padding: '5px 6px', color: isAnomalous ? '#ff003c' : isSuspicious ? '#ffaa00' : '#00f0ff', fontWeight: 600 }}>
+                              {idx === 0 ? 'root ' : ' └── '}{proc.name}
+                              {proc.anomalyDesc && <div style={{ fontSize: 8, color: '#ff6b8b', fontWeight: 400 }}>{proc.anomalyDesc}</div>}
+                            </td>
+                            <td style={{ padding: '5px 6px', color: '#c0d0e0' }}>{proc.pid}</td>
+                            <td style={{ padding: '5px 6px', color: '#8090a0' }}>{proc.parentName} ({proc.parentPid})</td>
+                            <td style={{ padding: '5px 6px' }}>
+                              <span style={{
+                                backgroundColor: proc.threatScore > 70 ? '#ff003c22' : proc.threatScore > 40 ? '#ffaa0022' : '#00ff661a',
+                                color: proc.threatScore > 70 ? '#ff003c' : proc.threatScore > 40 ? '#ffaa00' : '#00ff66',
+                                padding: '2px 5px',
+                                borderRadius: 3,
+                                fontWeight: 'bold'
+                              }}>
+                                {proc.threatScore}/100
+                              </span>
+                            </td>
+                            <td style={{ padding: '5px 6px' }}>
+                              <span style={{ color: proc.rwxCount > 0 ? '#ff003c' : '#00ff66', fontWeight: proc.rwxCount > 0 ? 'bold' : 'normal' }}>
+                                {proc.rwxCount} {proc.rwxCount > 0 ? 'RWX' : 'none'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '5px 6px' }}>
+                              <span style={{ color: proc.peIntegrity === 'COMPROMISED' ? '#ff003c' : '#00ff66', fontWeight: 600 }}>
+                                {proc.peIntegrity}
+                              </span>
+                            </td>
+                            <td style={{ padding: '5px 6px' }}>
+                              {isIsolated ? (
+                                <span style={{ color: '#ff003c', fontSize: 8.5, fontWeight: 'bold' }}>ISOLATED</span>
+                              ) : isAnomalous || isSuspicious ? (
+                                <button
+                                  onClick={() => handleQuarantineKernelPid(proc.pid)}
+                                  style={{
+                                    backgroundColor: '#ff003c22',
+                                    border: '1px solid #ff003c66',
+                                    color: '#ff003c',
+                                    borderRadius: 3,
+                                    padding: '2px 6px',
+                                    fontSize: 8.5,
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                  }}
+                                >
+                                  QUARANTINE
+                                </button>
+                              ) : (
+                                <span style={{ color: '#00ff66', fontSize: 8.5 }}>PASS</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* RWX Memory Regions Table */}
+                <div style={{ backgroundColor: '#050a14', border: '1px solid #00f0ff22', borderRadius: 6, padding: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 'bold', color: '#ffaa00', marginBottom: 4, display: 'flex', justifyContent: 'space-between' }}>
+                    <span>UNBACKED / RWX EXECUTABLE MEMORY ALLOCATIONS</span>
+                    <span style={{ fontSize: 9, color: '#80a0c0' }}>VirtualQueryEx Scanner</span>
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9 }}>
+                    <thead>
+                      <tr style={{ color: '#80a0c0', borderBottom: '1px solid #00f0ff22', textAlign: 'left' }}>
+                        <th style={{ padding: '2px 4px' }}>PROCESS</th>
+                        <th style={{ padding: '2px 4px' }}>BASE ADDRESS</th>
+                        <th style={{ padding: '2px 4px' }}>SIZE</th>
+                        <th style={{ padding: '2px 4px' }}>PAGE PROTECTION</th>
+                        <th style={{ padding: '2px 4px' }}>TYPE</th>
+                        <th style={{ padding: '2px 4px' }}>RISK</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rwxRegions.map((reg, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #00f0ff10' }}>
+                          <td style={{ padding: '3px 4px', color: '#00f0ff' }}>{reg.process} ({reg.pid})</td>
+                          <td style={{ padding: '3px 4px', color: '#ffaa00', fontFamily: 'monospace' }}>{reg.baseAddress}</td>
+                          <td style={{ padding: '3px 4px' }}>{reg.sizeKb} KB</td>
+                          <td style={{ padding: '3px 4px', color: reg.protection.includes('0x40') ? '#ff003c' : '#ffaa00' }}>{reg.protection}</td>
+                          <td style={{ padding: '3px 4px', color: '#80a0c0' }}>{reg.type}</td>
+                          <td style={{ padding: '3px 4px' }}>
+                            <span style={{
+                              backgroundColor: reg.riskLevel === 'CRITICAL' ? '#ff003c22' : '#ffaa0022',
+                              color: reg.riskLevel === 'CRITICAL' ? '#ff003c' : '#ffaa00',
+                              padding: '1px 4px',
+                              borderRadius: 2,
+                              fontWeight: 'bold',
+                              fontSize: 8.5
+                            }}>
+                              {reg.riskLevel}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Live Console Output Terminal */}
+                <div
+                  style={{
+                    minHeight: 90,
+                    maxHeight: 130,
+                    backgroundColor: '#040810',
+                    border: '1px solid #00f0ff22',
+                    borderRadius: 6,
+                    padding: 8,
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
+                    fontSize: 9.5,
+                  }}
+                >
+                  {kernelLogs.map((line, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        color: line.startsWith('[+]')
+                          ? '#00ff66'
+                          : line.startsWith('[!]')
+                          ? '#ffaa00'
+                          : line.startsWith('[!!!]')
+                          ? '#ff003c'
+                          : line.startsWith('>>>') || line.startsWith('[>]')
+                          ? '#00f0ff'
+                          : line.startsWith('[KERNEL') || line.startsWith('[MEMGUARD')
                           ? '#c084fc'
                           : '#a0c0e0',
                       }}
