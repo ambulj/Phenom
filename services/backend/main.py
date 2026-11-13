@@ -232,6 +232,7 @@ import services.backend.tools.file_tools
 
 
 import services.backend.tools.app_tools
+import services.backend.tools.kali_tools
 
 
 
