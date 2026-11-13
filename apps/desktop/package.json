@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "34.0.0",
-  "description": "Phenom 34.0: Sovereign Contextual Voice Cloning, Prosodic Emotional Acting & Neural Voice Morphing OS — Autonomous Zero-Shot Local Voice Cloning, Multi-Emotional Prosodic Acting Engine & Breath Synthesizer, Cross-Identity Voice Morphing Matrix & Biometric Consent Enclave, and CyberHUD Voice Acting & Studio Control Room",
+  "version": "37.0.0",
+  "description": "Phenom 37.0: Autonomous Cross-Subsystem Workflows, Speculative LLM Acceleration, and Sovereign Tactical Control OS — Neural Speculative Decoding Engine, Cross-Subsystem 5-Stage Perimeter DAG Sweeps, Unified Airspace & Mesh CyberHUD Radar, and Sovereign Tactical Defense Operating System",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",

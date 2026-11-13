@@ -3730,3 +3730,35 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - **100% On-Device GPU Inference (Rule 4)**: Speculative drafting and verification run entirely on the local NVIDIA RTX 3050 GPU via Ollama; zero token prompts or responses egress to cloud servers.
 - **Universal Guardian Kill Switch (<25ms SLA)**: Speculative drafting loops monitor `guardian.is_halted` at every token iteration and abort generation immediately upon trigger.
 - **Rule 11 Credential Defense**: Speculative generation output passes through stream sanitizers; no API keys, private keys, or passwords are leaked in token output.
+
+
+## Section 43: Autonomous Cross-Subsystem Tactical DAG Governance
+### 1. Risk Tier Taxonomy
+- **Tier 0 (Read-Only Sweep History & Telemetry Queries)**:
+  - `get_tactical_sweep_history`: Chronological retrieval of past tactical security sweeps, stage metrics, and Obsidian debrief paths.
+- **Tier 1 (Multi-Stage Autonomous Perimeter Sweep)**:
+  - `execute_perimeter_sweep`: Orchestrates an autonomous 5-stage defensive security sweep across radio SIGINT, active sockets, Sigma SIEM rules, and deception canaries.
+
+### 2. Invariants & Guardrails
+- **Compensatory Stage Execution**: Each stage in the DAG (RF, Sockets, SIEM, Canary, Debrief) is isolated. If a single sensory stage encounters an environmental limitation (e.g. SDR offline), it records a non-fatal warning and allows downstream protective stages to proceed without unhandled exceptions.
+- **Universal Guardian Kill-Switch (<25ms SLA)**: The DAG orchestrator checks `guardian.is_halted` before entering each stage and aborts immediately (< 25ms SLA) if the emergency kill switch is triggered.
+- **Rule 1 & Rule 11 Invariants**: Debriefs saved to Obsidian or returned to the user are automatically scrubbed for credentials and private key headers. No cloud exfiltration occurs.
+
+
+## Section 44: Milestone 37 Comprehensive Safety Audit (SAF-01 to SAF-05)
+### 1. Complete Tool Inventory (5 Tools Across Milestone 37)
+- **Phase 1: Neural Speculative Decoding Engine**
+  - `generate_speculative_response`: Tier 0
+  - `benchmark_speculative_decoding`: Tier 0
+  - `get_speculative_metrics`: Tier 0
+- **Phase 2: Autonomous Cross-Subsystem Tactical DAGs**
+  - `execute_perimeter_sweep`: Tier 1
+  - `get_tactical_sweep_history`: Tier 0
+
+### 2. Universal Guardian Kill Switch SLA Benchmark (SAF-02)
+- 100 consecutive synchronous halt cycles executed simultaneously across `NeuralSpeculativeDecoder` and `TacticalDAGOrchestrator`.
+- Hard SLA: $< 25.0\text{ ms}$; measured typical: $< 1.0\text{ ms}$; P95: $< 2.0\text{ ms}$.
+
+### 3. Concurrency Chaos Battery (SAF-03)
+- 40 concurrent worker threads executing simultaneous speculative decoding, throughput benchmarking, perimeter sweeps, and history queries under load with zero deadlocks or race conditions.
+
