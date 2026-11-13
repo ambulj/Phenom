@@ -4,7 +4,7 @@ Provides autonomous red-teaming, live packet sniffing, binary reverse engineerin
 ESP8266 hardware interfacing, kernel ETW sensors, CUDA-accelerated cryptanalysis,
 OSINT attack surface discovery, SDR radio telemetry, binary entropy triage,
 Sigma SIEM real-time correlation, IoT firmware triage, P2P encrypted mesh networking,
-and Active Cyber Deception & Canary Token Enclaves.
+Active Cyber Deception Enclave, and Tactical Incident Response & RAM Forensics.
 """
 
 from services.backend.cyber.esp8266_controller import ESP8266Controller
@@ -20,6 +20,7 @@ from services.backend.cyber.sigma_siem import SigmaSIEMEngine, sigma_siem
 from services.backend.cyber.firmware_triage import FirmwareTriageEngine, firmware_triage
 from services.backend.cyber.p2p_mesh import P2PEncryptedMeshBridge, p2p_mesh
 from services.backend.cyber.deception_enclave import CyberDeceptionEnclave, deception_enclave
+from services.backend.cyber.incident_responder import TacticalIncidentResponder, incident_responder
 
 __all__ = [
     "ESP8266Controller",
@@ -46,4 +47,6 @@ __all__ = [
     "p2p_mesh",
     "CyberDeceptionEnclave",
     "deception_enclave",
+    "TacticalIncidentResponder",
+    "incident_responder",
 ]

@@ -3673,3 +3673,19 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - **User-Space & In-RAM Only**: Honeypot sockets bind user-mode unprivileged ports ($>1024$) with zero kernel modifications.
 - **Canary Hash Tracking**: Decoy tokens contain synthetic non-functional credentials (e.g., `AKIA...`) tracked by SHA-256 hash digests to identify unauthorized reading.
 - **Guardian Kill-Switch (<25ms SLA)**: Activating the Guardian immediately halts all honeypot listening sockets and cancels all probe workers.
+
+
+## Section 39: Tactical Incident Response & Live RAM Forensics Governance
+### 1. Risk Tier Taxonomy
+- **Tier 0 (Read-Only Forensics & Memory Sampling)**:
+  - `trigger_incident_pcap_dump`: Flushes the in-memory rolling network packet buffer to an incident artifact.
+  - `dump_process_memory_forensics`: Non-destructive read-only sampling of user-mode memory pages for IOCs.
+  - `list_isolated_processes`: Queries currently shielded PIDs.
+- **Tier 1 (Network Egress Shielding)**:
+  - `isolate_pid_network_egress`: Severs active outbound network socket handles for target PID without terminating process.
+  - `remove_pid_network_isolation`: Restores network connectivity for isolated PID.
+
+### 2. Invariants & Guardrails
+- **Non-Destructive Process Containment (Rule 7)**: Network Egress Shield isolates socket handles without terminating the process itself, preserving process memory for forensic triage.
+- **Guardian Kill-Switch (<25ms SLA)**: PCAP dumps and memory sampling loops actively check `guardian.is_halted` and abort immediately upon trigger.
+- **Rule 11 Credential Masking**: Real secrets or passwords discovered in process RAM string triage are masked with `[REDACTED]`.

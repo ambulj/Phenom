@@ -4144,3 +4144,23 @@ pm --prefix apps/desktop run build: **PASS (0 errors, 9.85s)**
    - `services/backend/tests/test_deception_suite.py`: **4/4 PASSED in 0.89s**.
    - Cumulative cyber test suite: **28/28 PASSED in 6.66s**.
    - Production Vite frontend build: **PASS (0 errors, 4.62s)**.
+
+
+# Milestone 36.0 Phase 2: Tactical Incident Response & Live RAM Forensics
+
+## Accomplishments
+1. **Automated Rolling PCAP Dumper (`services/backend/cyber/incident_responder.py`)**:
+   - Maintains a volatile in-memory ring buffer of recent network traffic.
+   - Automatically flushes to timestamped PCAP JSON artifacts on high-severity Sigma or tripwire alerts.
+2. **Network Egress Shield**:
+   - Isolates network socket handles for suspicious PIDs using process connection inspection, severing outbound C2 egress while preserving RAM state for forensic extraction.
+   - Supports 1-click isolation restoration.
+3. **Process RAM Memory Forensic Dumper**:
+   - Samples user-mode memory pages, command-line arguments, and environment strings.
+   - Performs regex triage for Indicators of Compromise (IPs, URLs, encoded Base64 blobs) and formats an Obsidian forensic report.
+4. **Tool Registry Integration (`services/backend/tools/incident_response_tools.py`)**:
+   - Registered 5 safety-wrapped tools: `trigger_incident_pcap_dump`, `isolate_pid_network_egress`, `remove_pid_network_isolation`, `dump_process_memory_forensics`, `list_isolated_processes`.
+5. **Testing & Verification**:
+   - `services/backend/tests/test_incident_response_suite.py`: **5/5 PASSED in 0.56s**.
+   - Cumulative cyber test suite: **33/33 PASSED in 13.02s**.
+   - Production Vite frontend build: **PASS (0 errors, 5.56s)**.
