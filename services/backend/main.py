@@ -240,6 +240,7 @@ import services.backend.tools.deception_tools
 import services.backend.tools.incident_response_tools
 import services.backend.tools.sigint_tools
 import services.backend.tools.wargame_tools
+import services.backend.tools.speculative_tools
 
 
 
