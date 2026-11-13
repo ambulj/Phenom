@@ -65,6 +65,10 @@ Core Instructions:
        Example for "open brave": {{"tool": "open_app", "args": {{"app_name": "brave"}}}}
        Example for "play Baarishein on YouTube": {{"tool": "open_app", "args": {{"app_name": "https://www.youtube.com/results?search_query=Baarishein"}}}}
        Example for "Spotify kholo": {{"tool": "open_app", "args": {{"app_name": "spotify"}}}}
+      * For media playback control, volume changes, pause, resume, or toggling tracks, ALWAYS call the `control_media` tool!
+        Example for "Spotify pause kar do" or "pause music": {{"tool": "control_media", "args": {{"action": "pause"}}}}
+        Example for "Volume badhao" or "volume up": {{"tool": "control_media", "args": {{"action": "volume_up"}}}}
+        Example for "Toggle media play/pause on Spotify": {{"tool": "control_media", "args": {{"action": "play_pause"}}}}
    - ABSOLUTE PROHIBITIONS:
      * NEVER output markdown headers like "** Tool :**", "** JSON Execution Block :**", or "Tool Invocation".
      * NEVER output meta-commentary like "This command will launch...", "Executing command...", or "[Action Executed: ...]".
