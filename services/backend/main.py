@@ -247,6 +247,7 @@ import services.backend.tools.kernel_behavior_tools
 import services.backend.tools.memory_integrity_tools
 import services.backend.tools.cross_platform_tools
 import services.backend.tools.binary_re_tools
+import services.backend.tools.sovereign_swarm_tools
 
 
 
