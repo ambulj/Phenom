@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "43.0.0",
-  "description": "Phenom 43.0: Project FULL-DUPLEX JARVIS — Real-Time Hands-Free Voice Agent, Sub-300ms Conversational Duplex, Streaming Whisper VAD, Voice Cyber Synapse & Audio Guardian E-Stop",
+  "version": "44.0.0",
+  "description": "Phenom 44.0: Project NEURAL-NEOCORTEX — Real-Time Screen Consciousness, Hybrid Screen Diffing, Local GPU OCR & Context-Aware Visual Synapse",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
