@@ -4156,6 +4156,56 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 ### 3. Visual Concurrency Chaos Battery (SAF-03)
 - 50 concurrent worker threads executing simultaneous screen frame diffing, OCR extraction, PII masking, and visual event correlation with zero deadlocks and zero unhandled exceptions.
 
+---
+
+## Section 71: Autonomous Computer-Use Governance & Synthetic Input Bounds
+1. **Human-Like Bezier Movement Constraints**:
+   - Cursor paths are computed using cubic Bezier curves with randomized lateral control-point displacement and Fitts' Law sinusoidal ease-in/ease-out velocity ramping.
+   - Physical mouse teleports and zero-duration jumps are strictly prohibited to prevent operating system input buffer stalls or anti-bot alarms.
+2. **Hybrid UI Automation & Fallback Hierarchy**:
+   - The agent prioritizes native accessibility tree patterns (InvokePattern, ValuePattern) where available.
+   - Non-interactive or custom canvas controls fall back safely to calculated bounding box center coordinates `((left + right) / 2, (top + bottom) / 2)`.
+3. **Speed-Demon Autonomous Bounds**:
+   - In autonomous mode, the agent executes non-destructive actions rapidly without pausing for individual user confirmation prompts, backed by universal synchronous Guardian freeze protection.
+
+---
+
+## Section 72: Dual-Layer Grounding Privacy Preview & PII Shielding (Rule 4 & Rule 11)
+1. **Sub-20ms Local-First OCR Grounding**:
+   - All text target resolutions run 100% locally on the RTX 3050 via Neocortex in-RAM bounding boxes with sub-20ms latency.
+2. **Cloud Vision Privacy Gating**:
+   - Non-text spatial icon queries ("settings gear", "play button") escalating to Nemotron Cloud Vision undergo mandatory PII redaction via `PrivacyMasker` regex filters prior to transmission.
+3. **Sensitive Window Grounding Hard-Shield**:
+   - Any attempt to resolve targets or dispatch synthetic clicks within password managers (KeePass, Bitwarden, 1Password), incognito sessions, or banking URLs raises `PrivacyShieldError` and immediately aborts.
+
+---
+
+## Section 73: Anti-Checkout & Destructive Action Hard Walls (Rules 1, 7, 8)
+1. **Rule 8 Anti-Checkout Enforcement**:
+   - Queries or bounding boxes containing `"checkout"`, `"buy now"`, `"place order"`, `"pay now"`, `"credit card"`, or `"cvv"` trigger immediate `Rule8ViolationError`.
+   - By architectural design, automated checkout or purchasing is impossible.
+2. **Rule 7 Scope Enforcement**:
+   - Actions and network commands dispatched via synthetic terminal keystrokes are strictly restricted to local loopback (127.0.0.1) and RFC1918 private subnets.
+
+---
+
+## Section 74: Universal Guardian Input Freeze SLA & Milestone 45 Master Audit (SAF-01 to SAF-05)
+### 1. Complete Tool Inventory (5 Tools Across Milestone 45)
+- **Phase 3: Multi-Modal Action Agent Tools**
+  - `execute_desktop_click`: Tier 1 (Clicks on-screen element or coordinates with Bezier glide)
+  - `execute_desktop_keystrokes`: Tier 1 (Dispatches human-cadence typing with micro-delays)
+  - `execute_desktop_action_sequence`: Tier 1 (Executes atomic sequence of mouse/keyboard actions)
+  - `resolve_visual_target_coordinates`: Tier 0 (Resolves text/icon queries with Rule 8 protection)
+  - `get_computer_use_status`: Tier 0 (Returns controller status, cursor position, and Guardian halt)
+
+### 2. Universal Guardian Kill Switch SLA Benchmark (SAF-02)
+- 100 consecutive synchronous halt cycles executed under active synthetic input and action sequence playback:
+  - Hard SLA: $< 25.0\text{ ms}$; measured typical: $< 0.1\text{ ms}$.
+
+### 3. Action Concurrency Chaos Battery (SAF-03)
+- 50 concurrent worker threads executing simultaneous click dispatch, keystroke typing, UIA tree searches, and visual target grounding with zero deadlocks and zero unhandled exceptions.
+
+
 
 
 

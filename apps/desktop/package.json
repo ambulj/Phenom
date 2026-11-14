@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "44.0.0",
-  "description": "Phenom 44.0: Project NEURAL-NEOCORTEX — Real-Time Screen Consciousness, Hybrid Screen Diffing, Local GPU OCR & Context-Aware Visual Synapse",
+  "version": "45.0.0",
+  "description": "Phenom 45.0: Project MULTI-MODAL ACTION AGENT — Vision-Grounded Computer-Use, Hybrid UIA & Bezier Desktop Execution, Dual-Layer Vision Grounding & Autonomous Speed-Demon Controller",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
