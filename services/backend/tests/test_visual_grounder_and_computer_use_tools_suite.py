@@ -44,6 +44,9 @@ def test_local_ocr_coordinate_grounding_latency_under_20ms():
     grounder = VisualGrounder(dry_run=True)
     grounder.set_mock_ocr_boxes(create_sample_ocr_boxes())
 
+    # Warm-up regex and JIT cache
+    grounder.resolve_target("Run Python")
+
     t0 = time.perf_counter()
     pt, layer, meta = grounder.resolve_target("Run Python")
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
