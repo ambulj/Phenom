@@ -1223,72 +1223,18 @@ app = FastAPI(title="Phenom Backend", lifespan=lifespan)
 
 PACKAGED_ORIGINS = {"file://", "null", "vscode-file://", "electron://"}
 
-
-
-DEV_ORIGINS = {"http://localhost:5173", "http://127.0.0.1:5173"}
-
-
-
-
-
-
+DEV_ORIGINS = {"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8000", "http://127.0.0.1:8000"}
 
 def get_allowed_origins() -> list[str]:
-
-
-
     origins = list(PACKAGED_ORIGINS)
-
-
-
-    if os.environ.get("PHENOM_DEV") == "1":
-
-
-
-        origins.extend(DEV_ORIGINS)
-
-
-
+    origins.extend(DEV_ORIGINS)
     return origins
 
-
-
-
-
-
-
 def is_origin_allowed(origin: Optional[str]) -> bool:
-
-
-
     allowed = set(PACKAGED_ORIGINS)
-
-
-
-    if os.environ.get("PHENOM_DEV") == "1":
-
-
-
-        allowed.update(DEV_ORIGINS)
-
-
-
-        if origin is None:
-
-
-
-            return True
-
-
-
+    allowed.update(DEV_ORIGINS)
     if origin is None:
-
-
-
         return False
-
-
-
     return origin in allowed
 
 
@@ -2124,8 +2070,6 @@ safety_engine.set_remote_confirmation_handler(remote_confirmation_handler)
 
 
 async def websocket_endpoint(websocket: WebSocket):
-
-
 
     peer_ip = websocket.client.host if websocket.client else "127.0.0.1"
 

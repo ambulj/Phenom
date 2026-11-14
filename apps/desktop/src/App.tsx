@@ -645,12 +645,13 @@ export const App: React.FC = () => {
 
 
 
-      ws.onclose = () => {
-
+      ws.onclose = (event) => {
         setIsConnected(false);
-
+        if (event.code === 4401 && !token) {
+          console.warn('[Phenom] Connection rejected: No session token available.');
+          return;
+        }
         reconnectTimeout = setTimeout(connect, 2000);
-
       };
 
 
