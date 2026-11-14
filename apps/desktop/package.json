@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "42.0.0",
-  "description": "Phenom 42.0: Project CHRONO-CYBER & DARK-WEBINT — Autonomous Red-Team Campaign DAG, Sovereign Threat Intelligence & Dual-Boot Encrypted Shared Vault OS",
+  "version": "43.0.0",
+  "description": "Phenom 43.0: Project FULL-DUPLEX JARVIS — Real-Time Hands-Free Voice Agent, Sub-300ms Conversational Duplex, Streaming Whisper VAD, Voice Cyber Synapse & Audio Guardian E-Stop",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
