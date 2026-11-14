@@ -21,7 +21,7 @@ export interface CyberCommandCenterHUDProps {
   onClose?: () => void;
 }
 
-type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'chrono' | 'intel' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem' | 'duplex' | 'neocortex';
+type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'chrono' | 'intel' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem' | 'duplex' | 'neocortex' | 'action_agent';
 
 interface SwarmAgentState {
   name: string;
@@ -423,6 +423,178 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
   }, [neocortexActive, neocortexBlinded, neocortexOcrBoxes, neocortexProcess, neocortexWindow]);
+
+  // Multi-Modal Action Agent States (Milestone 45.0)
+  const [actionAgentActive, setActionAgentActive] = useState<boolean>(true);
+  const [actionSpeedMode, setActionSpeedMode] = useState<'SPEED_DEMON' | 'CONTROLLED'>('SPEED_DEMON');
+  const [actionReticle, setActionReticle] = useState<{ x: number; y: number; label: string; active: boolean }>({
+    x: 420,
+    y: 150,
+    label: 'Run Python File [LOCAL_OCR]',
+    active: true,
+  });
+  const [actionTrajectory, setActionTrajectory] = useState<Array<{ x: number; y: number }>>([
+    { x: 100, y: 380 },
+    { x: 160, y: 320 },
+    { x: 240, y: 240 },
+    { x: 330, y: 180 },
+    { x: 420, y: 150 },
+  ]);
+  const [actionSequenceLog, setActionSequenceLog] = useState<Array<{
+    id: string;
+    time: string;
+    action: string;
+    target: string;
+    mode: string;
+    latency: string;
+    status: 'SUCCESS' | 'EXECUTING' | 'BLOCKED';
+  }>>([
+    { id: '1', time: '15:02:11', action: 'CLICK', target: 'Run Python File (420, 150)', mode: 'LOCAL_OCR', latency: '1.2ms', status: 'SUCCESS' },
+    { id: '2', time: '15:02:18', action: 'TYPE', target: 'Terminal Input: ls -la', mode: 'KEYSTROKE', latency: '15.4ms', status: 'SUCCESS' },
+    { id: '3', time: '15:02:30', action: 'RESOLVE', target: 'Settings Gear Icon (1880, 45)', mode: 'CLOUD_VISION', latency: '42.1ms', status: 'SUCCESS' },
+    { id: '4', time: '15:02:45', action: 'CLICK', target: 'Checkout / Buy Now', mode: 'RULE_8', latency: '0.2ms', status: 'BLOCKED' },
+  ]);
+
+  const actionCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Live Action Agent Viewport Canvas Animation (Bezier Ghost + Pulsing Reticle)
+  useEffect(() => {
+    let animId: number;
+    const canvas = actionCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let cursorStep = 0;
+    let pulseAngle = 0;
+
+    const render = () => {
+      cursorStep = (cursorStep + 0.02) % 1.0;
+      pulseAngle = (pulseAngle + 0.05) % (Math.PI * 2);
+
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Dark background
+      ctx.fillStyle = '#020509';
+      ctx.fillRect(0, 0, width, height);
+
+      // Grid background
+      ctx.strokeStyle = '#00f0ff08';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+      }
+      for (let y = 0; y < height; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+      }
+
+      // Simulated Target Application Windows
+      ctx.fillStyle = '#0a1220';
+      ctx.fillRect(40, 40, width - 80, height - 80);
+      ctx.strokeStyle = '#00f0ff22';
+      ctx.strokeRect(40, 40, width - 80, height - 80);
+
+      // App Title Bar
+      ctx.fillStyle = '#0e1a2d';
+      ctx.fillRect(40, 40, width - 80, 26);
+      ctx.fillStyle = '#00f0ff';
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('ACTIVE DESKTOP CONTEXT: Visual Studio Code - phenom/actions', 55, 57);
+
+      // Render Bezier Ghost Trajectory
+      if (actionTrajectory.length >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#00f0ff88';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(actionTrajectory[0].x, actionTrajectory[0].y);
+        for (let i = 1; i < actionTrajectory.length; i++) {
+          ctx.lineTo(actionTrajectory[i].x, actionTrajectory[i].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Trajectory Waypoint Dots
+        actionTrajectory.forEach((pt, idx) => {
+          ctx.fillStyle = idx === actionTrajectory.length - 1 ? '#00ff66' : '#00f0ff';
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, idx === actionTrajectory.length - 1 ? 5 : 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Animated Interpolated Cursor along Trajectory
+        const totalPts = actionTrajectory.length - 1;
+        const currentSegment = cursorStep * totalPts;
+        const segIdx = Math.min(Math.floor(currentSegment), totalPts - 1);
+        const t = currentSegment - segIdx;
+        const p0 = actionTrajectory[segIdx];
+        const p1 = actionTrajectory[segIdx + 1];
+        const curX = p0.x + (p1.x - p0.x) * t;
+        const curY = p0.y + (p1.y - p0.y) * t;
+
+        // Draw Synthetic Mouse Cursor (Arrow)
+        ctx.save();
+        ctx.translate(curX, curY);
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, 15);
+        ctx.lineTo(4, 11);
+        ctx.lineTo(8, 18);
+        ctx.lineTo(10, 17);
+        ctx.lineTo(6, 10);
+        ctx.lineTo(11, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Pulsing Target Lock Reticle
+      if (actionReticle.active) {
+        const rx = actionReticle.x;
+        const ry = actionReticle.y;
+        const pulse = 16 + Math.sin(pulseAngle) * 4;
+
+        ctx.save();
+        ctx.strokeStyle = '#00ffcc';
+        ctx.lineWidth = 1.5;
+
+        // Corner brackets
+        const bLen = 8;
+        // Top-left
+        ctx.beginPath(); ctx.moveTo(rx - pulse, ry - pulse + bLen); ctx.lineTo(rx - pulse, ry - pulse); ctx.lineTo(rx - pulse + bLen, ry - pulse); ctx.stroke();
+        // Top-right
+        ctx.beginPath(); ctx.moveTo(rx + pulse - bLen, ry - pulse); ctx.lineTo(rx + pulse, ry - pulse); ctx.lineTo(rx + pulse, ry - pulse + bLen); ctx.stroke();
+        // Bottom-left
+        ctx.beginPath(); ctx.moveTo(rx - pulse, ry + pulse - bLen); ctx.lineTo(rx - pulse, ry + pulse); ctx.lineTo(rx - pulse + bLen, ry + pulse); ctx.stroke();
+        // Bottom-right
+        ctx.beginPath(); ctx.moveTo(rx + pulse - bLen, ry + pulse); ctx.lineTo(rx + pulse, ry + pulse); ctx.lineTo(rx + pulse, ry + pulse - bLen); ctx.stroke();
+
+        // Crosshairs
+        ctx.strokeStyle = '#00ffcc66';
+        ctx.beginPath(); ctx.moveTo(rx - pulse - 6, ry); ctx.lineTo(rx + pulse + 6, ry); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(rx, ry - pulse - 6); ctx.lineTo(rx, ry + pulse + 6); ctx.stroke();
+
+        // Target Label
+        ctx.fillStyle = '#00ffcc';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(actionReticle.label, rx + pulse + 8, ry + 3);
+        ctx.restore();
+      }
+
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animId);
+  }, [actionAgentActive, actionReticle, actionTrajectory]);
 
   // Terminal log lines per tab
   const [reconLogs, setReconLogs] = useState<string[]>([
@@ -1386,6 +1558,7 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
               { id: 'siem', label: 'SIGMA SIEM' },
               { id: 'duplex', label: 'VOICE DUPLEX' },
               { id: 'neocortex', label: 'NEOCORTEX VISION' },
+              { id: 'action_agent', label: 'ACTION AGENT' },
             ].map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -3324,6 +3497,255 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'action_agent' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Header Banner */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: 12, fontWeight: 'bold', color: '#00ffcc', letterSpacing: 0.8 }}>
+                      MULTI-MODAL ACTION AGENT: VISION-GROUNDED COMPUTER-USE & BEZIER TRAJECTORY ENGINE
+                    </span>
+                    <span style={{ fontSize: 10, color: '#80a0c0', display: 'block', marginTop: 2 }}>
+                      Win32 SendInput dispatch, cubic Bezier curve interpolation, hybrid UIA resolver, Rule 8 Anti-Checkout, and Guardian E-Stop.
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <button
+                      onClick={() => setActionSpeedMode(actionSpeedMode === 'SPEED_DEMON' ? 'CONTROLLED' : 'SPEED_DEMON')}
+                      style={{
+                        backgroundColor: actionSpeedMode === 'SPEED_DEMON' ? '#ffaa0022' : '#00f0ff1a',
+                        border: actionSpeedMode === 'SPEED_DEMON' ? '1px solid #ffaa00' : '1px solid #00f0ff66',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: actionSpeedMode === 'SPEED_DEMON' ? '#ffaa00' : '#00f0ff',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {actionSpeedMode === 'SPEED_DEMON' ? '⚡ SPEED-DEMON: AUTONOMOUS' : '🛡️ SAFETY: CONTROLLED'}
+                    </button>
+                    <button
+                      onClick={() => setActionAgentActive(!actionAgentActive)}
+                      style={{
+                        backgroundColor: actionAgentActive ? '#00ff6615' : '#ff003c22',
+                        border: actionAgentActive ? '1px solid #00ff6644' : '1px solid #ff003c',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: actionAgentActive ? '#00ff66' : '#ff003c',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {actionAgentActive ? 'AGENT: ACTIVE' : 'AGENT: PAUSED'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Viewport & Telemetry Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '620px 1fr', gap: 12, backgroundColor: '#050a12', padding: 10, borderRadius: 6, border: '1px solid #00ffcc22' }}>
+                  {/* Left: Viewport Canvas with Bezier Ghost & Reticle */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 'bold', color: '#00ffcc' }}>
+                        COMPUTER-USE VIEWPORT: BEZIER TRAJECTORY & TARGET LOCK
+                      </span>
+                      <span style={{ fontSize: 9.5, color: '#6080a0' }}>
+                        Target: {actionReticle.label}
+                      </span>
+                    </div>
+                    <canvas
+                      ref={actionCanvasRef}
+                      width={620}
+                      height={270}
+                      style={{
+                        width: '100%',
+                        height: 270,
+                        backgroundColor: '#020509',
+                        borderRadius: 4,
+                        border: '1px solid #00ffcc33',
+                      }}
+                    />
+                  </div>
+
+                  {/* Right: Controls & Metrics */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 'bold', color: '#00ffcc' }}>ACTION CONTROL PANEL</span>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      <button
+                        onClick={() => {
+                          setActionReticle({ x: 420, y: 150, label: 'Run Python File [LOCAL_OCR]', active: true });
+                          setActionTrajectory([
+                            { x: 100, y: 380 }, { x: 180, y: 300 }, { x: 280, y: 220 }, { x: 360, y: 170 }, { x: 420, y: 150 }
+                          ]);
+                          setActionSequenceLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), action: 'CLICK', target: 'Run Python File (420, 150)', mode: 'LOCAL_OCR', latency: '1.4ms', status: 'SUCCESS' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#00ffcc15',
+                          border: '1px solid #00ffcc44',
+                          color: '#00ffcc',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        🖱️ Dispatch Local OCR Click (Run Python)
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActionReticle({ x: 580, y: 55, label: 'Settings Gear Icon [CLOUD_VISION]', active: true });
+                          setActionTrajectory([
+                            { x: 420, y: 150 }, { x: 470, y: 110 }, { x: 530, y: 80 }, { x: 580, y: 55 }
+                          ]);
+                          setActionSequenceLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), action: 'RESOLVE', target: 'Settings Gear Icon (580, 55)', mode: 'CLOUD_VISION', latency: '38.2ms', status: 'SUCCESS' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#ffaa0015',
+                          border: '1px solid #ffaa0044',
+                          color: '#ffaa00',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        👁️ Escalate to Cloud Vision (Gear Icon)
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActionSequenceLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), action: 'TYPE', target: 'Terminal: nmap -sS 127.0.0.1', mode: 'KEYSTROKE', latency: '18.1ms', status: 'SUCCESS' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#00f0ff15',
+                          border: '1px solid #00f0ff44',
+                          color: '#00f0ff',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        ⌨️ Type Command Keystrokes (120 WPM)
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActionSequenceLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), action: 'CLICK', target: 'Checkout / Buy Now Button', mode: 'RULE_8', latency: '0.1ms', status: 'BLOCKED' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#ff003c15',
+                          border: '1px solid #ff003c66',
+                          color: '#ff003c',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        🛑 Test Rule 8 Block (Checkout Trigger)
+                      </button>
+                    </div>
+
+                    {/* Grounding & Velocity Metrics */}
+                    <div style={{ backgroundColor: '#020509', border: '1px solid #00ffcc15', borderRadius: 4, padding: '8px', fontSize: 9.5, display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Mouse Trajectory:</span>
+                        <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>Cubic Bezier (Fitts' Law)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Local OCR Grounding:</span>
+                        <span style={{ color: '#00ff66', fontWeight: 'bold' }}>&lt; 20.0ms (RTX 3050)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Rule 8 Anti-Checkout:</span>
+                        <span style={{ color: '#00ff66', fontWeight: 'bold' }}>ENFORCED (Hard Wall)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Guardian Kill Switch:</span>
+                        <span style={{ color: '#00ff66', fontWeight: 'bold' }}>&lt; 10.0ms Instant Freeze</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Sequence Dispatch Stream Table */}
+                <div style={{ backgroundColor: '#050a12', padding: 8, borderRadius: 6, border: '1px solid #00ffcc22' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 'bold', color: '#00ffcc' }}>
+                      LIVE ACTION DISPATCH STREAM (COMPUTER-USE SEQUENCE)
+                    </span>
+                    <span style={{ fontSize: 9, color: '#6080a0' }}>Latency SLA: &lt;20ms OCR, &lt;10ms Freeze</span>
+                  </div>
+
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9.5 }}>
+                    <thead>
+                      <tr style={{ color: '#6080a0', textAlign: 'left', borderBottom: '1px solid #00ffcc22' }}>
+                        <th style={{ padding: '4px 6px' }}>TIME</th>
+                        <th style={{ padding: '4px 6px' }}>ACTION</th>
+                        <th style={{ padding: '4px 6px' }}>TARGET</th>
+                        <th style={{ padding: '4px 6px' }}>GROUNDING LAYER</th>
+                        <th style={{ padding: '4px 6px' }}>LATENCY</th>
+                        <th style={{ padding: '4px 6px' }}>STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {actionSequenceLog.map((row) => (
+                        <tr key={row.id} style={{ borderBottom: '1px solid #ffffff08' }}>
+                          <td style={{ padding: '4px 6px', color: '#80a0c0' }}>{row.time}</td>
+                          <td style={{ padding: '4px 6px', color: '#00ffcc', fontWeight: 'bold' }}>{row.action}</td>
+                          <td style={{ padding: '4px 6px', color: '#d0f0ff' }}>{row.target}</td>
+                          <td style={{ padding: '4px 6px', color: row.mode === 'RULE_8' ? '#ff003c' : row.mode === 'CLOUD_VISION' ? '#ffaa00' : '#00f0ff' }}>
+                            {row.mode}
+                          </td>
+                          <td style={{ padding: '4px 6px', color: '#a0c0d0' }}>{row.latency}</td>
+                          <td style={{ padding: '4px 6px' }}>
+                            <span
+                              style={{
+                                backgroundColor: row.status === 'SUCCESS' ? '#00ff6615' : '#ff003c22',
+                                border: `1px solid ${row.status === 'SUCCESS' ? '#00ff6644' : '#ff003c'}`,
+                                color: row.status === 'SUCCESS' ? '#00ff66' : '#ff003c',
+                                padding: '1px 6px',
+                                borderRadius: 3,
+                                fontSize: 8.5,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {row.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
