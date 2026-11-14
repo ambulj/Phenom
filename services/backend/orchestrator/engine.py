@@ -69,6 +69,13 @@ Core Instructions:
         Example for "Spotify pause kar do" or "pause music": {{"tool": "control_media", "args": {{"action": "pause"}}}}
         Example for "Volume badhao" or "volume up": {{"tool": "control_media", "args": {{"action": "volume_up"}}}}
         Example for "Toggle media play/pause on Spotify": {{"tool": "control_media", "args": {{"action": "play_pause"}}}}
+      * For screen inspection, checking the active window, reading what is on screen, or visual error checking, ALWAYS call the `inspect_screen` tool!
+        Example for "What's on my screen right now?": {{"tool": "inspect_screen", "args": {{"query": "Describe what is on screen and highlight open windows and any errors."}}}}
+        Example for "Inspect active window and report any errors": {{"tool": "inspect_screen", "args": {{"query": "Inspect active window and report any errors."}}}}
+      * For real-time weather inquiries, call the `get_weather` tool:
+        Example for "weather in Mumbai": {{"tool": "get_weather", "args": {{"location": "Mumbai"}}}}
+      * For financial stock quotes or indices, call the `get_market_quote` tool:
+        Example for "Apple stock price": {{"tool": "get_market_quote", "args": {{"symbol": "AAPL"}}}}
    - ABSOLUTE PROHIBITIONS:
      * NEVER output markdown headers like "** Tool :**", "** JSON Execution Block :**", or "Tool Invocation".
      * NEVER output meta-commentary like "This command will launch...", "Executing command...", or "[Action Executed: ...]".
