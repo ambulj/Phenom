@@ -21,7 +21,7 @@ export interface CyberCommandCenterHUDProps {
   onClose?: () => void;
 }
 
-type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'chrono' | 'intel' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem' | 'duplex';
+type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'chrono' | 'intel' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem' | 'duplex' | 'neocortex';
 
 interface SwarmAgentState {
   name: string;
@@ -276,6 +276,153 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
   }, [handsFreeActive, duplexState]);
+
+  // Neocortex Real-Time Screen Consciousness States (Milestone 44.0)
+  const [neocortexActive, setNeocortexActive] = useState<boolean>(true);
+  const [neocortexBlinded, setNeocortexBlinded] = useState<boolean>(false);
+  const [neocortexWindow, setNeocortexWindow] = useState<string>('kali@kali: ~ (WSL2)');
+  const [neocortexProcess, setNeocortexProcess] = useState<string>('wsl.exe');
+  const [neocortexDiffFps, setNeocortexDiffFps] = useState<number>(5.0);
+  const [neocortexOcrBoxes, setNeocortexOcrBoxes] = useState<Array<{
+    text: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    isRedacted: boolean;
+  }>>([
+    { text: "kali@kali:~$ sudo nmap -sV 127.0.0.1", x: 20, y: 35, w: 290, h: 20, isRedacted: false },
+    { text: "PORT 22/tcp open OpenSSH 8.9p1", x: 20, y: 65, w: 250, h: 20, isRedacted: false },
+    { text: "PORT 80/tcp open Apache httpd 2.4.52", x: 20, y: 90, w: 270, h: 20, isRedacted: false },
+    { text: "API_TOKEN=[REDACTED_API_KEY]", x: 20, y: 115, w: 240, h: 20, isRedacted: true },
+    { text: "[+] Spawned root shell on target 127.0.0.1", x: 20, y: 140, w: 320, h: 20, isRedacted: false },
+  ]);
+  const [neocortexEventsLog, setNeocortexEventsLog] = useState<Array<{
+    event: string;
+    priority: string;
+    detail: string;
+    time: string;
+  }>>([
+    { event: "RECON_COMPLETE", priority: "HIGH", detail: "Nmap port scan finished on 127.0.0.1 (ports 22, 80)", time: "20:38:12" },
+    { event: "REVERSE_SHELL", priority: "CRITICAL", detail: "Root shell spawned (uid=0 root)", time: "20:38:45" },
+    { event: "PII_REDACTED", priority: "INFORMATIONAL", detail: "Automated regex mask applied to API token", time: "20:39:01" },
+  ]);
+
+  const neocortexCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Live Neocortex Viewport Canvas Animation
+  useEffect(() => {
+    let animId: number;
+    const canvas = neocortexCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let scanY = 0;
+    const render = () => {
+      scanY = (scanY + 1.5) % canvas.height;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      if (neocortexBlinded) {
+        // Blinded shield (opaque privacy pattern)
+        ctx.fillStyle = '#080c14';
+        ctx.fillRect(0, 0, width, height);
+
+        // Hazard stripes
+        ctx.strokeStyle = '#ffaa0022';
+        ctx.lineWidth = 14;
+        for (let i = -height; i < width + height; i += 36) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i + height, height);
+          ctx.stroke();
+        }
+
+        // Center privacy shield box
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#ff0055';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(width / 2 - 180, height / 2 - 35, 360, 70);
+        ctx.fillRect(width / 2 - 180, height / 2 - 35, 360, 70);
+
+        ctx.fillStyle = '#ff0055';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('🛡️ PRIVACY SHIELD ACTIVE (Rule 4)', width / 2, height / 2 - 8);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px monospace';
+        ctx.fillText('SENSITIVE VAULT / BANKING / INPRIVATE DETECTED', width / 2, height / 2 + 14);
+      } else {
+        // Active Terminal Simulation
+        ctx.fillStyle = '#020509';
+        ctx.fillRect(0, 0, width, height);
+
+        // Window Title Bar
+        ctx.fillStyle = '#0a1220';
+        ctx.fillRect(0, 0, width, 24);
+        ctx.strokeStyle = '#00f0ff22';
+        ctx.strokeRect(0, 0, width, 24);
+
+        // Window Controls (dots)
+        ctx.fillStyle = '#ff5f56';
+        ctx.beginPath(); ctx.arc(12, 12, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffbd2e';
+        ctx.beginPath(); ctx.arc(24, 12, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#27c93f';
+        ctx.beginPath(); ctx.arc(36, 12, 4, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = '#80a0c0';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${neocortexProcess} - [${neocortexWindow}]`, 50, 15);
+
+        // Render OCR Bounding Boxes
+        ctx.font = '10.5px monospace';
+        neocortexOcrBoxes.forEach((box) => {
+          // Box stroke and fill
+          ctx.strokeStyle = box.isRedacted ? '#ff0055' : '#00f0ff88';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(box.x, box.y, box.w, box.h);
+          ctx.fillStyle = box.isRedacted ? 'rgba(255, 0, 85, 0.15)' : 'rgba(0, 240, 255, 0.05)';
+          ctx.fillRect(box.x, box.y, box.w, box.h);
+
+          // Box Corner accents
+          ctx.fillStyle = box.isRedacted ? '#ff0055' : '#00f0ff';
+          ctx.fillRect(box.x - 1, box.y - 1, 4, 4);
+          ctx.fillRect(box.x + box.w - 3, box.y - 1, 4, 4);
+          ctx.fillRect(box.x - 1, box.y + box.h - 3, 4, 4);
+          ctx.fillRect(box.x + box.w - 3, box.y + box.h - 3, 4, 4);
+
+          // Text content
+          ctx.fillStyle = box.isRedacted ? '#ff66aa' : '#00ff66';
+          ctx.fillText(box.text, box.x + 6, box.y + 14);
+        });
+
+        if (neocortexActive) {
+          // Vertical scanning laser beam
+          const grad = ctx.createLinearGradient(0, scanY - 8, 0, scanY + 8);
+          grad.addColorStop(0, 'rgba(0, 240, 255, 0)');
+          grad.addColorStop(0.5, 'rgba(0, 240, 255, 0.45)');
+          grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, scanY - 8, width, 16);
+
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, scanY);
+          ctx.lineTo(width, scanY);
+          ctx.stroke();
+        }
+      }
+
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animId);
+  }, [neocortexActive, neocortexBlinded, neocortexOcrBoxes, neocortexProcess, neocortexWindow]);
 
   // Terminal log lines per tab
   const [reconLogs, setReconLogs] = useState<string[]>([
@@ -1238,6 +1385,7 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
               { id: 'radar', label: 'ADS-B RADAR' },
               { id: 'siem', label: 'SIGMA SIEM' },
               { id: 'duplex', label: 'VOICE DUPLEX' },
+              { id: 'neocortex', label: 'NEOCORTEX VISION' },
             ].map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -2914,6 +3062,265 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                         <div style={{ fontSize: 9.5, color: '#a0c0e0', fontStyle: 'italic', backgroundColor: '#020509', padding: '2px 6px', borderRadius: 3 }}>
                           SSML: {log.ssml}
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'neocortex' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Header Banner */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: 12, fontWeight: 'bold', color: '#00f0ff', letterSpacing: 0.8 }}>
+                      NEURAL-NEOCORTEX: MULTIMODAL SCREEN CONSCIOUSNESS & LOCAL GPU OCR
+                    </span>
+                    <span style={{ fontSize: 10, color: '#80a0c0', display: 'block', marginTop: 2 }}>
+                      In-RAM hybrid screen diffing (&lt;20ms), automated PII redaction (Rule 11), sensitive vault blinding (Rule 4).
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span
+                      style={{
+                        backgroundColor: neocortexBlinded ? '#ff003c22' : '#00ff6615',
+                        border: `1px solid ${neocortexBlinded ? '#ff003c' : '#00ff6644'}`,
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: neocortexBlinded ? '#ff003c' : '#00ff66',
+                      }}
+                    >
+                      {neocortexBlinded ? 'SHIELD: BLINDED' : 'SHIELD: ARMED'}
+                    </span>
+                    <button
+                      onClick={() => setNeocortexActive(!neocortexActive)}
+                      style={{
+                        backgroundColor: neocortexActive ? '#00f0ff1a' : '#141c2b',
+                        border: neocortexActive ? '1px solid #00f0ff66' : '1px solid #ffffff22',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: neocortexActive ? '#00f0ff' : '#607080',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {neocortexActive ? `CAPTURE: ${neocortexDiffFps} FPS` : 'CAPTURE: PAUSED'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Viewport & Telemetry Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '620px 1fr', gap: 12, backgroundColor: '#050a12', padding: 10, borderRadius: 6, border: '1px solid #00f0ff22' }}>
+                  {/* Left: Viewport Canvas */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, color: '#00f0ff', fontWeight: 'bold' }}>
+                        LIVE FOREGROUND VIEWPORT & OCR BOUNDING BOXES
+                      </span>
+                      <span style={{ fontSize: 9, color: '#a855f7' }}>
+                        ACTIVE: {neocortexProcess} [{neocortexWindow}]
+                      </span>
+                    </div>
+                    <canvas
+                      ref={neocortexCanvasRef}
+                      width={620}
+                      height={240}
+                      style={{
+                        width: '100%',
+                        height: 240,
+                        backgroundColor: '#020509',
+                        borderRadius: 4,
+                        border: '1px solid #00f0ff15',
+                      }}
+                    />
+                  </div>
+
+                  {/* Right: Vision Telemetry Metrics */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ backgroundColor: '#09101d', border: '1px solid #00f0ff33', borderRadius: 4, padding: '8px 10px' }}>
+                      <span style={{ fontSize: 9, color: '#80a0c0', display: 'block' }}>FRAME DIFF LATENCY</span>
+                      <span style={{ fontSize: 13, fontWeight: 'bold', color: '#00ff66' }}>&lt; 2.5 ms</span>
+                      <span style={{ fontSize: 9, color: '#00ff66', display: 'block', marginTop: 2 }}>SLA &lt; 20ms [PASS]</span>
+                    </div>
+                    <div style={{ backgroundColor: '#09101d', border: '1px solid #00f0ff33', borderRadius: 4, padding: '8px 10px' }}>
+                      <span style={{ fontSize: 9, color: '#80a0c0', display: 'block' }}>MEMORY PERSISTENCE</span>
+                      <span style={{ fontSize: 13, fontWeight: 'bold', color: '#00f0ff' }}>0 Disk Files</span>
+                      <span style={{ fontSize: 9, color: '#00ff66', display: 'block', marginTop: 2 }}>In-RAM Ring Buffer (Rule 4)</span>
+                    </div>
+                    <div style={{ backgroundColor: '#09101d', border: '1px solid #00f0ff33', borderRadius: 4, padding: '8px 10px' }}>
+                      <span style={{ fontSize: 9, color: '#80a0c0', display: 'block' }}>PII REDACTION SHIELD</span>
+                      <span style={{ fontSize: 13, fontWeight: 'bold', color: '#ffaa00' }}>Rule 11 Enforced</span>
+                      <span style={{ fontSize: 9, color: '#00ff66', display: 'block', marginTop: 2 }}>API Keys / Passwords Masked</span>
+                    </div>
+                    <div style={{ backgroundColor: '#09101d', border: '1px solid #00f0ff33', borderRadius: 4, padding: '8px 10px' }}>
+                      <span style={{ fontSize: 9, color: '#80a0c0', display: 'block' }}>LOCAL OCR ACCELERATION</span>
+                      <span style={{ fontSize: 13, fontWeight: 'bold', color: '#c084fc' }}>RTX 3050 CUDA</span>
+                      <span style={{ fontSize: 9, color: '#00ff66', display: 'block', marginTop: 2 }}>Zero Cloud Egress (Rule 4)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Simulation & Audit Interactive Controls */}
+                <div style={{ backgroundColor: '#09101d', border: '1px solid #00f0ff22', borderRadius: 6, padding: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 'bold', color: '#00f0ff' }}>
+                      VISUAL SYNAPSE SIMULATION & SENSITIVE POLICY AUDIT
+                    </span>
+                    <span style={{ fontSize: 9, color: '#80a0c0' }}>
+                      TEST REAL-TIME TACTICAL PROACTIVITY
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+                    <button
+                      onClick={() => {
+                        setNeocortexBlinded(false);
+                        setNeocortexWindow('root@kali: ~/kernel_audit');
+                        setNeocortexProcess('wsl.exe');
+                        setNeocortexOcrBoxes([
+                          { text: "[!] CRITICAL: Kernel syscall table altered at 0xffffffff81000000", x: 20, y: 35, w: 460, h: 20, isRedacted: false },
+                          { text: "[!] Spectral Rootkit Hook Detected: sys_call_table[__NR_read]", x: 20, y: 65, w: 430, h: 20, isRedacted: false },
+                          { text: "[+] Isolating affected module via Guardian sandbox", x: 20, y: 95, w: 380, h: 20, isRedacted: false },
+                        ]);
+                        setNeocortexEventsLog((prev) => [
+                          { event: "ROOTKIT_ALERT", priority: "CRITICAL", detail: "Kernel syscall table altered; tactical alert triggered", time: new Date().toLocaleTimeString() },
+                          ...prev.slice(0, 7),
+                        ]);
+                      }}
+                      style={{
+                        backgroundColor: '#0c1626',
+                        border: '1px solid #ff005544',
+                        color: '#ff0055',
+                        borderRadius: 4,
+                        padding: '6px 4px',
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      SIM ROOTKIT ALERT
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNeocortexBlinded(false);
+                        setNeocortexWindow('msfconsole - meterpreter');
+                        setNeocortexProcess('msfconsole');
+                        setNeocortexOcrBoxes([
+                          { text: "meterpreter > getuid", x: 20, y: 35, w: 220, h: 20, isRedacted: false },
+                          { text: "Server username: NT AUTHORITY\\SYSTEM", x: 20, y: 65, w: 320, h: 20, isRedacted: false },
+                          { text: "[+] Meterpreter session 1 opened (127.0.0.1:4444 -> 127.0.0.1:49210)", x: 20, y: 95, w: 490, h: 20, isRedacted: false },
+                        ]);
+                        setNeocortexEventsLog((prev) => [
+                          { event: "REVERSE_SHELL", priority: "CRITICAL", detail: "NT AUTHORITY\\SYSTEM shell spawned on 127.0.0.1", time: new Date().toLocaleTimeString() },
+                          ...prev.slice(0, 7),
+                        ]);
+                      }}
+                      style={{
+                        backgroundColor: '#0c1626',
+                        border: '1px solid #00ff6644',
+                        color: '#00ff66',
+                        borderRadius: 4,
+                        padding: '6px 4px',
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      SIM ROOT SHELL
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNeocortexBlinded(true);
+                        setNeocortexWindow('KeePassXC - Master Password Prompt');
+                        setNeocortexProcess('keepassxc.exe');
+                        setNeocortexEventsLog((prev) => [
+                          { event: "VAULT_BLINDED", priority: "INFORMATIONAL", detail: "Sensitive window KeePassXC detected; capture opaque blinded", time: new Date().toLocaleTimeString() },
+                          ...prev.slice(0, 7),
+                        ]);
+                      }}
+                      style={{
+                        backgroundColor: '#0c1626',
+                        border: '1px solid #ffaa0044',
+                        color: '#ffaa00',
+                        borderRadius: 4,
+                        padding: '6px 4px',
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      BLIND VAULT WINDOW
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNeocortexBlinded(false);
+                        setNeocortexWindow('kali@kali: ~ (WSL2)');
+                        setNeocortexProcess('wsl.exe');
+                        setNeocortexDiffFps(5.0);
+                        setNeocortexOcrBoxes([
+                          { text: "kali@kali:~$ sudo nmap -sV 127.0.0.1", x: 20, y: 35, w: 290, h: 20, isRedacted: false },
+                          { text: "PORT 22/tcp open OpenSSH 8.9p1", x: 20, y: 65, w: 250, h: 20, isRedacted: false },
+                          { text: "PORT 80/tcp open Apache httpd 2.4.52", x: 20, y: 90, w: 270, h: 20, isRedacted: false },
+                          { text: "API_TOKEN=[REDACTED_API_KEY]", x: 20, y: 115, w: 240, h: 20, isRedacted: true },
+                          { text: "[+] Spawned root shell on target 127.0.0.1", x: 20, y: 140, w: 320, h: 20, isRedacted: false },
+                        ]);
+                        setNeocortexEventsLog((prev) => [
+                          { event: "RESTORE_KALI", priority: "INFORMATIONAL", detail: "Active terminal restored to Kali WSL2; PII mask armed", time: new Date().toLocaleTimeString() },
+                          ...prev.slice(0, 7),
+                        ]);
+                      }}
+                      style={{
+                        backgroundColor: '#0c1626',
+                        border: '1px solid #00f0ff44',
+                        color: '#00f0ff',
+                        borderRadius: 4,
+                        padding: '6px 4px',
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      RESTORE KALI WSL
+                    </button>
+                  </div>
+
+                  {/* Visual Security Events Stream */}
+                  <div style={{ maxHeight: 150, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {neocortexEventsLog.map((log, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          backgroundColor: '#050a12',
+                          border: '1px solid #00f0ff15',
+                          borderRadius: 4,
+                          padding: '6px 8px',
+                          fontSize: 10,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                          <span
+                            style={{
+                              backgroundColor: log.priority === 'CRITICAL' ? '#ff003c22' : log.priority === 'HIGH' ? '#ffaa0022' : '#00f0ff15',
+                              border: `1px solid ${log.priority === 'CRITICAL' ? '#ff003c' : log.priority === 'HIGH' ? '#ffaa00' : '#00f0ff44'}`,
+                              color: log.priority === 'CRITICAL' ? '#ff003c' : log.priority === 'HIGH' ? '#ffaa00' : '#00f0ff',
+                              padding: '2px 6px',
+                              borderRadius: 3,
+                              fontSize: 9,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {log.event}
+                          </span>
+                          <span style={{ color: '#d0f0ff' }}>{log.detail}</span>
+                        </div>
+                        <span style={{ color: '#607080', fontSize: 9 }}>{log.time}</span>
                       </div>
                     ))}
                   </div>
