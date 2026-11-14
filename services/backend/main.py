@@ -373,6 +373,7 @@ import services.backend.tools.barge_in_tools
 import services.backend.tools.voice_synapse_tools
 import services.backend.tools.neocortex_tools
 import services.backend.tools.visual_synapse_tools
+import services.backend.tools.computer_use_tools
 import services.backend.tools.ambient_companion_tools
 import services.backend.tools.gui_action_tools
 import services.backend.tools.expressive_voice_tools
