@@ -332,7 +332,8 @@ export const App: React.FC = () => {
 
     const connect = () => {
 
-      const token = window.phenom?.getSessionToken();
+      const urlToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null;
+      const token = window.phenom?.getSessionToken() || urlToken || (typeof window !== 'undefined' ? localStorage.getItem('phenom_session_token') : null);
 
       const protocols = token ? [`phenom.${token}`] : [];
 
