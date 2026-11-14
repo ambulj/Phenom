@@ -74,6 +74,9 @@ PII_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (re.compile(r"(?i)\b(password|passwd|secret|api_key|privkey)\s*[:=]\s*['\"]?([^\s;,\"']+)['\"]?"), r"\1=[REDACTED_SECRET]"),
 ]
 
+# Backward compatibility alias for legacy tests
+DEFAULT_SENSITIVE_PATTERNS = PII_PATTERNS
+
 
 class PrivacyMasker:
     """
