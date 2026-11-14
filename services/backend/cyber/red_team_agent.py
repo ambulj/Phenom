@@ -7,6 +7,7 @@ Compiles executive markdown debriefs into Obsidian vault.
 
 import time
 from typing import Dict, Any, List, Optional
+from services.backend.safety.guardian import guardian
 class AutonomousRedTeamAgent:
     """Orchestrates end-to-end security audits and penetration tests autonomously."""
 

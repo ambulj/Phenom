@@ -11,6 +11,11 @@ from services.backend.schemas.biometrics import WorkspacePartitionType
 from services.backend.schemas.deep_uia import UIWorkflowStep
 from services.backend.schemas.telepresence import SensorState
 
+import services.backend.tools.telepresence_tools
+import services.backend.tools.enclave_tools
+import services.backend.tools.uia_tools
+import services.backend.tools.extension_tools
+
 
 # The 18 tools introduced in Milestone 14.0
 MILESTONE_14_TOOL_MANIFEST = {

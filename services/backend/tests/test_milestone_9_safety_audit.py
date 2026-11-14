@@ -18,6 +18,8 @@ import pytest
 
 from services.backend.safety.guardian import guardian
 from services.backend.safety.registry import registry
+import services.backend.tools.automation_tools
+import services.backend.tools.integration_tools
 from services.backend.schemas.missions import (
     MissionAbortArgs,
     MissionDebriefArgs,

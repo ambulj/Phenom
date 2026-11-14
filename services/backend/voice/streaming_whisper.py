@@ -267,7 +267,12 @@ class StreamingWhisperEngine:
         # Emit transcript callback if speech ended
         if transcription_event and self._on_transcript_callback:
             try:
-                self._on_transcript_callback(transcription_event)
+                import inspect
+                sig = inspect.signature(self._on_transcript_callback)
+                if len(sig.parameters) >= 2:
+                    self._on_transcript_callback(transcription_event.transcript, transcription_event.is_final)
+                else:
+                    self._on_transcript_callback(transcription_event)
             except Exception as e:
                 logger.error("Error in transcript callback: %s", e)
 
