@@ -21,7 +21,7 @@ export interface CyberCommandCenterHUDProps {
   onClose?: () => void;
 }
 
-type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'chrono' | 'intel' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem' | 'duplex' | 'neocortex' | 'action_agent';
+type CyberTab = 'recon' | 'kali' | 'kernel' | 'swarm' | 'binary' | 'chrono' | 'intel' | 'spectral' | 'ghost' | 'stealth' | 'packets' | 'esp8266' | 'hashcat' | 'etw' | 'sockets' | 'radar' | 'siem' | 'duplex' | 'neocortex' | 'action_agent' | 'telegram';
 
 interface SwarmAgentState {
   name: string;
@@ -595,6 +595,24 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
   }, [actionAgentActive, actionReticle, actionTrajectory]);
+
+  // Secure Telegram Remote Uplink States (Milestone 46.0)
+  const [telegramOnline, setTelegramOnline] = useState<boolean>(true);
+  const [telegramAuthorizedId] = useState<number>(9988776655);
+  const [telegramPingMs] = useState<number>(38);
+  const [telegramCommandLog, setTelegramCommandLog] = useState<Array<{
+    id: string;
+    time: string;
+    sender: string;
+    command: string;
+    detail: string;
+    status: 'SUCCESS' | 'DROPPED' | 'HALTED';
+  }>>([
+    { id: '1', time: '15:24:10', sender: '9988776655', command: '/status', detail: 'Reported RTX 3050 & Neocortex Nominal', status: 'SUCCESS' },
+    { id: '2', time: '15:24:25', sender: '9988776655', command: 'VOICE_NOTE', detail: 'Whisper STT: "Check active network scans" -> Jarvis TTS reply', status: 'SUCCESS' },
+    { id: '3', time: '15:24:40', sender: '1234567890', command: '/status', detail: 'Unauthorized sender dropped silently without acknowledgement', status: 'DROPPED' },
+    { id: '4', time: '15:25:01', sender: '9988776655', command: '/screen', detail: 'Sent in-RAM PII-redacted desktop snapshot (Rule 4 zero-disk)', status: 'SUCCESS' },
+  ]);
 
   // Terminal log lines per tab
   const [reconLogs, setReconLogs] = useState<string[]>([
@@ -1559,6 +1577,7 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
               { id: 'duplex', label: 'VOICE DUPLEX' },
               { id: 'neocortex', label: 'NEOCORTEX VISION' },
               { id: 'action_agent', label: 'ACTION AGENT' },
+              { id: 'telegram', label: 'TELEGRAM UPLINK' },
             ].map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -3733,6 +3752,299 @@ export const CyberCommandCenterHUD: React.FC<CyberCommandCenterHUDProps> = ({
                                 backgroundColor: row.status === 'SUCCESS' ? '#00ff6615' : '#ff003c22',
                                 border: `1px solid ${row.status === 'SUCCESS' ? '#00ff6644' : '#ff003c'}`,
                                 color: row.status === 'SUCCESS' ? '#00ff66' : '#ff003c',
+                                padding: '1px 6px',
+                                borderRadius: 3,
+                                fontSize: 8.5,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {row.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'telegram' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Header Banner */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: 12, fontWeight: 'bold', color: '#38bdf8', letterSpacing: 0.8 }}>
+                      SECURE TELEGRAM REMOTE UPLINK: ENCRYPTED MOBILE COMPANION
+                    </span>
+                    <span style={{ fontSize: 10, color: '#80a0c0', display: 'block', marginTop: 2 }}>
+                      Bi-directional full-duplex voice notes, remote desktop screen snapshots with Rule 4 blinding, single-user ID whitelist, and remote Guardian E-Stop.
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <span
+                      style={{
+                        backgroundColor: '#38bdf81a',
+                        border: '1px solid #38bdf866',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: '#38bdf8',
+                      }}
+                    >
+                      PING: {telegramPingMs}ms
+                    </span>
+                    <span
+                      style={{
+                        backgroundColor: '#00ff6615',
+                        border: '1px solid #00ff6644',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: '#00ff66',
+                      }}
+                    >
+                      USER: {telegramAuthorizedId}
+                    </span>
+                    <button
+                      onClick={() => setTelegramOnline(!telegramOnline)}
+                      style={{
+                        backgroundColor: telegramOnline ? '#00ff6615' : '#ff003c22',
+                        border: telegramOnline ? '1px solid #00ff6644' : '1px solid #ff003c',
+                        borderRadius: 4,
+                        padding: '2px 8px',
+                        fontSize: 9.5,
+                        fontWeight: 700,
+                        color: telegramOnline ? '#00ff66' : '#ff003c',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {telegramOnline ? 'UPLINK: ONLINE [ENCRYPTED]' : 'UPLINK: DISCONNECTED'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Viewport & Telemetry Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '620px 1fr', gap: 12, backgroundColor: '#050a12', padding: 10, borderRadius: 6, border: '1px solid #38bdf822' }}>
+                  {/* Left: Mobile Phone Chat Mockup */}
+                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#030712', borderRadius: 6, border: '1px solid #38bdf833', padding: 12, height: 280, overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: 6, marginBottom: 10 }}>
+                      <span style={{ fontSize: 10, fontWeight: 'bold', color: '#38bdf8' }}>📱 TELEGRAM SECURE SESSION (#9988776655)</span>
+                      <span style={{ fontSize: 9, color: '#00ff66' }}>● End-to-End Encrypted</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 10 }}>
+                      {/* Message 1 (Outbound User) */}
+                      <div style={{ alignSelf: 'flex-end', backgroundColor: '#0284c7', color: '#ffffff', padding: '6px 10px', borderRadius: '10px 10px 2px 10px', maxWidth: '75%' }}>
+                        <code>/status</code>
+                      </div>
+
+                      {/* Message 2 (Inbound Jarvis) */}
+                      <div style={{ alignSelf: 'flex-start', backgroundColor: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '10px 10px 10px 2px', maxWidth: '85%' }}>
+                        📊 <b>Phenom Workstation Status: NOMINAL</b><br/>
+                        • GPU: RTX 3050 Laptop (CUDA Ready)<br/>
+                        • Vision: In-RAM Diffing @ 5 FPS<br/>
+                        • Action Agent: Speed-Demon Mode
+                      </div>
+
+                      {/* Message 3 (Outbound Voice Note) */}
+                      <div style={{ alignSelf: 'flex-end', backgroundColor: '#0284c7', color: '#ffffff', padding: '6px 10px', borderRadius: '10px 10px 2px 10px', maxWidth: '75%' }}>
+                        🎙️ <i>Voice Note (3.2s)</i><br/>
+                        "Phenom, run a security check on local port 22"
+                      </div>
+
+                      {/* Message 4 (Inbound Jarvis Voice Note) */}
+                      <div style={{ alignSelf: 'flex-start', backgroundColor: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '10px 10px 10px 2px', maxWidth: '85%' }}>
+                        ▶️ <b>Jarvis Voice Note:</b> [Synthesized male audio 2.1s]<br/>
+                        <i>"Right away, sir. Port 22 is open on OpenSSH 8.9p1 with zero CVE vulnerabilities."</i>
+                      </div>
+
+                      {/* Message 5 (Outbound Screen Command) */}
+                      <div style={{ alignSelf: 'flex-end', backgroundColor: '#0284c7', color: '#ffffff', padding: '6px 10px', borderRadius: '10px 10px 2px 10px', maxWidth: '75%' }}>
+                        <code>/screen</code>
+                      </div>
+
+                      {/* Message 6 (Inbound Screen Photo with PII Masking) */}
+                      <div style={{ alignSelf: 'flex-start', backgroundColor: '#1e293b', color: '#e2e8f0', padding: '6px 10px', borderRadius: '10px 10px 10px 2px', maxWidth: '85%' }}>
+                        🖥️ <b>Desktop Snapshot [IN-RAM ONLY]</b><br/>
+                        Window: <code>kali@kali: ~ (WSL2)</code><br/>
+                        🛡️ PII Masking: Applied (Rule 11) | Vaults: Blinded (Rule 4)
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Simulation Controls & Security Metrics */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 'bold', color: '#38bdf8' }}>REMOTE SIMULATION CONTROLS</span>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      <button
+                        onClick={() => {
+                          setTelegramCommandLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), sender: '9988776655', command: '/status', detail: 'Subsystem diagnostics: RTX 3050 & Neocortex Nominal', status: 'SUCCESS' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#38bdf815',
+                          border: '1px solid #38bdf844',
+                          color: '#38bdf8',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        📊 Dispatch Remote /status Command
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setTelegramCommandLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), sender: '9988776655', command: 'VOICE_NOTE', detail: 'Transcribed in RAM via Whisper -> Synthesized Jarvis male TTS reply', status: 'SUCCESS' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#00ff6615',
+                          border: '1px solid #00ff6644',
+                          color: '#00ff66',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        🎙️ Ingest Voice Note & Generate TTS Reply
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setTelegramCommandLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), sender: '9988776655', command: '/screen', detail: 'Sent in-RAM PII-redacted desktop snapshot (Rule 4 zero-disk)', status: 'SUCCESS' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#a855f715',
+                          border: '1px solid #a855f744',
+                          color: '#a855f7',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        🖥️ Dispatch /screen (In-RAM PII Masked)
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setTelegramCommandLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), sender: '1122334455', command: '/status', detail: 'Unauthorized sender dropped silently without acknowledgement', status: 'DROPPED' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#ffaa0015',
+                          border: '1px solid #ffaa0044',
+                          color: '#ffaa00',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        🔒 Test Unauthorized Sender (Silent Drop)
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setTelegramCommandLog((prev) => [
+                            { id: String(Date.now()), time: new Date().toLocaleTimeString(), sender: '9988776655', command: '/halt', detail: 'Guardian Emergency Kill Switch triggered remotely (<25ms SLA)', status: 'HALTED' },
+                            ...prev.slice(0, 5),
+                          ]);
+                        }}
+                        style={{
+                          backgroundColor: '#ff003c15',
+                          border: '1px solid #ff003c66',
+                          color: '#ff003c',
+                          padding: '4px 8px',
+                          borderRadius: 4,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        🚨 Dispatch Remote /halt Guardian E-Stop
+                      </button>
+                    </div>
+
+                    {/* Uplink Security Metrics */}
+                    <div style={{ backgroundColor: '#020509', border: '1px solid #38bdf815', borderRadius: 4, padding: '8px', fontSize: 9.5, display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Authorization Policy:</span>
+                        <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>Single-User ID Whitelist</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Voice Audio Persistence:</span>
+                        <span style={{ color: '#00ff66', fontWeight: 'bold' }}>Zero-Disk (Rule 4 In-RAM)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Vault & Banking Blinding:</span>
+                        <span style={{ color: '#00ff66', fontWeight: 'bold' }}>ENFORCED (Rule 4 Shield)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#80a0c0' }}>Remote Guardian E-Stop:</span>
+                        <span style={{ color: '#00ff66', fontWeight: 'bold' }}>&lt; 25.0ms SLA</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Remote Command Log Stream Table */}
+                <div style={{ backgroundColor: '#050a12', padding: 8, borderRadius: 6, border: '1px solid #38bdf822' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 'bold', color: '#38bdf8' }}>
+                      REMOTE TELEGRAM COMMAND & VOICE NOTE STREAM
+                    </span>
+                    <span style={{ fontSize: 9, color: '#6080a0' }}>Silent Drop on Non-Authorized Senders</span>
+                  </div>
+
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9.5 }}>
+                    <thead>
+                      <tr style={{ color: '#6080a0', textAlign: 'left', borderBottom: '1px solid #38bdf822' }}>
+                        <th style={{ padding: '4px 6px' }}>TIME</th>
+                        <th style={{ padding: '4px 6px' }}>SENDER ID</th>
+                        <th style={{ padding: '4px 6px' }}>COMMAND</th>
+                        <th style={{ padding: '4px 6px' }}>DETAIL</th>
+                        <th style={{ padding: '4px 6px' }}>STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {telegramCommandLog.map((row) => (
+                        <tr key={row.id} style={{ borderBottom: '1px solid #ffffff08' }}>
+                          <td style={{ padding: '4px 6px', color: '#80a0c0' }}>{row.time}</td>
+                          <td style={{ padding: '4px 6px', color: '#38bdf8' }}>{row.sender}</td>
+                          <td style={{ padding: '4px 6px', color: '#ffffff', fontWeight: 'bold' }}>{row.command}</td>
+                          <td style={{ padding: '4px 6px', color: '#d0f0ff' }}>{row.detail}</td>
+                          <td style={{ padding: '4px 6px' }}>
+                            <span
+                              style={{
+                                backgroundColor: row.status === 'SUCCESS' ? '#00ff6615' : row.status === 'DROPPED' ? '#ffaa0022' : '#ff003c22',
+                                border: `1px solid ${row.status === 'SUCCESS' ? '#00ff6644' : row.status === 'DROPPED' ? '#ffaa00' : '#ff003c'}`,
+                                color: row.status === 'SUCCESS' ? '#00ff66' : row.status === 'DROPPED' ? '#ffaa00' : '#ff003c',
                                 padding: '1px 6px',
                                 borderRadius: 3,
                                 fontSize: 8.5,
