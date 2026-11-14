@@ -1,7 +1,7 @@
 {
   "name": "phenom-desktop",
-  "version": "45.0.0",
-  "description": "Phenom 45.0: Project MULTI-MODAL ACTION AGENT — Vision-Grounded Computer-Use, Hybrid UIA & Bezier Desktop Execution, Dual-Layer Vision Grounding & Autonomous Speed-Demon Controller",
+  "version": "46.0.0",
+  "description": "Phenom 46.0: Project SECURE TELEGRAM REMOTE UPLINK — Encrypted Mobile Companion, Bi-Directional Voice Notes, Remote Screen Telemetry & Mobile Guardian E-Stop",
   "author": "Phenom Team",
   "private": true,
   "main": "electron/main.cjs",
