@@ -82,7 +82,7 @@ class StreamingWhisperEngine:
         # Injected test transcripts for deterministic testing
         self._transcript_queue: deque[str] = deque()
 
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
         # Register Guardian Kill Switch hook
         try:
@@ -245,6 +245,14 @@ class StreamingWhisperEngine:
                         tx_latency_ms = (time.perf_counter() - t_tx_start) * 1000.0
 
                         duration_sec = (len(self._current_utterance_chunks) * CHUNK_SIZE) / SAMPLE_RATE
+
+                        # Check spoken emergency halt triggers ("halt", "stop", "freeze", "guardian", "emergency")
+                        if text_result:
+                            try:
+                                from services.backend.voice.barge_in_controller import barge_in_controller
+                                barge_in_controller.check_emergency_spoken_command(text_result)
+                            except Exception as e:
+                                logger.error("Error evaluating spoken emergency trigger: %s", e)
 
                         transcription_event = SpeechTranscriptionResult(
                             transcript=text_result,

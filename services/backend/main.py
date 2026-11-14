@@ -369,6 +369,7 @@ import services.backend.tools.voice_confirmation_tools
 import services.backend.tools.telemetry_bus_tools
 import services.backend.tools.local_swarm_tools
 import services.backend.tools.full_duplex_voice_tools
+import services.backend.tools.barge_in_tools
 import services.backend.tools.ambient_companion_tools
 import services.backend.tools.gui_action_tools
 import services.backend.tools.expressive_voice_tools
