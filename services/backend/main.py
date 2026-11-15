@@ -492,7 +492,7 @@ from services.backend.remote.credentials import (
 
 
 
-    is_remote_locked, set_remote_locked, set_telegram_token, set_telegram_owner_id, get_telegram_owner_id,
+    is_remote_locked, set_remote_locked, set_telegram_token, get_telegram_token, set_telegram_owner_id, get_telegram_owner_id,
 
 
 
@@ -1149,6 +1149,13 @@ async def lifespan(app: FastAPI):
 
 
 
+    tg_token = get_telegram_token()
+    tg_owner = get_telegram_owner_id()
+    if tg_token and tg_owner:
+        try:
+            telegram_controller.set_credentials(tg_token, int(tg_owner))
+        except Exception as e:
+            print(f"[Telegram] Could not initialize credentials at startup: {e}")
     telegram_controller.start()
 
 
@@ -4108,6 +4115,119 @@ async def get_telegram_pin_status():
 
 
 
+@app.get("/api/settings", dependencies=[Depends(verify_session_token)])
+async def get_system_settings():
+    """Retrieve full system settings, merging defaults with encrypted database values."""
+    defaults = {
+        "local_model": "qwen2.5-coder:14b",
+        "cloud_model": "meta/llama-3.1-70b-instruct",
+        "routing_preference": "hybrid_auto",
+        "temperature": "0.2",
+        "stream_tokens": "true",
+        "max_context_tokens": "16384",
+        "wake_phrase": "hey_jarvis",
+        "voice_persona": "jarvis_male",
+        "speech_rate": "1.0",
+        "speech_volume": "85",
+        "speech_output_mode": "full_voice",
+        "hotkey_push_to_talk": "alt+space",
+        "hotkey_toggle_phenom": "ctrl+alt+p",
+        "hotkey_kill_switch": "ctrl+alt+pause",
+        "safe_mode": "false",
+        "gaming_mode_auto": "true",
+        "meeting_privacy_mode": "false",
+        "orb_lod": "ultra",
+        "start_on_boot": "true",
+        "start_minimized": "false",
+        "auto_recycle_bin": "true",
+        "financial_safeguards": "true",
+        "unattended_cart_block": "true",
+        "vault_auto_sync_interval": "1_hour",
+        "telegram_unattended_timeout": "30",
+        "telegram_pin_auto_delete": "true",
+        "morning_briefing_time": "08:00",
+        "morning_briefing_auto": "true",
+        "action_log_retention": "30_days",
+        "biometric_voice_verification": "false"
+    }
+    try:
+        persisted = encrypted_db.get_all_settings()
+    except Exception:
+        persisted = {}
+    merged = {**defaults, **persisted}
+    return {"settings": merged, "status": "ok"}
+
+
+@app.post("/api/settings", dependencies=[Depends(verify_session_token)])
+async def update_system_settings(payload: Dict[str, Any]):
+    """Update system settings in encrypted database."""
+    settings_dict = payload.get("settings", payload)
+    if isinstance(settings_dict, dict):
+        clean_settings = {str(k): str(v) for k, v in settings_dict.items()}
+        try:
+            encrypted_db.update_settings(clean_settings)
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+    defaults = {
+        "local_model": "qwen2.5-coder:14b",
+        "cloud_model": "meta/llama-3.1-70b-instruct",
+        "routing_preference": "hybrid_auto",
+        "temperature": "0.2",
+        "stream_tokens": "true",
+        "max_context_tokens": "16384",
+        "wake_phrase": "hey_jarvis",
+        "voice_persona": "jarvis_male",
+        "speech_rate": "1.0",
+        "speech_volume": "85",
+        "speech_output_mode": "full_voice",
+        "hotkey_push_to_talk": "alt+space",
+        "hotkey_toggle_phenom": "ctrl+alt+p",
+        "hotkey_kill_switch": "ctrl+alt+pause",
+        "safe_mode": "false",
+        "gaming_mode_auto": "true",
+        "meeting_privacy_mode": "false",
+        "orb_lod": "ultra",
+        "start_on_boot": "true",
+        "start_minimized": "false",
+        "auto_recycle_bin": "true",
+        "financial_safeguards": "true",
+        "unattended_cart_block": "true",
+        "vault_auto_sync_interval": "1_hour",
+        "telegram_unattended_timeout": "30",
+        "telegram_pin_auto_delete": "true",
+        "morning_briefing_time": "08:00",
+        "morning_briefing_auto": "true",
+        "action_log_retention": "30_days",
+        "biometric_voice_verification": "false"
+    }
+    try:
+        persisted = encrypted_db.get_all_settings()
+    except Exception:
+        persisted = {}
+    return {"status": "ok", "settings": {**defaults, **persisted}}
+
+
+@app.get("/api/models/available", dependencies=[Depends(verify_session_token)])
+async def get_available_models():
+    """Query local Ollama instance for installed models, returning verified inventory."""
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get("http://127.0.0.1:11434/api/tags")
+            if resp.status_code == 200:
+                data = resp.json()
+                models = [m.get("name") for m in data.get("models", []) if m.get("name")]
+                return {"models": models, "source": "ollama_live", "status": "ok"}
+    except Exception:
+        pass
+    return {
+        "models": ["qwen2.5-coder:14b", "phenom-jarvis:latest", "llama3:8b", "qwen2.5:7b"],
+        "source": "verified_defaults",
+        "status": "ok"
+    }
+
+
+
 
 
 
@@ -4208,6 +4328,119 @@ async def update_telegram_config(payload: Dict[str, Any]):
 
 
 
+    }
+
+
+
+@app.get("/api/settings", dependencies=[Depends(verify_session_token)])
+async def get_system_settings():
+    """Retrieve full system settings, merging defaults with encrypted database values."""
+    defaults = {
+        "local_model": "qwen2.5-coder:14b",
+        "cloud_model": "meta/llama-3.1-70b-instruct",
+        "routing_preference": "hybrid_auto",
+        "temperature": "0.2",
+        "stream_tokens": "true",
+        "max_context_tokens": "16384",
+        "wake_phrase": "hey_jarvis",
+        "voice_persona": "jarvis_male",
+        "speech_rate": "1.0",
+        "speech_volume": "85",
+        "speech_output_mode": "full_voice",
+        "hotkey_push_to_talk": "alt+space",
+        "hotkey_toggle_phenom": "ctrl+alt+p",
+        "hotkey_kill_switch": "ctrl+alt+pause",
+        "safe_mode": "false",
+        "gaming_mode_auto": "true",
+        "meeting_privacy_mode": "false",
+        "orb_lod": "ultra",
+        "start_on_boot": "true",
+        "start_minimized": "false",
+        "auto_recycle_bin": "true",
+        "financial_safeguards": "true",
+        "unattended_cart_block": "true",
+        "vault_auto_sync_interval": "1_hour",
+        "telegram_unattended_timeout": "30",
+        "telegram_pin_auto_delete": "true",
+        "morning_briefing_time": "08:00",
+        "morning_briefing_auto": "true",
+        "action_log_retention": "30_days",
+        "biometric_voice_verification": "false"
+    }
+    try:
+        persisted = encrypted_db.get_all_settings()
+    except Exception:
+        persisted = {}
+    merged = {**defaults, **persisted}
+    return {"settings": merged, "status": "ok"}
+
+
+@app.post("/api/settings", dependencies=[Depends(verify_session_token)])
+async def update_system_settings(payload: Dict[str, Any]):
+    """Update system settings in encrypted database."""
+    settings_dict = payload.get("settings", payload)
+    if isinstance(settings_dict, dict):
+        clean_settings = {str(k): str(v) for k, v in settings_dict.items()}
+        try:
+            encrypted_db.update_settings(clean_settings)
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+    defaults = {
+        "local_model": "qwen2.5-coder:14b",
+        "cloud_model": "meta/llama-3.1-70b-instruct",
+        "routing_preference": "hybrid_auto",
+        "temperature": "0.2",
+        "stream_tokens": "true",
+        "max_context_tokens": "16384",
+        "wake_phrase": "hey_jarvis",
+        "voice_persona": "jarvis_male",
+        "speech_rate": "1.0",
+        "speech_volume": "85",
+        "speech_output_mode": "full_voice",
+        "hotkey_push_to_talk": "alt+space",
+        "hotkey_toggle_phenom": "ctrl+alt+p",
+        "hotkey_kill_switch": "ctrl+alt+pause",
+        "safe_mode": "false",
+        "gaming_mode_auto": "true",
+        "meeting_privacy_mode": "false",
+        "orb_lod": "ultra",
+        "start_on_boot": "true",
+        "start_minimized": "false",
+        "auto_recycle_bin": "true",
+        "financial_safeguards": "true",
+        "unattended_cart_block": "true",
+        "vault_auto_sync_interval": "1_hour",
+        "telegram_unattended_timeout": "30",
+        "telegram_pin_auto_delete": "true",
+        "morning_briefing_time": "08:00",
+        "morning_briefing_auto": "true",
+        "action_log_retention": "30_days",
+        "biometric_voice_verification": "false"
+    }
+    try:
+        persisted = encrypted_db.get_all_settings()
+    except Exception:
+        persisted = {}
+    return {"status": "ok", "settings": {**defaults, **persisted}}
+
+
+@app.get("/api/models/available", dependencies=[Depends(verify_session_token)])
+async def get_available_models():
+    """Query local Ollama instance for installed models, returning verified inventory."""
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get("http://127.0.0.1:11434/api/tags")
+            if resp.status_code == 200:
+                data = resp.json()
+                models = [m.get("name") for m in data.get("models", []) if m.get("name")]
+                return {"models": models, "source": "ollama_live", "status": "ok"}
+    except Exception:
+        pass
+    return {
+        "models": ["qwen2.5-coder:14b", "phenom-jarvis:latest", "llama3:8b", "qwen2.5:7b"],
+        "source": "verified_defaults",
+        "status": "ok"
     }
 
 

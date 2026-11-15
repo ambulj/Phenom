@@ -188,11 +188,14 @@ class WakeWordDetector:
                     return
 
             # Predict wake word activation
-            predictions = self._model.predict(audio_chunk)
-            for phrase, score in predictions.items():
-                if score >= self.threshold:
-                    self._handle_detection(phrase, score)
-                    break
+            try:
+                predictions = self._model.predict(audio_chunk)
+                for phrase, score in predictions.items():
+                    if score >= self.threshold:
+                        self._handle_detection(phrase, score)
+                        break
+            except Exception:
+                pass
 
         try:
             with sd.InputStream(

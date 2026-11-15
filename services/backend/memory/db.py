@@ -232,5 +232,42 @@ class EncryptedDatabaseManager:
         conn.close()
         return deleted
 
+    def get_setting(self, key: str, default: Optional[str] = None) -> Optional[str]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM settings WHERE key = ?;", (key,))
+        row = cursor.fetchone()
+        conn.close()
+        if row is None:
+            return default
+        return row[0]
+
+    def set_setting(self, key: str, value: str):
+        conn = self.get_connection()
+        with conn:
+            conn.execute(
+                "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value;",
+                (key, str(value))
+            )
+        conn.close()
+
+    def get_all_settings(self) -> Dict[str, str]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT key, value FROM settings;")
+        rows = cursor.fetchall()
+        conn.close()
+        return {r[0]: r[1] for r in rows}
+
+    def update_settings(self, settings_dict: Dict[str, Any]):
+        conn = self.get_connection()
+        with conn:
+            for k, v in settings_dict.items():
+                conn.execute(
+                    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value;",
+                    (str(k), str(v))
+                )
+        conn.close()
+
 # Global Encrypted DB Manager
 encrypted_db = EncryptedDatabaseManager()
