@@ -126,6 +126,28 @@ class DesktopController:
             }
         return None
 
+    def is_focused_control_password(self) -> bool:
+        """
+        Queries Windows UI Automation to verify if the currently focused desktop control
+        has the IsPassword property set, or is a password edit control.
+        """
+        if auto is None:
+            return False
+        try:
+            focused = auto.GetFocusedElement()
+            if focused:
+                if getattr(focused, "IsPassword", False):
+                    return True
+                cls = getattr(focused, "ClassName", "").lower()
+                if "password" in cls or "pwd" in cls:
+                    return True
+                name = getattr(focused, "Name", "").lower()
+                if "password" in name or "pwd" in name:
+                    return True
+        except Exception:
+            pass
+        return False
+
     def focus_window(self, title_substr: str) -> bool:
         """Focuses a window matching title_substr."""
         win = auto.WindowControl(searchDepth=1, SubName=title_substr)
@@ -223,9 +245,9 @@ class DesktopController:
                             step_record["result"] = "target_not_found"
 
                     elif action == "type":
-                        # Check password prohibition
-                        if "pass" in target.lower() or "pwd" in target.lower():
-                            raise PermissionError("Typing passwords is strictly prohibited by SAFETY.md.")
+                        # Check password prohibition via UI Automation control property and string target
+                        if self.is_focused_control_password() or "pass" in target.lower() or "pwd" in target.lower():
+                            raise PermissionError("Typing into password fields is strictly prohibited by SAFETY.md.")
                         pyautogui.write(text, interval=0.03)
                         step_record["result"] = f"typed_{len(text)}_chars"
 

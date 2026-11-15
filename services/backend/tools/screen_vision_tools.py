@@ -12,7 +12,9 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
+from services.backend.safety.taint import taint_tracker
 from services.backend.automation.desktop_controller import DesktopController
+from services.backend.vision.privacy_masker import PrivacyScanFailureError
 from services.backend.vision.moondream_client import moondream_client
 from services.backend.vision.ocr_engine import ocr_engine
 from services.backend.vision.multimodal_coordinator import multimodal_coordinator
@@ -53,13 +55,23 @@ class AskScreenVisionCloudArgs(BaseModel):
 )
 async def inspect_screen(query: str = "Describe what is on the screen and highlight any open windows, dialogs, buttons, or errors.", include_elements: bool = True) -> Dict[str, Any]:
     """Captures screen in RAM and performs visual analysis with local Moondream2."""
-    img, has_changed, delta_score, masked_count = _desktop_controller.capture_screen_delta(apply_privacy=True)
+    try:
+        img, has_changed, delta_score, masked_count = _desktop_controller.capture_screen_delta(apply_privacy=True)
+    except PrivacyScanFailureError as pse:
+        raise PermissionError(f"Screen inspection refused: Privacy scan failed ({pse}). Fail-closed policy active.")
+
     vlm_result = await moondream_client.query_image(img, prompt=query)
     description = vlm_result.get("description") or vlm_result.get("error") or "Screen captured but no details extracted."
 
+    # Mark screen content as untrusted taint
+    taint_tracker.mark_tainted("screen_vision", f"Screen inspection: {description[:100]}")
+
     elements: List[Dict[str, Any]] = []
     if include_elements:
-        all_uia = ocr_engine.extract_elements_from_uia(max_depth=3)
+        try:
+            all_uia = ocr_engine.extract_elements_from_uia(max_depth=3)
+        except PrivacyScanFailureError as pse:
+            raise PermissionError(f"UI element inspection refused: Privacy scan failed ({pse}). Fail-closed policy active.")
         # Limit to 10 prominent elements
         elements = all_uia[:10]
         if elements:
@@ -98,10 +110,15 @@ async def inspect_screen(query: str = "Describe what is on the screen and highli
 )
 async def find_on_screen(element_name: str) -> Dict[str, Any]:
     """Locates an element on screen and returns its center coordinates (x, y)."""
-    img = _desktop_controller.capture_screen_ram()
+    try:
+        img = _desktop_controller.capture_screen_ram(apply_privacy=True)
+    except PrivacyScanFailureError as pse:
+        raise PermissionError(f"Screen localization refused: Privacy scan failed ({pse}). Fail-closed policy active.")
+
     match = ocr_engine.find_element_coordinates(element_name, img)
 
     if match:
+        taint_tracker.mark_tainted("screen_find", f"Located screen element: {element_name}")
         anno = HudAnnotation(
             id=f"find-{int(time.time() * 1000)}",
             name=element_name,
@@ -140,7 +157,12 @@ async def find_on_screen(element_name: str) -> Dict[str, Any]:
 )
 async def ask_screen_vision_cloud(question: str) -> Dict[str, Any]:
     """Cloud vision escalation gated strictly behind Tier 2 preview and approval."""
-    res = await multimodal_coordinator.execute_screen_query(prompt=question, prefer_cloud=True)
+    try:
+        res = await multimodal_coordinator.execute_screen_query(prompt=question, prefer_cloud=True)
+    except PrivacyScanFailureError as pse:
+        raise PermissionError(f"Cloud screen vision refused: Privacy scan failed ({pse}). Fail-closed policy active.")
+
+    taint_tracker.mark_tainted("cloud_screen_vision", f"Cloud VLM screen inspection: {res.get('description', '')[:100]}")
     return {
         "status": res.get("status", "success"),
         "question": question,
@@ -175,6 +197,8 @@ async def search_visual_memory(query: str, limit: int = 5) -> Dict[str, Any]:
     """Queries local encrypted visual memory using hybrid temporal parsing and vector similarity."""
     from services.backend.vision.temporal_recall import temporal_recall_engine
     matches = temporal_recall_engine.recall(query=query, limit=limit)
+    if matches:
+        taint_tracker.mark_tainted("visual_memory", f"Visual memory recall: {query}")
     return {
         "status": "success",
         "query": query,

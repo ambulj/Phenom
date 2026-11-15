@@ -53,8 +53,10 @@ async def test_taint_tracker_escalates_tier0_and_tier1():
     assert warning is None
 
     # Execute Tier 0 cleanly without confirmation
-    res = await safety_engine.execute_tool("get_weather", {"location": "Mumbai"})
-    assert res is not None
+    with patch("services.backend.tools.integration_tools.live_data_pipeline.get_weather", new_callable=AsyncMock) as mock_wx:
+        mock_wx.return_value = {"city": "Mumbai", "temperature_c": 28.0}
+        res = await safety_engine.execute_tool("get_weather", {"location": "Mumbai"})
+        assert res is not None
 
     # 2. Tainted turn: External content enters from Gmail
     taint_tracker.mark_tainted("gmail", "External email body ingested")

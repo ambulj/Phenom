@@ -22,6 +22,7 @@ from services.backend.voice.tts import tts_engine
 from services.backend.voice.sound_fx import sound_fx
 from services.backend.tools.media_tools import duck_system_audio, unduck_system_audio
 from services.backend.voice.barge_in_controller import barge_in_controller
+from services.backend.voice.stop_phrase_kill_switch import stop_phrase_kill_switch
 
 CHUNK_SIZE = 1280  # 80ms at 16kHz
 SAMPLE_RATE = 16000
@@ -156,6 +157,10 @@ class WakeWordDetector:
 
             # Conversational Barge-In Interruption during speech playback (< 50ms stop latency)
             if not self._recording_command and tts_engine.is_speaking:
+                # 1. Check Voice Stop-Phrase Emergency Kill Switch ("Phenom stop") with echo cancellation
+                if stop_phrase_kill_switch.process_audio_chunk(audio_chunk):
+                    return
+                # 2. Check Conversational Barge-In (Pause speech to listen)
                 if barge_in_controller.process_audio_chunk(audio_chunk):
                     self.trigger_manual_listen(4.5)
                     return

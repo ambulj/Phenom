@@ -35,10 +35,23 @@ class ScreenOCREngine:
         """
         Scans top-level active Windows controls using Windows UI Automation.
         Returns a list of interactive elements with names, control types, and bounding rectangles.
+        Fails CLOSED: if privacy scanner fails, raises PrivacyScanFailureError.
         """
+        from services.backend.vision.privacy_masker import privacy_masker, PrivacyScanFailureError
+        sensitive_windows = privacy_masker.scan_visible_sensitive_windows()
+
         elements: List[Dict[str, Any]] = []
         if not auto:
             return elements
+
+        def is_inside_sensitive_window(cx: int, cy: int) -> bool:
+            for item in sensitive_windows:
+                r = item.get("rect")
+                if r and len(r) == 4:
+                    l, t, right, b = r
+                    if l <= cx <= right and t <= cy <= b:
+                        return True
+            return False
 
         try:
             root = auto.GetRootControl()
@@ -56,14 +69,15 @@ class ScreenOCREngine:
                         h = rect.bottom - rect.top
                         cx = rect.left + (w // 2)
                         cy = rect.top + (h // 2)
-                        elements.append({
-                            "name": name,
-                            "control_type": control.ControlTypeName,
-                            "x": cx,
-                            "y": cy,
-                            "bbox": [rect.left, rect.top, w, h],
-                            "method": "ui_automation"
-                        })
+                        if not is_inside_sensitive_window(cx, cy):
+                            elements.append({
+                                "name": name,
+                                "control_type": control.ControlTypeName,
+                                "x": cx,
+                                "y": cy,
+                                "bbox": [rect.left, rect.top, w, h],
+                                "method": "ui_automation"
+                            })
                     for child in control.GetChildren():
                         walk(child, depth + 1)
                 except Exception:

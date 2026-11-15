@@ -37,12 +37,25 @@ class PressKeyCombinationArgs(BaseModel):
     keys: List[str] = Field(description="List of keys to press together. Example: ['ctrl', 's'], ['enter'], ['alt', 'tab']")
 
 
+def format_macro_preview(a: Dict[str, Any]) -> str:
+    """Formats a preview showing the literal step list (action and target for each step)."""
+    steps = a.get("steps", [])
+    desc = a.get("description", "Workflow")
+    step_items = []
+    for idx, s in enumerate(steps, 1):
+        action = s.get("action", "action")
+        target = s.get("target") or s.get("text") or s.get("keys") or (f"({s.get('x')}, {s.get('y')})" if "x" in s else "")
+        step_items.append(f"Step {idx}: {action} -> {target}")
+    step_str = "; ".join(step_items) if step_items else "0 steps"
+    return f"Execute desktop macro ({len(steps)} steps): [{step_str}] - {desc}"
+
+
 @registry.register(
     name="execute_desktop_macro",
     tier=1,
     description="Executes a multi-step desktop macro (focus window, click, type text, press hotkeys) with live screen overlay and takeover pause.",
     args_schema=ExecuteDesktopMacroArgs,
-    preview_fn=lambda a: f"Execute desktop macro ({len(a.get('steps', []))} steps): {a.get('description', 'Workflow')}"
+    preview_fn=format_macro_preview
 )
 async def execute_desktop_macro(steps: List[Dict[str, Any]], description: Optional[str] = None) -> Dict[str, Any]:
     """Runs a multi-step GUI automation plan with active safety gates."""

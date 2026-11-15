@@ -34,6 +34,15 @@ SENSITIVE_PROCESSES: Set[str] = {
     "1password.exe",
     "dashlane.exe",
     "lastpass.exe",
+    "outlook.exe",
+    "thunderbird.exe",
+    "mailspring.exe",
+    "whatsapp.exe",
+    "signal.exe",
+    "telegram.exe",
+    "teams.exe",
+    "slack.exe",
+    "discord.exe",
 }
 
 # Sensitive title substrings (case-insensitive)
@@ -62,6 +71,16 @@ SENSITIVE_TITLE_KEYWORDS: List[str] = [
     "whatsapp",
     "signal",
     "telegram",
+    "teams",
+    "slack",
+    "discord",
+    "outlook",
+    "thunderbird",
+    "mail",
+    "gmail",
+    "yahoo mail",
+    "protonmail",
+    "inbox",
     "master password",
     "enter password",
     "unlock database",
@@ -103,6 +122,11 @@ PII_PATTERNS: List[Tuple[re.Pattern, str]] = [
 DEFAULT_SENSITIVE_PATTERNS = PII_PATTERNS
 
 
+class PrivacyScanFailureError(RuntimeError):
+    """Raised when sensitive window scanning fails, enforcing fail-closed privacy."""
+    pass
+
+
 class PrivacyMasker:
     """
     Automated visual PII redactor and sensitive window shield.
@@ -135,12 +159,16 @@ class PrivacyMasker:
         """
         Uses Win32 API to find visible window bounds matching sensitive patterns.
         Returns list of rects: [{"title": str, "rect": (left, top, right, bottom)}]
+        Fails CLOSED: if win32gui is unavailable or enumeration raises, raises PrivacyScanFailureError.
         """
         matches: List[Dict[str, Any]] = []
         if win32gui is None:
-            return matches
+            raise PrivacyScanFailureError("Screen privacy masking scan failed: win32gui is unavailable (Fail-Closed).")
+
+        enum_error: Optional[Exception] = None
 
         def enum_callback(hwnd, extra):
+            nonlocal enum_error
             try:
                 if win32gui.IsWindowVisible(hwnd):
                     title = win32gui.GetWindowText(hwnd).strip()
@@ -152,14 +180,17 @@ class PrivacyMasker:
                                 "title": title,
                                 "rect": (left, top, right, bottom)
                             })
-            except Exception:
-                pass
+            except Exception as e:
+                enum_error = e
             return True
 
         try:
             win32gui.EnumWindows(enum_callback, None)
-        except Exception:
-            pass
+        except Exception as e:
+            raise PrivacyScanFailureError(f"Screen privacy masking scan failed during window enumeration: {e} (Fail-Closed).")
+
+        if enum_error:
+            raise PrivacyScanFailureError(f"Screen privacy masking scan error inside window callback: {enum_error} (Fail-Closed).")
 
         return matches
 
