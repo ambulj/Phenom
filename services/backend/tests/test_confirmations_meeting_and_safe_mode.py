@@ -207,8 +207,11 @@ def test_meeting_mode_detection_and_display_affinity(meeting_mgr):
 # 5. Daily Self-Check Diagnostics
 # ==============================================================================
 
-def test_daily_self_check_diagnostics_and_alerts(self_check):
+def test_daily_self_check_diagnostics_and_alerts(self_check, monkeypatch):
     """Verifies concise Telegram status format and spoken alert on critical hazards."""
+    # Ensure disk usage reports healthy in unit test environment
+    monkeypatch.setattr(shutil, "disk_usage", lambda path: type("Usage", (), {"free": 50 * 1024**3})())
+
     # 1. Clean Run
     report_clean = self_check.run_diagnostic_suite()
     assert report_clean["all_healthy"] is True
