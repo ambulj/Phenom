@@ -40,3 +40,21 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_windows)
         if "needs_audio" in item.keywords and not AUDIO_AVAILABLE:
             item.add_marker(skip_audio)
+
+
+@pytest.fixture(autouse=True)
+def reset_guardian_state():
+    try:
+        from services.backend.safety.guardian import guardian
+        if guardian.is_halted:
+            guardian.resume()
+    except Exception:
+        pass
+    yield
+    try:
+        from services.backend.safety.guardian import guardian
+        if guardian.is_halted:
+            guardian.resume()
+    except Exception:
+        pass
+
