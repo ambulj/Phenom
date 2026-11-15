@@ -30,12 +30,7 @@ import { FirstRunWizard } from './components/FirstRunWizard';
 import { ScreenBorderOverlay, ScreenOverlayState, ClickTarget, TickerItem, HudAnnotationItem, AmbientAlertItem } from './components/ScreenBorderOverlay';
 
 import { OrbState, ConfirmRequestPayload, LearnedRuleItem } from './types/protocol';
-
-import { CommandPalette, CommandItem } from './components/CommandPalette';
-
-import { HUDCard, HUDCardProps } from './components/HUDCard';
-
-import { StreamingConsole, ConsoleLine } from './components/StreamingConsole';
+import { OrbWindow } from './components/OrbWindow';
 
 import { HumanTakeoverBanner } from './components/CyberHUD/HumanTakeoverBanner';
 import { MediaPlayerHUD } from './components/CyberHUD/MediaPlayerHUD';
@@ -106,19 +101,18 @@ import { AutomationTakeoverPromptPayload } from './types/protocol';
 
 
 export const App: React.FC = () => {
+  // If loaded as floating Orb window (Task 6E.1)
+  if (typeof window !== 'undefined' && window.location.hash === '#/orb') {
+    return <OrbWindow />;
+  }
 
   const [showFirstRun, setShowFirstRun] = useState<boolean>(() => {
-
     if (typeof window !== 'undefined') {
-
       if ((window as any).phenom?.isFirstRunDone?.()) return false;
-
       if (localStorage.getItem('phenom_first_run_done') === 'true') return false;
-
+      return true; // Fixed: was unreachable (Task 6E.9)
     }
-
     return false;
-
   });
 
   const [orbState, setOrbState] = useState<OrbState>('idle');
@@ -139,19 +133,6 @@ export const App: React.FC = () => {
 
   const [historyMessages, setHistoryMessages] = useState<Array<{ id: string; role: string; content: string }>>([]);
 
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
-
-  const [isConsoleOpen, setIsConsoleOpen] = useState<boolean>(false);
-
-  const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([
-
-    { text: 'Phenom Engine v0.1.0 initialized (Windows 11 Mica/Acrylic)', type: 'system', timestamp: new Date().toLocaleTimeString() },
-
-    { text: 'WebSocket link: ws://127.0.0.1:8000/ws', type: 'system', timestamp: new Date().toLocaleTimeString() }
-
-  ]);
-
-  const [activeHudCard, setActiveHudCard] = useState<HUDCardProps | null>(null);
   const [ambientAlerts, setAmbientAlerts] = useState<AmbientAlertItem[]>([]);
   const [workspaceState, setWorkspaceState] = useState<DeveloperWorkspaceState | null>(null);
 
@@ -584,46 +565,19 @@ export const App: React.FC = () => {
 
           } else if (mtype === 'PROACTIVE_CARD' || mtype === 'proactive.card') {
             const card = payload.card || msg.card || payload;
-            setActiveHudCard({
-              title: card.title || 'Proactive Recommendation',
-              message: card.description || '',
-              badge: "PROACTIVE: " + (card.event_type || "INTEL"),
-              type: card.priority >= 3 ? 'approval' : 'info',
-              actions: card.action_chip ? [
+            if (card?.title) {
+              setAmbientAlerts((prev) => [
+                ...prev,
                 {
-                  label: card.action_chip,
-                  onClick: () => {
-                    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                      wsRef.current.send(JSON.stringify({
-                        type: 'proactive.action',
-                        payload: { card_id: card.id, action_payload: card.action_payload }
-                      }));
-                    }
-                    setActiveHudCard(null);
-                  },
-                  variant: card.priority >= 3 ? 'danger' : 'primary'
-                },
-                {
-                  label: 'Dismiss',
-                  onClick: () => {
-                    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                      wsRef.current.send(JSON.stringify({
-                        type: 'proactive.dismiss',
-                        payload: { card_id: card.id }
-                      }));
-                    }
-                    setActiveHudCard(null);
-                  },
-                  variant: 'secondary'
+                  id: card.id || `card-${Date.now()}`,
+                  title: card.title,
+                  message: card.description || '',
+                  category: 'system',
+                  urgency: 'low',
+                  timestamp: new Date().toLocaleTimeString()
                 }
-              ] : [
-                {
-                  label: 'Dismiss',
-                  onClick: () => setActiveHudCard(null),
-                  variant: 'secondary'
-                }
-              ]
-            });
+              ]);
+            }
           } else if (mtype === 'DEV_WORKSPACE_UPDATE' || mtype === 'dev.workspace_update') {
             const wsState = payload as DeveloperWorkspaceState;
             setWorkspaceState(wsState);
@@ -1061,26 +1015,11 @@ export const App: React.FC = () => {
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
 
-      // Alt+Space or Ctrl+K opens Command Palette
-
-      if ((e.altKey && (e.code === 'Space' || e.key === ' ')) || (e.ctrlKey && e.key.toLowerCase() === 'k')) {
-
+      // Alt+Space or Ctrl+Space triggers Voice push-to-talk (Task 6E.10)
+      if ((e.altKey && (e.code === 'Space' || e.key === ' ')) || (e.ctrlKey && (e.code === 'Space' || e.key === ' '))) {
         e.preventDefault();
-
-        setIsCommandPaletteOpen((prev) => !prev);
-
+        handleTriggerVoice();
       }
-
-      // Ctrl+` toggles terminal streaming console
-
-      if (e.ctrlKey && (e.key === '`' || e.key === '~')) {
-
-        e.preventDefault();
-
-        setIsConsoleOpen((prev) => !prev);
-
-      }
-
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -1091,556 +1030,6 @@ export const App: React.FC = () => {
 
 
 
-  const paletteCommands: CommandItem[] = [
-
-    {
-
-      id: 'cmd-doctor',
-
-      title: 'Run Phenom Doctor',
-
-      subtitle: 'Inspect CUDA, GPU VRAM, Python, Node, Git, and Ollama toolchains',
-
-      category: 'Dev',
-
-      shortcut: 'Alt+D',
-
-      onExecute: () => handleSendMessage('/doctor')
-
-    },
-
-    {
-
-      id: 'cmd-pre-push',
-
-      title: 'Execute Git Pre-Push Gate',
-
-      subtitle: 'Audit secret leakage, verify tests, and draft PR release notes',
-
-      category: 'Git',
-
-      shortcut: 'Alt+G',
-
-      onExecute: () => handleSendMessage('/git-gate')
-
-    },
-
-    {
-
-      id: 'cmd-console',
-
-      title: 'Toggle Streaming Terminal Console',
-
-      subtitle: 'View live execution stdout/stderr and system logs',
-
-      category: 'Dev',
-
-      shortcut: 'Ctrl+`',
-
-      onExecute: () => setIsConsoleOpen((prev) => !prev)
-
-    },
-
-    {
-
-      id: 'cmd-mode-work',
-
-      title: 'Cycle Operating Mode',
-
-      subtitle: `Current mode: ${currentMode.toUpperCase()}`,
-
-      category: 'System',
-
-      onExecute: () => handleCycleMode()
-
-    },
-
-    {
-
-      id: 'cmd-killswitch',
-
-      title: 'Emergency Halt (Kill Switch)',
-
-      subtitle: 'Immediately abort all processes and speech',
-
-      category: 'System',
-
-      shortcut: 'Esc Esc Esc',
-
-      onExecute: handleTriggerKillswitch
-
-    },
-
-    {
-
-      id: 'cmd-persona-stark',
-
-      title: 'Switch Persona: Tony Stark',
-
-      subtitle: 'Default witty, high-banter lab partner tone',
-
-      category: 'Assistant',
-
-      onExecute: () => handleSendMessage('Switch to Tony Stark persona')
-
-    },
-
-    {
-
-      id: 'cmd-persona-prof',
-
-      title: 'Switch Persona: Professor Mode',
-
-      subtitle: 'Deep technical rigor, formal mechanics, zero slang',
-
-      category: 'Assistant',
-
-      onExecute: () => handleSendMessage('Switch to Professor persona')
-
-    },
-
-    {
-
-      id: 'cmd-persona-silent',
-
-      title: 'Toggle Cyber HUD Media Player',
-      subtitle: 'Open or dock YouTube and Spotify embedded player',
-      category: 'Assistant',
-      onExecute: () => setShowMediaPlayer((prev) => !prev)
-    },
-    {
-      id: 'cmd-toggle-window-tiler',
-      title: 'Toggle Window Tiler & Macro Dashboard',
-      subtitle: 'Open native Win32 window layout manager and macro recorder HUD',
-      category: 'Assistant',
-      onExecute: () => setShowWindowTiler((prev) => !prev)
-    },
-    {
-      id: 'cmd-toggle-voice-persona',
-      title: 'Toggle Voice Persona & Prosody HUD',
-      subtitle: 'View emotion telemetry, cadence rate, and lock persona voice styles',
-      category: 'Assistant',
-      onExecute: () => setShowVoicePersona((prev) => !prev)
-    },
-    {
-      id: 'cmd-toggle-context-stream',
-      title: 'Toggle Context Fusion HUD',
-      subtitle: 'Inspect active workspace foreground/background multi-app stream',
-      category: 'Assistant',
-      onExecute: () => setShowContextStream((prev) => !prev)
-    },
-    {
-      id: 'cmd-toggle-telegram-companion',
-      title: 'Toggle Telegram Companion HUD',
-      subtitle: 'Manage remote mobile controls, quick action buttons, and snapshot previews',
-      category: 'Assistant',
-      onExecute: () => setShowTelegramCompanion((prev) => !prev)
-    },
-    {
-      id: 'cmd-toggle-document-synthesis',
-      title: 'Toggle Document Synthesis HUD',
-      subtitle: 'Autonomous Word, Excel, PowerPoint & PDF generation, charts, and Obsidian hub',
-      category: 'Assistant',
-      onExecute: () => setShowDocumentSynthesis((prev) => !prev)
-    },
-    {
-      id: 'cmd-toggle-browser-operator',
-      title: 'Toggle Browser Operator HUD',
-      subtitle: 'Persistent Playwright sovereign web agent & live viewport stream',
-      category: 'Assistant',
-      onExecute: () => setShowBrowserOperator((prev) => !prev)
-    },
-    {
-      id: 'cmd-associative-memory',
-      title: 'Toggle Associative Memory HUD',
-      subtitle: 'Search 384-d dense vector knowledge graph, view similarity scores, and manage memories',
-      category: 'Assistant',
-      onExecute: () => setShowAssociativeMemory((prev) => !prev)
-    },
-    {
-      id: 'cmd-workspace-code-hud',
-      title: 'Toggle Workspace Code & Symbol HUD',
-      subtitle: 'Explore AST symbols, find callers & preview multi-file atomic refactor diffs',
-      category: 'Assistant',
-      onExecute: () => setShowWorkspaceCode((prev) => !prev)
-    },
-    {
-      id: 'cmd-knowledge-canvas-hud',
-      title: 'Toggle Knowledge Canvas & Cross-Vault HUD',
-      subtitle: 'Interactive Obsidian graph, cross-vault wikilinks, hybrid RAG inspector & worktree monitor',
-      category: 'Assistant',
-      onExecute: () => setShowKnowledgeCanvas((prev) => !prev)
-    },
-    {
-      id: 'cmd-multimodal-fusion-hud',
-      title: 'Toggle Multimodal Context Fusion HUD',
-      subtitle: 'Live 4-channel matrix (Voice, Window, OCR, AST) & deictic reference resolution',
-      category: 'Assistant',
-      onExecute: () => setShowMultimodalFusion((prev) => !prev)
-    },
-    {
-      id: 'cmd-macro-workflow-hud',
-      title: 'Toggle Desktop Macro Synthesis & Workflow HUD',
-      subtitle: 'Synthesize parameterized YAML workflows, test step execution & self-healing element retargeting',
-      category: 'Assistant',
-      onExecute: () => setShowMacroWorkflow((prev) => !prev)
-    },
-    {
-      id: 'cmd-telegram-mesh-hud',
-      title: 'Toggle Telegram Mobile Mesh HUD',
-      subtitle: 'Live interactive approval queue, remote voice RAG feed & emergency /halt control',
-      category: 'Assistant',
-      onExecute: () => setShowTelegramMesh((prev) => !prev)
-    },
-    {
-      id: 'cmd-adaptive-voice-hud',
-      title: 'Toggle Adaptive Neural Voice & Persona HUD',
-      subtitle: 'Dynamic prosody presets, live waveform monitor & automatic audio ducking',
-      category: 'Assistant',
-      onExecute: () => setShowAdaptiveVoice((prev) => !prev)
-    },
-    {
-      id: 'cmd-swarm-orchestrator-hud',
-      title: 'Toggle Dynamic Swarm Task Graph (DAG) HUD',
-      subtitle: 'Inspect topological wave partitioning, dynamic subagent delegation & live node states',
-      category: 'Assistant',
-      onExecute: () => setShowSwarmOrchestrator((prev) => !prev)
-    },
-    {
-      id: 'cmd-temporal-reasoning-hud',
-      title: 'Toggle Temporal Intent Memory & Reasoning HUD',
-      subtitle: 'Inspect preference lineage, counterfactual decision rationale & alternative evaluations',
-      category: 'Assistant',
-      onExecute: () => setShowTemporalReasoning((prev) => !prev)
-    },
-    {
-      id: 'cmd-spatial-layout-hud',
-      title: 'Toggle Multi-Display Spatial Layout HUD',
-      subtitle: 'Choreograph desktop windows across monitors with task presets & reversible rollback',
-      category: 'Assistant',
-      onExecute: () => setShowSpatialLayout((prev) => !prev)
-    },
-    {
-      id: 'cmd-ambient-intelligence-hud',
-      title: 'Toggle Ambient Intelligence & Priority Hub HUD',
-      subtitle: 'Inspect proactive alerts, system health, and regulate focus filtering thresholds',
-      category: 'Assistant',
-      onExecute: () => setShowAmbientIntelligence((prev) => !prev)
-    },
-    {
-      id: 'cmd-metacognitive-reflector-hud',
-      title: 'Toggle Metacognitive Reflector & Calibration HUD',
-      subtitle: 'Inspect execution trajectory post-mortems, epistemic confidence & calibration stats',
-      category: 'Assistant',
-      onExecute: () => setShowMetacognitiveReflector((prev) => !prev)
-    },
-    {
-      id: 'cmd-lora-adapter-hub-hud',
-      title: 'Toggle LoRA Adapter Hub & Evolution HUD',
-      subtitle: 'Monitor task-specific PEFT adapters, local GPU VRAM allocations & dataset volumes',
-      category: 'Assistant',
-      onExecute: () => setShowLoRAAdapterHub((prev) => !prev)
-    },
-    {
-      id: 'cmd-voice-code-synapse-hud',
-      title: 'Toggle Voice-Code Synapse & AST Co-Editor HUD',
-      subtitle: 'Real-time conversational AST code mutations, dry-run diffs & acoustic earcons',
-      category: 'Assistant',
-      onExecute: () => setShowVoiceCodeSynapse((prev) => !prev)
-    },
-    {
-      id: 'cmd-predictive-task-hub-hud',
-      title: 'Toggle Predictive Task Anticipation & Ambient Pipelining HUD',
-      subtitle: 'Markov workflow state transitions, proactive action cards & cache pre-warming',
-      category: 'Assistant',
-      onExecute: () => setShowPredictiveTaskHub((prev) => !prev)
-    },
-    {
-      id: 'cmd-self-healing-kernel-hud',
-      title: 'Toggle Self-Healing Kernel HUD',
-      subtitle: 'Automated traceback diagnosis, AST fault localization, and reversible patch synthesis',
-      category: 'Assistant',
-      onExecute: () => setShowSelfHealingKernel((prev) => !prev)
-    },
-    {
-      id: 'cmd-sandbox-execution-jail-hud',
-      title: 'Toggle Sandbox Execution Jail HUD',
-      subtitle: 'Static AST security auditing, capability-gated ephemeral execution, and timeout enforcement',
-      category: 'Assistant',
-      onExecute: () => setShowSandboxExecutionJail((prev) => !prev)
-    },
-    {
-      id: 'cmd-spatial-voice-synapse-hud',
-      title: 'Toggle Spatial Cursor-Voice Intent Synapse HUD',
-      subtitle: 'Cross-modal deictic speech and screen coordinate intent resolver (< 35ms SLA)',
-      category: 'Assistant',
-      onExecute: () => setShowSpatialVoiceSynapse((prev) => !prev)
-    },
-    {
-      id: 'cmd-resource-governor-hud',
-      title: 'Toggle Predictive Resource Governor HUD',
-      subtitle: 'Dynamic heterogeneous CUDA/RAM balancing, telemetry monitoring, and emergency throttling',
-      category: 'Assistant',
-      onExecute: () => setShowResourceGovernor((prev) => !prev)
-    },
-    {
-      id: 'cmd-screen-grounding-hud',
-      title: 'Toggle GUI Semantic Grounding HUD',
-      subtitle: 'Real-time multi-modal screen element segmentation and natural language coordinate grounding',
-      category: 'Assistant',
-      onExecute: () => setShowScreenGrounding((prev) => !prev)
-    },
-    {
-      id: 'cmd-gui-action-player-hud',
-      title: 'Toggle Declarative GUI Action Player HUD',
-      subtitle: 'Safe multi-step GUI interaction plan executor with human takeover protection',
-      category: 'Assistant',
-      onExecute: () => setShowGuiActionPlayer((prev) => !prev)
-    },
-    {
-      id: 'cmd-cross-app-workflow-hud',
-      title: 'Toggle Cross-App Workflow Orchestrator HUD',
-      subtitle: 'Ambient multi-application data pipelining, state machines, and window focus synchronization',
-      category: 'Assistant',
-      onExecute: () => setShowCrossAppWorkflow((prev) => !prev)
-    },
-    {
-      id: 'cmd-desktop-watchdog-hud',
-      title: 'Toggle Desktop Watchdog & Interceptor HUD',
-      subtitle: 'Proactive context-aware desktop incident monitoring, stability gauge, and 1-click remediation',
-      category: 'Assistant',
-      onExecute: () => setShowDesktopWatchdog((prev) => !prev)
-    },
-    {
-      id: 'cmd-memory-consolidation-hud',
-      title: 'Toggle Memory Consolidation HUD',
-      subtitle: 'Episodic session trace consolidation, hierarchical abstraction levels, and decay soft-pruning',
-      category: 'Assistant',
-      onExecute: () => setShowMemoryConsolidation((prev) => !prev)
-    },
-    {
-      id: 'cmd-epistemic-belief-hud',
-      title: 'Toggle Epistemic Belief Network HUD',
-      subtitle: 'Bayesian proposition weights, contradiction detection, and revision audit history',
-      category: 'Assistant',
-      onExecute: () => setShowEpistemicBeliefNetwork((prev) => !prev)
-    },
-    {
-      id: 'cmd-world-model-simulator-hud',
-      title: 'Toggle World-Model Simulator HUD',
-      subtitle: 'Counterfactual plan projection, feasibility scoring, and collateral side-effect forecasting',
-      category: 'Assistant',
-      onExecute: () => setShowWorldModelSimulator((prev) => !prev)
-    },
-    {
-      id: 'cmd-cognitive-load-balancer-hud',
-      title: 'Toggle Cognitive Load Balancer HUD',
-      subtitle: 'Attentional focus pacing, interaction velocity meters, and deferred notification queue',
-      category: 'Assistant',
-      onExecute: () => setShowCognitiveLoadBalancer((prev) => !prev)
-    },
-    {
-      id: 'cmd-agent-swarm-mesh-hud',
-      title: 'Toggle Agent Swarm Mesh HUD',
-      subtitle: 'Specialist worker node topology, P2P asynchronous mailboxes, and swarm metrics',
-      category: 'Assistant',
-      onExecute: () => setShowAgentSwarmMesh((prev) => !prev)
-    },
-    {
-      id: 'cmd-task-auction-protocol-hud',
-      title: 'Toggle Task Auction Protocol HUD',
-      subtitle: 'DAG dependency contracts, specialist worker bidding matrix, and contract awards',
-      category: 'Assistant',
-      onExecute: () => setShowTaskAuctionProtocol((prev) => !prev)
-    },
-    {
-      id: 'cmd-swarm-consensus-crdt-hud',
-      title: 'Toggle Swarm Consensus CRDT HUD',
-      subtitle: 'Lamport vector clocks, distributed state convergence, and LWW delta resolution',
-      category: 'Assistant',
-      onExecute: () => setShowSwarmConsensusCRDT((prev) => !prev)
-    },
-    {
-      id: 'cmd-swarm-watchdog-arbiter-hud',
-      title: 'Toggle Swarm Watchdog & Arbiter HUD',
-      subtitle: 'Byzantine worker anomaly radar, node quarantine, and task failover rescue',
-      category: 'Assistant',
-      onExecute: () => setShowSwarmWatchdogArbiter((prev) => !prev)
-    },
-    {
-      id: 'cmd-goal-decomposition-tree-hud',
-      title: 'Toggle Goal Decomposition Tree HUD',
-      subtitle: 'Recursive multi-tier plan tree, DAG subtasks, and progress tracking',
-      category: 'Assistant',
-      onExecute: () => setShowGoalDecompositionTree((prev) => !prev)
-    },
-    {
-      id: 'cmd-adaptive-branch-planner-hud',
-      title: 'Toggle Adaptive Branch Planner HUD',
-      subtitle: 'Speculative multi-path candidate branches, Monte Carlo feasibility, and branch pruning',
-      category: 'Assistant',
-      onExecute: () => setShowAdaptiveBranchPlanner((prev) => !prev)
-    },
-    {
-      id: 'cmd-self-healing-orchestrator-hud',
-      title: 'Toggle Self-Healing Orchestrator HUD',
-      subtitle: 'Dynamic failure interception, error taxonomy classification, and compensatory plan grafting',
-      category: 'Assistant',
-      onExecute: () => setShowSelfHealingOrchestrator((prev) => !prev)
-    },
-    {
-      id: 'cmd-execution-stream-shield-hud',
-      title: 'Toggle Execution Stream Shield HUD',
-      subtitle: 'Zero-noise chat stream filter, leak purger, and adaptive persona tuner',
-      category: 'Assistant',
-      onExecute: () => setShowExecutionStreamShield((prev) => !prev)
-    },
-    {
-      id: 'cmd-safety-tier-matrix-hud',
-      title: 'Toggle Safety Tier Matrix HUD',
-      subtitle: 'Zero-prompt auto-execution matrix, risk tiers, and high-risk boundary gating',
-      category: 'Assistant',
-      onExecute: () => setShowSafetyTierMatrix((prev) => !prev)
-    },
-    {
-      id: 'cmd-voice-confirmation-hud',
-      title: 'Toggle Voice Confirmation HUD',
-      subtitle: 'Natural spoken confirmation prompts, audio wave visualizer, and 1-click approvals',
-      category: 'Assistant',
-      onExecute: () => setShowVoiceConfirmation((prev) => !prev)
-    },
-    {
-      id: 'cmd-silent-activity-monitor-hud',
-      title: 'Toggle Silent Activity Monitor HUD',
-      subtitle: 'Real-time background tool execution waterfall, latencies, and parameter inspector',
-      category: 'Assistant',
-      onExecute: () => setShowSilentActivityMonitor((prev) => !prev)
-    },
-    {
-      id: 'cmd-screen-intelligence-hud',
-      title: 'Toggle Screen Intelligence HUD',
-      subtitle: 'Real-time offline VLM task tracker, visual UI bounding boxes, and screen-region OCR',
-      category: 'Assistant',
-      onExecute: () => setShowScreenIntelligence((prev) => !prev)
-    },
-    {
-      id: 'cmd-multi-agent-swarm-hud',
-      title: 'Toggle Local Multi-Agent Swarm HUD',
-      subtitle: 'Actor-based subagent fleet (Coder, Research, Executive) with live task queue and emergency halt',
-      category: 'Assistant',
-      onExecute: () => setShowMultiAgentSwarm((prev) => !prev)
-    },
-    {
-      id: 'cmd-full-duplex-voice-hud',
-      title: 'Toggle Full-Duplex Voice & Barge-In HUD',
-      subtitle: 'Sub-15ms speech interruption with Silero VAD ONNX and natural turn-taking state machine',
-      category: 'Assistant',
-      onExecute: () => setShowFullDuplexVoice((prev) => !prev)
-    },
-    {
-      id: 'cmd-ambient-companion-hud',
-      title: 'Toggle Ambient Watchdog & Telegram Companion HUD',
-      subtitle: 'Context-aware ambient toasts, focus nudges, and remote Telegram companion controls',
-      category: 'Assistant',
-      onExecute: () => setShowAmbientCompanion((prev) => !prev)
-    },
-    {
-      id: 'cmd-vision-action-grounding-hud',
-      title: 'Toggle Vision-Action Grounding HUD',
-      subtitle: 'Visual coordinate prediction, desktop action primitives, and human takeover watchdog',
-      category: 'Assistant',
-      onExecute: () => setShowVisionActionGrounding((prev) => !prev)
-    },
-    {
-      id: 'cmd-expressive-voice-hud',
-      title: 'Toggle Expressive Neural Voice HUD',
-      subtitle: 'Dynamic emotional prosody, Jarvis banter modulation, and sub-250ms TTFA streaming buffer',
-      category: 'Assistant',
-      onExecute: () => setShowExpressiveVoice((prev) => !prev)
-    },
-    {
-      id: 'cmd-temporal-knowledge-graph-hud',
-      title: 'Toggle Temporal Knowledge Graph HUD',
-      subtitle: 'Associative memory matrix, exponential half-life decay, and cross-session episodic search',
-      category: 'Assistant',
-      onExecute: () => setShowTemporalKnowledgeGraph((prev) => !prev)
-    },
-    {
-      id: 'cmd-workspace-self-healing-hud',
-      title: 'Toggle Workspace Self-Healing HUD',
-      subtitle: 'Proactive compiler and test triage, automated AST hot-patching, and 1-click rollback',
-      category: 'Assistant',
-      onExecute: () => setShowWorkspaceSelfHealing((prev) => !prev)
-    },
-    {
-      id: 'cmd-workflow-orchestrator-hud',
-      title: 'Toggle Workflow Orchestrator HUD',
-      subtitle: 'Cross-app DAG flow visualizer, state checkpoints, and compensatory rollback',
-      category: 'Assistant',
-      onExecute: () => setShowWorkflowOrchestrator((prev) => !prev)
-    },
-    {
-      id: 'cmd-tool-foundry-hud',
-      title: 'Toggle Dynamic Tool Foundry HUD',
-      subtitle: 'Synthesized micro-tool directory, static AST security inspection, and sandbox verification',
-      category: 'Assistant',
-      onExecute: () => setShowToolFoundry((prev) => !prev)
-    },
-    {
-      id: 'cmd-sensory-presence-hud',
-      title: 'Toggle CyberHUD Sensory Presence Dashboard',
-      subtitle: 'Attentive gaze tracking, spatial hand gestures, acoustic proximity, and privacy shutter',
-      category: 'Assistant',
-      onExecute: () => setShowSensoryPresence((prev) => !prev)
-    },
-    {
-      id: 'cmd-voice-studio-hud',
-      title: 'Toggle CyberHUD Voice Acting & Studio Control Room',
-      subtitle: 'Zero-shot voice cloning, emotional prosodic envelopes, timbre morphing, and biometric consent enclave',
-      category: 'Assistant',
-      onExecute: () => setShowVoiceStudio((prev) => !prev)
-    },
-    {
-      id: 'cmd-cyber-command-center-hud',
-      title: 'Toggle Cyber Command Center HUD',
-      subtitle: 'Autonomous red-team DAG, live packet sniffer, ESP8266 serial bridge, RTX CUDA cryptanalysis',
-      category: 'Assistant',
-      onExecute: () => setShowCyberCommandCenter((prev) => !prev)
-    },
-    {
-      id: 'cmd-proactive-scheduler',
-      title: 'Toggle Proactive Scheduler HUD',
-      subtitle: 'Manage autonomous background daemon, 08:30 AM morning briefing, and file watcher',
-      category: 'Assistant',
-      onExecute: () => setShowProactiveScheduler((prev) => !prev)
-    },
-    {
-      id: 'cmd-screen-vision',
-      title: 'Toggle Screen Vision Viewport HUD',
-      subtitle: 'Inspect Smart Context active window capture, UIA target bounding boxes, and Rule 8 shield',
-      category: 'Assistant',
-      onExecute: () => setShowScreenVision((prev) => !prev)
-    },
-    {
-      id: 'cmd-particle-orb',
-      title: 'Toggle Reactive 3D Particle Orb HUD',
-      subtitle: 'Sound-reactive Three.js WebGL particle orb & wake-word controls',
-      category: 'Assistant',
-      onExecute: () => setShowParticleOrb((prev) => !prev)
-    },
-    {
-      id: 'cmd-persona-silent',
-      title: 'Switch Persona: Silent Co-Pilot',
-
-      subtitle: 'Visual HUD diffs and code summaries only',
-
-      category: 'Assistant',
-
-      onExecute: () => handleSendMessage('Switch to Silent Co-Pilot persona')
-
-    }
-
-  ];
 
 
 
@@ -1677,10 +1066,6 @@ export const App: React.FC = () => {
         showMiniOverlay={showMiniOverlay}
 
         onToggleMiniOverlay={() => setShowMiniOverlay((prev) => !prev)}
-
-        onOpenPalette={() => setIsCommandPaletteOpen(true)}
-
-        onToggleConsole={() => setIsConsoleOpen((prev) => !prev)}
         workspaceState={workspaceState}
 
       />
@@ -2769,58 +2154,6 @@ export const App: React.FC = () => {
       />
 
 
-
-      {/* Raycast / Spotlight Centered Command Palette (Alt+Space) */}
-
-      <CommandPalette
-
-        isOpen={isCommandPaletteOpen}
-
-        onClose={() => setIsCommandPaletteOpen(false)}
-
-        commands={paletteCommands}
-
-        onSubmitQuery={(q) => {
-
-          setIsCommandPaletteOpen(false);
-
-          handleSendMessage(q);
-
-        }}
-
-      />
-
-
-
-      {/* Collapsible Streaming Terminal Console Drawer */}
-
-      <StreamingConsole
-
-        isOpen={isConsoleOpen}
-
-        onToggle={() => setIsConsoleOpen((prev) => !prev)}
-
-        lines={consoleLines}
-
-        onClear={() => setConsoleLines([])}
-
-      />
-
-
-
-      {/* Floating HUD Card for Action Approvals and Diff Reviews */}
-
-      {activeHudCard && (
-
-        <HUDCard
-
-          {...activeHudCard}
-
-          onClose={() => setActiveHudCard(null)}
-
-        />
-
-      )}
 
       {/* Cyber HUD Floating Human Takeover Alert Banner */}
       {takeoverPayload && (

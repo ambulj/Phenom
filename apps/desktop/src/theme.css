@@ -46,11 +46,28 @@
   --glass-border-cobalt: 1px solid rgba(0, 82, 255, 0.35);
   --glass-border-lime: 1px solid rgba(204, 255, 0, 0.35);
 
+  /* Holographic HUD Accents (Task 6E) */
+  --color-cyan-glow: #00e5ff;
+  --color-violet-glow: #c084fc;
+  --color-hologram-glass: rgba(8, 15, 28, 0.85);
+  --color-hologram-border: rgba(0, 229, 255, 0.35);
+  --color-hologram-glow: 0 0 16px rgba(0, 229, 255, 0.35);
+
   /* Status Colors */
   --color-status-success: #ccff00;
   --color-status-warning: #f59e0b;
   --color-status-danger: #ef4444;
   --color-status-info: #0052ff;
+}
+
+/* Accessible reduced-motion guard (Task 6E) */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Global resets & selection */

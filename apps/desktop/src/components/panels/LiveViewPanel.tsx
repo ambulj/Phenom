@@ -1,8 +1,16 @@
 import React from 'react';
 import { Button, Badge } from '@fluentui/react-components';
-import { DismissRegular, PlayRegular, StopRegular, EyeRegular } from '@fluentui/react-icons';
+import {
+  DismissRegular,
+  PlayRegular,
+  PauseRegular,
+  HandRightRegular,
+  StopRegular,
+  EyeRegular,
+  TargetRegular
+} from '@fluentui/react-icons';
 
-interface AutomationStep {
+export interface AutomationStep {
   step_number: number;
   action: string;
   target: string;
@@ -15,7 +23,11 @@ interface LiveViewPanelProps {
   liveFrame?: string | null;
   takeoverPrompt?: string | null;
   onTakeoverDecision?: (decision: 'continue' | 'stop') => void;
+  onPause?: () => void;
+  onResume?: () => void;
+  isPaused?: boolean;
   steps?: AutomationStep[];
+  clickTarget?: { x: number; y: number } | null;
 }
 
 export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
@@ -23,119 +35,169 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
   liveFrame,
   takeoverPrompt,
   onTakeoverDecision,
-  steps = []
+  onPause,
+  onResume,
+  isPaused = false,
+  steps = [],
+  clickTarget
 }) => {
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', color: '#f8fafc' }}>
+      {/* Header with Close and Controls */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          paddingBottom: 16,
-          borderBottom: '1px solid rgba(0, 82, 255, 0.25)'
+          paddingBottom: 14,
+          borderBottom: '1px solid rgba(0, 229, 255, 0.25)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <EyeRegular style={{ color: '#0052FF', fontSize: 20 }} />
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f8fafc', margin: 0 }}>Automation Live View</h2>
+          <EyeRegular style={{ color: '#00e5ff', fontSize: 20 }} />
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', margin: 0, letterSpacing: '0.4px' }}>
+            Live Screen & Automation HUD
+          </h2>
         </div>
-        <Button appearance="subtle" icon={<DismissRegular />} onClick={onClose} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* Explicit Pause / Resume Button (Task 6E.4) */}
+          <Button
+            appearance="subtle"
+            size="small"
+            icon={isPaused ? <PlayRegular /> : <PauseRegular />}
+            style={{
+              color: isPaused ? '#ccff00' : '#00e5ff',
+              background: 'rgba(0, 229, 255, 0.12)',
+              border: '1px solid rgba(0, 229, 255, 0.3)',
+              borderRadius: 6
+            }}
+            onClick={() => (isPaused ? onResume?.() : onPause?.())}
+            title={isPaused ? 'Resume Automation' : 'Pause Automation'}
+          >
+            {isPaused ? 'Resume' : 'Pause'}
+          </Button>
+
+          {/* Explicit Take-Over Button (Task 6E.4) */}
+          <Button
+            appearance="subtle"
+            size="small"
+            icon={<HandRightRegular />}
+            style={{
+              color: '#f87171',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: 6
+            }}
+            onClick={() => onTakeoverDecision?.('stop')}
+            title="Instant Human Take-Over (Halts Automation)"
+          >
+            Take-Over
+          </Button>
+
+          <Button appearance="subtle" icon={<DismissRegular />} onClick={onClose} />
+        </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
         {/* Human Takeover Alert Banner */}
         {takeoverPrompt && (
           <div
             style={{
-              background: 'rgba(239, 68, 68, 0.20)',
-              border: '2px solid #EF4444',
+              background: 'rgba(239, 68, 68, 0.18)',
+              border: '1px solid #ef4444',
               borderRadius: 8,
-              padding: 14,
+              padding: 12,
               display: 'flex',
               flexDirection: 'column',
-              gap: 10,
-              boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)'
+              gap: 8,
+              boxShadow: '0 0 16px rgba(239, 68, 68, 0.3)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Badge appearance="filled" color="danger">HUMAN TAKEOVER DETECTED</Badge>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#fca5a5' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5' }}>
                 Automation Paused Immediately
               </span>
             </div>
             <p style={{ fontSize: 12, color: '#f8fafc', margin: 0 }}>
-              {takeoverPrompt} Please choose whether to resume or cancel automation:
+              {takeoverPrompt}
             </p>
-            <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
               <Button
                 appearance="primary"
+                size="small"
                 icon={<PlayRegular />}
-                style={{ background: 'linear-gradient(135deg, #0052FF, #1a66ff)', color: '#fff', fontWeight: 600, border: 'none' }}
-                onClick={() => onTakeoverDecision && onTakeoverDecision('continue')}
+                style={{ background: '#0052ff', color: '#fff', border: 'none', fontWeight: 600 }}
+                onClick={() => onTakeoverDecision?.('continue')}
               >
-                Continue Automation
+                Continue
               </Button>
               <Button
                 appearance="primary"
+                size="small"
                 icon={<StopRegular />}
-                style={{ background: '#EF4444', color: '#fff', fontWeight: 600, border: 'none' }}
-                onClick={() => onTakeoverDecision && onTakeoverDecision('stop')}
+                style={{ background: '#ef4444', color: '#fff', border: 'none', fontWeight: 600 }}
+                onClick={() => onTakeoverDecision?.('stop')}
               >
-                Stop / Abort
+                Abort
               </Button>
             </div>
           </div>
         )}
 
-        {/* Live Viewport Screen Stream */}
+        {/* Live Viewport Screen Stream with Click-Target Overlay (Task 6E.4) */}
         <div
           style={{
-            background: '#040609',
-            borderRadius: 8,
+            background: '#04070d',
+            borderRadius: 10,
             overflow: 'hidden',
-            border: '1px solid rgba(0, 82, 255, 0.35)',
+            border: '1px solid rgba(0, 229, 255, 0.3)',
             display: 'flex',
             flexDirection: 'column',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6)'
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.7)'
           }}
         >
           <div
             style={{
-              padding: '8px 12px',
-              background: 'rgba(13, 17, 26, 0.90)',
-              borderBottom: '1px solid rgba(0, 82, 255, 0.20)',
-              fontSize: 12,
-              fontWeight: 500,
+              padding: '6px 12px',
+              background: 'rgba(13, 20, 36, 0.95)',
+              borderBottom: '1px solid rgba(0, 229, 255, 0.18)',
+              fontSize: 11,
+              fontWeight: 600,
               color: '#94a3b8',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}
           >
-            <span>Active Browser / Screen View</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <TargetRegular style={{ color: '#00e5ff', fontSize: 14 }} />
+              <span>Viewport Surface Tracking</span>
+            </div>
             <Badge
               appearance="filled"
               style={{
-                background: liveFrame ? 'rgba(204, 255, 0, 0.2)' : 'rgba(148, 163, 184, 0.1)',
-                color: liveFrame ? '#CCFF00' : '#94a3b8',
-                border: `1px solid ${liveFrame ? '#CCFF00' : 'rgba(148, 163, 184, 0.2)'}`,
+                background: liveFrame ? 'rgba(0, 229, 255, 0.2)' : 'rgba(148, 163, 184, 0.1)',
+                color: liveFrame ? '#00e5ff' : '#94a3b8',
+                border: `1px solid ${liveFrame ? '#00e5ff' : 'rgba(148, 163, 184, 0.2)'}`,
                 fontSize: 10
               }}
               size="small"
             >
-              {liveFrame ? 'STREAMING' : 'IDLE'}
+              {isPaused ? 'PAUSED' : liveFrame ? 'STREAMING' : 'IDLE'}
             </Badge>
           </div>
+
           <div
             style={{
               width: '100%',
               height: 220,
-              background: '#080B10',
+              background: '#020408',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
             {liveFrame ? (
@@ -145,82 +207,119 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
             ) : (
-              <span style={{ fontSize: 13, color: '#64748b' }}>
-                No active browser session. Launch an automation task to stream.
+              <span style={{ fontSize: 12, color: '#64748b' }}>
+                No active automation session. Actions will stream in real-time.
               </span>
+            )}
+
+            {/* Click-Target Box Overlay (Task 6E.4) */}
+            {clickTarget && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${clickTarget.x}%`,
+                  top: `${clickTarget.y}%`,
+                  width: 32,
+                  height: 32,
+                  border: '2px solid #00e5ff',
+                  borderRadius: 6,
+                  transform: 'translate(-50%, -50%)',
+                  boxShadow: '0 0 16px #00e5ff, inset 0 0 8px rgba(0, 229, 255, 0.5)',
+                  pointerEvents: 'none',
+                  animation: 'pulse 1s infinite'
+                }}
+                title="Next Click Target"
+              />
             )}
           </div>
         </div>
 
-        {/* Step List Overlay */}
+        {/* Step List: Done / Doing / Next (Task 6E.4) */}
         <div
           style={{
-            background: 'rgba(13, 17, 26, 0.85)',
-            border: '1px solid rgba(0, 82, 255, 0.22)',
-            padding: 14,
-            borderRadius: 8,
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+            background: 'rgba(8, 15, 28, 0.85)',
+            border: '1px solid rgba(0, 229, 255, 0.2)',
+            padding: 12,
+            borderRadius: 10,
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.4)'
           }}
         >
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#CCFF00', marginBottom: 10 }}>
-            Execution Step List
+          <h3 style={{ fontSize: 13, fontWeight: 700, color: '#00e5ff', marginBottom: 10, letterSpacing: '0.4px' }}>
+            EXECUTION STEP LIST (DONE / DOING / NEXT)
           </h3>
           {steps.length === 0 ? (
             <div style={{ fontSize: 12, color: '#94a3b8' }}>
-              No automation steps running. Plans and progress will appear here in real-time.
+              No automation steps running. Task progress appears here in real-time.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {steps.map((st, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 10px',
-                    borderRadius: 6,
-                    background:
-                      st.status === 'current'
-                        ? 'rgba(0, 82, 255, 0.25)'
-                        : st.status === 'done'
-                        ? 'rgba(204, 255, 0, 0.10)'
-                        : 'rgba(8, 11, 16, 0.5)',
-                    border:
-                      st.status === 'current'
-                        ? '1px solid #0052FF'
-                        : '1px solid rgba(0, 82, 255, 0.15)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0052FF', fontFamily: 'Consolas, monospace' }}>
-                      #{st.step_number}
-                    </span>
-                    <span style={{ fontSize: 13, color: '#f8fafc' }}>
-                      {st.action} <strong>{st.target}</strong>
-                    </span>
-                  </div>
-                  <Badge
-                    appearance="tint"
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {steps.map((st, i) => {
+                const isCurrent = st.status === 'current';
+                const isDone = st.status === 'done';
+                return (
+                  <div
+                    key={i}
                     style={{
-                      background: st.status === 'done' ? 'rgba(204, 255, 0, 0.15)' : st.status === 'current' ? 'rgba(0, 82, 255, 0.25)' : 'rgba(148, 163, 184, 0.1)',
-                      color: st.status === 'done' ? '#CCFF00' : st.status === 'current' ? '#337aff' : '#94a3b8'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      background: isCurrent
+                        ? 'rgba(0, 229, 255, 0.15)'
+                        : isDone
+                        ? 'rgba(204, 255, 0, 0.08)'
+                        : 'rgba(4, 7, 13, 0.6)',
+                      border: isCurrent
+                        ? '1px solid #00e5ff'
+                        : isDone
+                        ? '1px solid rgba(204, 255, 0, 0.25)'
+                        : '1px solid rgba(255, 255, 255, 0.08)'
                     }}
-                    size="small"
                   >
-                    {st.status.toUpperCase()}
-                  </Badge>
-                </div>
-              ))}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: isCurrent ? '#00e5ff' : isDone ? '#ccff00' : '#64748b',
+                          fontFamily: 'Consolas, monospace'
+                        }}
+                      >
+                        #{st.step_number}
+                      </span>
+                      <span style={{ fontSize: 12, color: isCurrent ? '#f8fafc' : isDone ? '#94a3b8' : '#64748b' }}>
+                        {st.action} <strong style={{ color: isCurrent ? '#00e5ff' : '#cbd5e1' }}>{st.target}</strong>
+                      </span>
+                    </div>
+                    <Badge
+                      appearance="tint"
+                      style={{
+                        background: isCurrent
+                          ? 'rgba(0, 229, 255, 0.2)'
+                          : isDone
+                          ? 'rgba(204, 255, 0, 0.15)'
+                          : 'rgba(148, 163, 184, 0.1)',
+                        color: isCurrent ? '#00e5ff' : isDone ? '#ccff00' : '#94a3b8',
+                        fontSize: 10,
+                        fontWeight: 600
+                      }}
+                      size="small"
+                    >
+                      {isCurrent ? 'DOING' : isDone ? 'DONE' : 'NEXT'}
+                    </Badge>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Safety Guarantees Notice */}
-        <div style={{ background: 'rgba(8, 11, 16, 0.6)', border: '1px solid rgba(0, 82, 255, 0.15)', padding: 12, borderRadius: 8 }}>
-          <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>
-            🔒 <strong style={{ color: '#CCFF00' }}>Safety Enforced</strong>: Payments and checkouts are blocked by construction.
-            Human takeover pauses automation in under 1 second upon physical mouse or key movement.
+        {/* Safety Invariant Notice */}
+        <div style={{ background: 'rgba(4, 7, 13, 0.7)', border: '1px solid rgba(0, 229, 255, 0.15)', padding: 10, borderRadius: 8 }}>
+          <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>
+            🛡️ <strong style={{ color: '#00e5ff' }}>Guardian Protected</strong>: Physical mouse or keyboard movements pause
+            automation within 1 second. Resuming requires explicit operator confirmation.
           </div>
         </div>
       </div>

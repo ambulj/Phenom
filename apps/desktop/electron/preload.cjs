@@ -67,5 +67,26 @@ contextBridge.exposeInMainWorld('phenom', {
     ipcRenderer.on('media:guardian-mute', () => {
       if (typeof callback === 'function') callback();
     });
+  },
+  // Orb Floating Window & HUD Controls (Task 6E)
+  setIgnoreMouseEvents: (ignore, options) => {
+    try {
+      ipcRenderer.send('orb:set-ignore-mouse-events', ignore, options);
+    } catch {}
+  },
+  setOrbOpacity: (opacity) => {
+    try {
+      ipcRenderer.send('orb:set-opacity', opacity);
+    } catch {}
+  },
+  toggleMainWindow: () => {
+    try {
+      ipcRenderer.send('orb:toggle-main-window');
+    } catch {}
+  },
+  sendOrbFileDrop: (filePath) => {
+    try {
+      ipcRenderer.send('orb:file-drop', filePath);
+    } catch {}
   }
 });

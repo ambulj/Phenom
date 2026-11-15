@@ -48,8 +48,15 @@ for (const tf of candidateTokenFiles) {
 
 process.env.PHENOM_SESSION_TOKEN = sessionToken;
 
-// IPC handler to expose session token securely via contextBridge preload
+// IPC handler to expose session token securely via contextBridge preload (Task 6E Hardening F11)
 ipcMain.on('phenom:get-session-token', (event) => {
+  const senderUrl = event.senderFrame?.url || event.sender?.getURL() || '';
+  const isTrusted = senderUrl.startsWith('file://') || (!app.isPackaged && (senderUrl.startsWith('http://localhost:5173') || senderUrl.startsWith('http://127.0.0.1:5173')));
+  if (!isTrusted) {
+    console.warn('[Phenom Security] Blocked get-session-token request from untrusted origin:', senderUrl);
+    event.returnValue = null;
+    return;
+  }
   event.returnValue = sessionToken;
 });
 
@@ -69,7 +76,8 @@ function isFirstRunDone() {
       if (data.first_run_done !== undefined) return Boolean(data.first_run_done);
     }
   } catch (e) {}
-  return true; // Already configured in config.toml
+  // Fix for Task 6E: Do not default to true; first-run wizard must be reachable
+  return false;
 }
 
 function setFirstRunDone() {
@@ -94,12 +102,43 @@ ipcMain.on('phenom:set-first-run-done', (event) => {
 });
 
 let mainWindow;
+let orbWindow = null;
 let tray = null;
 let isQuitting = false;
 let isVoiceMuted = false;
 let backendProcess = null;
 let backendRestartAttempts = 0;
 const MAX_BACKEND_RESTARTS = 5;
+
+// Orb Window IPC Listeners (Task 6E)
+ipcMain.on('orb:set-ignore-mouse-events', (event, ignore, options) => {
+  if (orbWindow && !orbWindow.isDestroyed()) {
+    orbWindow.setIgnoreMouseEvents(Boolean(ignore), options || { forward: true });
+  }
+});
+
+ipcMain.on('orb:set-opacity', (event, opacity) => {
+  if (orbWindow && !orbWindow.isDestroyed()) {
+    orbWindow.setOpacity(Math.max(0.1, Math.min(1.0, Number(opacity))));
+  }
+});
+
+ipcMain.on('orb:toggle-main-window', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
+    } else {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  }
+});
+
+ipcMain.on('orb:file-drop', (event, filePath) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('orb:file-dropped', filePath);
+  }
+});
 
 function updateTrayContextMenu() {
   if (!tray) return;
@@ -342,6 +381,18 @@ function checkPrerequisites() {
   });
 }
 
+function getDistPath() {
+  const candidates = [
+    path.join(__dirname, '../dist/index.html'),
+    path.join(app.getAppPath(), 'dist/index.html'),
+    path.join(__dirname, 'dist/index.html')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[0];
+}
+
 function createWindow() {
   const iconPath = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
@@ -363,19 +414,7 @@ function createWindow() {
     }
   });
 
-  const candidates = [
-    path.join(__dirname, '../dist/index.html'),
-    path.join(app.getAppPath(), 'dist/index.html'),
-    path.join(__dirname, 'dist/index.html')
-  ];
-  let distPath = candidates[0];
-  for (const c of candidates) {
-    if (fs.existsSync(c)) {
-      distPath = c;
-      break;
-    }
-  }
-
+  const distPath = getDistPath();
   let loaded = false;
   const loadDist = () => {
     if (loaded) return;
@@ -384,17 +423,40 @@ function createWindow() {
     mainWindow.loadFile(distPath);
   };
 
-  const req = http.get('http://localhost:5173', (res) => {
-    if (!loaded) {
-      loaded = true;
-      console.log('[Phenom] Connected to Vite dev server on 5173');
-      mainWindow.loadURL('http://localhost:5173');
-    }
-  });
-  req.on('error', loadDist);
-  req.setTimeout(300, () => {
-    req.destroy();
+  // Hardening guard (F11/H2): Never probe localhost:5173 when app is packaged
+  if (app.isPackaged) {
     loadDist();
+  } else {
+    const req = http.get('http://localhost:5173', (res) => {
+      if (!loaded) {
+        loaded = true;
+        console.log('[Phenom] Connected to Vite dev server on 5173');
+        mainWindow.loadURL('http://localhost:5173');
+      }
+    });
+    req.on('error', loadDist);
+    req.setTimeout(400, () => {
+      req.destroy();
+      loadDist();
+    });
+  }
+
+  // Security navigation & window opening guards (Task 6E Hardening)
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://') || url.startsWith('http://')) {
+      require('electron').shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const isLocal = url.startsWith('file://') || (!app.isPackaged && (url.startsWith('http://localhost:5173') || url.startsWith('http://127.0.0.1:5173')));
+    if (!isLocal) {
+      event.preventDefault();
+      if (url.startsWith('https://') || url.startsWith('http://')) {
+        require('electron').shell.openExternal(url);
+      }
+    }
   });
 
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
@@ -426,6 +488,92 @@ function createWindow() {
   });
 }
 
+function createOrbWindow() {
+  const primaryDisplay = require('electron').screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
+  let orbX = screenWidth - 180;
+  let orbY = screenHeight - 180;
+  try {
+    const p = getSettingsFilePath();
+    if (fs.existsSync(p)) {
+      const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (data.orb_x !== undefined && data.orb_y !== undefined) {
+        orbX = data.orb_x;
+        orbY = data.orb_y;
+      }
+    }
+  } catch (e) {}
+
+  orbWindow = new BrowserWindow({
+    width: 160,
+    height: 160,
+    x: orbX,
+    y: orbY,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    hasShadow: false,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs')
+    }
+  });
+
+  // Click-through when idle, forward events so hover can solid
+  orbWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  const distPath = getDistPath();
+  if (app.isPackaged) {
+    orbWindow.loadFile(distPath, { hash: 'orb' });
+  } else {
+    orbWindow.loadURL('http://localhost:5173/#/orb').catch(() => {
+      orbWindow.loadFile(distPath, { hash: 'orb' });
+    });
+  }
+
+  // Snapping to screen edges & remembering coordinates (Task 6E.1)
+  orbWindow.on('moved', () => {
+    if (!orbWindow || orbWindow.isDestroyed()) return;
+    const [x, y] = orbWindow.getPosition();
+    const [w, h] = orbWindow.getSize();
+    const disp = require('electron').screen.getDisplayNearestPoint({ x, y });
+    const { x: dx, y: dy, width: dw, height: dh } = disp.workArea;
+
+    let finalX = x;
+    let finalY = y;
+    const SNAP_MARGIN = 32;
+
+    if (Math.abs(x - dx) < SNAP_MARGIN) finalX = dx + 12;
+    else if (Math.abs(x + w - (dx + dw)) < SNAP_MARGIN) finalX = dx + dw - w - 12;
+
+    if (Math.abs(y - dy) < SNAP_MARGIN) finalY = dy + 12;
+    else if (Math.abs(y + h - (dy + dh)) < SNAP_MARGIN) finalY = dy + dh - h - 12;
+
+    if (finalX !== x || finalY !== y) {
+      orbWindow.setPosition(finalX, finalY);
+    }
+
+    try {
+      const p = getSettingsFilePath();
+      let data = {};
+      if (fs.existsSync(p)) {
+        try { data = JSON.parse(fs.readFileSync(p, 'utf8')); } catch {}
+      }
+      data.orb_x = finalX;
+      data.orb_y = finalY;
+      fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e) {}
+  });
+
+  orbWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  orbWindow.webContents.on('will-navigate', (e) => e.preventDefault());
+}
+
 app.whenReady().then(() => {
   // Configure Windows Auto-Start
   app.setLoginItemSettings({
@@ -437,6 +585,7 @@ app.whenReady().then(() => {
   createTray();
   startBackend();
   createWindow();
+  createOrbWindow();
   checkPrerequisites();
 
   // Register IPC handler for webview media muting
