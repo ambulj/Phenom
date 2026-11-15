@@ -17,6 +17,7 @@ import pytest
 import asyncio
 import io
 import numpy as np
+from unittest.mock import patch
 from PIL import Image
 from typing import Dict, Any, List
 
@@ -326,15 +327,16 @@ async def test_screenshot_command_workflow(clean_remote_env):
     bot, client = clean_remote_env
 
     # 1. Send /screenshot
-    res = await bot.process_update({
-        "update_id": 205,
-        "message": {
-            "message_id": 14,
-            "from": {"id": OWNER_USER_ID},
-            "chat": {"id": OWNER_USER_ID},
-            "text": "/screenshot"
-        }
-    })
+    with patch("services.backend.vision.privacy_masker.privacy_masker.scan_visible_sensitive_windows", return_value=[{"title": "Bitwarden", "rect": (10, 10, 100, 100)}]):
+        res = await bot.process_update({
+            "update_id": 205,
+            "message": {
+                "message_id": 14,
+                "from": {"id": OWNER_USER_ID},
+                "chat": {"id": OWNER_USER_ID},
+                "text": "/screenshot"
+            }
+        })
     assert res["status"] == "screenshot_sent"
     assert len(client.sent_photos) == 1
 

@@ -1052,11 +1052,21 @@ class TelegramBotController:
     async def _handle_screenshot_command(self, chat_id: int) -> Dict[str, Any]:
         """Captures primary screen, applies 35px blur over sensitive apps, sends photo."""
         from services.backend.automation.desktop_controller import desktop_controller
+        from services.backend.vision.privacy_masker import PrivacyScanFailureError
+
         desktop_controller._emit_overlay_event("telegram.screenshot_requested", {
             "message": "Telegram screenshot requested. Obfuscating sensitive windows..."
         })
 
-        img, redacted_windows = capture_and_obfuscate_screen(blur_radius=35)
+        try:
+            img, redacted_windows = capture_and_obfuscate_screen(blur_radius=35)
+        except (PrivacyScanFailureError, Exception) as e:
+            await self.client.send_message(
+                chat_id,
+                f"❌ *Screenshot capture refused:* Privacy masking scan failed ({e}). Unmasked screen cannot be transmitted (Fail-Closed)."
+            )
+            return {"status": "error", "reason": str(e)}
+
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=75)
         photo_bytes = buf.getvalue()
