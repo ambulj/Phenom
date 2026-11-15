@@ -1,0 +1,21 @@
+{
+  "model_name": "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M",
+  "digest": "57956d831b778fee6a5831e8fe67492d622f5d61cd35803e82563ccba49d2f9a",
+  "size_bytes": 2783447223,
+  "size_gb": 2.59,
+  "details": {
+    "parent_model": "",
+    "format": "gguf",
+    "family": "qwen35",
+    "families": [
+      "qwen35"
+    ],
+    "parameter_size": "4.33B",
+    "quantization_level": "Q4_K_M",
+    "context_length": 262144,
+    "embedding_length": 2560,
+    "runner": "ggml"
+  },
+  "verified_at": "2026-11-15T09:04:16.769471+00:00",
+  "status": "VERIFIED_SPECIALIST_READY"
+}

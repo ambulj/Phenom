@@ -562,9 +562,8 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('orb.') || mtype.startsWith('wake.') || mtype.startsWith('whisper.')) {
             setShowParticleOrb(true);
           } else if (mtype === 'mode.changed') {
-
             setCurrentMode(payload.mode || 'work');
-
+            setModelExternalEvent({ type: mtype, payload });
           } else if (mtype === 'scheduler.list_result') {
 
             setScheduledJobs(payload.jobs || []);

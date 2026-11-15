@@ -15,11 +15,30 @@ class AssistantMode(str, Enum):
     CHILL = "chill"
     DEEP_FOCUS = "deep_focus"
     CYBER = "cyber"
+    SECURITY = "security"
+
+SPECIALIST_MODEL_NAME = "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
 
 MODE_PROFILES: Dict[AssistantMode, Dict[str, Any]] = {
+    AssistantMode.SECURITY: {
+        "name": "Security & Kali Mode",
+        "description": "Tactical Infosec & Penetration Testing: Reconnaissance, scanning, exploit simulation, vulnerability auditing.",
+        "specialist_model": SPECIALIST_MODEL_NAME,
+        "tone_prompt": (
+            "OPERATING MODE: SECURITY & KALI SPECIALIST OPERATOR.\n"
+            "Tone: Tactical, precision-driven infosec engineer and offensive security partner. "
+            "Execute recon, scanning, and security audits with elite technical precision. "
+            "Address user as Bro or Chief Operator. Zero conversational fluff."
+        ),
+        "notification_policy": "standard",
+        "resource_profile": "high",
+        "audio_volume_scale": 0.9,
+        "prioritized_tool_categories": ["security", "terminal", "diagnostics", "code", "network"],
+    },
     AssistantMode.CYBER: {
         "name": "Cyber Warfare & SOC",
         "description": "Tactical Infosec Operator: Network security, reverse engineering, exploit analysis, threat auditing.",
+        "specialist_model": SPECIALIST_MODEL_NAME,
         "tone_prompt": (
             "OPERATING MODE: CYBER WARFARE & SOC LAB PARTNER.\n"
             "Tone: Tactical, elite infosec engineer and cyber partner to Abhi. "
@@ -103,6 +122,20 @@ class ModeManager:
             pass
         return AssistantMode.WORK
 
+    @property
+    def current_mode(self) -> AssistantMode:
+        return self._current_mode
+
+    @property
+    def is_security_mode_active(self) -> bool:
+        return self._current_mode in (AssistantMode.SECURITY, AssistantMode.CYBER)
+
+    @property
+    def active_specialist_model(self) -> Optional[str]:
+        if self.is_security_mode_active:
+            return SPECIALIST_MODEL_NAME
+        return None
+
     def get_current_mode(self) -> AssistantMode:
         return self._current_mode
 
@@ -112,16 +145,20 @@ class ModeManager:
 
     def set_mode(self, new_mode: str) -> Dict[str, Any]:
         normalized = new_mode.strip().lower()
-        if "deep" in normalized or "silent" in normalized:
+        if "security" in normalized or "kali" in normalized:
+            mode = AssistantMode.SECURITY
+        elif "cyber" in normalized or "red_team" in normalized or "redteam" in normalized:
+            mode = AssistantMode.CYBER
+        elif "deep" in normalized or "silent" in normalized:
             mode = AssistantMode.DEEP_FOCUS
-        elif "work" in normalized:
+        elif "work" in normalized or "normal" in normalized or "default" in normalized:
             mode = AssistantMode.WORK
         elif "study" in normalized or "research" in normalized or "focus" in normalized:
             mode = AssistantMode.STUDY
         elif "chill" in normalized or "game" in normalized or "gaming" in normalized:
             mode = AssistantMode.CHILL
         else:
-            raise ValueError(f"Unknown mode '{new_mode}'. Allowed modes: work, study, chill, deep_focus.")
+            raise ValueError(f"Unknown mode '{new_mode}'. Allowed modes: work, study, chill, deep_focus, security, cyber.")
 
         self._current_mode = mode
 
@@ -138,12 +175,37 @@ class ModeManager:
         except Exception as e:
             print(f"[ModeManager] Failed to persist mode: {e}")
 
+        # Broadcast mode change to UI
+        try:
+            import sys, asyncio
+            main_mod = sys.modules.get("services.backend.main")
+            if main_mod and hasattr(main_mod, "broadcast_message"):
+                msg = {
+                    "type": "mode.changed",
+                    "payload": {
+                        "mode": mode.value,
+                        "name": MODE_PROFILES[mode]["name"],
+                        "is_security_mode": self.is_security_mode_active,
+                        "specialist_model": self.active_specialist_model,
+                        "indicator": "SECURITY / KALI SPECIALIST ACTIVE" if self.is_security_mode_active else None
+                    }
+                }
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(main_mod.broadcast_message(msg))
+                except RuntimeError:
+                    pass
+        except Exception:
+            pass
+
         return {
             "mode": mode.value,
             "name": MODE_PROFILES[mode]["name"],
             "description": MODE_PROFILES[mode]["description"],
             "notification_policy": MODE_PROFILES[mode]["notification_policy"],
-            "resource_profile": MODE_PROFILES[mode]["resource_profile"]
+            "resource_profile": MODE_PROFILES[mode]["resource_profile"],
+            "is_security_mode": self.is_security_mode_active,
+            "specialist_model": self.active_specialist_model
         }
 
     def cycle_mode(self) -> Dict[str, Any]:

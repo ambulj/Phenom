@@ -47,9 +47,16 @@ class ActionLogManager:
                 decision TEXT NOT NULL,
                 result_status TEXT NOT NULL,
                 error TEXT,
-                undo_token TEXT
+                undo_token TEXT,
+                model TEXT
             );
             """)
+            # Schema migration: check if model column exists
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(action_log);")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "model" not in columns:
+                conn.execute("ALTER TABLE action_log ADD COLUMN model TEXT;")
             conn.commit()
 
     def log_action(
@@ -62,17 +69,28 @@ class ActionLogManager:
         source: str = "desktop",
         error: Optional[str] = None,
         undo_token: Optional[str] = None,
-        log_id: Optional[str] = None
+        log_id: Optional[str] = None,
+        model: Optional[str] = None
     ) -> Dict[str, Any]:
         entry_id = log_id or str(uuid.uuid4())
         ts = datetime.now(timezone.utc).isoformat()
         redacted_args_str = redact_arguments(args)
 
+        # Tag every action-log entry produced in security mode with the specialist model name (Task 6D)
+        active_model = model
+        if not active_model:
+            try:
+                from services.backend.modes.mode_manager import mode_manager
+                if mode_manager.is_security_mode_active:
+                    active_model = mode_manager.active_specialist_model or "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
+            except Exception:
+                pass
+
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
-            INSERT INTO action_log (id, timestamp, source, tool, tier, arguments_redacted, decision, result_status, error, undo_token)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, (entry_id, ts, source, tool, tier, redacted_args_str, decision, result_status, error, undo_token))
+            INSERT INTO action_log (id, timestamp, source, tool, tier, arguments_redacted, decision, result_status, error, undo_token, model)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """, (entry_id, ts, source, tool, tier, redacted_args_str, decision, result_status, error, undo_token, active_model))
             conn.commit()
 
         return {
@@ -85,7 +103,8 @@ class ActionLogManager:
             "decision": decision,
             "result_status": result_status,
             "error": error,
-            "undo_token": undo_token
+            "undo_token": undo_token,
+            "model": active_model
         }
 
     def list_entries(self, limit: int = 50) -> List[Dict[str, Any]]:

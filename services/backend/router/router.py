@@ -38,7 +38,7 @@ class ModelRouter:
                 return cfg_m
         except Exception:
             pass
-        return "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
+        return "phenom-jarvis:latest"
 
     @ollama_model.setter
     def ollama_model(self, val: Optional[str]):
@@ -82,6 +82,21 @@ class ModelRouter:
             "word_count": word_count,
             "estimated_tokens": est_tokens
         }
+
+        # Security / Kali Mode routing (Task 6D)
+        try:
+            from services.backend.modes.mode_manager import mode_manager
+            if mode_manager.is_security_mode_active:
+                specialist = mode_manager.active_specialist_model or "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
+                metadata["task_type"] = "security"
+                metadata["vram_estimated_mb"] = 2800
+                metadata["dispatch_reason"] = f"Security / Kali mode active -> Dispatched to Specialist model ({specialist})"
+                reason = f"Security / Kali mode active: requests routed to specialist model {specialist}."
+                self._log_decision("local", specialist, reason, metadata)
+                metadata["routing_reason"] = reason
+                return specialist, "local", metadata
+        except Exception:
+            pass
 
         # Resolve specialized local model
         target_local_model = self.ollama_model

@@ -5,6 +5,7 @@ import {
   ChatRegular,
   ChevronDownRegular,
   SparkleRegular,
+  ShieldDismissRegular,
 } from '@fluentui/react-icons';
 
 export interface ActiveModelIndicatorProps {
@@ -20,10 +21,10 @@ export const ActiveModelIndicator: React.FC<ActiveModelIndicatorProps> = ({
   sendMessage,
 }) => {
   const [activeModel, setActiveModel] = useState<string>(
-    'hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M'
+    'phenom-jarvis:latest'
   );
-  const [taskType, setTaskType] = useState<'code' | 'reasoning' | 'chat'>('chat');
-  const [estimatedVramMb, setEstimatedVramMb] = useState<number>(2800);
+  const [taskType, setTaskType] = useState<'code' | 'reasoning' | 'chat' | 'security'>('chat');
+  const [estimatedVramMb, setEstimatedVramMb] = useState<number>(4700);
   const [overrideModel, setOverrideModel] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
@@ -37,6 +38,16 @@ export const ActiveModelIndicator: React.FC<ActiveModelIndicatorProps> = ({
       if (payload?.estimated_vram_mb) setEstimatedVramMb(payload.estimated_vram_mb);
     } else if (type === 'MODEL_ROUTING_OVERRIDE_CHANGED') {
       setOverrideModel(payload?.override_model || null);
+    } else if (type === 'mode.changed') {
+      if (payload?.is_security_mode) {
+        setTaskType('security');
+        if (payload?.specialist_model) setActiveModel(payload.specialist_model);
+      } else {
+        if (taskType === 'security') {
+          setTaskType('chat');
+          setActiveModel('phenom-jarvis:latest');
+        }
+      }
     }
   }, [externalEvent]);
 
@@ -55,6 +66,15 @@ export const ActiveModelIndicator: React.FC<ActiveModelIndicatorProps> = ({
   };
 
   const getBadgeStyle = () => {
+    if (taskType === 'security' || activeModel.includes('tinyopsec') || activeModel.includes('Uncensored')) {
+      return {
+        bg: 'rgba(239, 68, 68, 0.22)',
+        border: 'rgba(239, 68, 68, 0.7)',
+        color: '#ff6b6b',
+        label: 'KALI / SECURITY (4B Uncensored)',
+        icon: <ShieldDismissRegular style={{ fontSize: '14px' }} />,
+      };
+    }
     if (taskType === 'code' || activeModel.includes('coder')) {
       return {
         bg: 'rgba(56, 189, 248, 0.12)',
@@ -74,10 +94,10 @@ export const ActiveModelIndicator: React.FC<ActiveModelIndicatorProps> = ({
       };
     }
     return {
-      bg: 'rgba(52, 211, 153, 0.12)',
-      border: 'rgba(52, 211, 153, 0.4)',
-      color: '#34d399',
-      label: 'Fast 4B',
+      bg: 'rgba(0, 229, 255, 0.12)',
+      border: 'rgba(0, 229, 255, 0.4)',
+      color: '#00e5ff',
+      label: 'Jarvis 8B',
       icon: <ChatRegular style={{ fontSize: '14px' }} />,
     };
   };

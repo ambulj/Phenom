@@ -212,6 +212,14 @@ Permanently blocked without allowlist entries: `modify_photo`, `delete_photo`, `
 
 - **Daily Self-Check**: Runs at 04:00 AM checking disk space (< 2 GB alert), database integrity, vault sync, rule SHA-256 verification, and model status, reporting sanitized summaries to Telegram and reserving spoken alerts for critical integrity failures.
 
+### 10.1 Security & Kali Linux Specialist Mode Boundary (Task 6D)
+- **Model Isolation**: When the owner activates Security/Kali mode, model routing dispatches exclusively to the specialist uncensored model `hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M`. General chat reverts immediately to the primary Llama 3.1 8B model (`phenom-jarvis:latest`) upon exiting security mode.
+- **Uncensored Specialist Model Acquisition**: Model acquisition verifies the model by exact name, recording its digest and size in `reports/specialist_model_manifest.json`. If resolution fails, setup fails loudly with a critical error and never silently substitutes another model.
+- **Scope & Target Allowlist Tradeoff (Owner Decision)**: The owner explicitly chose not to implement a code-level target allowlist. Phenom's security tools may be pointed at any target the owner names. The owner accepted no code-level scope restriction and takes sole legal and operational responsibility for targets selected.
+- **Tool Wrappers vs Raw Shell**: Phenom enforces allowlisted tool wrappers (`kali_recon_scan`, `kali_web_audit`, `kali_exploit_payload`, `kali_brute_force_audit`) with strict Pydantic argument schemas. Free-form shell execution is prohibited.
+- **Confirmation for Destructive Actions**: Non-destructive reconnaissance and scanning tools (`kali_recon_scan`, `kali_web_audit`) operate at Tier 0 without confirmation. Any destructive, exploit simulation, brute-force, or payload-delivery action (`kali_exploit_payload`, `kali_brute_force_audit`) is strictly classified as Tier 2, requiring explicit user confirmation naming the exact target and action before execution.
+- **Permanent Immutable Logging**: Every action attempted in security mode is tagged with the specialist model name in `action_log` and records the exact target and action, never auto-pruned.
+
 
 
 

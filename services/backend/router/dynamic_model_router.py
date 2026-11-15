@@ -21,17 +21,19 @@ from services.backend.safety.registry import registry
 from services.backend.safety.guardian import guardian
 
 # Standard Model Manifest
-MODEL_FAST_CHAT = "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
+MODEL_FAST_CHAT = "phenom-jarvis:latest"
 MODEL_CODER = "qwen2.5-coder:14b"
 MODEL_REASONER = "llama3:8b-instruct-q8_0"
 MODEL_FALLBACK = "phenom-jarvis:latest"
+MODEL_SPECIALIST = "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
 
 # VRAM Footprints (in MB)
 ESTIMATED_VRAM_MB = {
-    MODEL_FAST_CHAT: 2800,
+    MODEL_FAST_CHAT: 4700,
     MODEL_CODER: 9200,
     MODEL_REASONER: 8500,
     MODEL_FALLBACK: 4700,
+    MODEL_SPECIALIST: 2800,
 }
 
 
@@ -139,6 +141,16 @@ class DynamicModelRouter:
         Resolves the target model, task type, estimated VRAM, and routing reason.
         Returns: (model_name, task_type, vram_mb, reason)
         """
+        # 0. Check security / Kali mode
+        try:
+            from services.backend.modes.mode_manager import mode_manager
+            if mode_manager.is_security_mode_active:
+                reason = "Security / Kali mode active: strictly routed to specialist uncensored model."
+                self._update_state(MODEL_SPECIALIST, "security")
+                return MODEL_SPECIALIST, "security", ESTIMATED_VRAM_MB[MODEL_SPECIALIST], reason
+        except Exception:
+            pass
+
         # 1. Check manual override
         if self._manual_override:
             task_type = self.classify_intent(prompt)
@@ -172,7 +184,7 @@ class DynamicModelRouter:
             reason = "Deep analytical / reasoning query detected -> Dispatched to Llama 3 8B Instruct."
         else:
             selected = MODEL_FAST_CHAT
-            reason = "Conversational / system query detected -> Dispatched to Qwen 3.5 4B Fast Chat."
+            reason = "Conversational / system query detected -> Dispatched to Llama 3.1 8B (phenom-jarvis:latest)."
 
         vram = ESTIMATED_VRAM_MB.get(selected, 4000)
         self._update_state(selected, task_type)
