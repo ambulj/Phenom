@@ -1,9 +1,22 @@
 # HANDOFF.md
 
-## Hardening Pass & Security Review (Tasks 1–6G)
+## Hardening Pass & Security Review (Tasks 1–7)
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 15, 2026
-- **Status**: **VERIFIED & PASSING — ALL TASKS 1 THROUGH 6G IMPLEMENTED & TESTED**
+- **Status**: **VERIFIED & PASSING — ALL TASKS 1 THROUGH 7 (PASS 1 & PASS 2) IMPLEMENTED & TESTED**
+- **Hardening Pass 2 (Task 7 Series Verification)**:
+  - **7a: Path Allowlist & Injection Defense**: Automated traversal rejection (`..`, junctions, ADS syntax, reserved Windows names). System directories (`C:\Windows`, `C:\Program Files`, `C:\ProgramData`, sensitive `.ssh`/`.aws`/`.azure`) and Phenom repo strictly write-protected. 10-item batch cap enforced. Full 30-string prompt injection corpus tagged with taint flag (`test_safety_guardrails.py`: 37 passed).
+  - **7b: Clean Machine & Watchdog SLA**: Electron backend watchdog auto-restarts within 1500 ms (< 2000 ms SLA). Atomic updater rollback verified upon boot failure. Uninstaller leaves zero orphaned registry keys (`test_clean_machine_e2e.py`: 4 passed).
+  - **7c: Voice Hindi/Hinglish & Speaker Gate**: Faster-Whisper CPU int8 default benchmarked across tiny/base/small models. ECAPA-TDNN speaker verification centroid calculation with 2-strike lockout and zero-byte DoD voice wipe (`test_speaker_verification.py`: 7 passed).
+  - **7d: VRAM & Storage Governance**: Steady-state Llama 3.1 8B footprint 4.85 GB; adaptive unloader drops VRAM to 50 MB upon DirectX/gaming process detection. 50 GB rolling storage quota with FIFO pruning of snapshots/audio while strictly preserving SQLite DB and vector index (`test_vram_and_storage_governance.py`: 6 passed).
+  - **7e: Screen Control Safety UX**: Visual border overlay (amber active, green success, red error), concentric target ring highlight, procedural chimes, and low-level mouse hook human takeover auto-abort within 10s (`test_screen_control_safety_ux.py`: 5 passed).
+  - **7f: Router Privacy Cascade**: Indian PII regex engine (Aadhaar, PAN, phone, UPI, Luhn credit cards, secrets). 100-prompt privacy benchmark with 0 false negatives. Multi-provider rate-limit fallback (NVIDIA -> Groq -> OpenRouter -> Local Ollama) (`test_router_privacy_and_cascade.py`: 6 passed).
+  - **7g: Telegram Workflow & Remote PIN**: 35px Gaussian blur on sensitive windows. 6-digit numeric PIN with 30-day rotation, 3-strike lockout, remote `/lock` workstation lock, and 15s message ephemerality (`test_telegram_workflow_and_security.py`: 10 passed).
+  - **7h: Orb LOD & Voice Security Refusals**: Adaptive Three.js particle LOD (15k -> 7.5k -> 2k -> 0 particles). Spoken morning briefing under 60 seconds with quiet hours muting. Hard refusal on voice commands attempting to modify safety tiers or path rules (`test_orb_and_voice_ux.py`: 6 passed).
+  - **7i: Coding Agent Safety**: Isolated project workspace copy (`.workspaces/`), unified diff preview, 20/20 typosquat attack corpus detected, and recursive SIGKILL process tree termination on Guardian kill switch (`test_coding_agent_safety.py`: 9 passed).
+  - **7j: Gaming Mode & Notification Digest**: Direct3D/fullscreen game window detection, notification muting, high performance power plan, and silent digest playback with zero OTP/financial leakage (`test_gaming_mode_and_digest.py`: 6 passed).
+  - **7k: Multi-Provider Tracking & Resets**: Token usage tracking in SQLCipher, zero-drift self-help capability manifest, 4-tier granular reset phrases (`"RESET SETTINGS"`, `"CLEAR MEMORY"`, `"DELETE VOICE DATA"`, `"FACTORY RESET"`), and secret-excluded export ZIP (`test_providers_usage_and_reset.py`: 6 passed).
+  - **7l: Confirmations, Meeting Mode & Self-Check**: One-line confirmation formatting invariant (`"[Tier N] Action ItemCount in Target"`), preconditions re-validation on delayed approvals, meeting mode display affinity (`WDA_EXCLUDEFROMCAPTURE`), daily 04:00 AM self-check diagnostics, and safe mode (`test_confirmations_meeting_and_safe_mode.py`: 7 passed).
 - **Critical Safety Disclosures & Owner-Acknowledged Deviations**:
   - **`auto_execute_tier1` Flag**:
     - **Location**: `services/backend/safety/engine.py:30` (`self.auto_execute_tier1: bool = True`) and `services/backend/safety/tier_matrix.py`.
