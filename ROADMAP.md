@@ -129,6 +129,97 @@ In strict adherence to project rules, an item in this checklist is marked comple
 
 ---
 
+### [x] Task 6c: Local Model Overhaul — Native Tool Calling, Trustworthy Benchmark & CPU Whisper (Fixes F13–F17)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `aec630b task 6C: local model overhaul real tool calling and cpu whisper`
+- **Key Files:** [engine.py](file:///c:/Phenom/services/backend/orchestrator/engine.py), [hardcore_model_benchmark.py](file:///c:/Phenom/services/backend/scripts/hardcore_model_benchmark.py), [taint.py](file:///c:/Phenom/services/backend/safety/taint.py), [stt.py](file:///c:/Phenom/services/backend/voice/stt.py), [test_task_6c.py](file:///c:/Phenom/services/backend/tests/test_task_6c.py)
+- **Evidence Attached:**
+  - Native Ollama Tool Calling: Structured schema validation via Ollama `/api/chat` `tools` parameter; malformed tool calls rejected before execution; zero raw JSON exposed to chat transcript or TTS.
+  - Code-Graded Benchmark: Replaced dummy grader with strict code-based evaluation (exact arguments match, refusal assertions, held-out math answers); verified against `phenom-jarvis:latest` on Llama 3.1 8B.
+  - Prompt Injection Taint: Ingestion points (Gmail, web, OCR, RAG) wire into `taint_tracker.mark_tainted()`, escalating tool calls to require explicit confirmation.
+  - Device Placement: Faster-Whisper configured to CPU `int8` default, reserving 100% of 6–8 GB GPU VRAM for the local LLM.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_task_6c.py
+    # 5 passed in 2.12s
+    ```
+
+---
+
+### [x] Task 6d: Security / Kali Mode with Specialist Model (Owner Decisions Round 14)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `13c234c task 6D: security kali mode with specialist model`
+- **Key Files:** [setup_specialist_model.py](file:///c:/Phenom/services/backend/scripts/setup_specialist_model.py), [mode_manager.py](file:///c:/Phenom/services/backend/modes/mode_manager.py), [kali_security_tools.py](file:///c:/Phenom/services/backend/tools/kali_security_tools.py), [dynamic_model_router.py](file:///c:/Phenom/services/backend/router/dynamic_model_router.py), [test_task_6d.py](file:///c:/Phenom/services/backend/tests/test_task_6d.py)
+- **Evidence Attached:**
+  - Specialist Model Verification: Strict HuggingFace resolution for `hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M` with SHA-256 recording; fails loudly without silent substitution.
+  - Security Mode Routing: Explicit mode switch routes exclusively to specialist model during security mode; general chat stays on Llama 3.1 8B. Persistent UI mode indicator displayed.
+  - Structured Kali Tools: Registered allowlisted tool wrappers (`kali_recon_scan`, `kali_exploit_payload`) rather than raw shell execution.
+  - Destructive Step Confirmation: Exploit/payload steps require explicit confirmation naming target and action; all actions recorded permanently in `action_log`.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_task_6d.py
+    # 6 passed in 1.45s
+    ```
+
+---
+
+### [x] Task 6e: Futuristic Animated UI and Floating Orb (Owner Decisions Round 15 & F10–F12)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `3538618 task 6E: futuristic animated UI and floating orb`
+- **Key Files:** [OrbWindow.tsx](file:///c:/Phenom/apps/desktop/src/components/OrbWindow.tsx), [MarkdownRenderer.tsx](file:///c:/Phenom/apps/desktop/src/components/MarkdownRenderer.tsx), [LiveViewPanel.tsx](file:///c:/Phenom/apps/desktop/src/components/panels/LiveViewPanel.tsx), [ConfirmationModal.tsx](file:///c:/Phenom/apps/desktop/src/components/ConfirmationModal.tsx), [DashboardPanel.tsx](file:///c:/Phenom/apps/desktop/src/components/panels/DashboardPanel.tsx), [main.cjs](file:///c:/Phenom/apps/desktop/electron/main.cjs), [test_task_6e.py](file:///c:/Phenom/services/backend/tests/test_task_6e.py)
+- **Evidence Attached:**
+  - Floating Orb Window: Separate 160x160 frameless transparent always-on-top window; idle click-through and hover-to-solid; local file drop summarization.
+  - Holographic HUD Rebuild: Glass panels, neon cyan/violet accents, Three.js shader-based particle orb, and `prefers-reduced-motion` suppression.
+  - Chat & Markdown: Added sanitized `MarkdownRenderer` with code syntax highlighting, copy button, retry/edit/pin. Removed dead CommandPalette.
+  - Live View Side Panel: Real-time step list (done/doing/next), click-target highlight box, Pause and Take-over buttons.
+  - One-Line Confirmation Modal: Strict `[Tier N] Action ItemCount in Target` formatting with expandable details on tap.
+  - Single Dashboard Tile: Dedicated System Status tile (VRAM, GPU, RAM, Killswitch).
+  - TypeScript strict compilation and Vite build:
+    ```powershell
+    cd apps/desktop; npm run build
+    # built in 10.13s (clean)
+    python -m pytest services/backend/tests/test_task_6e.py
+    # 9 passed in 1.25s
+    ```
+
+---
+
+### [x] Task 6f: Fix Vision, Macro & Voice Kill Switch Gaps (Fixes F19–F24)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `8499501 task 6F: fix vision macro and voice kill switch gaps`
+- **Key Files:** [privacy_masker.py](file:///c:/Phenom/services/backend/vision/privacy_masker.py), [screen_vision_tools.py](file:///c:/Phenom/services/backend/tools/screen_vision_tools.py), [desktop_macro_tools.py](file:///c:/Phenom/services/backend/tools/desktop_macro_tools.py), [desktop_controller.py](file:///c:/Phenom/services/backend/automation/desktop_controller.py), [stop_phrase_kill_switch.py](file:///c:/Phenom/services/backend/voice/stop_phrase_kill_switch.py), [test_task_6f.py](file:///c:/Phenom/services/backend/tests/test_task_6f.py)
+- **Evidence Attached:**
+  - Fail-Closed Privacy Masking: Expanded keywords to cover Outlook, Thunderbird, Mail, WhatsApp, Signal, Telegram, Teams, Slack DMs. Raises `PrivacyScanFailureError` on Win32 scan error; vision tools refuse capture on failure.
+  - Real Cloud Vision: `ask_screen_vision_cloud` wired to `multimodal_coordinator.execute_screen_query(prefer_cloud=True)` with base64 privacy-masked frames.
+  - Literal Macro Step List: Confirmation preview renders literal action and target for each step.
+  - Real Password-Field Guard: UI Automation `IsPassword` property check on focused element; blocks typing into password controls regardless of description.
+  - Vision Ingestion Taint: All screen vision tools invoke `taint_tracker.mark_tainted("screen_vision")`.
+  - Real Stop-Phrase Kill Switch: Built `StopPhraseKillSwitch` spotting "Phenom stop" with software acoustic echo cancellation; triggers `guardian.trigger()`; resume strictly prohibited by voice alone.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_task_6f.py
+    # 8 passed in 12.61s
+    ```
+
+---
+
+### [x] Task 6g: Fix open_app Quoting/Allowlist & Hotkey-to-Guardian Wiring (Fixes F27, F28)
+- **Status:** COMPLETE & VERIFIED
+- **Commit:** `74fca58 task 6G: fix open_app allowlist quoting and hotkey-to-guardian wiring`
+- **Key Files:** [app_tools.py](file:///c:/Phenom/services/backend/tools/app_tools.py), [hotkeys.py](file:///c:/Phenom/services/backend/voice/hotkeys.py), [main.py](file:///c:/Phenom/services/backend/main.py), [main.cjs](file:///c:/Phenom/apps/desktop/electron/main.cjs), [AGENTS.md](file:///c:/Phenom/AGENTS.md), [SAFETY.md](file:///c:/Phenom/SAFETY.md), [HANDOFF.md](file:///c:/Phenom/HANDOFF.md), [test_task_6g.py](file:///c:/Phenom/services/backend/tests/test_task_6g.py)
+- **Evidence Attached:**
+  - `open_app` Security Hardening: Quoting flaw eliminated via `subprocess.list2cmdline` and native `os.startfile`/`webbrowser.open`. Application allowlist enforced (`APPROVED_APP_NAMES` / `APPROVED_APP_EXES`); unapproved binaries raise `PermissionError`. Web URLs sanitized for http/https and prohibited shell characters. Kept at Tier 0 per owner decision.
+  - Proven Hotkey & Tray HALT Direct Wiring: Backend `hotkey_manager.register_callback("kill_switch", ...)` and `guardian.setup_global_hotkey` wired to `guardian.trigger()`. Authenticated `POST /api/killswitch/trigger` added to `main.py`. Electron tray HALT and global hotkeys (`Ctrl+Alt+P`, `Ctrl+Alt+Escape`) directly invoke backend killswitch endpoint.
+  - Honest `auto_execute_tier1` Documentation: Disclosed in `SAFETY.md` (Section 1.1) and `HANDOFF.md` with commit `0a4eabd` reference and owner acknowledgment; flag remains `True` per owner instruction.
+  - Standing Safety-Change Rule: Added Rule 13 to `AGENTS.md` requiring explicit commit naming and owner approval for changes to safety engine, guardian, approvals, or tool tiers.
+  - Test suite result:
+    ```powershell
+    python -m pytest services/backend/tests/test_task_6g.py
+    # 11 passed in 31.92s
+    ```
+
+---
+
 ## Hardening Pass 2: Architecture & Hardening Specifications (Task 7)
 
 ### [x] Task 7: Architectural Planning (`PLAN_NEXT.md`)
