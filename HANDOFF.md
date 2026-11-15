@@ -1,5 +1,28 @@
 # HANDOFF.md
 
+## Hardening Pass & Security Review (Tasks 1–6G)
+- **Branch**: `hardening/pass-1` / `main`
+- **Date**: November 15, 2026
+- **Status**: **VERIFIED & PASSING — ALL TASKS 1 THROUGH 6G IMPLEMENTED & TESTED**
+- **Critical Safety Disclosures & Owner-Acknowledged Deviations**:
+  - **`auto_execute_tier1` Flag**:
+    - **Location**: `services/backend/safety/engine.py:30` (`self.auto_execute_tier1: bool = True`) and `services/backend/safety/tier_matrix.py`.
+    - **History**: Introduced in Milestone 29 (commit `0a4eabd`) as part of a "zero-friction auto-execution matrix".
+    - **Current Operational Effect**: Every Tier 1 tool across all 244 tool files auto-runs with zero prompt/confirmation when the conversation context is untainted, bypassing the original "confirm unless remembered per folder" design. Affected tool categories include file creation/copy/move, process termination (`close_app`), simulated GUI mouse/keyboard actions (`click_screen`, `type_keyboard`, `execute_desktop_macro`), document generation, and Kali reconnaissance wrappers.
+    - **Owner Decision**: The owner has formally acknowledged this deviation and explicitly directed that `auto_execute_tier1` remain `True` for this pass to preserve existing automated workflows. Any future modification requires explicit owner consent under `AGENTS.md` Rule 13.
+  - **`open_app` Security Lockdown (Task 6G.1)**:
+    - Fixed quoting flaw: replaced unescaped string-interpolation with `subprocess.list2cmdline` and native `os.startfile`/`webbrowser.open`.
+    - Application allowlist enforced: strictly restricts launchable applications to approved productivity apps and browsers (`notepad`, `calc`, `brave`, `chrome`, `msedge`, `firefox`, `code`, `spotify`, `slack`, `discord`, `obsidian`, `explorer`) and safe `http`/`https` URLs (prohibiting shell characters). Unallowlisted applications raise `PermissionError`.
+    - Remains at Tier 0 per owner decision.
+  - **Global Hotkey & Tray HALT Direct Wiring (Task 6G.2)**:
+    - Wired `hotkeys.py`'s `register_callback("kill_switch", ...)` and `guardian.setup_global_hotkey` to trigger `guardian.trigger()`.
+    - Implemented authenticated `POST /api/killswitch/trigger` endpoint in `services/backend/main.py`.
+    - Updated Electron `main.cjs` to directly call the backend killswitch endpoint on tray "HALT" click and global hotkeys (`Ctrl+Alt+P`, `Ctrl+Alt+Esc`).
+  - **Standing Safety-Change Rule (Task 6G.4)**:
+    - Added Rule 13 to `AGENTS.md`: any change to safety engine, guardian, approvals, or tool tier numbers must be named explicitly in its own commit and requires explicit owner approval.
+
+---
+
 ## Milestone 46.0: Project SECURE TELEGRAM REMOTE UPLINK — Encrypted Mobile Companion, Bi-Directional Voice Notes, Remote Screen Telemetry & Mobile Guardian E-Stop
 - **Branch**: `main`
 - **Date**: November 14, 2026

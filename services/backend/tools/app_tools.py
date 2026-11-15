@@ -9,6 +9,7 @@ import psutil
 import shutil
 import winreg
 import ctypes
+import urllib.parse
 from ctypes import wintypes
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -168,58 +169,77 @@ class OpenAppArgs(BaseModel):
     app_name: str = Field(description="Name or command of application to open, or web URL (e.g. 'brave', 'chrome', 'spotify', 'notepad', 'https://youtube.com')")
     url_or_args: Optional[str] = Field(default=None, description="Optional URL or arguments to pass to the application")
 
+
+# ==============================================================================
+# Application Allowlist & Safe Launch (Task 6G.1)
+# ==============================================================================
+
+APPROVED_APP_NAMES = {
+    "notepad", "calc", "calculator", "brave", "chrome", "msedge", "edge",
+    "firefox", "code", "vscode", "spotify", "slack", "discord", "obsidian",
+    "explorer"
+}
+
+APPROVED_APP_EXES = {
+    "notepad.exe", "calc.exe", "brave.exe", "chrome.exe", "msedge.exe",
+    "firefox.exe", "code.exe", "code.cmd", "spotify.exe", "slack.exe",
+    "discord.exe", "obsidian.exe", "explorer.exe"
+}
+
+PROHIBITED_URL_CHARS = set("&|;\"'^%<>\r\n`$")
+
+def is_app_allowlisted(name: str, resolved_path: str) -> bool:
+    clean = name.strip().lower().replace(".exe", "")
+    if clean in APPROVED_APP_NAMES:
+        return True
+    base = os.path.basename(resolved_path).lower()
+    if base in APPROVED_APP_EXES or base.replace(".exe", "") in APPROVED_APP_NAMES:
+        return True
+    return False
+
+def validate_url(url: str) -> str:
+    clean_url = url.strip()
+    if not (clean_url.startswith("http://") or clean_url.startswith("https://")):
+        raise PermissionError(f"Prohibited URL scheme for open_app: '{clean_url}'. Only http/https supported.")
+    if any(c in PROHIBITED_URL_CHARS for c in clean_url):
+        raise PermissionError(f"Prohibited shell characters detected in URL: '{clean_url}'")
+    parsed = urllib.parse.urlparse(clean_url)
+    if not parsed.netloc:
+        raise PermissionError(f"Invalid URL structure: '{clean_url}'")
+    return clean_url
+
+
 @registry.register(
     name="open_app",
     tier=0,
-    description="Launch an application or open a web URL",
+    description="Launch an application or open a web URL (strictly allowlisted)",
     args_schema=OpenAppArgs,
     preview_fn=lambda a: f"Launch application or URL: '{a.get('app_name')}'" + (f" with args '{a.get('url_or_args')}'" if a.get('url_or_args') else ""),
     can_remember_per_folder=False
 )
 def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]:
-    resolved = resolve_application_path(app_name)
     clean_name = app_name.strip()
-
-    target = resolved
-    args_str = ""
+    resolved = resolve_application_path(app_name)
 
     # Check if target is a web URL
     is_url = clean_name.startswith("http://") or clean_name.startswith("https://") or resolved.startswith("http://") or resolved.startswith("https://")
 
     if is_url:
-        target_url = resolved if (resolved.startswith("http://") or resolved.startswith("https://")) else clean_name
+        target_url = validate_url(resolved if (resolved.startswith("http://") or resolved.startswith("https://")) else clean_name)
         
-        # 1. Primary: Launch on interactive desktop WinSta0\Default via cmd.exe start
-        cmd_str = f'cmd.exe /c start "" "{target_url}"'
-        pid = _launch_on_default_desktop(cmd_str)
-        if pid:
-            guardian.track_pid(pid)
-            return {
-                "app_name": clean_name,
-                "resolved_path": target_url,
-                "launched": True,
-                "launcher_pid": pid,
-                "message": f"Successfully opened {clean_name}"
-            }
-
-        # 2. Secondary fallback: WScript.Shell
+        # 1. Primary: Native OS ShellExecute (zero cmd.exe / PowerShell string interpolation)
         try:
-            import win32com.client
-            import pythoncom
-            pythoncom.CoInitialize()
-            w = win32com.client.Dispatch("WScript.Shell")
-            w.Run(f'cmd.exe /c start "" "{target_url}"', 1, False)
-            pythoncom.CoUninitialize()
-            return {
-                "app_name": clean_name,
-                "resolved_path": target_url,
-                "launched": True,
-                "message": f"Successfully opened {clean_name}"
-            }
+            if hasattr(os, "startfile"):
+                os.startfile(target_url)
+                return {
+                    "app_name": clean_name,
+                    "resolved_path": target_url,
+                    "launched": True,
+                    "message": f"Successfully opened {clean_name}"
+                }
         except Exception:
             pass
 
-        # 3. Tertiary fallback: webbrowser module
         import webbrowser
         try:
             webbrowser.open(target_url, new=2)
@@ -233,18 +253,28 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
             "message": f"Successfully opened {clean_name}"
         }
 
-    # Application launching (e.g. "brave", "chrome", "notepad", "calc")
+    # Application launching - strictly enforce allowlist before execution
+    if not is_app_allowlisted(clean_name, resolved):
+        raise PermissionError(
+            f"Application '{app_name}' (resolved: '{resolved}') is not in the approved application allowlist. "
+            f"Approved applications: {sorted(APPROVED_APP_NAMES)}"
+        )
+
+    # Quoting & Argument Safety: validate args if provided
+    safe_args = []
     is_chromium = any(b in clean_name.lower() or b in os.path.basename(resolved).lower() for b in ("brave", "chrome", "msedge", "firefox"))
     if is_chromium:
-        args_str = "--new-window --disable-gpu --disable-extensions"
+        safe_args.extend(["--new-window", "--disable-gpu", "--disable-extensions"])
     if url_or_args:
-        args_str = f"{args_str} {url_or_args}".strip()
+        # Prevent shell breakout characters in url_or_args
+        for bad_char in ["&", "|", ";", "\n", "\r", "`", "$"]:
+            if bad_char in url_or_args:
+                raise PermissionError(f"Prohibited character '{bad_char}' detected in application arguments.")
+        safe_args.extend(url_or_args.strip().split())
 
-    # Determine command to run on Default desktop
-    if os.path.isabs(target) and os.path.exists(target):
-        cmd_to_run = f'"{target}" {args_str}'.strip() if args_str else f'"{target}"'
-    else:
-        cmd_to_run = f'cmd.exe /c start "" "{target}" {args_str}'.strip() if args_str else f'cmd.exe /c start "" "{target}"'
+    # Build safe command line using subprocess.list2cmdline (never raw shell string concatenation)
+    full_cmd_list = [resolved] + safe_args
+    cmd_to_run = subprocess.list2cmdline(full_cmd_list)
 
     # 1. Primary method: CreateProcessW explicitly targeting WinSta0\Default
     pid = _launch_on_default_desktop(cmd_to_run)
@@ -258,28 +288,25 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
             "message": f"Successfully launched {clean_name}"
         }
 
-    # 2. Secondary method: COM WScript.Shell
+    # 2. Secondary method: os.startfile with safe argument string
     try:
-        import win32com.client
-        import pythoncom
-        pythoncom.CoInitialize()
-        w = win32com.client.Dispatch("WScript.Shell")
-        w.Run(cmd_to_run, 1, False)
-        pythoncom.CoUninitialize()
-        return {
-            "app_name": clean_name,
-            "resolved_path": resolved,
-            "launched": True,
-            "message": f"Successfully launched {clean_name}"
-        }
+        if hasattr(os, "startfile"):
+            args_str = subprocess.list2cmdline(safe_args) if safe_args else ""
+            if args_str:
+                os.startfile(resolved, arguments=args_str)
+            else:
+                os.startfile(resolved)
+            return {
+                "app_name": clean_name,
+                "resolved_path": resolved,
+                "launched": True,
+                "message": f"Successfully launched {clean_name}"
+            }
     except Exception:
         pass
 
-    # 3. Tertiary method: Subprocess fallback
-    cmd = [target]
-    if args_str:
-        cmd.extend(args_str.split())
-    proc = subprocess.Popen(cmd)
+    # 3. Tertiary method: Subprocess list fallback (never shell=True)
+    proc = subprocess.Popen(full_cmd_list)
     guardian.track_pid(proc.pid)
     return {
         "app_name": clean_name,
@@ -288,6 +315,7 @@ def open_app(app_name: str, url_or_args: Optional[str] = None) -> Dict[str, Any]
         "launcher_pid": proc.pid,
         "message": f"Successfully launched {clean_name}"
     }
+
 
 class CloseAppArgs(BaseModel):
     app_name: str = Field(description="Name of the process to terminate (e.g. 'notepad.exe', 'calc.exe')")

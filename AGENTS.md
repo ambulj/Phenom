@@ -45,6 +45,7 @@ Never restructure the layout without asking.
 10. If a request looks risky or likely wrong, warn politely once, then follow the user's decision unless it is Tier 3 and not allowed.
 11. Secrets live in environment variables or Credential Manager. Never in code, logs, memory or chat.
 12. Work only on the current phase. If a later feature seems needed, write it in HANDOFF.md under "Next" and do not build it.
+13. Standing safety-change rule: Any change to `services/backend/safety/engine.py`, `services/backend/safety/guardian.py`, `services/backend/safety/approvals.py`, or any tool's tier reclassification, must be named explicitly in its own commit message and PR description (never bundled into an unrelated feature commit) and requires the owner's explicit approval before merge. (Prompted by the silent additions of `auto_execute_tier1` in milestone-29 and the `open_app` Tier 0 reclassification).
 
 ## 5. Working agreement
 - **Plan first.** Start each phase by reading `phases/PHASE_N.md`, then write a short plan (files to create, order, risks) and proceed unless something is unclear. Ask the user only about real ambiguities, with a recommended default.

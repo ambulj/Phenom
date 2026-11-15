@@ -24,7 +24,12 @@ This file is the contract for the Safety layer. The code enforces it; this docum
 
 Unknown tools or unclassified calls are Tier 3.
 
-
+### 1.1 Known Deviation: `auto_execute_tier1` Flag (Owner-Acknowledged)
+- **Flag Name:** `auto_execute_tier1: bool = True` (defined in `services/backend/safety/engine.py:30` and `services/backend/safety/tier_matrix.py`).
+- **Origin:** Added during Milestone 29 (commit `0a4eabd`) as part of a "zero-friction auto-execution matrix".
+- **Current Operational Effect:** When `auto_execute_tier1` is `True`, every Tier 1 tool across all 244 tool files automatically executes without prompting for user confirmation, bypassing the original "confirm once unless remembered per folder" requirement, as long as the context is not marked tainted by untrusted input.
+- **Affected Tool Classes:** Reversible file operations (create, move, copy file), process termination (`close_app`), simulated desktop mouse and keyboard interactions (`click_screen`, `type_keyboard`, `press_key_combination`, `execute_desktop_macro`), document generation, draft creation, and Kali recon tool wrappers.
+- **Owner Decision:** The owner has explicitly reviewed this deviation and chosen to defer modifying the default for this pass. The flag remains `True` by owner instruction. Any future modification to this flag or Tier 1 execution requires explicit owner authorization per AGENTS.md Rule 13.
 
 ## 2. Tool declaration
 

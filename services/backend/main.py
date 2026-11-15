@@ -533,11 +533,11 @@ async def lifespan(app: FastAPI):
 
 
 
-    # Setup global hotkey in background
-
-
-
+    # Setup global hotkey in background and wire hotkey_manager (Task 6G.2)
+    hotkey_manager.register_callback("kill_switch", lambda: guardian.trigger("Global hotkey (hotkey_manager)"))
     guardian.setup_global_hotkey("ctrl+alt+pause")
+    guardian.setup_global_hotkey("ctrl+alt+escape")
+    guardian.setup_global_hotkey("ctrl+alt+p")
 
 
 
@@ -4031,6 +4031,14 @@ async def get_telegram_status():
 
 
 
+
+@app.post("/api/killswitch/trigger", dependencies=[Depends(verify_session_token)])
+async def api_killswitch_trigger(payload: Optional[Dict[str, Any]] = None):
+    reason = "Electron Tray/Global Hotkey HALT"
+    if payload and isinstance(payload, dict):
+        reason = payload.get("reason", reason)
+    guardian.trigger(reason)
+    return {"status": "halted", "is_halted": True, "reason": reason}
 
 @app.post("/api/telegram/unlock", dependencies=[Depends(verify_session_token)])
 

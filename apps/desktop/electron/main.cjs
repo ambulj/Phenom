@@ -140,6 +140,50 @@ ipcMain.on('orb:file-drop', (event, filePath) => {
   }
 });
 
+function triggerGuardianHalt(reason = 'Electron Tray/Hotkey HALT') {
+  // 1. Synchronously mute all active WebContents audio (< 1ms SLA)
+  try {
+    const { webContents } = require('electron');
+    if (webContents) {
+      webContents.getAllWebContents().forEach(wc => {
+        try { wc.setAudioMuted(true); } catch (e) {}
+      });
+    }
+  } catch (e) {}
+
+  // 2. Notify renderer windows
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('guardian:hotkey', { reason });
+    mainWindow.webContents.send('media:guardian-mute');
+  }
+  if (orbWindow && !orbWindow.isDestroyed()) {
+    orbWindow.webContents.send('guardian:hotkey', { reason });
+  }
+
+  // 3. Directly call backend REST API to trigger Guardian Kill Switch (< 10ms)
+  try {
+    const http = require('http');
+    const req = http.request({
+      hostname: '127.0.0.1',
+      port: 8000,
+      path: '/api/killswitch/trigger',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${sessionToken}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 1000
+    }, (res) => {});
+    req.on('error', (err) => {
+      console.warn('[Phenom] Could not post killswitch to backend:', err.message);
+    });
+    req.write(JSON.stringify({ reason }));
+    req.end();
+  } catch (err) {
+    console.warn('[Phenom] Failed to dispatch killswitch HTTP request:', err);
+  }
+}
+
 function updateTrayContextMenu() {
   if (!tray) return;
   const contextMenu = Menu.buildFromTemplate([
@@ -173,9 +217,7 @@ function updateTrayContextMenu() {
     {
       label: 'Guardian Kill Switch (HALT)',
       click: () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('guardian:hotkey');
-        }
+        triggerGuardianHalt('Tray HALT menu item clicked');
       }
     },
     { type: 'separator' },
@@ -603,17 +645,7 @@ app.whenReady().then(() => {
   const registerKillHotkey = (shortcut) => {
     try {
       globalShortcut.register(shortcut, () => {
-        // Synchronous audio mute across all active webContents (< 1ms SLA)
-        const { webContents } = require('electron');
-        if (webContents) {
-          webContents.getAllWebContents().forEach(wc => {
-            try { wc.setAudioMuted(true); } catch (e) {}
-          });
-        }
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('guardian:hotkey');
-          mainWindow.webContents.send('media:guardian-mute');
-        }
+        triggerGuardianHalt(`Global hotkey ${shortcut}`);
       });
     } catch (err) {
       console.warn(`Could not register ${shortcut}:`, err);

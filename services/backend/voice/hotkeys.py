@@ -82,6 +82,24 @@ class HotkeyManager:
         self._callbacks[action] = callback
         self.rebind_action(action)
 
+    def trigger_action(self, action: str):
+        """Programmatically triggers the registered callback for an action."""
+        cb = self._callbacks.get(action)
+        if cb:
+            cb()
+        elif action == "kill_switch":
+            from services.backend.safety.guardian import guardian
+            guardian.trigger("hotkey_killswitch")
+
+    def trigger_kill_switch(self, reason: str = "hotkey_killswitch"):
+        """Directly invokes the registered kill switch callback and halts guardian."""
+        cb = self._callbacks.get("kill_switch")
+        if cb:
+            cb()
+        else:
+            from services.backend.safety.guardian import guardian
+            guardian.trigger(reason)
+
     def rebind_action(self, action: str):
         if action in self._hooks:
             try:
@@ -92,7 +110,7 @@ class HotkeyManager:
 
         key_combo = self._hotkeys.get(action)
         cb = self._callbacks.get(action)
-        if key_combo and cb:
+        if key_combo and cb and keyboard is not None:
             try:
                 hook = keyboard.add_hotkey(key_combo, cb)
                 self._hooks[action] = hook
