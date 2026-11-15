@@ -21,6 +21,8 @@ from services.backend.router.router import model_router
 from services.backend.safety.engine import safety_engine
 from services.backend.safety.guardian import guardian
 from services.backend.safety.registry import registry
+from services.backend.safety.taint import taint_tracker
+from services.backend.safety.action_log import action_log
 from services.backend.memory.db import encrypted_db
 from services.backend.memory.rules import learned_rules
 from services.backend.modes.mode_manager import mode_manager
@@ -32,8 +34,6 @@ OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
 SYSTEM_PROMPT_TEMPLATE = """You are Phenom, a personal Windows 11 AI desktop assistant and lab partner to Abhi.
-Current Date & Time: {current_time}
-{mode_prompt}
 Personality: Witty, sharp, charismatic companion and lab partner. Confident, direct, energetic, and technically formidable.
 Honorific: Always address the user as "Bro" naturally (e.g. "Haan Bro!", "Sab set hai Bro!", "Batao Bro kya plan hai?").
 Language: Natural colloquial Hinglish (Hindi + English blend written in Roman alphabet). Technical terms, commands, file paths, and code remain in English.
@@ -46,76 +46,70 @@ Permanent Rules:
 4. Email: drafts only, never send. Calendar: create events only, never edit or delete.
 5. If a request looks risky or irreversible, politely warn the user once, explain the risk, offer a safer option, and proceed with their choice.
 6. Never pretend to have executed a command without receiving a tool result.
+7. Structured Tool Calling: Invoke tools natively when requested. Never output raw JSON, schemas, or tool calls in the final conversational chat or speech text.
 
 Active Learned Rules:
 {learned_rules}
-
-Available Tools:
-{tool_descriptions}
-
-Core Instructions:
-1. Action Execution: When the user requests ANY action, media control, playback change, volume adjustment, app launch, news briefing, weather, calculation, reminder, or system task:
-   - Output a single ```json tool call block:
-```json
-{{"tool": "open_app", "args": {{"app_name": "brave"}}}}
-```
-   - CRITICAL TOOL INVOCATION RULES:
-     * You MUST ONLY use the EXACT registered tool names listed in "Available Tools" above. NEVER invent new tool names (e.g. NEVER emit `{{"tool": "brave"}}` or `{{"tool": "youtube"}}`).
-     * To launch ANY desktop application (Brave, Chrome, Spotify, Notepad, Calculator, VS Code) or open any website/video/music (YouTube search, news), ALWAYS call the `open_app` tool!
-       Example for "open brave": {{"tool": "open_app", "args": {{"app_name": "brave"}}}}
-       Example for "play Baarishein on YouTube": {{"tool": "open_app", "args": {{"app_name": "https://www.youtube.com/results?search_query=Baarishein"}}}}
-       Example for "Spotify kholo": {{"tool": "open_app", "args": {{"app_name": "spotify"}}}}
-      * For media playback control, volume changes, pause, resume, or toggling tracks, ALWAYS call the `control_media` tool!
-        Example for "Spotify pause kar do" or "pause music": {{"tool": "control_media", "args": {{"action": "pause"}}}}
-        Example for "Volume badhao" or "volume up": {{"tool": "control_media", "args": {{"action": "volume_up"}}}}
-        Example for "Toggle media play/pause on Spotify": {{"tool": "control_media", "args": {{"action": "play_pause"}}}}
-      * For screen inspection, checking the active window, reading what is on screen, or visual error checking, ALWAYS call the `inspect_screen` tool!
-        Example for "What's on my screen right now?": {{"tool": "inspect_screen", "args": {{"query": "Describe what is on screen and highlight open windows and any errors."}}}}
-        Example for "Inspect active window and report any errors": {{"tool": "inspect_screen", "args": {{"query": "Inspect active window and report any errors."}}}}
-      * For real-time weather inquiries, call the `get_weather` tool:
-        Example for "weather in Mumbai": {{"tool": "get_weather", "args": {{"location": "Mumbai"}}}}
-      * For financial stock quotes or indices, call the `get_market_quote` tool:
-        Example for "Apple stock price": {{"tool": "get_market_quote", "args": {{"symbol": "AAPL"}}}}
-   - ABSOLUTE PROHIBITIONS:
-     * NEVER output markdown headers like "** Tool :**", "** JSON Execution Block :**", or "Tool Invocation".
-     * NEVER output meta-commentary like "This command will launch...", "Executing command...", or "[Action Executed: ...]".
-     * NEVER repeat phrases or "All set." multiple times.
-     * Keep your response natural, conversational and crisp (Jarvis/bro style) without technical noise or raw JSON explanations.
-
-2. General Conversation & Interruption:
-   - When the user greets you (e.g. "hi", "kya haal hai Bro", "hello") or makes casual conversation, respond in 1-2 natural, punchy Hinglish sentences addressing the user as "Bro". Never mention JSON, tools, or schemas to the user. Never offer canned system status reports unless explicitly asked.
-   - If the user says "shut up", "stop", "chup", "quiet", "shaant", never preach, lecture, or apologize like a generic customer service bot. Be crisp and loyal: "Got it Bro, standing by. Sab shaant."
-
-3. Questions & Knowledge: When the user asks a question, explain directly and concisely in natural Hinglish, keeping technical details in crisp English.
+{mode_prompt}
 """
 
-_CACHED_TOOLS_STR: Optional[str] = None
-_CACHED_TOOLS_LEN: int = 0
+_CACHED_SYSTEM_PROMPT: Optional[str] = None
+_CACHED_SYSTEM_PROMPT_KEY: Optional[str] = None
+_CACHED_OLLAMA_TOOLS: Optional[List[Dict[str, Any]]] = None
+_CACHED_OLLAMA_TOOLS_COUNT: int = 0
 
-def get_cached_tool_descriptions() -> str:
-    global _CACHED_TOOLS_STR, _CACHED_TOOLS_LEN
+def get_ollama_tools() -> List[Dict[str, Any]]:
+    """Converts registered ToolDefinitions into Ollama/OpenAI native function calling schemas."""
+    global _CACHED_OLLAMA_TOOLS, _CACHED_OLLAMA_TOOLS_COUNT
     all_tools = registry.list_all()
-    if _CACHED_TOOLS_STR is None or len(all_tools) != _CACHED_TOOLS_LEN:
-        tool_lines = []
+    if _CACHED_OLLAMA_TOOLS is None or len(all_tools) != _CACHED_OLLAMA_TOOLS_COUNT:
+        tools_list = []
         for name, tool_def in all_tools.items():
-            fields = list(tool_def.args_schema.model_fields.keys())
-            tool_lines.append(f"- {name}({', '.join(fields)}): {tool_def.description} [Tier {tool_def.tier}]")
-        _CACHED_TOOLS_STR = "\n".join(tool_lines)
-        _CACHED_TOOLS_LEN = len(all_tools)
-    return _CACHED_TOOLS_STR
+            if tool_def.tier == 3:
+                continue
+            schema = tool_def.args_schema.model_json_schema()
+            props = schema.get("properties", {})
+            clean_props = {}
+            for prop_k, prop_v in props.items():
+                clean_prop = {"type": prop_v.get("type", "string")}
+                if "description" in prop_v:
+                    clean_prop["description"] = prop_v["description"]
+                if "enum" in prop_v:
+                    clean_prop["enum"] = prop_v["enum"]
+                clean_props[prop_k] = clean_prop
+            
+            tools_list.append({
+                "type": "function",
+                "function": {
+                    "name": name,
+                    "description": tool_def.description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": clean_props,
+                        "required": schema.get("required", [])
+                    }
+                }
+            })
+        _CACHED_OLLAMA_TOOLS = tools_list
+        _CACHED_OLLAMA_TOOLS_COUNT = len(all_tools)
+    return _CACHED_OLLAMA_TOOLS
 
 def build_system_prompt() -> str:
-    tools_str = get_cached_tool_descriptions()
+    """
+    Builds the system prompt. Caches output to maximize Ollama prompt caching (KV-cache reuse).
+    Rebuilding the prompt with volatile per-second timestamps invalidates the prompt prefix on every turn.
+    """
+    global _CACHED_SYSTEM_PROMPT, _CACHED_SYSTEM_PROMPT_KEY
     rules_str = learned_rules.format_rules_for_prompt() or "(None yet)"
     mode_prompt = mode_manager.get_tone_prompt()
-    from datetime import datetime
-    current_time_str = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
-    return SYSTEM_PROMPT_TEMPLATE.format(
-        current_time=current_time_str,
-        mode_prompt=mode_prompt,
-        learned_rules=rules_str,
-        tool_descriptions=tools_str
-    )
+    cache_key = f"{rules_str}::{mode_prompt}"
+    if _CACHED_SYSTEM_PROMPT is None or _CACHED_SYSTEM_PROMPT_KEY != cache_key:
+        _CACHED_SYSTEM_PROMPT = SYSTEM_PROMPT_TEMPLATE.format(
+            learned_rules=rules_str,
+            mode_prompt=mode_prompt
+        ).strip()
+        _CACHED_SYSTEM_PROMPT_KEY = cache_key
+    return _CACHED_SYSTEM_PROMPT
 
 async def warm_up_ollama(model_name: Optional[str] = None):
     """Preloads the model into GPU VRAM at application startup to eliminate cold-start latency."""
@@ -532,13 +526,16 @@ class Orchestrator:
         - {"type": "chat.token", "payload": {"token": "...", "index": N}}
         - {"type": "chat.done", "payload": {...}}
         """
+        # Reset taint tracking at start of turn (scoped per-conversation turn)
+        taint_tracker.reset()
+
         if guardian.is_halted:
             yield {"type": "state.change", "payload": {"state": "halted"}}
             yield {"type": "chat.token", "payload": {"token": "Phenom is currently halted by the Guardian kill switch.", "index": 1}}
             yield {"type": "chat.done", "payload": {"total_tokens": 10, "duration_s": 0.1, "tps": 0.0}}
             return
 
-                # Fast silence / stop / interrupt interception
+        # Fast silence / stop / interrupt interception
         clean_prompt = prompt.lower().strip()
         if re.search(r"^(shut\s*up|stop|chup|chup\s*ho\s*ja|shaant|quiet|silence|halt|bas|band\s*kar)[\s.!\?]*$", clean_prompt):
             try:
@@ -549,13 +546,13 @@ class Orchestrator:
             reply = "Got it Bro, standing by. Sab shaant."
             yield {"type": "state.change", "payload": {"state": "speaking"}}
             yield {"type": "chat.token", "payload": {"token": reply, "index": 1}}
-            yield {"type": "chat.done", "payload": {"total_tokens": 8, "duration_s": 0.01, "tps": 100.0}}
+            yield {"type": "chat.done", "payload": {"total_tokens": 8, "duration_s": 0.01, "tps": 100.0, "full_text": reply}}
             yield {"type": "state.change", "payload": {"state": "idle"}}
             encrypted_db.add_message(os.urandom(8).hex(), "user", prompt, model="system")
             encrypted_db.add_message(os.urandom(8).hex(), "assistant", reply, model="system", tokens=8)
             return
 
-        # Direct User Intent Interception (Instant Zero-Latency Dispatch for App Launch & YouTube)
+        # Direct User Intent Interception (Instant Zero-Latency Dispatch for App Launch & Media)
         direct_intent = self._detect_direct_intent(prompt)
         if direct_intent:
             tool_name, tool_args, reply_text = direct_intent
@@ -613,6 +610,7 @@ class Orchestrator:
                 if doc_matches and doc_matches[0]["score"] > 0.45:
                     sources = "\n".join([f"- [{m['filename']}] (Score: {m['score']}): {m['snippet']}" for m in doc_matches])
                     memory_context = f"\nRelevant Memory & Document Citations:\n{sources}\n"
+                    taint_tracker.mark_tainted("rag_memory", "External document citations ingested into prompt context")
             except Exception:
                 pass
 
@@ -628,6 +626,10 @@ class Orchestrator:
             if role == "assistant":
                 if any(bad in m_text for bad in ["All systems running cool and clean", "Please respond with your request", "Please respond with a JSON block", "<tool_name>"]):
                     continue
+                if "[UNTRUSTED_HISTORY]" in m_text:
+                    cleaned_hist = m_text.replace("[UNTRUSTED_HISTORY]", "").strip()
+                    chat_messages.append({"role": "assistant", "content": f"<untrusted_history>\n{cleaned_hist}\n</untrusted_history>"})
+                    continue
             if m_text and "<tool_name>" not in m_text and "Please respond with a JSON block" not in m_text:
                 cleaned = re.sub(r"\[(Phenom Safety Gate|Tool|Action Blocked).*?\]", "", m_text).strip()
                 if cleaned:
@@ -637,52 +639,130 @@ class Orchestrator:
         start_time = time.perf_counter()
         token_index = 0
         collected_tokens = []
-        is_first_token = True
+        full_reply = ""
+        tool_was_executed = False
 
-        suppress_stream = False
+        tools_payload = get_ollama_tools()
+
         try:
             if backend_type == "local":
-                # Stream from Ollama chat endpoint with native ChatML token separation
+                # Step 1: Native Structured Tool Calling with Ollama
                 async with httpx.AsyncClient(timeout=180.0) as client:
-                    async with client.stream(
-                        "POST",
+                    resp = await client.post(
                         OLLAMA_CHAT_URL,
                         json={
                             "model": model_name,
                             "messages": chat_messages,
-                            "stream": True,
+                            "tools": tools_payload,
+                            "stream": False,
                             "keep_alive": -1,
                             "options": {
                                 "temperature": 0.2,
                                 "num_predict": 512,
+                                "num_ctx": 16384,
                             }
                         }
-                    ) as resp:
-                        async for line in resp.aiter_lines():
-                            if cancel_event and cancel_event.is_set():
-                                yield {"type": "chat.cancelled", "payload": {"tokens_emitted": token_index}}
-                                yield {"type": "state.change", "payload": {"state": "idle"}}
-                                return
+                    )
+                    if resp.status_code != 200:
+                        raise RuntimeError(f"Ollama inference error {resp.status_code}: {resp.text}")
 
-                            if not line:
-                                continue
-                            chunk = json.loads(line)
-                            token = chunk.get("message", {}).get("content", "")
-                            if token:
-                                collected_tokens.append(token)
-                                accumulated = "".join(collected_tokens)
-                                if any(marker in accumulated for marker in ("** Tool", "**Tool", "** JSON", "**JSON", "```json", '{"tool":', '"tool":', 'This command will launch')):
-                                    suppress_stream = True
+                    data = resp.json()
+                    assistant_msg = data.get("message", {})
+                    tool_calls = assistant_msg.get("tool_calls", [])
 
-                                if not suppress_stream:
-                                    if is_first_token:
-                                        is_first_token = False
-                                        yield {"type": "state.change", "payload": {"state": "speaking"}}
+                    if tool_calls:
+                        tool_was_executed = True
+                        yield {"type": "state.change", "payload": {"state": "thinking", "detail": "Executing tool"}}
+
+                        tool_call = tool_calls[0]
+                        func = tool_call.get("function", {})
+                        raw_tool_name = func.get("name", "")
+                        raw_tool_args = func.get("arguments", {})
+                        tool_call_id = tool_call.get("id", f"call_{os.urandom(4).hex()}")
+
+                        tool_name, tool_args = self._resolve_tool_alias(raw_tool_name, raw_tool_args)
+
+                        # Reject tool call whose name isn't in registry before reaching safety engine
+                        tool_def = registry.get(tool_name)
+                        if tool_def is None:
+                            err_msg = f"Tool '{tool_name}' is not in the registry and was rejected."
+                            action_log.log_action(
+                                tool=tool_name,
+                                tier=3,
+                                args=tool_args,
+                                decision="blocked",
+                                result_status="REJECTED_UNKNOWN_TOOL",
+                                error=err_msg
+                            )
+                            raise PermissionError(err_msg)
+
+                        # Reject tool call whose arguments fail schema validation before reaching safety engine
+                        try:
+                            validated_args = tool_def.args_schema.model_validate(tool_args).model_dump()
+                        except Exception as val_err:
+                            err_msg = f"Arguments for '{tool_name}' failed schema validation: {val_err}"
+                            action_log.log_action(
+                                tool=tool_name,
+                                tier=tool_def.get_tier(tool_args),
+                                args=tool_args,
+                                decision="blocked",
+                                result_status="SCHEMA_VALIDATION_FAILED",
+                                error=err_msg
+                            )
+                            raise ValueError(err_msg)
+
+                        # Execute strictly through Safety Execution Engine
+                        tool_result = await safety_engine.execute_tool(tool_name, validated_args)
+
+                        # Feed result back to the model as a tool role message
+                        followup_messages = list(chat_messages)
+                        followup_messages.append(assistant_msg)
+                        followup_messages.append({
+                            "role": "tool",
+                            "content": json.dumps(tool_result),
+                            "tool_call_id": tool_call_id
+                        })
+
+                        # Stream final natural-language reply from model without raw JSON leakage
+                        yield {"type": "state.change", "payload": {"state": "speaking"}}
+                        async with client.stream(
+                            "POST",
+                            OLLAMA_CHAT_URL,
+                            json={
+                                "model": model_name,
+                                "messages": followup_messages,
+                                "stream": True,
+                                "keep_alive": -1,
+                                "options": {
+                                    "temperature": 0.2,
+                                    "num_predict": 512,
+                                    "num_ctx": 16384,
+                                }
+                            }
+                        ) as stream_resp:
+                            async for line in stream_resp.aiter_lines():
+                                if cancel_event and cancel_event.is_set():
+                                    yield {"type": "chat.cancelled", "payload": {"tokens_emitted": token_index}}
+                                    yield {"type": "state.change", "payload": {"state": "idle"}}
+                                    return
+                                if not line:
+                                    continue
+                                chunk = json.loads(line)
+                                token = chunk.get("message", {}).get("content", "")
+                                if token:
+                                    collected_tokens.append(token)
                                     token_index += 1
                                     yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
-
-                            if chunk.get("done"):
-                                break
+                                if chunk.get("done"):
+                                    break
+                    else:
+                        # Pure conversational response without tool call
+                        content = assistant_msg.get("content", "")
+                        if content:
+                            yield {"type": "state.change", "payload": {"state": "speaking"}}
+                            collected_tokens.append(content)
+                            token_index += 1
+                            yield {"type": "chat.token", "payload": {"token": content, "index": token_index}}
             else:
                 # Stream from Cloud Nemotron
                 api_key = os.environ.get("NVIDIA_API_KEY", "")
@@ -701,110 +781,28 @@ class Orchestrator:
                     if chunk.choices and chunk.choices[0].delta.content:
                         token = chunk.choices[0].delta.content
                         collected_tokens.append(token)
-                        accumulated = "".join(collected_tokens)
-                        if any(marker in accumulated for marker in ("** Tool", "**Tool", "** JSON", "**JSON", "```json", '{"tool":', '"tool":', 'This command will launch')):
-                            suppress_stream = True
-
-                        if not suppress_stream:
-                            if is_first_token:
-                                is_first_token = False
-                                yield {"type": "state.change", "payload": {"state": "speaking"}}
-                            token_index += 1
-                            yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
+                        token_index += 1
+                        yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
 
         except Exception as e:
-            yield {"type": "error", "payload": {"message": f"Inference error: {str(e)}"}}
+            err_text = f"[Action Blocked or Failed: {str(e)}]"
+            token_index += 1
+            yield {"type": "chat.token", "payload": {"token": err_text, "index": token_index}}
             yield {"type": "state.change", "payload": {"state": "idle"}}
-            return
+            full_reply = err_text
 
-        elapsed = time.perf_counter() - start_time
-        tps = token_index / elapsed if elapsed > 0 else 0.0
-        raw_llm_reply = "".join(collected_tokens)
-
-        # 2. Check for Tool Call in Reply
-        call_data = None
-        for m in re.finditer(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", raw_llm_reply, re.DOTALL):
-            try:
-                candidate = json.loads(m.group(1))
-                if isinstance(candidate, dict) and ("tool" in candidate or "action" in candidate or "app" in candidate):
-                    call_data = candidate
-                    break
-            except Exception:
-                continue
-
-        if not call_data:
-            for m in re.finditer(r"(\{[\s\S]*?\})", raw_llm_reply):
-                try:
-                    candidate = json.loads(m.group(1))
-                    if isinstance(candidate, dict) and ("tool" in candidate or "action" in candidate or "app" in candidate):
-                        call_data = candidate
-                        break
-                except Exception:
-                    continue
-
-        if not call_data:
-            m_yt = re.search(r"youtube[-_]play\s+[\"']([^\"']+)[\"']", raw_llm_reply, re.IGNORECASE)
-            if m_yt:
-                call_data = {"tool": "youtube", "args": {"play": m_yt.group(1)}}
-            else:
-                m_op = re.search(r"(?:open|launch)[-_]?(?:app)?\s+[\"']([^\"']+)[\"']", raw_llm_reply, re.IGNORECASE)
-                if m_op:
-                    call_data = {"tool": "open_app", "args": {"app_name": m_op.group(1)}}
-
-        if call_data:
-            try:
-                tool_name = call_data.get("tool")
-                tool_args = call_data.get("args", {})
-                if tool_name:
-                    tool_name, tool_args = self._resolve_tool_alias(tool_name, tool_args)
-                    
-                    # Execute strictly through Safety Execution Engine
-                    tool_result = await safety_engine.execute_tool(tool_name, tool_args)
-                    
-                    res_val = tool_result.get('result')
-                    app_target = str(tool_args.get("app_name", "") or tool_args.get("target", "") or tool_name)
-                    clean_disp = app_target.split("\\")[-1].replace(".exe", "").title()
-                    
-                    if tool_name == "open_app":
-                        if "youtube" in app_target.lower():
-                            action_resp = "Done Bro! Opening YouTube for you. Enjoy the music!"
-                        else:
-                            action_resp = f"Opening {clean_disp} Bro!"
-                    elif isinstance(res_val, dict) and 'briefing_markdown' in res_val:
-                        action_resp = res_val['briefing_markdown']
-                    elif isinstance(res_val, dict) and 'message' in res_val and len(res_val.keys()) <= 3:
-                        action_resp = res_val['message']
-                    else:
-                        action_resp = f"Sab set hai Bro! {tool_name} executed."
-
-                    # Sanitize any conversational preamble from LLM text
-                    sanitized_preamble = stream_sanitizer.sanitize(raw_llm_reply).clean_text
-                    if sanitized_preamble and sanitized_preamble.lower() not in action_resp.lower():
-                        full_reply = f"{sanitized_preamble}\n\n{action_resp}"
-                    else:
-                        full_reply = action_resp
-
-                    # If stream was suppressed or empty, yield the clean action message
-                    if suppress_stream or token_index == 0:
-                        yield {"type": "state.change", "payload": {"state": "speaking"}}
-                        token_index += 1
-                        yield {"type": "chat.token", "payload": {"token": full_reply, "index": token_index}}
-                    else:
-                        token_index += 1
-                        yield {"type": "chat.token", "payload": {"token": "\n" + action_resp, "index": token_index}}
-            except Exception as tool_err:
-                blocked_msg = f"[Action Blocked or Failed: {tool_err}]"
-                token_index += 1
-                yield {"type": "chat.token", "payload": {"token": f"\n{blocked_msg}", "index": token_index}}
-                full_reply = blocked_msg
-        else:
-            # Pure conversational query without tool call: sanitize any noise
+        if not full_reply:
+            raw_llm_reply = "".join(collected_tokens)
             sanitized = stream_sanitizer.sanitize(raw_llm_reply)
             full_reply = sanitized.clean_text
 
-        # 3. Post-Task Persistence
+        elapsed = time.perf_counter() - start_time
+        tps = token_index / elapsed if elapsed > 0 else 0.0
+
+        # Post-Task Persistence with untrusted history tagging
+        db_content = f"[UNTRUSTED_HISTORY] {full_reply}" if (tool_was_executed or taint_tracker.is_tainted) else full_reply
         encrypted_db.add_message(os.urandom(8).hex(), "user", prompt, model=model_name)
-        encrypted_db.add_message(os.urandom(8).hex(), "assistant", full_reply, model=model_name, tokens=token_index)
+        encrypted_db.add_message(os.urandom(8).hex(), "assistant", db_content, model=model_name, tokens=token_index)
 
         # 4. Check for User Correction to learn new rules
         self._check_and_learn_rule(prompt)

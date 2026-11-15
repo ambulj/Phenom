@@ -11,6 +11,7 @@ import asyncio
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
+from services.backend.safety.taint import taint_tracker
 from services.backend.modes.mode_manager import mode_manager, AssistantMode
 from services.backend.scheduler.cron import background_scheduler
 from services.backend.integrations.finance import financial_engine, TradingProhibitedError
@@ -289,7 +290,10 @@ class GmailSearchArgs(BaseModel):
     preview_fn=lambda a: f"Search Gmail for: '{a.get('query')}'"
 )
 def gmail_search_emails(query: str = "", max_results: int = 5) -> List[Dict[str, Any]]:
-    return google_workspace.search_emails(query, max_results)
+    res = google_workspace.search_emails(query, max_results)
+    if res:
+        taint_tracker.mark_tainted("gmail", "Searched external emails")
+    return res
 
 class GmailReadEmailArgs(BaseModel):
     email_id: str = Field(description="ID of the email message to read")
@@ -302,7 +306,14 @@ class GmailReadEmailArgs(BaseModel):
     preview_fn=lambda a: f"Read email ID '{a.get('email_id')}'"
 )
 def gmail_read_email(email_id: str) -> Optional[Dict[str, Any]]:
-    return google_workspace.read_email(email_id)
+    res = google_workspace.read_email(email_id)
+    if res and isinstance(res, dict):
+        taint_tracker.mark_tainted("gmail", "Read external email message")
+        body = res.get("body", "")
+        if body:
+            wrapped, _, _ = taint_tracker.inspect_and_sanitize(body, source="gmail")
+            res["body"] = wrapped
+    return res
 
 class GmailCreateDraftArgs(BaseModel):
     to: str = Field(description="Recipient email address")

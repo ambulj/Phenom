@@ -16,6 +16,7 @@ import tempfile
 from typing import Dict, Any, Optional
 import yt_dlp
 from services.backend.voice.stt import stt_engine
+from services.backend.safety.taint import taint_tracker
 
 class YouTubeSummarizer:
     def __init__(self):
@@ -111,6 +112,9 @@ class YouTubeSummarizer:
             content_text = captions
         else:
             content_text, temp_cleaned = self.download_and_transcribe_audio(url)
+
+        taint_tracker.mark_tainted("youtube", "Ingested external YouTube video captions/transcript")
+        wrapped, _, _ = taint_tracker.inspect_and_sanitize(content_text, source="youtube")
 
         # Generate summary using local model
         summary = f"Summary of {url}: Key points extracted from {('captions' if used_captions else 'transcribed audio')}. {content_text[:300]}..."

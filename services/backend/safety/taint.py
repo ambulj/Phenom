@@ -110,14 +110,17 @@ class TaintTracker:
         """
         Calculates effective security tier under active taint.
         Tainted context invalidates remembered choices and escalates execution scrutiny.
+        Any tool following tainted content requires user confirmation (even Tier 0/1).
         """
         if not self._is_tainted:
             return requested_tier, None
 
-        warning = f"SECURITY WARNING: Turn is tainted by external untrusted content ({', '.join(self._tainted_sources)}). Automatic approval is suspended."
-        # If tool was Tier 1 with possible remembered folder approval, force to explicit preview
+        warning = f"SECURITY WARNING: Turn is tainted by external untrusted content ({', '.join(self._tainted_sources)}). Automatic execution is suspended; confirmation required."
+        # Tier 0 and Tier 1 tools escalate to require explicit confirmation
+        if requested_tier == 0:
+            return 1, warning  # Escalate Tier 0 to Tier 1 requiring confirmation
         if requested_tier == 1:
-            return 2, warning  # Escalate to Tier 2 (never remembered)
+            return 2, warning  # Escalate Tier 1 to Tier 2 (never remembered)
 
         return requested_tier, warning
 

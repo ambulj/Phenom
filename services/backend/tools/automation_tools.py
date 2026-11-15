@@ -10,6 +10,7 @@ Tier classification:
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from services.backend.safety.registry import registry
+from services.backend.safety.taint import taint_tracker
 from services.backend.browser.browser_controller import browser_controller
 from services.backend.browser.cart_automator import cart_automator
 from services.backend.browser.youtube_summarizer import youtube_summarizer
@@ -31,6 +32,7 @@ class TakeScreenshotArgs(BaseModel):
 )
 async def take_screenshot() -> Dict[str, Any]:
     b64 = desktop_controller.capture_screen_base64()
+    taint_tracker.mark_tainted("ocr", "Screen OCR content ingested")
     return {
         "status": "success",
         "format": "jpeg_base64",
@@ -75,6 +77,7 @@ async def inspect_screen_ocr(focus_query: Optional[str] = None) -> Dict[str, Any
         q = focus_query.lower()
         matched_texts = [t for t in detected_texts if q in t.lower()]
 
+    taint_tracker.mark_tainted("ocr", "Screen OCR content ingested")
     return {
         "status": "success",
         "total_elements_found": len(detected_texts),

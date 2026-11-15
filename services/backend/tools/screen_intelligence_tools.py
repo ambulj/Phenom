@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from services.backend.safety.registry import registry
+from services.backend.safety.taint import taint_tracker
 from services.backend.vision.screen_intelligence_tracker import (
     screen_intelligence_tracker,
     TrackingMode,
@@ -87,6 +88,7 @@ def handle_extract_screen_region_ocr(
     window_title: Optional[str] = None,
 ) -> Dict[str, Any]:
     res = screen_intelligence_tracker.extract_region_ocr(bbox=bbox, window_title=window_title)
+    taint_tracker.mark_tainted("ocr", "Screen region OCR ingested")
     return {
         "text": res.text,
         "word_count": res.word_count,

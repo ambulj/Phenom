@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 from services.backend.safety.registry import registry
 from services.backend.safety.guardian import guardian
+from services.backend.safety.taint import taint_tracker
 from services.backend.browser.browser_controller import browser_controller
 from services.backend.automation.human_takeover import takeover_manager
 
@@ -130,7 +131,12 @@ class BrowserExtractContentArgs(BaseModel):
 async def browser_extract_content() -> Dict[str, Any]:
     if guardian.is_halted:
         raise RuntimeError("Browser operation halted by Guardian Kill Switch")
-    return await browser_controller.extract_page_content()
+    taint_tracker.mark_tainted("web_scrape", "Extracted content from external web page")
+    res = await browser_controller.extract_page_content()
+    if isinstance(res, dict) and "text" in res:
+        wrapped, _, _ = taint_tracker.inspect_and_sanitize(res["text"], source="web_scrape")
+        res["text"] = wrapped
+    return res
 
 
 # ---------------- 6. BROWSER MANAGE TABS ----------------

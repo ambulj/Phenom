@@ -29,7 +29,7 @@ import faster_whisper
 DEFAULT_HINGLISH_PROMPT = "Phenom, please file open karo aur analyze karo. Let's start the task."
 
 class STTEngine:
-    def __init__(self, model_size: str = "small", device: str = "cuda", compute_type: str = "float16"):
+    def __init__(self, model_size: str = "small", device: str = "cpu", compute_type: str = "int8"):
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type

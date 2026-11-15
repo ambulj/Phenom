@@ -92,6 +92,8 @@ false_trigger_calibration = "adaptive_encrypted_snippet" # Saying 'false trigger
 [shell]
 default_runner = "pwsh"                # PowerShell 7 primary subprocess runner
 fallback_runner = "powershell"         # Windows PowerShell 5.1 fallback
+executable = "pwsh"                    # PowerShell 7
+environment = "isolated_clean_utf8"    # Isolated environment without profile side-effects, UTF-8 forced
 
 [terminal]
 pty_interactive_mode = true            # Interactive PTY in HUD console for stdin forwarding
@@ -380,10 +382,6 @@ persist_to_project_rules = true        # Persist extracted rules into workspace 
 
 [workspace]
 switching_mode = "seamless_reanchor"   # Re-anchor active workspace, load local .phenom/prompt.md, refocus/launch VS Code, re-scope git/vectors
-
-[shell]
-executable = "pwsh"                    # PowerShell 7
-environment = "isolated_clean_utf8"    # Isolated environment without profile side-effects, UTF-8 forced
 
 [scheduler]
 engine = "dual_task_scheduler_apscheduler" # Windows Task Scheduler for sleep-wake reliable runs, APScheduler for reactive runtime jobs

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 import send2trash
 from services.backend.safety.registry import registry
 from services.backend.safety.path_guard import validate_path
+from services.backend.safety.taint import taint_tracker
 
 # ==========================================
 # Tier 0 (Read-Only) File Tools
@@ -65,7 +66,9 @@ def read_file(path: str, max_bytes: int = 50000) -> str:
         raise IsADirectoryError(f"Path is a directory, not a file: {path}")
 
     with open(norm_path, "r", encoding="utf-8", errors="replace") as f:
-        return f.read(max_bytes)
+        content = f.read(max_bytes)
+        taint_tracker.mark_tainted("file_read", f"Read file {os.path.basename(norm_path)}")
+        return content
 
 class SearchFilesByNameArgs(BaseModel):
     directory: str = Field(description="Directory to search in")
