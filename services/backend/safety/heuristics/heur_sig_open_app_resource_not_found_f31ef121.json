@@ -1,0 +1,11 @@
+{
+  "rule_id": "heur_sig_open_app_resource_not_found_f31ef121",
+  "tool_name": "open_app",
+  "failure_signature": "sig_open_app_resource_not_found_f31ef121",
+  "description": "Verify executable exists before open_app",
+  "constraint_expression": "args.get('path') is not None",
+  "planner_guideline": "Verify target path before opening application.",
+  "is_active": true,
+  "confidence": 1.0,
+  "created_at": 1794861839.9020755
+}

@@ -4285,6 +4285,27 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `query_associative_memory`: **Tier 0** (Read-only hybrid BM25, dense vector embedding, temporal decay, and graph proximity search). Runs automatically and logged.
 - `sync_obsidian_memory`: **Tier 1** (Writes structured markdown notes and wikilinks to `vault/Memory/` on disk). Requires user preview approval unless auto-execute is enabled.
 
+---
+
+## Section 80: Self-Reflective Post-Mortem & Heuristics Governance (Milestone 49 Phase 2)
+
+### 1. Safety Policies & Invariants
+1. **Rule 8 & Rule 11 Trace Scrubbing**:
+   - Raw exception strings, call frames, and input arguments pass through regex masking to eliminate financial/checkout tokens (Rule 8) and secret credentials (API keys, passwords, bearer tokens) before post-mortem storage.
+2. **Mandatory AST Syntax Validation**:
+   - All synthesized heuristic constraints must parse cleanly into valid Python AST via `ast.parse(..., mode='exec')` prior to disk persistence. Malformed or invalid syntax is rejected immediately.
+3. **Restricted Heuristic Execution Environment**:
+   - Runtime heuristic precondition evaluations run in an isolated dictionary scope with strict builtins, preventing arbitrary system corruption or execution of unsafe commands.
+4. **Sub-25ms Universal Guardian Kill Switch SLA**:
+   - Synchronous kill switch checks are enforced on every post-mortem analysis and heuristic evaluation call. Latency benchmarked at $< 25.0\text{ ms}$ (measured $< 0.1\text{ ms}$).
+5. **Acoustic Word Limit Guarantee**:
+   - Proactive spoken morning briefings are strictly validated to never exceed 60 words for crisp auditory UX.
+
+### 2. Tool Tier Classifications
+- `analyze_failure_postmortem`: **Tier 0** (Read-only diagnostic evaluation of execution failure trace). Runs automatically and logged.
+- `synthesize_heuristic_rule`: **Tier 1** (Compiles and persists AST-validated executable rule to `services/backend/safety/heuristics/`). Requires user preview approval unless auto-execute is enabled.
+- `generate_proactive_briefing`: **Tier 0** (Read-only mining of temporal routines and synthesis of morning voice briefing). Runs automatically and logged.
+
 
 
 
