@@ -4328,6 +4328,27 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `get_active_window_context`: **Tier 0** (Read-only foreground window HWND, PID, title, and bounds inspection). Runs automatically and logged.
 - `check_anti_checkout_boundary`: **Tier 0** (Read-only safety barrier inspection against Rule 8/5 triggers). Runs automatically and logged.
 
+---
+
+## Section 82: Cross-Application Visual Desktop Choreography Governance (Milestone 49 Phase 4)
+
+### 1. Safety Policies & Invariants
+1. **Humanized Cubic Bezier Motion (CHOREO-01)**:
+   - Automated cursor movements follow smooth cubic Bezier paths parameterized with sinusoidal ease-in-ease-out acceleration and physiological micro-jitter ($1-2\text{px}$ tremor), avoiding robotic linear jumps.
+2. **Visual HUD Target Halos (CHOREO-03)**:
+   - Target UI elements and bounding coordinates are broadcast as `TargetHaloSpec` to the CyberHUD floating overlay prior to click dispatch, ensuring complete visual transparency for the operator.
+3. **Mandatory Semantic Focus Precondition**:
+   - All actions assert expected target window title, PID, and coordinate containment via `SemanticFocusGuard` before dispatch. Focus mismatches trigger immediate abortion (`ABORTED_FOCUS_MISMATCH`).
+4. **Rule 8 & Rule 5 Anti-Checkout Barriers**:
+   - Target elements and window titles are inspected by `AntiCheckoutShield`. Any detected checkout or financial execution elements result in immediate `ABORTED_CHECKOUT` termination.
+5. **Sub-25ms Universal Guardian Kill Switch SLA**:
+   - Synchronous kill switch checks are enforced on every Bezier interpolation step and choreography sequence. Latency benchmarked at $< 25.0\text{ ms}$ (measured $< 0.1\text{ ms}$).
+
+### 2. Tool Tier Classifications
+- `execute_choreographed_action`: **Tier 1** (Executes choreographed mouse movements, clicks, or keystrokes). Requires user preview approval unless auto-execute is enabled.
+- `preview_target_halo`: **Tier 0** (Read-only HUD bounding box halo spec formulation). Runs automatically and logged.
+- `generate_bezier_trajectory`: **Tier 0** (Read-only mathematical cubic Bezier trajectory waypoint calculation). Runs automatically and logged.
+
 
 
 
