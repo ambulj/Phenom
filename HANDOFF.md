@@ -1,5 +1,20 @@
 # HANDOFF.md
 
+## Milestone 49.0: Project COGNITIVE CHOREOGRAPHER: Multi-App Visual Desktop Automation & Bi-Temporal Episodic Knowledge Matrix
+- **Branch**: `hardening/pass-1` / `main`
+- **Date**: November 17, 2026
+- **Status**: **INITIALIZED & READY TO PLAN — PHASE 49-01 READY**
+- **Project Scope & Architecture Decisions**:
+  - **Desktop Automation**: Hybrid UIA element targeting combined with smooth cubic Bezier mouse trajectories and visual HUD bounding-box halos for total transparency and safety.
+  - **Bi-Temporal Memory Engine**: Encrypted SQLite/SQLCipher persistent graph storage with NetworkX topology, separating valid event time ($T_v$) from transaction recording time ($T_t$), with hybrid BM25 + dense vector associative retrieval.
+  - **Live Bidirectional Obsidian Mirroring**: Live synchronization of episodic graph nodes and relationship clusters into structured Markdown files in `vault/Memory/` with YAML frontmatter and `[[wikilinks]]`.
+  - **Self-Reflective Post-Mortem Synthesis**: Autonomous decomposition of failed missions/tool executions into structured root causes, automatically compiling persistent executable preconditions and parameter constraints into `services/backend/safety/heuristics/` and updating DAG planner context.
+  - **Multi-App Semantic Focus Guard & Instant Human Takeover**: Continuous monitoring of active window title, PID, and UIA root element with pre-action verification guards; low-level Win32 mouse hook (>15px displacement) yielding control in $< 10.0\text{ ms}$; strict Rule 8/5 visual anti-checkout barriers.
+  - **CyberHUD Dual-View Visualizer**: 3D force-directed node cluster around the Three.js Orb plus interactive 2D radial canvas with bi-temporal timeline slider ($T_v$ vs $T_t$), real-time WebSocket telemetry, and rich Telegram episodic cards.
+- **Next Action**: Execute Phase 49-01 (`/gsd-plan-phase 1` or execute phase 49-01).
+
+---
+
 ## Milestone 48.0: Project DUAL-CORE AUTONOMY: Multi-Agent Collaborative Swarm, Consensus Verification & Full-Duplex Dynamic Persona OS
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 17, 2026
