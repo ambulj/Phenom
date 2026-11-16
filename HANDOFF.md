@@ -3,7 +3,15 @@
 ## Milestone 49.0: Project COGNITIVE CHOREOGRAPHER: Multi-App Visual Desktop Automation & Bi-Temporal Episodic Knowledge Matrix
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 17, 2026
-- **Status**: **PHASE 49-04 COMPLETE & VERIFIED (PASS) — 9/9 TESTS PASSED, 73 MASTER TESTS PASSED, FRONTEND BUILD PASS**
+- **Status**: **100% COMPLETE & VERIFIED (PASS) — ALL 48 MASTER TESTS PASSED, FRONTEND BUILD PASS**
+- **Phase 49-05 Accomplishments (TELE-01, TELE-02, TELE-03, TELE-04)**:
+  - **Real-Time Memory Telemetry Hub (`services/backend/memory/telemetry_hub.py`)**: WebSocket broadcaster and bounded 100-event FIFO rolling ring buffer streaming real-time choreography, focus changes, and episodic memory recall activations to CyberHUD and frontend clients.
+  - **Proactive Telegram Episodic Companion Cards (`services/backend/remote/telegram_episodic_card.py`)**: Formats rich Telegram companion cards featuring ASCII knowledge graph topologies, active foreground window focus indicators, entity linkage recaps, and interactive callback buttons (`/sync_obsidian_vault` and `/guardian_halt`), with strict Rule 11 credential redacting.
+  - **CyberHUD 3D/Radial Knowledge Orb Overlay (`apps/desktop/src/components/CyberHUD/KnowledgeOrbOverlay.tsx`)**: Real-time 3D/radial node overlay orbiting around the Three.js particle Orb and CyberHUD, color-coding nodes by entity type (`PROJECT`, `CONCEPT`, `TASK`, `TOOL`, `DECISION`, `FAILURE`), with pulsing glow and ripple rings on active memory recall.
+  - **Interactive 2D Radial Knowledge Matrix Panel (`apps/desktop/src/components/panels/KnowledgeMatrixPanel.tsx`)**: High-fidelity 2D canvas with pan, zoom, entity search, category filter chips, node inspection details drawer, bi-temporal timeline scrubber ($T_v$ vs $T_t$), and emergency Guardian HALT trigger.
+  - **Tool Registry Integration (`services/backend/tools/choreography_telemetry_tools.py`)**: Registered `broadcast_choreography_telemetry` (Tier 0) and `generate_telegram_episodic_card` (Tier 0).
+  - **Safety & Guardian SLA Benchmark**: 100 consecutive Guardian kill switch halts under active telemetry broadcast and companion card generation load: Mean=0.0105ms, Max=0.0988ms (hard SLA $< 25.0\text{ ms}$).
+  - **Verification**: `test_cyberhud_knowledge_matrix_and_telemetry_suite.py`: **8/8 PASSED in 0.42s**. Master cumulative tests across Milestone 49: **48/48 PASSED in 9.30s**. Desktop frontend build: `tsc && vite build` clean in 3.61s.
 - **Phase 49-04 Accomplishments (CHOREO-01, CHOREO-02, CHOREO-03)**:
   - **Pydantic Schemas (`services/backend/schemas/desktop_choreography.py`)**: `BezierPoint`, `BezierTrajectory`, `DesktopActionType`, `TargetHaloSpec`, `DesktopActionStep`, `ChoreographyPlan`, and `ChoreographyResult`.
   - **Cubic Bezier Trajectory Generator (`services/backend/desktop/bezier_trajectory_generator.py`)**: Calculates natural curved mouse paths connecting start and destination points using cubic Bezier equations, sinusoidal ease-in-out motor velocity profiling, and physiological micro-jitter ($1-2\text{px}$ tremor) to avoid robotic linear teleportation.

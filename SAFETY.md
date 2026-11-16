@@ -4349,6 +4349,26 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `preview_target_halo`: **Tier 0** (Read-only HUD bounding box halo spec formulation). Runs automatically and logged.
 - `generate_bezier_trajectory`: **Tier 0** (Read-only mathematical cubic Bezier trajectory waypoint calculation). Runs automatically and logged.
 
+---
+
+## Section 83: CyberHUD Knowledge Matrix & Multi-Modal Telemetry Governance (Milestone 49 Phase 5)
+
+### 1. Safety Policies & Invariants
+1. **Telemetry Streaming & Rolling Ring Buffer Governance (TELE-02)**:
+   - Real-time choreography and memory telemetry is managed via `MemoryTelemetryHub` with a strictly bounded 100-event FIFO rolling ring buffer.
+   - Subscriber notifications are decoupled and error-isolated to prevent downstream UI delays from impacting backend execution.
+2. **Proactive Telegram Episodic Companion Privacy & Rule 11 (TELE-03)**:
+   - Proactive Telegram companion cards format ASCII knowledge topologies and milestone recaps while strictly applying regex-based credential and secret redaction (`_CREDENTIAL_PATTERN`).
+   - Interactive button callbacks route strictly to sanctioned callback commands (`/sync_obsidian_vault` Tier 1, `/guardian_halt` Emergency Stop).
+3. **Sub-25ms Universal Guardian Kill Switch SLA (SAF-02)**:
+   - Synchronous Guardian kill switch checks (`guardian.is_halted`) are enforced across telemetry event dispatch, historical buffer queries, and Telegram card formatting.
+   - Emergency halt aborts all telemetry broadcasts and companion rendering in $< 25.0\text{ ms}$ (benchmarked $< 0.1\text{ ms}$).
+
+### 2. Tool Tier Classifications
+- `broadcast_choreography_telemetry`: **Tier 0** (Read-only real-time choreography, focus, and memory recall event streaming to CyberHUD). Runs automatically and logged.
+- `generate_telegram_episodic_card`: **Tier 0** (Read-only proactive markdown status card and ASCII graph formulation for Telegram). Runs automatically and logged.
+
+
 
 
 

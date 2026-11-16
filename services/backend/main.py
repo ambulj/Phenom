@@ -384,6 +384,7 @@ import services.backend.tools.temporal_memory_tools
 import services.backend.tools.reflective_postmortem_tools
 import services.backend.tools.semantic_focus_tools
 import services.backend.tools.desktop_choreographer_tools
+import services.backend.tools.choreography_telemetry_tools
 import services.backend.tools.workspace_self_healing_tools
 import services.backend.tools.workflow_tools
 from services.backend.orchestration.workflow_engine import workflow_engine
