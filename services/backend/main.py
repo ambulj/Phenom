@@ -5382,6 +5382,60 @@ async def complete_system_setup():
 
 
 
+# ============================================================================
+# Phase 47-01: Mission Orchestrator Endpoints (DAG-01, DAG-02, DAG-03, DAG-04)
+# ============================================================================
+
+from services.backend.schemas.mission_dag import MissionDAG, DAGNodeStatus
+from services.backend.orchestrator.dag_decomposer import MissionDAGDecomposer
+from services.backend.safety.precondition_engine import PreconditionEngine
+
+_active_missions: Dict[str, MissionDAG] = {}
+_mission_decomposer = MissionDAGDecomposer()
+_mission_precondition_engine = PreconditionEngine()
+
+
+@app.post("/api/mission/decompose", dependencies=[Depends(verify_session_token)])
+async def decompose_mission(payload: Dict[str, Any]):
+    """Decomposes a user goal into an autonomous Mission DAG and evaluates pre-flight preconditions."""
+    goal = payload.get("goal", "").strip()
+    if not goal:
+        raise HTTPException(status_code=400, detail="Missing mission goal")
+    try:
+        dag = _mission_decomposer.decompose_goal(goal)
+        _mission_precondition_engine.check_mission_preconditions(dag)
+        _active_missions[dag.mission_id] = dag
+        return dag.model_dump()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/mission/approve", dependencies=[Depends(verify_session_token)])
+async def approve_mission(payload: Dict[str, Any]):
+    """Approves a mission DAG for autonomous execution."""
+    mission_id = payload.get("mission_id")
+    if not mission_id or mission_id not in _active_missions:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    dag = _active_missions[mission_id]
+    dag.is_approved = True
+    return {"status": "ok", "mission_id": mission_id, "is_approved": True}
+
+
+@app.post("/api/mission/cancel", dependencies=[Depends(verify_session_token)])
+async def cancel_mission(payload: Dict[str, Any]):
+    """Cancels and halts an active mission DAG."""
+    mission_id = payload.get("mission_id")
+    if not mission_id or mission_id not in _active_missions:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    dag = _active_missions[mission_id]
+    for node in dag.nodes:
+        if node.status in (DAGNodeStatus.PENDING, DAGNodeStatus.READY, DAGNodeStatus.RUNNING):
+            node.status = DAGNodeStatus.HALTED
+    return {"status": "ok", "mission_id": mission_id, "state": "cancelled"}
+
+
+
+
 
 
 
