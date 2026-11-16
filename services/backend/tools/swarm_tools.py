@@ -1,170 +1,137 @@
-"""
-Phenom Swarm Management Tools
-Provides tool endpoints for dispatching, monitoring, and aborting autonomous background workers.
-Strictly respects SAFETY.md:
-- get_swarm_status (Tier 0): Read-only status overview.
-- dispatch_swarm_task (Tier 1): Requires interactive preview confirmation.
-- abort_swarm_task (Tier 1): Requires confirmation to cancel active worker.
+"""Swarm Tools Registration (Phase 48-01, SWARM-01, SWARM-02).
+
+Registers multi-agent task auction dispatching, swarm roster inspection,
+and competitive agent bid queries into Phenom's Safety ToolRegistry.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from services.backend.safety.registry import registry
-from services.backend.automation.swarm_manager import swarm_manager
-from services.backend.schemas.swarm_debate import (
-    SwarmProposal,
-    SwarmDispatchSpecialistsArgs,
-    SwarmGetDebateStatusArgs,
-    SwarmSubmitUserDecisionArgs,
-)
-from services.backend.swarm.specialist_orchestrator import specialist_swarm_orchestrator
+from services.backend.schemas.swarm_auction import AgentRole
+from services.backend.swarm.agent_roles import AgentRoleRegistry
+from services.backend.swarm.auction_engine import TaskAuctionEngine
+from services.backend.swarm.scheduler import SwarmScheduler
+
+# Singleton instances for tools
+auction_engine = TaskAuctionEngine()
+swarm_scheduler = SwarmScheduler()
 
 
-class GetSwarmStatusArgs(BaseModel):
-    """Schema for get_swarm_status query (no arguments required)."""
-    pass
+# ============================================================================
+# 1. dispatch_swarm_auction (Tier 1)
+# ============================================================================
 
-
-class DispatchSwarmTaskArgs(BaseModel):
-    task_type: str = Field(
-        description="Type of worker to spawn: 'headless_browser' (background research/scraping) or 'subprocess_cli' (background scripts/commands)"
-    )
-    url: Optional[str] = Field(
-        default=None,
-        description="URL for headless_browser tasks"
-    )
-    command: Optional[str] = Field(
-        default=None,
-        description="Shell command for subprocess_cli tasks"
-    )
-    selectors: Optional[List[str]] = Field(
-        default=None,
-        description="Optional CSS selectors to extract from web page"
+class DispatchSwarmAuctionArgs(BaseModel):
+    tasks: List[Dict[str, Any]] = Field(
+        ...,
+        description="List of task/node dictionaries containing node_id, tool_name, title, and description",
     )
 
 
-class AbortSwarmTaskArgs(BaseModel):
-    task_id: str = Field(
-        description="ID of the active swarm task to abort"
-    )
+def dispatch_swarm_auction_preview(args: Dict[str, Any]) -> str:
+    tasks = args.get("tasks", [])
+    count = len(tasks)
+    return f"Dispatch {count} DAG task(s) to Multi-Agent Auction Engine for role fitness bidding."
 
 
 @registry.register(
-    name="get_swarm_status",
-    tier=0,
-    description="Returns real-time status of active background autonomous workers, queue capacity, and task progress. Read-only.",
-    args_schema=GetSwarmStatusArgs,
-    preview_fn=lambda a: "Inspect active autonomous worker swarm status (Read-only)"
-)
-def get_swarm_status() -> Dict[str, Any]:
-    """Returns status overview of all swarm workers."""
-    return swarm_manager.get_swarm_status()
-
-
-@registry.register(
-    name="dispatch_swarm_task",
+    name="dispatch_swarm_auction",
     tier=1,
-    description="Dispatches an autonomous background worker (headless browser scraper or background CLI runner) without stealing user focus.",
-    args_schema=DispatchSwarmTaskArgs,
-    preview_fn=lambda a: f"Dispatch swarm task: type='{a.get('task_type')}', target='{a.get('url') or a.get('command')}'"
+    description="Conducts competitive auction on DAG tasks across Architect, Coder, Auditor, and Scout roles.",
+    args_schema=DispatchSwarmAuctionArgs,
+    preview_fn=dispatch_swarm_auction_preview,
+    can_remember_per_folder=False,
 )
-async def dispatch_swarm_task(
-    task_type: str,
-    url: Optional[str] = None,
-    command: Optional[str] = None,
-    selectors: Optional[List[str]] = None
-) -> Dict[str, Any]:
-    """Dispatches a task to the swarm manager."""
-    payload: Dict[str, Any] = {}
-    if url:
-        payload["url"] = url
-    if command:
-        payload["command"] = command
-    if selectors:
-        payload["selectors"] = selectors
-
-    return await swarm_manager.dispatch_task(task_type, payload)
-
-
-@registry.register(
-    name="abort_swarm_task",
-    tier=1,
-    description="Aborts an active autonomous swarm task immediately.",
-    args_schema=AbortSwarmTaskArgs,
-    preview_fn=lambda a: f"Abort active swarm task: id='{a.get('task_id')}'"
-)
-def abort_swarm_task(task_id: str) -> Dict[str, Any]:
-    """Aborts a specific swarm worker task."""
-    aborted = swarm_manager.abort_task(task_id)
+def handle_dispatch_swarm_auction(tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    auction_results = auction_engine.conduct_auction_for_dag(tasks)
+    serialized = {
+        node_id: res.model_dump()
+        for node_id, res in auction_results.items()
+    }
     return {
-        "status": "aborted" if aborted else "not_found",
-        "task_id": task_id,
-        "success": aborted
+        "auction_count": len(serialized),
+        "assignments": {
+            node_id: res["winning_role"] for node_id, res in serialized.items()
+        },
+        "details": serialized,
     }
 
 
-# =========================================================================
-# Milestone 10.0 Phase 1: Autonomous Multi-Agent Collaborative Swarm Tools
-# =========================================================================
+# ============================================================================
+# 2. get_swarm_roster_status (Tier 0 - Read Only)
+# ============================================================================
 
-@registry.register(
-    name="swarm_dispatch_specialists",
-    tier=1,
-    description="Dispatches a proposal to the 4 specialist sub-agents (Architect, Code Reviewer, Security, QA) for multi-turn synthetic debate and consensus scoring.",
-    args_schema=SwarmDispatchSpecialistsArgs,
-    preview_fn=lambda a: f"Dispatch multi-agent synthetic debate across 4 specialists for proposal: '{a.get('title')}' (Tier {a.get('risk_tier', 1)})"
-)
-async def swarm_dispatch_specialists(
-    title: str,
-    description: str,
-    diff: Optional[str] = None,
-    risk_tier: int = 1,
-    max_rounds: int = 3
-) -> Dict[str, Any]:
-    """Dispatches a proposal to the specialist swarm orchestrator."""
-    proposal = SwarmProposal(
-        title=title,
-        description=description,
-        diff=diff,
-        risk_tier=risk_tier
-    )
-    report = await specialist_swarm_orchestrator.dispatch_debate(
-        proposal,
-        max_rounds=max_rounds
-    )
-    return report.model_dump()
+class GetSwarmRosterStatusArgs(BaseModel):
+    pass
+
+
+def get_swarm_roster_status_preview(args: Dict[str, Any]) -> str:
+    return "Query active swarm agent roles, capability profiles, workloads, and GPU VRAM metrics."
 
 
 @registry.register(
-    name="swarm_get_debate_status",
+    name="get_swarm_roster_status",
     tier=0,
-    description="Returns the status of an ongoing or completed specialist synthetic debate, or a summary of recent debates. Read-only.",
-    args_schema=SwarmGetDebateStatusArgs,
-    preview_fn=lambda a: f"Query status of specialist swarm synthetic debates (ID: {a.get('debate_id') or 'recent'})"
+    description="Returns current swarm roster profiles, active task workloads, and real-time VRAM telemetry.",
+    args_schema=GetSwarmRosterStatusArgs,
+    preview_fn=get_swarm_roster_status_preview,
 )
-def swarm_get_debate_status(debate_id: Optional[str] = None) -> Dict[str, Any]:
-    """Queries debate status from the specialist swarm orchestrator."""
-    return specialist_swarm_orchestrator.get_debate_status(debate_id)
+def handle_get_swarm_roster_status() -> Dict[str, Any]:
+    profiles = [p.model_dump() for p in AgentRoleRegistry.list_profiles()]
+    vram = swarm_scheduler.get_vram_metrics().model_dump()
+    workloads = {
+        role.value: auction_engine.active_workloads.get(role, 0)
+        for role in AgentRoleRegistry.get_all_roles()
+    }
+    return {
+        "agent_count": len(profiles),
+        "profiles": profiles,
+        "workloads": workloads,
+        "vram_metrics": vram,
+    }
+
+
+# ============================================================================
+# 3. query_agent_bids (Tier 0 - Read Only)
+# ============================================================================
+
+class QueryAgentBidsArgs(BaseModel):
+    node_id: str = Field(..., description="Unique ID of the task or DAG node")
+    tool_name: str = Field(..., description="Target tool name to evaluate")
+    title: Optional[str] = Field(default="", description="Optional title of the task")
+    description: Optional[str] = Field(default="", description="Optional description of the task")
+
+
+def query_agent_bids_preview(args: Dict[str, Any]) -> str:
+    node_id = args.get("node_id", "")
+    tool = args.get("tool_name", "")
+    return f"Simulate multi-agent bidding for node '{node_id}' with tool '{tool}'."
 
 
 @registry.register(
-    name="swarm_submit_user_decision",
-    tier=1,
-    description="Submits a user override or rejection decision for an escalated specialist synthetic debate.",
-    args_schema=SwarmSubmitUserDecisionArgs,
-    preview_fn=lambda a: f"Submit user decision '{a.get('decision')}' for escalated debate '{a.get('debate_id')}'"
+    name="query_agent_bids",
+    tier=0,
+    description="Calculates and returns individual bids from all 4 agent roles for a specific task.",
+    args_schema=QueryAgentBidsArgs,
+    preview_fn=query_agent_bids_preview,
 )
-def swarm_submit_user_decision(
-    debate_id: str,
-    decision: str,
-    reason: Optional[str] = None
+def handle_query_agent_bids(
+    node_id: str,
+    tool_name: str,
+    title: Optional[str] = "",
+    description: Optional[str] = "",
 ) -> Dict[str, Any]:
-    """Submits a user override or rejection decision."""
-    report = specialist_swarm_orchestrator.submit_user_decision(
-        debate_id=debate_id,
-        decision=decision,
-        reason=reason
+    bids = auction_engine.generate_bids_for_node(
+        node_id=node_id,
+        tool_name=tool_name,
+        node_title=title or "",
+        node_desc=description or "",
     )
-    return report.model_dump()
-
+    winner = auction_engine.select_winning_bid(node_id, bids)
+    return {
+        "node_id": node_id,
+        "tool_name": tool_name,
+        "winning_role": winner.winning_role.value,
+        "bids": [b.model_dump() for b in bids],
+    }
