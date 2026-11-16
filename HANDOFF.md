@@ -3,7 +3,14 @@
 ## Milestone 48.0: Project DUAL-CORE AUTONOMY: Multi-Agent Collaborative Swarm, Consensus Verification & Full-Duplex Dynamic Persona OS
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 17, 2026
-- **Status**: **PHASE 48-02 VERIFIED & PASSING — ALL 17 CUMULATIVE TESTS PASSED, FRONTEND BUILD PASS**
+- **Status**: **PHASE 48-03 VERIFIED & PASSING — ALL 23 CUMULATIVE TESTS PASSED, FRONTEND BUILD PASS**
+- **Phase 48-03 Accomplishments (VOICE-01, VOICE-02, VOICE-03)**:
+  - **Pydantic Schemas (`services/backend/schemas/voice_duplex.py`)**: `DuplexStreamState`, `BargeInType`, `BargeInEvent`, `DuplexAudioMetrics`, `SwarmGuidanceInjection`.
+  - **Barge-In Soft-Mute Handler (`services/backend/voice/barge_in_handler.py`)**: Instantly attenuates TTS output gain to $0.0$ in $< 100\text{ ms}$ (measured $< 5\text{ ms}$) without aborting background swarm agents; triggers Universal Guardian kill switch in $< 25.0\text{ ms}$ SLA if emergency phrase (`"phenom stop"`, `"freeze"`) is spoken.
+  - **Low-Latency Full-Duplex Stream Manager (`services/backend/voice/full_duplex_stream.py`)**: 16kHz mono in-RAM ring buffer with zero disk writes; energy VAD onset detection (~64ms); $< 300\text{ ms}$ roundtrip latency SLA.
+  - **Contextual Swarm Voice Bridge (`services/backend/voice/swarm_voice_bridge.py`)**: Translates spoken user interruptions into high-priority steering guidance (`_operator_guidance`, priority 8-10) injected directly into active `SwarmScheduler` tasks without worker thread interruption.
+  - **Tool Registry Integration (`services/backend/tools/duplex_voice_tools.py`)**: Registered `configure_duplex_streaming` (Tier 0), `inject_voice_guidance` (Tier 1), and `get_duplex_voice_metrics` (Tier 0).
+  - **Verification**: `services/backend/tests/test_full_duplex_voice_and_barge_in_suite.py`: **6/6 PASSED in 0.60s**. Cumulative tests: **23/23 PASSED in 2.68s**. Desktop frontend build: `tsc && vite build` clean in 4.42s.
 - **Phase 48-02 Accomplishments (CONS-01, CONS-02, CONS-03)**:
   - **Pydantic Schemas (`services/backend/schemas/swarm_consensus.py`)**: `ReviewVerdict`, `FindingCategory`, `FindingSeverity`, `ReviewFinding`, `AgentReviewVote`, `QuorumState`, `QuorumEvaluationResult`, `PatchBundle`.
   - **Peer Review Protocol (`services/backend/swarm/peer_review.py`)**: Automated in-memory AST syntax parser, test suite exit code inspector, path allowlist guardian (`..`, root `.env`, system dirs), and unified diff secret/PII scanner (API keys, Aadhaar, PAN, phone).
