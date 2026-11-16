@@ -28,6 +28,10 @@ interface LiveViewPanelProps {
   isPaused?: boolean;
   steps?: AutomationStep[];
   clickTarget?: { x: number; y: number } | null;
+  missionTitle?: string | null;
+  elapsedSeconds?: number;
+  totalSteps?: number;
+  completedSteps?: number;
 }
 
 export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
@@ -39,8 +43,16 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
   onResume,
   isPaused = false,
   steps = [],
-  clickTarget
+  clickTarget,
+  missionTitle,
+  elapsedSeconds = 0,
+  totalSteps = 0,
+  completedSteps = 0
 }) => {
+  const percentComplete = totalSteps > 0 ? Math.min(100, Math.round((completedSteps / totalSteps) * 100)) : 0;
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+  const timerStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', color: '#f8fafc' }}>
       {/* Header with Close and Controls */}
@@ -99,6 +111,49 @@ export const LiveViewPanel: React.FC<LiveViewPanelProps> = ({
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Active Mission Telemetry Banner */}
+        {missionTitle && (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(13, 20, 36, 0.95) 100%)',
+              border: '1px solid rgba(0, 229, 255, 0.35)',
+              borderRadius: 8,
+              padding: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc' }}>
+                🎯 {missionTitle}
+              </span>
+              <span style={{ fontSize: 12, fontFamily: 'Consolas, monospace', color: '#00e5ff', fontWeight: 600 }}>
+                ⏱️ {timerStr}
+              </span>
+            </div>
+
+            {totalSteps > 0 && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>
+                  <span>Progress: {completedSteps}/{totalSteps} steps completed</span>
+                  <span>{percentComplete}%</span>
+                </div>
+                <div style={{ width: '100%', height: 6, background: 'rgba(255, 255, 255, 0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: `${percentComplete}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #00e5ff, #0052ff)',
+                      transition: 'width 0.3s ease'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Human Takeover Alert Banner */}
         {takeoverPrompt && (
           <div
