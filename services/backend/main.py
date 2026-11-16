@@ -380,6 +380,7 @@ import services.backend.tools.ambient_companion_tools
 import services.backend.tools.gui_action_tools
 import services.backend.tools.expressive_voice_tools
 import services.backend.tools.temporal_knowledge_graph_tools
+import services.backend.tools.temporal_memory_tools
 import services.backend.tools.workspace_self_healing_tools
 import services.backend.tools.workflow_tools
 from services.backend.orchestration.workflow_engine import workflow_engine

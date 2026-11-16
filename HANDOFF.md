@@ -3,15 +3,16 @@
 ## Milestone 49.0: Project COGNITIVE CHOREOGRAPHER: Multi-App Visual Desktop Automation & Bi-Temporal Episodic Knowledge Matrix
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 17, 2026
-- **Status**: **INITIALIZED & READY TO PLAN — PHASE 49-01 READY**
-- **Project Scope & Architecture Decisions**:
-  - **Desktop Automation**: Hybrid UIA element targeting combined with smooth cubic Bezier mouse trajectories and visual HUD bounding-box halos for total transparency and safety.
-  - **Bi-Temporal Memory Engine**: Encrypted SQLite/SQLCipher persistent graph storage with NetworkX topology, separating valid event time ($T_v$) from transaction recording time ($T_t$), with hybrid BM25 + dense vector associative retrieval.
-  - **Live Bidirectional Obsidian Mirroring**: Live synchronization of episodic graph nodes and relationship clusters into structured Markdown files in `vault/Memory/` with YAML frontmatter and `[[wikilinks]]`.
-  - **Self-Reflective Post-Mortem Synthesis**: Autonomous decomposition of failed missions/tool executions into structured root causes, automatically compiling persistent executable preconditions and parameter constraints into `services/backend/safety/heuristics/` and updating DAG planner context.
-  - **Multi-App Semantic Focus Guard & Instant Human Takeover**: Continuous monitoring of active window title, PID, and UIA root element with pre-action verification guards; low-level Win32 mouse hook (>15px displacement) yielding control in $< 10.0\text{ ms}$; strict Rule 8/5 visual anti-checkout barriers.
-  - **CyberHUD Dual-View Visualizer**: 3D force-directed node cluster around the Three.js Orb plus interactive 2D radial canvas with bi-temporal timeline slider ($T_v$ vs $T_t$), real-time WebSocket telemetry, and rich Telegram episodic cards.
-- **Next Action**: Execute Phase 49-01 (`/gsd-plan-phase 1` or execute phase 49-01).
+- **Status**: **PHASE 49-01 COMPLETE & VERIFIED (PASS) — 10/10 TESTS PASSED, 43 MASTER TESTS PASSED, FRONTEND BUILD PASS**
+- **Phase 49-01 Accomplishments (MEM-01, MEM-02, MEM-03)**:
+  - **Pydantic Schemas (`services/backend/schemas/temporal_graph.py`)**: `TemporalEntity`, `TemporalRelation`, `TemporalEpisode`, `TemporalInterval`, `AssociativeQuery`, `MemorySearchResult`, `ObsidianMirrorEvent`. Strictly models Valid Time ($T_v$) and Transaction Time ($T_t$).
+  - **Bi-Temporal Knowledge Graph Engine (`services/backend/memory/temporal_graph_engine.py`)**: Encrypted SQLite persistent storage with NetworkX `MultiDiGraph` topology. Supports non-destructive updates along $T_t$, bi-temporal time-travel queries ("as-of" $T_v$ and $T_t$), ego-subgraph neighborhood extraction, and Rule 8/11/3 safety protections.
+  - **Hybrid Associative Memory Retriever (`services/backend/memory/associative_retriever.py`)**: Fuses Okapi BM25 lexical relevance, dense vector embedding similarity (`all-MiniLM-L6-v2` / CPU ONNX), exponential temporal decay ($S_{\text{temp}} = \exp(-\lambda \Delta t)$), and graph degree centrality into an explainable composite score with 1-hop/2-hop neighborhood expansion.
+  - **Live Bidirectional Obsidian Mirror (`services/backend/memory/obsidian_mirror.py`)**: Synchronizes episodic entities into `vault/Memory/<entity_type>/<slug>.md` with structured YAML frontmatter (timestamps, checksum, tags) and bidirectional `[[wikilinks]]` for relationships.
+  - **Tool Registry Integration (`services/backend/tools/temporal_memory_tools.py`)**: Registered `record_temporal_episode` (Tier 1), `query_associative_memory` (Tier 0), and `sync_obsidian_memory` (Tier 1) in Phenom Safety ToolRegistry.
+  - **Safety & Guardian SLA Benchmark**: 100 consecutive Guardian kill switch halts under active database and graph traversal load: Max=0.170ms, Avg=0.035ms (hard SLA $< 25.0\text{ ms}$). Rule 8 blocks payment/checkout queries; Rule 11 dynamic regex scrubs API keys and credentials.
+  - **Verification**: `test_temporal_graph_and_associative_memory_suite.py`: **10/10 PASSED in 9.78s**. Master cumulative tests: **43/43 PASSED in 10.62s**. Desktop frontend build: `tsc && vite build` clean in 4.27s.
+- **Next Action**: Execute Phase 49-02: Self-Reflective Post-Mortem Engine & Proactive Workflow Synthesizer (`REFL-01`, `REFL-02`, `REFL-03`).
 
 ---
 

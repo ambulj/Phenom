@@ -4265,6 +4265,26 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 ### 3. Remote Uplink Concurrency Chaos Battery (SAF-03)
 - 50 concurrent worker threads executing simultaneous bot command handling, voice note transcription, screen snapshot generation, and tool dispatches with zero deadlocks and zero unhandled exceptions.
 
+---
+
+## Section 79: Bi-Temporal Episodic Knowledge Matrix & Obsidian Mirror Governance (Milestone 49 Phase 1)
+
+### 1. Safety Policies & Invariants
+1. **Bi-Temporal Audit Preservation & Versioning**:
+   - Entities and relations strictly distinguish valid real-world time ($T_v$) from transaction recording time ($T_t$).
+   - Non-destructive updates never delete rows; superseded assertions are versioned along transaction time (`superseded_at`), preserving an unforgeable historical audit trail.
+2. **Rule 8 (Anti-Checkout & Financial Protection)**:
+   - All knowledge graph entities, relations, episodes, and search queries pass through strict regex inspection blocking payment, credit card, checkout, or billing strings. Violations raise `Rule8ViolationError`.
+3. **Rule 11 (Credential & Secret Scrubbing)**:
+   - Dynamic regex scrubber cleanses API keys (`nvapi-`, `ghp_`, `sk-`, `AKIA`), tokens, passwords, and authorization headers before committing any text into persistent database rows or Obsidian markdown notes.
+4. **Sub-25ms Universal Guardian Kill Switch SLA**:
+   - `guardian.is_halted` is verified synchronously before every database transaction, associative retrieval search, and Obsidian file generation. Kill switch halt latency is benchmarked at $< 25.0\text{ ms}$ (measured $< 0.1\text{ ms}$).
+
+### 2. Tool Tier Classifications
+- `record_temporal_episode`: **Tier 1** (Inserts episodic event and linked entity records into encrypted database). Requires user preview approval unless auto-execute is enabled.
+- `query_associative_memory`: **Tier 0** (Read-only hybrid BM25, dense vector embedding, temporal decay, and graph proximity search). Runs automatically and logged.
+- `sync_obsidian_memory`: **Tier 1** (Writes structured markdown notes and wikilinks to `vault/Memory/` on disk). Requires user preview approval unless auto-execute is enabled.
+
 
 
 
