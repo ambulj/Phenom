@@ -3,7 +3,12 @@
 ## Milestone 50.0: Project AUTONOMOUS WORKFLOW OPERATOR: Multi-App Sovereign Macro Chains, Enclave Sandboxing & Visual Grounding
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 18, 2026
-- **Status**: **Phase 50-03 COMPLETE & VERIFIED (PASS) — ALL 18 WORKFLOW TESTS PASSED, FRONTEND BUILD PASS (0 TS ERRORS)**
+- **Status**: **Phase 50-04 COMPLETE & VERIFIED (PASS) — ALL 24 WORKFLOW TESTS PASSED, FRONTEND BUILD PASS (0 TS ERRORS)**
+- **Phase 50-04 Accomplishments (WKF-04.1, WKF-04.2, WKF-04.3)**:
+  - **Strict Taint Enclave Engine (`services/backend/security/taint_enclave.py`)**: Encapsulates external web scraped and retrieved data in `EnclaveDataPayload` with explicit `[UNTRUSTED_TAINT]` boundaries. Scans against 30-pattern injection corpus, strips malicious instructions (`[REDACTED_PROMPT_INJECTION]`), neutralizes dangerous shell subshells (`$(...)`, `` `...` ``), and calculates unified diff previews before touching disk files.
+  - **CyberHUD Diff Preview Card (`apps/desktop/src/components/CyberHUD/DataPipeDiffPreviewCard.tsx`)**: High-fidelity visual split/unified diff preview component rendering added/deleted lines in green/red, displaying the `[UNTRUSTED_TAINT]` badge and origin link, and wiring 1-click "Authorize & Commit Diff" and "Discard" triggers.
+  - **Tool Registry Integration (`services/backend/tools/pipeline_tools.py`)**: Registered `encapsulate_untrusted_data` (Tier 0), `stage_enclave_diff_preview` (Tier 1), and `commit_enclave_data_to_file` (Tier 1) with Rule 7 recycle bin safety.
+  - **Verification**: `test_workflow_enclave_sandbox.py`: **6/6 PASSED in 0.74s**. Cumulative workflow suite (`50-01` through `50-04`): **24/24 PASSED in 1.69s**. Full safety suite: **55/55 PASSED in 15.66s**. Desktop frontend: `npx tsc --noEmit` clean (0 errors).
 - **Phase 50-03 Accomplishments (WKF-03.1, WKF-03.2, WKF-03.3)**:
   - **Active Visual Safety Shield (`services/backend/safety/visual_shield.py`)**: Real-time keyword & regex scanner inspecting on-screen surfaces, OCR frames, and DOM text with sub-25ms hard SLA (measured $< 1.0\text{ ms}$). Enforces Rule 8 (payments/checkout prohibited), Rule 11 (passwords/OTPs/2FA prohibited), and Rule 5 (trading prohibited), while permitting non-destructive shopping cart inspections ("Fill carts and stop").
   - **Anti-Checkout Guard & Audit Logger (`services/backend/safety/anti_checkout_guard.py`)**: Pre-action execution barrier hook. Immediately triggers Guardian kill switch upon barrier breach and writes tamper-evident audit records to encrypted SQLite `action_log`. Emits `WORKFLOW_SAFETY_BARRIER_TRIPPED` WebSocket event.
@@ -21,7 +26,7 @@
   - **Tool Registry Integration**: Registered `plan_workflow_dag` (Tier 0), `approve_workflow_batch` (Tier 1), `execute_workflow_dag` (Tier 1).
   - **Frontend Integration (`apps/desktop/src/App.tsx`)**: Connected to WebSocket telemetry stream (`WORKFLOW_DAG_CREATED`, `WORKFLOW_STEP_STATUS`, `WORKFLOW_DIVERGENCE_ALERT`). Passed `tsc --noEmit` cleanly with 0 errors.
   - **Verification**: `test_workflow_dag_planner.py`: **6/6 PASSED in 0.95s**. Full safety suite: **55/55 PASSED in 16.59s**.
-- **Next Action**: Execute Phase 50-04: Strict Enclave Sandbox & Taint-Tracked Data Pipes (`WKF-04`).
+- **Next Action**: Execute Phase 50-05: Observable Motion Choreography & Dual Handoff Briefing (`WKF-05`).
 
 ---
 

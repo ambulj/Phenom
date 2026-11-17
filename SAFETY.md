@@ -4425,6 +4425,27 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `inspect_visual_safety_barrier`: **Tier 0** (Read-only visual safety barrier evaluation on screen surface text). Runs automatically and logged.
 - `verify_anti_checkout_boundary`: **Tier 0** (Read-only verification that target URL and page summary respect Rule 8 boundaries). Runs automatically and logged.
 
+---
+
+## Section 87: Strict Enclave Sandbox & Taint-Tracked Data Pipes Governance (Milestone 50 Phase 4)
+
+### 1. Safety Policies & Invariants
+1. **Mandatory [UNTRUSTED_TAINT] Encapsulation (`WKF-04.1`)**:
+   - Content extracted from external sources (websites, APIs, RSS, Gmail, web scrapers) must be encapsulated in an `EnclaveDataPayload` with explicit `[UNTRUSTED_TAINT]` boundaries.
+   - Prevents untrusted data from being passed directly to tool execution engines or shell interpreters.
+2. **Prompt Injection & Shell Metacharacter Neutralization (`WKF-04.2`)**:
+   - All text flowing through the taint enclave is scanned against the 30-pattern injection corpus and disarmed (`[REDACTED_PROMPT_INJECTION]`).
+   - Shell command substitutions (`$(...)`, `` `...` ``) and metacharacters are neutralized to prevent subshell command execution.
+3. **Side-by-Side Diff Preview & Rule 7 Safety (`WKF-04.3`)**:
+   - Modifying any workspace file or Obsidian note with web-derived content requires staging a unified diff preview card (`DiffPreviewPayload`) in the desktop UI.
+   - Committing changes requires explicit user authorization and enforces Rule 7 (recycle bin backup via `send2trash` before overwriting).
+
+### 2. Tool Tier Classifications
+- `encapsulate_untrusted_data`: **Tier 0** (Read-only content encapsulation, injection scrubbing, and taint tagging). Runs automatically and logged.
+- `stage_enclave_diff_preview`: **Tier 1** (Calculates and broadcasts diff preview card to desktop CyberHUD). Requires confirmation preview.
+- `commit_enclave_data_to_file`: **Tier 1** (Applies authorized diff to disk with Rule 7 recycle bin backup). Requires confirmation preview.
+
+
 
 
 

@@ -98,6 +98,7 @@ import { SensoryPresenceHUD } from './components/CyberHUD/SensoryPresenceHUD';
 import { VoiceStudioHUD } from './components/CyberHUD/VoiceStudioHUD';
 import { CyberCommandCenterHUD } from './components/CyberHUD/CyberCommandCenterHUD';
 import { WorkflowBatchApprovalCard } from './components/CyberHUD/WorkflowBatchApprovalCard';
+import { DataPipeDiffPreviewCard } from './components/CyberHUD/DataPipeDiffPreviewCard';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -265,6 +266,8 @@ export const App: React.FC = () => {
   const [cognitiveLoadBalancerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showWorkflowBatchApproval, setShowWorkflowBatchApproval] = useState<boolean>(true);
   const [workflowBatchApprovalExternalEvent, setWorkflowBatchApprovalExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showDiffPreview, setShowDiffPreview] = useState<boolean>(true);
+  const [diffPreviewExternalEvent, setDiffPreviewExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAgentSwarmMesh, setShowAgentSwarmMesh] = useState<boolean>(false);
   const [agentSwarmMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTaskAuctionProtocol, setShowTaskAuctionProtocol] = useState<boolean>(false);
@@ -550,6 +553,9 @@ export const App: React.FC = () => {
             setScreenGroundingExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('actor.') || mtype.startsWith('gui.action')) {
             setGuiActionPlayerExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('WORKFLOW_DIFF_') || mtype.startsWith('workflow_diff.')) {
+            setDiffPreviewExternalEvent({ type: mtype, payload });
+            setShowDiffPreview(true);
           } else if (mtype.startsWith('WORKFLOW_') || mtype.startsWith('workflow_dag.')) {
             setWorkflowBatchApprovalExternalEvent({ type: mtype, payload });
             setShowWorkflowBatchApproval(true);
@@ -1801,6 +1807,21 @@ export const App: React.FC = () => {
           <WorkflowBatchApprovalCard
             externalEvent={workflowBatchApprovalExternalEvent}
             onClose={() => setShowWorkflowBatchApproval(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Strict Enclave Sandbox & Taint-Tracked Data Pipes Diff Preview (Phase 50-04) */}
+      {showDiffPreview && (
+        <div style={{ position: 'fixed', bottom: 90, right: 24, width: '600px', maxHeight: '85vh', overflowY: 'auto', zIndex: 141 }}>
+          <DataPipeDiffPreviewCard
+            externalEvent={diffPreviewExternalEvent}
+            onClose={() => setShowDiffPreview(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
