@@ -532,12 +532,9 @@ from services.backend.resource.vram_manager import vram_manager
 
 
 
-@asynccontextmanager
-
-
-
 main_loop = None
 
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     global main_loop
 
