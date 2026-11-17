@@ -97,6 +97,7 @@ import { ToolFoundryHUD } from './components/CyberHUD/ToolFoundryHUD';
 import { SensoryPresenceHUD } from './components/CyberHUD/SensoryPresenceHUD';
 import { VoiceStudioHUD } from './components/CyberHUD/VoiceStudioHUD';
 import { CyberCommandCenterHUD } from './components/CyberHUD/CyberCommandCenterHUD';
+import { WorkflowBatchApprovalCard } from './components/CyberHUD/WorkflowBatchApprovalCard';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -262,6 +263,8 @@ export const App: React.FC = () => {
   const [worldModelSimulatorExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showCognitiveLoadBalancer, setShowCognitiveLoadBalancer] = useState<boolean>(false);
   const [cognitiveLoadBalancerExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showWorkflowBatchApproval, setShowWorkflowBatchApproval] = useState<boolean>(true);
+  const [workflowBatchApprovalExternalEvent, setWorkflowBatchApprovalExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAgentSwarmMesh, setShowAgentSwarmMesh] = useState<boolean>(false);
   const [agentSwarmMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTaskAuctionProtocol, setShowTaskAuctionProtocol] = useState<boolean>(false);
@@ -547,6 +550,9 @@ export const App: React.FC = () => {
             setScreenGroundingExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('actor.') || mtype.startsWith('gui.action')) {
             setGuiActionPlayerExternalEvent({ type: mtype, payload });
+          } else if (mtype.startsWith('WORKFLOW_') || mtype.startsWith('workflow_dag.')) {
+            setWorkflowBatchApprovalExternalEvent({ type: mtype, payload });
+            setShowWorkflowBatchApproval(true);
           } else if (mtype.startsWith('workflow.') || mtype.startsWith('crossapp.') || mtype.startsWith('window.')) {
             setCrossAppWorkflowExternalEvent({ type: mtype, payload });
           } else if (mtype.startsWith('watchdog.') || mtype.startsWith('incident.') || mtype.startsWith('alert.')) {
@@ -1780,6 +1786,21 @@ export const App: React.FC = () => {
         <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999 }}>
           <CyberCommandCenterHUD
             onClose={() => setShowCyberCommandCenter(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Autonomous Workflow DAG Planner & Upfront Batch Approvals (Phase 50-01) */}
+      {showWorkflowBatchApproval && (
+        <div style={{ position: 'fixed', bottom: 90, right: 24, width: '560px', maxHeight: '80vh', overflowY: 'auto', zIndex: 140 }}>
+          <WorkflowBatchApprovalCard
+            externalEvent={workflowBatchApprovalExternalEvent}
+            onClose={() => setShowWorkflowBatchApproval(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));

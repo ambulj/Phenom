@@ -444,6 +444,8 @@ from services.backend.memory.multi_source_graph import multi_source_graph
 from services.backend.memory.graph_rag import graph_rag_engine
 from services.backend.vision.ambient_copilot import ambient_copilot
 from services.backend.system.resource_governor import resource_governor
+import services.backend.workflows.batch_approval
+from services.backend.workflows.batch_approval import workflow_execution_manager
 
 
 

@@ -1,5 +1,20 @@
 # HANDOFF.md
 
+## Milestone 50.0: Project AUTONOMOUS WORKFLOW OPERATOR: Multi-App Sovereign Macro Chains, Enclave Sandboxing & Visual Grounding
+- **Branch**: `hardening/pass-1` / `main`
+- **Date**: November 18, 2026
+- **Status**: **Phase 50-01 COMPLETE & VERIFIED (PASS) — ALL 6 TESTS PASSED, FRONTEND BUILD PASS (0 TS ERRORS)**
+- **Phase 50-01 Accomplishments (WKF-01.1, WKF-01.2, WKF-01.3)**:
+  - **DAG Planner Engine (`services/backend/workflows/dag_planner.py`)**: Natural language intent decomposition into topologically ordered `WorkflowDAG` graphs. Calculates risk tier distribution (`max_tier`), estimates duration, resolves atomic step dependencies, and provisions runtime preconditions (`StepPrecondition`).
+  - **Batch Approval & Execution Manager (`services/backend/workflows/batch_approval.py`)**: Enforces upfront batch authorization lifecycle (`status == "approved"` required before execution). Verifies runtime preconditions (file presence, process execution) before step dispatch. Immediately pauses on environmental divergence with `WORKFLOW_DIVERGENCE_ALERT`.
+  - **CyberHUD Batch Approval Card (`apps/desktop/src/components/CyberHUD/WorkflowBatchApprovalCard.tsx`)**: High-fidelity Fluent UI overlay rendering the full DAG step progression, risk badges (Tier 0–2), divergence warning banners, and 1-click batch approve/abort triggers.
+  - **Tool Registry Integration**: Registered `plan_workflow_dag` (Tier 0), `approve_workflow_batch` (Tier 1), `execute_workflow_dag` (Tier 1).
+  - **Frontend Integration (`apps/desktop/src/App.tsx`)**: Connected to WebSocket telemetry stream (`WORKFLOW_DAG_CREATED`, `WORKFLOW_STEP_STATUS`, `WORKFLOW_DIVERGENCE_ALERT`). Passed `tsc --noEmit` cleanly with 0 errors.
+  - **Verification**: `test_workflow_dag_planner.py`: **6/6 PASSED in 0.95s**. Full safety suite: **55/55 PASSED in 16.59s**.
+- **Next Action**: Execute Phase 50-02: Self-Healing UI Notice & Interstitial Dismissal Kernel (`WKF-02`).
+
+---
+
 ## Milestone 49.0: Project COGNITIVE CHOREOGRAPHER: Multi-App Visual Desktop Automation & Bi-Temporal Episodic Knowledge Matrix
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 17, 2026

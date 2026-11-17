@@ -4368,6 +4368,27 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `broadcast_choreography_telemetry`: **Tier 0** (Read-only real-time choreography, focus, and memory recall event streaming to CyberHUD). Runs automatically and logged.
 - `generate_telegram_episodic_card`: **Tier 0** (Read-only proactive markdown status card and ASCII graph formulation for Telegram). Runs automatically and logged.
 
+---
+
+## Section 84: Autonomous Workflow DAG & Upfront Batch Approvals Governance (Milestone 50 Phase 1)
+
+### 1. Safety Policies & Invariants
+1. **Upfront Batch Approval & Execution Guard (`WKF-01.1`, `WKF-01.2`)**:
+   - Multi-step cross-application goals must be decomposed into a strictly typed `WorkflowDAG` before execution.
+   - The DAG assigns each step an atomic risk tier (Tier 0 to Tier 2) and computes `max_tier`.
+   - Execution without explicit prior batch authorization (`status == "approved"`) is strictly rejected with a `ValueError`.
+2. **Automated Pre-Condition Divergence Detection (`WKF-01.3`)**:
+   - Each step defines environmental preconditions (`StepPrecondition`: file existence, expected process/window title).
+   - If any precondition fails prior to step dispatch, execution immediately pauses, the step and DAG status are marked `diverged`, and a `WORKFLOW_DIVERGENCE_ALERT` is broadcast to CyberHUD for operator intervention.
+3. **Standing Safety & Tool Boundary Enforcement**:
+   - Step execution delegates strictly to `safety_engine.execute_tool`, maintaining all Rule 1 tier classifications, Rule 8 anti-checkout checks, and Rule 5 financial bans.
+
+### 2. Tool Tier Classifications
+- `plan_workflow_dag`: **Tier 0** (Decomposes user intent into an ordered execution DAG with preconditions and risk tiers). Runs automatically and logged.
+- `approve_workflow_batch`: **Tier 1** (Upfront batch authorization for all steps within a prepared workflow DAG). Requires explicit confirmation preview.
+- `execute_workflow_dag`: **Tier 1** (Triggers sequential dependency-aware execution of an approved DAG with divergence guards). Requires explicit confirmation preview.
+
+
 
 
 
