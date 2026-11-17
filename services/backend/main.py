@@ -449,6 +449,9 @@ from services.backend.workflows.batch_approval import workflow_execution_manager
 import services.backend.tools.self_healing_tools
 from services.backend.automation.self_healing_resolver import self_healing_resolver
 from services.backend.automation.hybrid_grounding import hybrid_grounder
+import services.backend.tools.visual_safety_tools
+from services.backend.safety.visual_shield import visual_safety_shield
+from services.backend.safety.anti_checkout_guard import anti_checkout_guard
 
 
 

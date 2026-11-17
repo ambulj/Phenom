@@ -4405,6 +4405,27 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `detect_and_resolve_obstacles`: **Tier 1** (Inspects foreground state, classifies obstacles, and auto-dismisses safe barriers). Requires confirmation preview.
 - `ground_element_hybrid`: **Tier 0** (Read-only spatial coordinate resolution via native UIA with visual OCR fallback). Runs automatically and logged.
 
+---
+
+## Section 86: Active Visual Safety Shield & Anti-Checkout Barrier Governance (Milestone 50 Phase 3)
+
+### 1. Safety Policies & Invariants
+1. **Real-Time Visual & DOM Keyword Scanning (`WKF-03.1`)**:
+   - Every macro step performs a pre-action visual and DOM evaluation using `ActiveVisualSafetyShield`.
+   - Inspection evaluates text across active application surfaces and OCR frames for prohibited terms.
+2. **Sub-25ms Emergency Halt on Checkout and Credentials (`WKF-03.2`)**:
+   - Hard latency SLA of $< 25.0\text{ ms}$ (benchmarked $< 5.0\text{ ms}$ mean).
+   - Any detected payment or checkout term (`cvv`, `card number`, `pay now`, `complete purchase`, `place order`, `billing address`, `upi pin`) immediately triggers `guardian.trigger()`, halts macro execution, and raises `VisualSafetyBarrierError` (Rule 8).
+   - Any credential or OTP input (`enter password`, `confirm password`, `one time password`, `2fa code`) immediately triggers `guardian.trigger()` to prevent exfiltration (Rule 11).
+   - Benign shopping cart views ("View Cart", "Cart: 3 items") remain explicitly permitted under Rule 8 ("Fill carts and stop").
+3. **Tamper-Evident Audit Logging (`WKF-03.3`)**:
+   - Every tripped barrier produces a tamper-evident audit record (`BarrierTripRecord`) persisted into encrypted SQLite `action_log` with timestamp, trigger keyword, and window context.
+
+### 2. Tool Tier Classifications
+- `inspect_visual_safety_barrier`: **Tier 0** (Read-only visual safety barrier evaluation on screen surface text). Runs automatically and logged.
+- `verify_anti_checkout_boundary`: **Tier 0** (Read-only verification that target URL and page summary respect Rule 8 boundaries). Runs automatically and logged.
+
+
 
 
 
