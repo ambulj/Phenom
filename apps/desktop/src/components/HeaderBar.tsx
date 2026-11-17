@@ -17,7 +17,9 @@ import {
   WeatherMoonRegular,
   WindowAppsRegular,
   SearchRegular,
-  CodeRegular
+  CodeRegular,
+  BotRegular,
+  BrainCircuitRegular
 } from '@fluentui/react-icons';
 import { OrbState } from '../types/protocol';
 import { DeveloperWorkspaceState } from '../types/workspace';
@@ -224,6 +226,22 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           onClick={() => onSelectPanel(activePanel === 'live_view' ? null : 'live_view')}
         >
           Live View
+        </Button>
+        <Button
+          appearance={activePanel === 'swarm' ? 'primary' : 'subtle'}
+          icon={<BotRegular />}
+          onClick={() => onSelectPanel(activePanel === 'swarm' ? null : 'swarm')}
+          title="Open Multi-Agent Swarm Visualizer"
+        >
+          Swarm
+        </Button>
+        <Button
+          appearance={activePanel === 'knowledge_matrix' ? 'primary' : 'subtle'}
+          icon={<BrainCircuitRegular />}
+          onClick={() => onSelectPanel(activePanel === 'knowledge_matrix' ? null : 'knowledge_matrix')}
+          title="Open Bi-Temporal Knowledge Matrix"
+        >
+          Matrix
         </Button>
         <Button
           appearance={showMiniOverlay ? 'primary' : 'subtle'}

@@ -1,5 +1,11 @@
 export function getSessionToken(): string | undefined {
-  return typeof window !== 'undefined' ? window.phenom?.getSessionToken() : undefined;
+  if (typeof window === 'undefined') return undefined;
+  const electronToken = window.phenom?.getSessionToken();
+  if (electronToken) return electronToken;
+  const urlToken = new URLSearchParams(window.location.search).get('token');
+  if (urlToken) return urlToken;
+  const storedToken = localStorage.getItem('phenom_session_token');
+  return storedToken || undefined;
 }
 
 export function getAuthHeaders(): Record<string, string> {

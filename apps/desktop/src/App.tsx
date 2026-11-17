@@ -22,6 +22,8 @@ import { SettingsPanel } from './components/panels/SettingsPanel';
 import { LiveViewPanel } from './components/panels/LiveViewPanel';
 
 import { DashboardPanel } from './components/panels/DashboardPanel';
+import { SwarmVisualizerPanel } from './components/panels/SwarmVisualizerPanel';
+import { KnowledgeMatrixPanel } from './components/panels/KnowledgeMatrixPanel';
 
 import { MiniOverlay } from './components/MiniOverlay';
 
@@ -311,10 +313,25 @@ export const App: React.FC = () => {
 
 
 
-    const connect = () => {
+    const connect = async () => {
 
-      const urlToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null;
-      const token = window.phenom?.getSessionToken() || urlToken || (typeof window !== 'undefined' ? localStorage.getItem('phenom_session_token') : null);
+      let urlToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null;
+      let token = window.phenom?.getSessionToken() || urlToken || (typeof window !== 'undefined' ? localStorage.getItem('phenom_session_token') : null);
+
+      if (!token && typeof window !== 'undefined') {
+        try {
+          const devRes = await fetch('/api/dev-token');
+          if (devRes.ok) {
+            const devData = await devRes.json();
+            if (typeof devData.token === 'string') {
+              token = devData.token;
+              localStorage.setItem('phenom_session_token', devData.token);
+            }
+          }
+        } catch {
+          // Dev token endpoint unavailable
+        }
+      }
 
       const protocols = token ? [`phenom.${token}`] : [];
 
@@ -638,7 +655,18 @@ export const App: React.FC = () => {
 
   const handleSendMessage = (text: string) => {
 
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      setHistoryMessages((prev) => [
+        ...prev,
+        { id: `hist-${Date.now()}`, role: 'user', content: text },
+        {
+          id: `hist-reply-${Date.now()}`,
+          role: 'assistant',
+          content: `⚠️ **Phenom Backend Offline**\n\nThe UI is currently not connected to the local backend WebSocket (\`ws://127.0.0.1:8000/ws\`).\n\nPlease ensure the Phenom backend is running (\`npm run dev:backend\` or \`python -m uvicorn services.backend.main:app\`). Once connected, the status badge will indicate **ONLINE** and real-time execution will resume.`
+        }
+      ]);
+      return;
+    }
 
     setStreamingText('');
 
@@ -2122,6 +2150,30 @@ export const App: React.FC = () => {
             takeoverPrompt={takeoverPrompt}
 
             onTakeoverDecision={handleTakeoverDecision}
+
+          />
+
+        )}
+
+        {activePanel === 'swarm' && (
+
+          <SwarmVisualizerPanel
+
+            onClose={() => setActivePanel(null)}
+
+            onHalt={handleTriggerKillswitch}
+
+          />
+
+        )}
+
+        {activePanel === 'knowledge_matrix' && (
+
+          <KnowledgeMatrixPanel
+
+            onClose={() => setActivePanel(null)}
+
+            onEmergencyHalt={handleTriggerKillswitch}
 
           />
 
