@@ -446,6 +446,9 @@ from services.backend.vision.ambient_copilot import ambient_copilot
 from services.backend.system.resource_governor import resource_governor
 import services.backend.workflows.batch_approval
 from services.backend.workflows.batch_approval import workflow_execution_manager
+import services.backend.tools.self_healing_tools
+from services.backend.automation.self_healing_resolver import self_healing_resolver
+from services.backend.automation.hybrid_grounding import hybrid_grounder
 
 
 

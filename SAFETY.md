@@ -4388,6 +4388,24 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `approve_workflow_batch`: **Tier 1** (Upfront batch authorization for all steps within a prepared workflow DAG). Requires explicit confirmation preview.
 - `execute_workflow_dag`: **Tier 1** (Triggers sequential dependency-aware execution of an approved DAG with divergence guards). Requires explicit confirmation preview.
 
+---
+
+## Section 85: Self-Healing UI Resilience & Hybrid Grounding Governance (Milestone 50 Phase 2)
+
+### 1. Safety Policies & Invariants
+1. **Strict Modal Classification & Destructive Barrier Protection (`WKF-02.1`, `WKF-02.2`)**:
+   - Detected modal dialogs and on-screen obstacles are classified into strictly typed categories (`COOKIE_BANNER`, `PROMOTIONAL_TIP`, `UPDATE_NOTICE`, `PERMISSION_ALERT`, `DESTRUCTIVE_CONFIRMATION`, `UNKNOWN_MODAL`).
+   - Non-destructive informational barriers (cookie consent banners, promotional tips, update prompts) are autonomously dismissed in $< 500\text{ ms}$ without failing the active workflow.
+   - Any destructive prompt (file deletion, formatting, discarding unsaved work, payment/checkout) is marked `is_safe_to_dismiss = False`. Macro execution immediately pauses, yields control, and prompts the operator for typed on-screen confirmation.
+2. **Hybrid Element Grounding Hierarchy (`WKF-02.3`)**:
+   - Target element grounding queries primary native Windows UIAutomation accessibility trees with $< 15\text{ ms}$ SLA.
+   - When accessibility handles are detached, virtualized, or embedded in canvas/WebGL/Electron frameworks, grounding gracefully transitions to visual OCR / Moondream coordinate extraction, ensuring transparent spatial awareness.
+
+### 2. Tool Tier Classifications
+- `detect_and_resolve_obstacles`: **Tier 1** (Inspects foreground state, classifies obstacles, and auto-dismisses safe barriers). Requires confirmation preview.
+- `ground_element_hybrid`: **Tier 0** (Read-only spatial coordinate resolution via native UIA with visual OCR fallback). Runs automatically and logged.
+
+
 
 
 
