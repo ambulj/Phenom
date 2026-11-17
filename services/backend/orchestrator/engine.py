@@ -765,7 +765,12 @@ class Orchestrator:
                             yield {"type": "chat.token", "payload": {"token": content, "index": token_index}}
             else:
                 # Stream from Cloud Nemotron
-                api_key = os.environ.get("NVIDIA_API_KEY", "")
+                try:
+                    from services.backend.remote.credentials import get_credential
+                    cred_key = get_credential("nvidia-api-key")
+                except Exception:
+                    cred_key = None
+                api_key = os.environ.get("NVIDIA_API_KEY") or cred_key or ""
                 client = OpenAI(base_url=NVIDIA_BASE_URL, api_key=api_key)
                 stream_resp = client.chat.completions.create(
                     model=model_name,
@@ -778,11 +783,13 @@ class Orchestrator:
                         yield {"type": "chat.cancelled", "payload": {"tokens_emitted": token_index}}
                         yield {"type": "state.change", "payload": {"state": "idle"}}
                         return
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        token = chunk.choices[0].delta.content
-                        collected_tokens.append(token)
-                        token_index += 1
-                        yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
+                    if chunk.choices and len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta
+                        token = delta.content or getattr(delta, "reasoning_content", None)
+                        if token:
+                            collected_tokens.append(token)
+                            token_index += 1
+                            yield {"type": "chat.token", "payload": {"token": token, "index": token_index}}
 
         except Exception as e:
             err_text = f"[Action Blocked or Failed: {str(e)}]"

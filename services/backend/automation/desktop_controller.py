@@ -30,6 +30,7 @@ from services.backend.vision.privacy_masker import privacy_masker
 
 class DesktopController:
     def __init__(self):
+        pyautogui.FAILSAFE = False
         self.limits = AutomationLimitsManager()
         self._step_history: List[Dict[str, Any]] = []
         self._overlay_callback = None

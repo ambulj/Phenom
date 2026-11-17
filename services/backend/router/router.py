@@ -18,10 +18,31 @@ from services.backend.safety.action_log import action_log
 CloudApprovalHandler = Callable[[str, str, int], Awaitable[bool]] # (request_id, preview_text, token_estimate) -> approved
 
 class ModelRouter:
-    def __init__(self, ollama_model: Optional[str] = None, cloud_model: str = "nvidia/llama-3.1-nemotron-70b-instruct"):
+    def __init__(self, ollama_model: Optional[str] = None, cloud_model: Optional[str] = None):
         self._explicit_ollama_model = ollama_model
-        self.cloud_model = cloud_model
+        self._explicit_cloud_model = cloud_model
         self._cloud_approval_handler: Optional[CloudApprovalHandler] = None
+
+    @property
+    def cloud_model(self) -> str:
+        if self._explicit_cloud_model:
+            return self._explicit_cloud_model
+        env_c = os.environ.get("PHENOM_CLOUD_MODEL") or os.environ.get("NVIDIA_CLOUD_MODEL")
+        if env_c:
+            return env_c
+        try:
+            from services.backend.memory.vault import load_config
+            cfg = load_config()
+            cfg_c = cfg.get("models", {}).get("cloud_model")
+            if cfg_c:
+                return cfg_c
+        except Exception:
+            pass
+        return "nvidia/nemotron-3.5-bolt-e4b"
+
+    @cloud_model.setter
+    def cloud_model(self, val: Optional[str]):
+        self._explicit_cloud_model = val
 
     @property
     def ollama_model(self) -> str:

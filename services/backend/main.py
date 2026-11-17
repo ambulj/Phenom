@@ -23,6 +23,8 @@ Connects the desktop Electron app to the orchestrator, safety layer, router, and
 
 
 import asyncio
+from dotenv import load_dotenv
+load_dotenv()
 
 
 
