@@ -4445,6 +4445,26 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `stage_enclave_diff_preview`: **Tier 1** (Calculates and broadcasts diff preview card to desktop CyberHUD). Requires confirmation preview.
 - `commit_enclave_data_to_file`: **Tier 1** (Applies authorized diff to disk with Rule 7 recycle bin backup). Requires confirmation preview.
 
+---
+
+## Section 88: Observable Motion Choreography & Dual Handoff Governance (Milestone 50 Phase 5)
+
+### 1. Safety Policies & Invariants
+1. **Observable Motion Choreography & Halo Transparency (`WKF-05.1`, `WKF-05.2`)**:
+   - Cursor motion during multi-step macros must follow smooth cubic Bezier trajectories scaled to 1.2x human speed with physiological micro-jitter to eliminate jarring linear teleportation.
+   - Target bounding box halos (`TargetHaloSpec`) must be formulated and emitted to the CyberHUD visual overlay prior to click dispatch, ensuring the human operator has transparent visual preview of intended interactions.
+2. **Sub-10ms Human Takeover Interruption (`WKF-05.3`)**:
+   - During synthetic cursor glides, low-level physical mouse displacement is continuously sampled.
+   - Any physical divergence exceeding $> 15\text{px}$ immediately aborts macro motion and yields full desktop control back to the operator within $< 10.0\text{ ms}$ SLA.
+3. **Dual Handoff Briefing & Privacy Controls (`WKF-05.4`)**:
+   - Upon macro completion or divergence, Phenom synthesizes a dual debriefing: a spoken witty Jarvis audio summary strictly constrained to $\le 25$ words, and a structured Telegram companion card.
+   - Rule 11 secret scrubbing is enforced across the Telegram companion card.
+
+### 2. Tool Tier Classifications
+- `drive_observable_motion`: **Tier 1** (Drives observable cursor glide with target halos and takeover hooks). Requires confirmation preview.
+- `generate_dual_handoff_briefing`: **Tier 0** (Read-only synthesis of witty Jarvis audio summary and Telegram companion card). Runs automatically and logged.
+
+
 
 
 

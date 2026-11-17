@@ -99,6 +99,7 @@ import { VoiceStudioHUD } from './components/CyberHUD/VoiceStudioHUD';
 import { CyberCommandCenterHUD } from './components/CyberHUD/CyberCommandCenterHUD';
 import { WorkflowBatchApprovalCard } from './components/CyberHUD/WorkflowBatchApprovalCard';
 import { DataPipeDiffPreviewCard } from './components/CyberHUD/DataPipeDiffPreviewCard';
+import { WorkflowHandoffCard } from './components/CyberHUD/WorkflowHandoffCard';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -268,6 +269,8 @@ export const App: React.FC = () => {
   const [workflowBatchApprovalExternalEvent, setWorkflowBatchApprovalExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showDiffPreview, setShowDiffPreview] = useState<boolean>(true);
   const [diffPreviewExternalEvent, setDiffPreviewExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showWorkflowHandoff, setShowWorkflowHandoff] = useState<boolean>(true);
+  const [workflowHandoffExternalEvent, setWorkflowHandoffExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAgentSwarmMesh, setShowAgentSwarmMesh] = useState<boolean>(false);
   const [agentSwarmMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTaskAuctionProtocol, setShowTaskAuctionProtocol] = useState<boolean>(false);
@@ -556,6 +559,9 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('WORKFLOW_DIFF_') || mtype.startsWith('workflow_diff.')) {
             setDiffPreviewExternalEvent({ type: mtype, payload });
             setShowDiffPreview(true);
+          } else if (mtype.startsWith('WORKFLOW_HANDOFF_') || mtype === 'WORKFLOW_HANDOFF_BRIEFING') {
+            setWorkflowHandoffExternalEvent({ type: mtype, payload });
+            setShowWorkflowHandoff(true);
           } else if (mtype.startsWith('WORKFLOW_') || mtype.startsWith('workflow_dag.')) {
             setWorkflowBatchApprovalExternalEvent({ type: mtype, payload });
             setShowWorkflowBatchApproval(true);
@@ -1822,6 +1828,21 @@ export const App: React.FC = () => {
           <DataPipeDiffPreviewCard
             externalEvent={diffPreviewExternalEvent}
             onClose={() => setShowDiffPreview(false)}
+            sendMessage={(msg) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify(msg));
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {/* Observable Motion Choreography & Dual Handoff Briefing (Phase 50-05) */}
+      {showWorkflowHandoff && (
+        <div style={{ position: 'fixed', bottom: 90, right: 24, width: '520px', zIndex: 142 }}>
+          <WorkflowHandoffCard
+            externalEvent={workflowHandoffExternalEvent}
+            onClose={() => setShowWorkflowHandoff(false)}
             sendMessage={(msg) => {
               if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify(msg));
