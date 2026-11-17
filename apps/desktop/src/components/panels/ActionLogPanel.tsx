@@ -53,9 +53,9 @@ export const ActionLogPanel: React.FC<ActionLogPanelProps> = ({ onClose }) => {
         {logs.length === 0 ? (
           <div style={{ color: '#64748b', fontSize: 14 }}>No actions logged yet.</div>
         ) : (
-          logs.map((log) => (
+          logs.map((log, idx) => (
             <div
-              key={log.log_id}
+              key={log.log_id || `log-${idx}-${log.timestamp || ''}`}
               style={{
                 background: 'rgba(13, 17, 26, 0.85)',
                 border: '1px solid rgba(0, 82, 255, 0.22)',
