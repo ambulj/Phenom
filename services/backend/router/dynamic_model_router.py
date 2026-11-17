@@ -63,7 +63,10 @@ def broadcast_routing_event(event_type: str, payload: Dict[str, Any]):
         loop = asyncio.get_running_loop()
         loop.create_task(broadcaster(msg))
     except RuntimeError:
-        pass
+        main_mod = sys.modules.get("services.backend.main")
+        main_loop = getattr(main_mod, "main_loop", None)
+        if main_loop and main_loop.is_running():
+            asyncio.run_coroutine_threadsafe(broadcaster(msg), main_loop)
 
 
 class DynamicModelRouter:

@@ -536,7 +536,10 @@ from services.backend.resource.vram_manager import vram_manager
 
 
 
+main_loop = None
+
 async def lifespan(app: FastAPI):
+    global main_loop
 
 
 
@@ -552,51 +555,23 @@ async def lifespan(app: FastAPI):
 
 
 
+    main_loop = asyncio.get_running_loop()
+
     # Setup amplitude callback for TTS speech animation with envelope smoothing
-
-
 
     def on_tts_amplitude(amp: float):
 
-
-
         smoothed = amplitude_smoother.update(amp)
 
-
-
-        asyncio.create_task(broadcast_message({
-
-
-
-            "id": f"tts-amp-{os.urandom(2).hex()}",
-
-
-
-            "type": "voice.amplitude",
-
-
-
-            "ts": "",
-
-
-
-            "payload": {"amplitude": smoothed}
-
-
-
-        }))
-
-
+        if main_loop and main_loop.is_running():
+            asyncio.run_coroutine_threadsafe(broadcast_message({
+                "id": f"tts-amp-{os.urandom(2).hex()}",
+                "type": "voice.amplitude",
+                "ts": "",
+                "payload": {"amplitude": smoothed}
+            }), main_loop)
 
     tts_engine.set_amplitude_callback(on_tts_amplitude)
-
-
-
-
-
-
-
-    main_loop = asyncio.get_running_loop()
 
 
 
