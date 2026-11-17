@@ -4483,6 +4483,27 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `sample_desktop_reflex_frame`: **Tier 0** (Read-only perceptual diff hash computation and cue extraction on provided text/image). Runs automatically and logged.
 - `simulate_reflex_event`: **Tier 0** (Read-only synthetic event generation for automated test pipelines). Runs automatically and logged.
 
+---
+
+## Section 90: Sub-100ms Reflex Reaction Engine & Adaptive Jarvis Commentary (Milestone 51 Phase 2)
+
+### 1. Safety Policies & Invariants
+1. **Sub-100ms Event Matching SLA (`REFLEX-02.1`)**:
+   - In-memory declarative reflex rule matching must evaluate incoming `ReflexEvent` payloads in $< 100\text{ ms}$ (measured $< 5\text{ ms}$).
+   - Category cooldown and debounce gates prevent repetitive auditory interruptions and notification fatigue.
+2. **Concise Spoken Persona Voice Constraint (`REFLEX-02.2`)**:
+   - Voice commentary text generated for reflex reactions must strictly adhere to a maximum length of $\le 20$ words.
+   - Persona remains observant, polite, and witty without being obtrusive.
+3. **Safety Tier Integrity & Action Staging (`REFLEX-02.3`, Rules 1 & 10)**:
+   - Voice commentary generation and reflex event rule evaluation are classified as **Tier 0** (read-only / informational).
+   - Any suggested remediation actions staged by reflex rules (e.g. file edits, test re-runs) must preserve their native risk tier and require operator confirmation prior to execution.
+   - Reconfiguring cooldown parameters is classified as **Tier 1** (reversible setting).
+
+### 2. Tool Tier Classifications
+- `evaluate_reflex_reaction`: **Tier 0** (In-memory rule matching and reaction generation). Runs automatically and logged.
+- `dispatch_jarvis_commentary`: **Tier 0** (Spoken voice text synthesis strictly $\le 20$ words). Runs automatically and logged.
+- `configure_reflex_cooldowns`: **Tier 1** (Updates rule cooldown and debounce parameters). Requires confirmation preview.
+
 
 
 
