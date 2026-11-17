@@ -4524,6 +4524,26 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `capture_and_classify_clipboard`: **Tier 0** (Content ingestion, secret redaction, and format classification). Runs automatically and logged.
 - `sync_clipboard_to_knowledge_graph`: **Tier 1** (Persists sanitized clipboard entity into SQLite Temporal Knowledge Graph). Requires confirmation preview.
 
+---
+
+## Section 92: Active Desktop Focus & Contextual Semantic Anchor Governance (Milestone 51 Phase 4)
+
+### 1. Safety Policies & Invariants
+1. **Semantic Workspace Mapping (`REFLEX-04.1`)**:
+   - Resolves active foreground application context into structured `ActiveContextAnchor` models without modifying or intercepting desktop input streams.
+   - Accurately parses window titles to identify active files and open projects.
+2. **Contextual Action Proposal Integrity (`REFLEX-04.2`, Rules 1 & 10)**:
+   - Proposals staged by `ContextualActionSuggester` are informational suggestions (`ContextualProposal`).
+   - Generating proposals is classified as **Tier 0**. Executing any proposed tool preserves that tool's native tier (e.g. read tools are Tier 0; state changes or test commands are Tier 1).
+3. **Pre-Action Focus Guard (`REFLEX-04.3`)**:
+   - Before any suggested action payload is dispatched, `validate_target_focus` asserts that the foreground window handle (HWND) and process executable match the expected target.
+   - Any detected focus divergence immediately blocks execution with an informative warning, preventing keystrokes or clicks from reaching unintended applications.
+
+### 2. Tool Tier Classifications
+- `resolve_active_context_anchor`: **Tier 0** (Read-only resolution of foreground window context and active file). Runs automatically and logged.
+- `generate_contextual_action_proposals`: **Tier 0** (Read-only synthesis of 1-click suggested remediation actions). Runs automatically and logged.
+- `validate_target_window_focus`: **Tier 0** (Pre-action verification of foreground window focus against expected target). Runs automatically and logged.
+
 
 
 

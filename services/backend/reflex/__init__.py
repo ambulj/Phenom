@@ -7,12 +7,16 @@ from services.backend.reflex.reflex_engine import ReflexEngine, ReflexReaction, 
 from services.backend.reflex.clipboard_classifier import ClipboardClassifier, ClipboardContentType, ClassifiedClipboardPayload
 from services.backend.reflex.clipboard_sentinel import ClipboardSentinel, ClipboardItem
 from services.backend.safety.clipboard_privacy_filter import ClipboardPrivacyFilter, SanitizedClipboardResult
+from services.backend.reflex.contextual_anchor import ContextualAnchorManager, ActiveContextAnchor, ApplicationCategory
+from services.backend.reflex.action_suggester import ContextualActionSuggester, ContextualProposal
 
 visual_sentinel = VisualReflexSentinel()
 notification_sentinel = NotificationReflexSentinel()
 jarvis_commentator = JarvisCommentator()
 reflex_engine = ReflexEngine(commentator=jarvis_commentator)
 clipboard_sentinel = ClipboardSentinel()
+contextual_anchor_manager = ContextualAnchorManager()
+action_suggester = ContextualActionSuggester(anchor_mgr=contextual_anchor_manager)
 
 __all__ = [
     "VisualReflexSentinel",
@@ -28,9 +32,16 @@ __all__ = [
     "ClipboardItem",
     "ClipboardPrivacyFilter",
     "SanitizedClipboardResult",
+    "ContextualAnchorManager",
+    "ActiveContextAnchor",
+    "ApplicationCategory",
+    "ContextualActionSuggester",
+    "ContextualProposal",
     "visual_sentinel",
     "notification_sentinel",
     "jarvis_commentator",
     "reflex_engine",
     "clipboard_sentinel",
+    "contextual_anchor_manager",
+    "action_suggester",
 ]
