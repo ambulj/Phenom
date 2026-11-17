@@ -4464,6 +4464,25 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `drive_observable_motion`: **Tier 1** (Drives observable cursor glide with target halos and takeover hooks). Requires confirmation preview.
 - `generate_dual_handoff_briefing`: **Tier 0** (Read-only synthesis of witty Jarvis audio summary and Telegram companion card). Runs automatically and logged.
 
+---
+
+## Section 89: Low-Latency Desktop Visual & Audio Reflex Sentinel Governance (Milestone 51 Phase 1)
+
+### 1. Safety Policies & Invariants
+1. **Lightweight Perceptual Sampling & Low CPU Budget (`REFLEX-01.1`)**:
+   - The visual reflex sentinel samples foreground window bounding boxes using perceptual difference hashing (dHash) on resized 9x8 thumbnails.
+   - Perceptual diffing must consume $< 2.0\%$ CPU overhead during background sampling, automatically slowing to idle rates (2Hz) during static screen periods.
+2. **Deterministic Diagnostic Recognition (`REFLEX-01.2`)**:
+   - Regex and structural parsers detect terminal completion exit codes (0 vs non-zero), test runner outcomes, and compiler diagnostics without invoking cloud LLMs or performing OCR unless a visual change is confirmed.
+3. **Notification Safety & Privacy Boundaries (`REFLEX-01.3`, Rules 4 & 11)**:
+   - System toasts and alarms are normalized into `ReflexEvent` schemas with automated severity classification.
+   - Private credentials, tokens, and passwords in notifications must never be forwarded to external services.
+
+### 2. Tool Tier Classifications
+- `inspect_reflex_sentinel_state`: **Tier 0** (Read-only telemetry, event count, latency, and CPU metrics). Runs automatically and logged.
+- `sample_desktop_reflex_frame`: **Tier 0** (Read-only perceptual diff hash computation and cue extraction on provided text/image). Runs automatically and logged.
+- `simulate_reflex_event`: **Tier 0** (Read-only synthetic event generation for automated test pipelines). Runs automatically and logged.
+
 
 
 

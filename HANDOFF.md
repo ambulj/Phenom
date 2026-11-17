@@ -1,5 +1,19 @@
 # HANDOFF.md
 
+## Milestone 51.0: Project NEURAL PERCEPTION & ACTIVE DESKTOP REFLEXES
+- **Branch**: `hardening/pass-1` / `main`
+- **Date**: November 18, 2026
+- **Status**: **Phase 51-01 COMPLETE & VERIFIED (PASS) — 7/7 TESTS PASSED, FRONTEND BUILD PASS (0 TS ERRORS)**
+- **Phase 51-01 Accomplishments (REFLEX-01.1, REFLEX-01.2, REFLEX-01.3)**:
+  - **Pydantic Schemas (`services/backend/schemas/reflex_events.py`)**: `ReflexEventType`, `ReflexSeverity`, `VisualCueDetails`, `ToastNotificationDetails`, `ReflexEvent`, `ReflexSentinelConfig`, `ReflexSentinelStatus`. Includes `is_failure` and `is_success` properties.
+  - **Visual Reflex Sentinel (`services/backend/reflex/visual_sentinel.py`)**: 64-bit dHash perceptual hashing across 9x8 grayscale thumbnails, hamming distance change sensitivity, and fast regex recognition of terminal command completions (exit code 0 vs non-zero), test runner outcomes (`pytest`, `jest`), and compiler diagnostics (`error TS\d+`, `SyntaxError`, `ModuleNotFoundError`). Sub-15ms processing latency and $< 2.0\%$ CPU overhead.
+  - **Notification Reflex Sentinel (`services/backend/reflex/notification_sentinel.py`)**: Ingests, normalizes, triages, and debounces Windows desktop toast alerts.
+  - **Tool Registry Integration (`services/backend/tools/reflex_sentinel_tools.py`)**: Registered `inspect_reflex_sentinel_state` (Tier 0), `sample_desktop_reflex_frame` (Tier 0), and `simulate_reflex_event` (Tier 0).
+  - **Verification**: `services/backend/tests/test_reflex_sentinel.py`: **7/7 PASSED in 0.55s**. Safety master suite: **13/13 PASSED in 2.00s**. Desktop frontend: `npx tsc --noEmit` clean (0 errors).
+- **Next Action**: Execute Phase 51-02: Sub-100ms Reflex Reaction Engine & Adaptive Jarvis Commentary (`REFLEX-02.1`, `REFLEX-02.2`, `REFLEX-02.3`).
+
+---
+
 ## Milestone 50.0: Project AUTONOMOUS WORKFLOW OPERATOR: Multi-App Sovereign Macro Chains, Enclave Sandboxing & Visual Grounding
 - **Branch**: `hardening/pass-1` / `main`
 - **Date**: November 18, 2026

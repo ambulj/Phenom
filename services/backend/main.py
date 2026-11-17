@@ -457,6 +457,8 @@ from services.backend.security.taint_enclave import taint_enclave
 import services.backend.tools.workflow_handoff_tools
 from services.backend.desktop.observable_motion_driver import observable_motion_driver
 from services.backend.workflows.dual_handoff_briefing import dual_handoff_generator
+import services.backend.tools.reflex_sentinel_tools
+from services.backend.reflex import visual_sentinel, notification_sentinel
 
 
 
