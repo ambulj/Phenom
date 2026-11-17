@@ -663,6 +663,24 @@ class Orchestrator:
                             }
                         }
                     )
+                    if resp.status_code == 404 and model_name != "phenom-jarvis:latest":
+                        # Target specialist model not installed locally; gracefully fall back to phenom-jarvis:latest
+                        model_name = "phenom-jarvis:latest"
+                        resp = await client.post(
+                            OLLAMA_CHAT_URL,
+                            json={
+                                "model": model_name,
+                                "messages": chat_messages,
+                                "tools": tools_payload,
+                                "stream": False,
+                                "keep_alive": -1,
+                                "options": {
+                                    "temperature": 0.2,
+                                    "num_predict": 512,
+                                    "num_ctx": 16384,
+                                }
+                            }
+                        )
                     if resp.status_code != 200:
                         raise RuntimeError(f"Ollama inference error {resp.status_code}: {resp.text}")
 

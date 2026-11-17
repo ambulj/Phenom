@@ -21,7 +21,7 @@ from services.backend.safety.registry import registry
 from services.backend.safety.guardian import guardian
 
 # Standard Model Manifest
-MODEL_FAST_CHAT = "phenom-jarvis:latest"
+MODEL_FAST_CHAT = "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M"
 MODEL_CODER = "qwen2.5-coder:14b"
 MODEL_REASONER = "llama3:8b-instruct-q8_0"
 MODEL_FALLBACK = "phenom-jarvis:latest"
@@ -29,7 +29,7 @@ MODEL_SPECIALIST = "hf.co/tinyopsec/Qwen3.5-4B-Uncensored-Aggressive-GGUF:Q4_K_M
 
 # VRAM Footprints (in MB)
 ESTIMATED_VRAM_MB = {
-    MODEL_FAST_CHAT: 4700,
+    MODEL_FAST_CHAT: 2800,
     MODEL_CODER: 9200,
     MODEL_REASONER: 8500,
     MODEL_FALLBACK: 4700,
