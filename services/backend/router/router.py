@@ -125,7 +125,10 @@ class ModelRouter:
             try:
                 from services.backend.router.dynamic_model_router import dynamic_model_router
                 resolved, task_type, vram_mb, dispatch_reason = dynamic_model_router.resolve_target_model(prompt)
-                target_local_model = resolved
+                if task_type == "chat" and not dynamic_model_router.manual_override:
+                    target_local_model = self.ollama_model
+                else:
+                    target_local_model = resolved
                 metadata["task_type"] = task_type
                 metadata["vram_estimated_mb"] = vram_mb
                 metadata["dispatch_reason"] = dispatch_reason

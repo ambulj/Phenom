@@ -663,8 +663,8 @@ class Orchestrator:
                             }
                         }
                     )
-                    if resp.status_code == 404 and model_name != "phenom-jarvis:latest":
-                        # Target specialist model not installed locally; gracefully fall back to phenom-jarvis:latest
+                    if resp.status_code in [400, 404] and model_name != "phenom-jarvis:latest":
+                        # Target specialist model not installed (404) or context size exceeded (400); gracefully fall back to phenom-jarvis:latest
                         model_name = "phenom-jarvis:latest"
                         resp = await client.post(
                             OLLAMA_CHAT_URL,
@@ -672,6 +672,22 @@ class Orchestrator:
                                 "model": model_name,
                                 "messages": chat_messages,
                                 "tools": tools_payload,
+                                "stream": False,
+                                "keep_alive": -1,
+                                "options": {
+                                    "temperature": 0.2,
+                                    "num_predict": 512,
+                                    "num_ctx": 16384,
+                                }
+                            }
+                        )
+                    if resp.status_code == 400:
+                        # Context window exceeded due to tool payload; retry without tool schemas to answer naturally
+                        resp = await client.post(
+                            OLLAMA_CHAT_URL,
+                            json={
+                                "model": model_name,
+                                "messages": chat_messages,
                                 "stream": False,
                                 "keep_alive": -1,
                                 "options": {
