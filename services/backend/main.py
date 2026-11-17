@@ -461,6 +461,8 @@ import services.backend.tools.reflex_sentinel_tools
 from services.backend.reflex import visual_sentinel, notification_sentinel
 import services.backend.tools.reflex_reaction_tools
 from services.backend.reflex import reflex_engine, jarvis_commentator
+import services.backend.tools.clipboard_tools
+from services.backend.reflex import clipboard_sentinel
 
 
 

@@ -4504,6 +4504,26 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `dispatch_jarvis_commentary`: **Tier 0** (Spoken voice text synthesis strictly $\le 20$ words). Runs automatically and logged.
 - `configure_reflex_cooldowns`: **Tier 1** (Updates rule cooldown and debounce parameters). Requires confirmation preview.
 
+---
+
+## Section 91: Multimodal Clipboard Sentinel & Data Privacy Governance (Milestone 51 Phase 3)
+
+### 1. Safety Policies & Invariants
+1. **Strict Credential & Secret Redaction (`REFLEX-03.2`, Rules 4, 8 & 11)**:
+   - All clipboard content captured by the sentinel must pass through `ClipboardPrivacyFilter` prior to memory indexing, tool inspection, or UI display.
+   - Any detected API key (OpenAI, Anthropic, GitHub, AWS, JWT, Bearer tokens), password assignment, or credit card / CVV number is replaced with a `[REDACTED_...]` marker.
+   - Raw credentials are never stored in memory logs, sqlite databases, action logs, or chat transcripts.
+2. **Deterministic Multimodal Classification (`REFLEX-03.1`)**:
+   - Content is classified via `ClipboardClassifier` using safe syntax analysis (Python `ast.parse` and token matching).
+   - Code, tabular data, JSON, and stack traces are structured with line/character counts and preview snippets.
+3. **Controlled Knowledge Graph Mirroring (`REFLEX-03.3`)**:
+   - Persisting clipboard data into the Temporal Knowledge Graph is classified as **Tier 1** (reversible write) and enforces bi-temporal intervals ($T_v, T_t$).
+
+### 2. Tool Tier Classifications
+- `inspect_active_clipboard`: **Tier 0** (Read-only sanitized clipboard history inspection). Runs automatically and logged.
+- `capture_and_classify_clipboard`: **Tier 0** (Content ingestion, secret redaction, and format classification). Runs automatically and logged.
+- `sync_clipboard_to_knowledge_graph`: **Tier 1** (Persists sanitized clipboard entity into SQLite Temporal Knowledge Graph). Requires confirmation preview.
+
 
 
 
