@@ -465,6 +465,8 @@ import services.backend.tools.clipboard_tools
 from services.backend.reflex import clipboard_sentinel
 import services.backend.tools.contextual_anchor_tools
 from services.backend.reflex import contextual_anchor_manager, action_suggester
+import services.backend.tools.reflex_telemetry_tools
+from services.backend.reflex import telegram_alert_stream
 
 
 

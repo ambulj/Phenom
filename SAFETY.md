@@ -4544,6 +4544,25 @@ All 12 voice cloning, prosodic acting, and voice morphing tools are formally reg
 - `generate_contextual_action_proposals`: **Tier 0** (Read-only synthesis of 1-click suggested remediation actions). Runs automatically and logged.
 - `validate_target_window_focus`: **Tier 0** (Pre-action verification of foreground window focus against expected target). Runs automatically and logged.
 
+---
+
+## Section 93: CyberHUD Reflex Radar & Telegram Companion Alert Governance (Milestone 51 Phase 5)
+
+### 1. Safety Policies & Invariants
+1. **Radar Telemetry Transparency (`REFLEX-05.1`)**:
+   - The CyberHUD Reflex Radar displays real-time event blips, focus anchors, and suggested actions without obstructing emergency Guardian controls or modals.
+   - 1-click suggested action executions maintain strict Tier enforcement (Tier 0 read-only vs Tier 1 reversible).
+2. **Remote Telegram Alert Safety (`REFLEX-05.2`, Rule 11)**:
+   - Push notifications transmitted to Telegram for background task completions or build errors are scrubbed against `ClipboardPrivacyFilter`.
+   - Under no circumstances will raw API keys, passwords, or private environment variables be transmitted remotely.
+   - Throttling and debounce timers prevent spamming the operator's mobile device.
+3. **Emergency Stop SLA Guarantee (`REFLEX-05.3`, Rule 3)**:
+   - Under active perceptual diffing, visual sentinel sampling, and telemetry broadcast load, the Guardian kill switch must halt all processes and automation within $< 25.0\text{ ms}$ hard SLA (measured average 0.038ms, maximum 0.180ms).
+
+### 2. Tool Tier Classifications
+- `broadcast_reflex_telemetry`: **Tier 0** (Read-only telemetry aggregation for desktop CyberHUD). Runs automatically and logged.
+- `dispatch_telegram_reflex_alert`: **Tier 0** (Sanitized formatting and queuing of remote push alerts). Runs automatically and logged.
+
 
 
 

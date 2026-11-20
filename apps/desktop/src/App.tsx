@@ -100,6 +100,7 @@ import { CyberCommandCenterHUD } from './components/CyberHUD/CyberCommandCenterH
 import { WorkflowBatchApprovalCard } from './components/CyberHUD/WorkflowBatchApprovalCard';
 import { DataPipeDiffPreviewCard } from './components/CyberHUD/DataPipeDiffPreviewCard';
 import { WorkflowHandoffCard } from './components/CyberHUD/WorkflowHandoffCard';
+import { ReflexRadarOverlay } from './components/CyberHUD/ReflexRadarOverlay';
 
 import { AutomationTakeoverPromptPayload } from './types/protocol';
 
@@ -271,6 +272,8 @@ export const App: React.FC = () => {
   const [diffPreviewExternalEvent, setDiffPreviewExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showWorkflowHandoff, setShowWorkflowHandoff] = useState<boolean>(true);
   const [workflowHandoffExternalEvent, setWorkflowHandoffExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
+  const [showReflexRadar, setShowReflexRadar] = useState<boolean>(true);
+  const [reflexRadarExternalEvent, setReflexRadarExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showAgentSwarmMesh, setShowAgentSwarmMesh] = useState<boolean>(false);
   const [agentSwarmMeshExternalEvent] = useState<{ type: string; payload?: any } | null>(null);
   const [showTaskAuctionProtocol, setShowTaskAuctionProtocol] = useState<boolean>(false);
@@ -562,6 +565,9 @@ export const App: React.FC = () => {
           } else if (mtype.startsWith('WORKFLOW_HANDOFF_') || mtype === 'WORKFLOW_HANDOFF_BRIEFING') {
             setWorkflowHandoffExternalEvent({ type: mtype, payload });
             setShowWorkflowHandoff(true);
+          } else if (mtype.startsWith('REFLEX_') || mtype.startsWith('reflex.')) {
+            setReflexRadarExternalEvent({ type: mtype, payload });
+            setShowReflexRadar(true);
           } else if (mtype.startsWith('WORKFLOW_') || mtype.startsWith('workflow_dag.')) {
             setWorkflowBatchApprovalExternalEvent({ type: mtype, payload });
             setShowWorkflowBatchApproval(true);
@@ -1850,6 +1856,19 @@ export const App: React.FC = () => {
             }}
           />
         </div>
+      )}
+
+      {/* Neural Perception & Active Desktop Reflex Radar (Phase 51-05) */}
+      {showReflexRadar && (
+        <ReflexRadarOverlay
+          externalEvent={reflexRadarExternalEvent}
+          onClose={() => setShowReflexRadar(false)}
+          sendMessage={(msg) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify(msg));
+            }
+          }}
+        />
       )}
 
       {/* Dynamic Micro-Sandbox & AST Jail HUD (SEC-04, ENV-02) */}

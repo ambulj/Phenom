@@ -9,6 +9,7 @@ from services.backend.reflex.clipboard_sentinel import ClipboardSentinel, Clipbo
 from services.backend.safety.clipboard_privacy_filter import ClipboardPrivacyFilter, SanitizedClipboardResult
 from services.backend.reflex.contextual_anchor import ContextualAnchorManager, ActiveContextAnchor, ApplicationCategory
 from services.backend.reflex.action_suggester import ContextualActionSuggester, ContextualProposal
+from services.backend.reflex.telegram_alert_stream import TelegramReflexAlertStream, TelegramAlertPayload
 
 visual_sentinel = VisualReflexSentinel()
 notification_sentinel = NotificationReflexSentinel()
@@ -17,6 +18,7 @@ reflex_engine = ReflexEngine(commentator=jarvis_commentator)
 clipboard_sentinel = ClipboardSentinel()
 contextual_anchor_manager = ContextualAnchorManager()
 action_suggester = ContextualActionSuggester(anchor_mgr=contextual_anchor_manager)
+telegram_alert_stream = TelegramReflexAlertStream()
 
 __all__ = [
     "VisualReflexSentinel",
@@ -37,6 +39,8 @@ __all__ = [
     "ApplicationCategory",
     "ContextualActionSuggester",
     "ContextualProposal",
+    "TelegramReflexAlertStream",
+    "TelegramAlertPayload",
     "visual_sentinel",
     "notification_sentinel",
     "jarvis_commentator",
@@ -44,4 +48,5 @@ __all__ = [
     "clipboard_sentinel",
     "contextual_anchor_manager",
     "action_suggester",
+    "telegram_alert_stream",
 ]
